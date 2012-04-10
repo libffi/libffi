@@ -13,7 +13,6 @@ class Platform(object):
 
 sdk_re = re.compile(r'.*-sdk ([a-zA-Z0-9.]*)')
 
-
 def sdkinfo(sdkname):
     ret = {}
     for line in subprocess.Popen(['xcodebuild', '-sdk', sdkname, '-version'], stdout=subprocess.PIPE).stdout:
@@ -32,45 +31,39 @@ def mkdir_p(path):
         else:
             raise
 
-
-sim_sdk_info = sdkinfo('iphonesimulator')
-device_sdk_info = sdkinfo('iphoneos')
+desktop_sdk_info = sdkinfo('macosx')
 
 def latest_sdks():
-    latest_sim = None
-    latest_device = None
+    latest_desktop = None
     for line in subprocess.Popen(['xcodebuild', '-showsdks'], stdout=subprocess.PIPE).stdout:
         match = sdk_re.match(line)
         if match:
-            if 'Simulator' in line:
-                latest_sim = match.group(1)
-            elif 'iOS' in line:
-                latest_device = match.group(1)
+            if 'OS X' in line:
+                latest_desktop = match.group(1)
 
-    return latest_sim, latest_device
+    return latest_desktop
 
-sim_sdk, device_sdk = latest_sdks()
+desktop_sdk = latest_sdks()
 
-class simulator_platform(Platform):
-    sdk='iphonesimulator'
+class desktop_platform_32(Platform):
+    sdk='macosx'
     arch = 'i386'
     short_arch = arch
     triple = 'i386-apple-darwin10'
-    sdkroot = sim_sdk_info['Path']
-
-    prefix = "#if !defined(__arm__) && defined(__i386__)\n\n"
+    sdkroot = desktop_sdk_info['Path']
+	
+    prefix = "#if defined(__i386__) && !defined(__x86_64__)\n\n"
     suffix = "\n\n#endif"
 
-class device_platform(Platform):
-    sdk='iphoneos'
-    short_arch = 'arm'
-    arch = 'armv7'
-    triple = 'arm-apple-darwin10'
-    sdkroot = device_sdk_info['Path']
-
-    prefix = "#ifdef __arm__\n\n"
+class desktop_platform_64(Platform):
+    sdk='macosx'
+    arch = 'x86_64'
+    short_arch = arch
+    triple = 'x86_64-apple-darwin10'
+    sdkroot = desktop_sdk_info['Path']
+	
+    prefix = "#if !defined(__i386__) && defined(__x86_64__)\n\n"
     suffix = "\n\n#endif"
-
 
 def move_file(src_dir, dst_dir, filename, file_suffix=None, prefix='', suffix=''):
     mkdir_p(dst_dir)
@@ -115,14 +108,13 @@ def move_source_tree(src_dir, dest_dir, dest_include_dir, arch=None, prefix=None
                      files=files,
                      prefix=prefix,
                      suffix=suffix)
-        elif relroot == 'arm':
-            move_dir(arch='arm',
-                     prefix="#ifdef __arm__\n\n",
+	elif relroot == 'x86':
+            move_dir(arch='i386',
+                     prefix="#if defined(__i386__) && !defined(__x86_64__)\n\n",
                      suffix="\n\n#endif",
                      files=files)
-        elif relroot == 'x86':
-            move_dir(arch='i386',
-                     prefix="#if !defined(__arm__) && defined(__i386__)\n\n",
+            move_dir(arch='x86_64',
+                     prefix="#if !defined(__i386__) && defined(__x86_64__)\n\n",
                      suffix="\n\n#endif",
                      files=files)
 
@@ -134,16 +126,16 @@ def build_target(platform):
     mkdir_p(build_dir)
     env = dict(CC=xcrun_cmd('clang'),
                LD=xcrun_cmd('ld'),
-               CFLAGS='-arch %s -isysroot %s -miphoneos-version-min=4.0' % (platform.arch, platform.sdkroot))
+               CFLAGS='-arch %s -isysroot %s -mmacosx-version-min=10.6' % (platform.arch, platform.sdkroot))
     working_dir=os.getcwd()
     try:
         os.chdir(build_dir)
         subprocess.check_call(['../configure', '-host', platform.triple], env=env)
-        move_source_tree('.', None, '../ios/include',
+        move_source_tree('.', None, '../osx/include',
                          arch=platform.short_arch,
                          prefix=platform.prefix,
                          suffix=platform.suffix)
-        move_source_tree('./include', None, '../ios/include',
+        move_source_tree('./include', None, '../osx/include',
                          arch=platform.short_arch,
                          prefix=platform.prefix,
                          suffix=platform.suffix)
@@ -162,14 +154,14 @@ def make_tramp():
 def main():
     make_tramp()
 
-    move_source_tree('src', 'ios/src', 'ios/include')
-    move_source_tree('include', None, 'ios/include')
-    build_target(simulator_platform)
-    build_target(device_platform)
+    move_source_tree('src', 'osx/src', 'osx/include')
+    move_source_tree('include', None, 'osx/include')
+    build_target(desktop_platform_32)
+    build_target(desktop_platform_64)
 
     for header_name, archs in headers_seen.iteritems():
         basename, suffix = os.path.splitext(header_name)
-        with open(os.path.join('ios/include', header_name), 'w') as header:
+        with open(os.path.join('osx/include', header_name), 'w') as header:
             for arch in archs:
                 header.write('#include <%s_%s%s>\n' % (basename, arch, suffix))
 
