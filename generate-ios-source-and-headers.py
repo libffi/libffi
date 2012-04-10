@@ -153,15 +153,7 @@ def build_target(platform):
     for header_name, archs in headers_seen.iteritems():
         basename, suffix = os.path.splitext(header_name)
 
-def make_tramp():
-    with open('src/arm/trampoline.S', 'w') as tramp_out:
-        p = subprocess.Popen(['bash', 'src/arm/gentramp.sh'], stdout=tramp_out)
-        p.wait()
-
-
 def main():
-    make_tramp()
-
     move_source_tree('src', 'ios/src', 'ios/include')
     move_source_tree('include', None, 'ios/include')
     build_target(simulator_platform)

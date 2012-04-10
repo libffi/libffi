@@ -310,6 +310,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F6F980C4147386130008F121 /* Build configuration list for PBXNativeTarget "libffi iOS" */;
 			buildPhases = (
+				6C43CC3E1534F8E200162364 /* ShellScript */,
 				F6F980B6147386130008F121 /* Sources */,
 				F6F980B7147386130008F121 /* Frameworks */,
 				F6F980B8147386130008F121 /* Headers */,
@@ -348,6 +349,22 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		6C43CC3E1534F8E200162364 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /usr/bin/python;
+			shellScript = "import subprocess\nimport re\nimport os\nimport errno\nimport sys\n\ndef main():\n    with open('src/arm/trampoline.S', 'w') as tramp_out:\n        p = subprocess.Popen(['bash', 'src/arm/gentramp.sh'], stdout=tramp_out)\n        p.wait()\n\nif __name__ == '__main__':\n    main()";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		6C43CB391534E9D100162364 /* Sources */ = {
