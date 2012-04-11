@@ -5,8 +5,6 @@ import os
 import errno
 import collections
 import sys
-#developer_path =
-
 
 class Platform(object):
     pass
@@ -21,15 +19,6 @@ def sdkinfo(sdkname):
             k,v = kv
             ret[k] = v
     return ret
-
-def mkdir_p(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc: # Python >2.5
-        if exc.errno == errno.EEXIST:
-            pass
-        else:
-            raise
 
 desktop_sdk_info = sdkinfo('macosx')
 
@@ -48,25 +37,27 @@ desktop_sdk = latest_sdks()
 class desktop_platform_32(Platform):
     sdk='macosx'
     arch = 'i386'
-    short_arch = arch
+    name = 'mac32'
     triple = 'i386-apple-darwin10'
     sdkroot = desktop_sdk_info['Path']
-	
+    
     prefix = "#if defined(__i386__) && !defined(__x86_64__)\n\n"
     suffix = "\n\n#endif"
 
 class desktop_platform_64(Platform):
     sdk='macosx'
     arch = 'x86_64'
-    short_arch = arch
+    name = 'mac'
     triple = 'x86_64-apple-darwin10'
     sdkroot = desktop_sdk_info['Path']
-	
+    
     prefix = "#if !defined(__i386__) && defined(__x86_64__)\n\n"
     suffix = "\n\n#endif"
 
 def move_file(src_dir, dst_dir, filename, file_suffix=None, prefix='', suffix=''):
-    mkdir_p(dst_dir)
+    if not os.path.exists(dst_dir):
+        os.makedirs(dst_dir)
+    
     out_filename = filename
 
     if file_suffix:
@@ -108,7 +99,7 @@ def move_source_tree(src_dir, dest_dir, dest_include_dir, arch=None, prefix=None
                      files=files,
                      prefix=prefix,
                      suffix=suffix)
-	elif relroot == 'x86':
+        elif relroot == 'x86':
             move_dir(arch='i386',
                      prefix="#if defined(__i386__) && !defined(__x86_64__)\n\n",
                      suffix="\n\n#endif",
@@ -122,28 +113,29 @@ def build_target(platform):
     def xcrun_cmd(cmd):
         return subprocess.check_output(['xcrun', '-sdk', platform.sdkroot, '-find', cmd]).strip()
 
-    build_dir = 'build_' + platform.short_arch
-    mkdir_p(build_dir)
-    env = dict(CC=xcrun_cmd('clang'),
-               LD=xcrun_cmd('ld'),
-               CFLAGS='-arch %s -isysroot %s -mmacosx-version-min=10.6' % (platform.arch, platform.sdkroot))
-    working_dir=os.getcwd()
-    try:
-        os.chdir(build_dir)
-        subprocess.check_call(['../configure', '-host', platform.triple], env=env)
-        move_source_tree('.', None, '../osx/include',
-                         arch=platform.short_arch,
-                         prefix=platform.prefix,
-                         suffix=platform.suffix)
-        move_source_tree('./include', None, '../osx/include',
-                         arch=platform.short_arch,
-                         prefix=platform.prefix,
-                         suffix=platform.suffix)
-    finally:
-        os.chdir(working_dir)
+    build_dir = 'build_' + platform.name
+    if not os.path.exists(build_dir):    
+        os.makedirs(build_dir)
+        env = dict(CC=xcrun_cmd('clang'),
+                   LD=xcrun_cmd('ld'),
+                   CFLAGS='-arch %s -isysroot %s -mmacosx-version-min=10.6' % (platform.arch, platform.sdkroot))
+        working_dir=os.getcwd()
+        try:
+            os.chdir(build_dir)
+            subprocess.check_call(['../configure', '-host', platform.triple], env=env)
+            move_source_tree('.', None, '../osx/include',
+                             arch=platform.arch,
+                             prefix=platform.prefix,
+                             suffix=platform.suffix)
+            move_source_tree('./include', None, '../osx/include',
+                             arch=platform.arch,
+                             prefix=platform.prefix,
+                             suffix=platform.suffix)
+        finally:
+            os.chdir(working_dir)
 
-    for header_name, archs in headers_seen.iteritems():
-        basename, suffix = os.path.splitext(header_name)
+        for header_name, archs in headers_seen.iteritems():
+            basename, suffix = os.path.splitext(header_name)
 
 def main():
     move_source_tree('src', 'osx/src', 'osx/include')
