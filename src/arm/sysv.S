@@ -109,6 +109,7 @@
 #define UNWIND @
 #endif	
 
+.syntax unified
 	
 #if defined(__thumb__) && !defined(__THUMB_INTERWORK__)
 .macro	ARM_FUNC_START name
@@ -228,7 +229,7 @@ ARM_FUNC_START ffi_call_SYSV
 #if defined(__SOFTFP__) || defined(__ARM_EABI__)
 	cmpne	r3, #FFI_TYPE_DOUBLE
 #endif
-	stmeqia	r2, {r0, r1}
+	stmiaeq	r2, {r0, r1}
 
 #if !defined(__SOFTFP__) && !defined(__ARM_EABI__)
 	beq	LSYM(Lepilogue)
@@ -410,7 +411,7 @@ LSYM(Lbase_args):
 	beq	LSYM(Lepilogue_vfp)
 
 	cmp	r3, #FFI_TYPE_SINT64
-	stmeqia	r2, {r0, r1}
+	stmiaeq	r2, {r0, r1}
 	beq	LSYM(Lepilogue_vfp)
 
 	cmp	r3, #FFI_TYPE_FLOAT
