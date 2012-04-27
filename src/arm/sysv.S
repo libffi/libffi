@@ -114,7 +114,7 @@
 #if defined(__thumb__) && !defined(__THUMB_INTERWORK__)
 .macro	ARM_FUNC_START name
 	.text
-	.align 0
+	.align 4
 	.thumb
 	.thumb_func
 #ifdef __APPLE__
@@ -137,7 +137,7 @@ _L__\name:
 #else
 .macro	ARM_FUNC_START name
 	.text
-	.align 0
+	.align 4
 	.arm
 #ifdef __APPLE__
 	ENTRY($0)
