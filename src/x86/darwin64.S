@@ -25,6 +25,8 @@
    OTHER DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
+#if defined(__i386__) || defined(__x86_64__)
+
 #ifdef __x86_64__
 #define LIBFFI_ASM
 #include <fficonfig.h>
@@ -414,3 +416,6 @@ LEFDE3:
 	.subsections_via_symbols
 
 #endif /* __x86_64__ */
+
+#endif /* __i386__ || __x86_64__ */
+

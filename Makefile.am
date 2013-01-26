@@ -123,8 +123,9 @@ endif
 if X86_WIN64
 nodist_libffi_la_SOURCES += src/x86/ffi.c src/x86/win64.S
 endif
-if X86_DARWIN
+if DARWIN
 nodist_libffi_la_SOURCES += src/x86/ffi.c src/x86/darwin.S src/x86/ffi64.c src/x86/darwin64.S
+nodist_libffi_la_SOURCES += src/powerpc/ffi_darwin.c src/powerpc/darwin.S src/powerpc/darwin_closure.S
 endif
 if SPARC
 nodist_libffi_la_SOURCES += src/sparc/ffi.c src/sparc/v8.S src/sparc/v9.S
@@ -149,9 +150,6 @@ nodist_libffi_la_SOURCES += src/powerpc/ffi.c src/powerpc/sysv.S src/powerpc/ppc
 endif
 if POWERPC_AIX
 nodist_libffi_la_SOURCES += src/powerpc/ffi_darwin.c src/powerpc/aix.S src/powerpc/aix_closure.S
-endif
-if POWERPC_DARWIN
-nodist_libffi_la_SOURCES += src/powerpc/ffi_darwin.c src/powerpc/darwin.S src/powerpc/darwin_closure.S
 endif
 if POWERPC_FREEBSD
 nodist_libffi_la_SOURCES += src/powerpc/ffi.c src/powerpc/sysv.S src/powerpc/ppc_closure.S

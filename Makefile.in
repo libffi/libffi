@@ -58,7 +58,7 @@ target_triplet = @target@
 @X86_FREEBSD_TRUE@am__append_5 = src/x86/ffi.c src/x86/freebsd.S
 @X86_WIN32_TRUE@am__append_6 = src/x86/ffi.c src/x86/win32.S
 @X86_WIN64_TRUE@am__append_7 = src/x86/ffi.c src/x86/win64.S
-@X86_DARWIN_TRUE@am__append_8 = src/x86/ffi.c src/x86/darwin.S src/x86/ffi64.c src/x86/darwin64.S
+@DARWIN_TRUE@am__append_8 = src/x86/ffi.c src/x86/darwin.S src/x86/ffi64.c src/x86/darwin64.S
 @SPARC_TRUE@am__append_9 = src/sparc/ffi.c src/sparc/v8.S src/sparc/v9.S
 @ALPHA_TRUE@am__append_10 = src/alpha/ffi.c src/alpha/osf.S
 @IA64_TRUE@am__append_11 = src/ia64/ffi.c src/ia64/unix.S
@@ -67,7 +67,7 @@ target_triplet = @target@
 @MICROBLAZE_TRUE@am__append_14 = src/microblaze/ffi.c src/microblaze/sysv.S
 @POWERPC_TRUE@am__append_15 = src/powerpc/ffi.c src/powerpc/sysv.S src/powerpc/ppc_closure.S src/powerpc/linux64.S src/powerpc/linux64_closure.S
 @POWERPC_AIX_TRUE@am__append_16 = src/powerpc/ffi_darwin.c src/powerpc/aix.S src/powerpc/aix_closure.S
-@POWERPC_DARWIN_TRUE@am__append_17 = src/powerpc/ffi_darwin.c src/powerpc/darwin.S src/powerpc/darwin_closure.S
+@DARWIN_TRUE@am__append_17 = src/powerpc/ffi_darwin.c src/powerpc/darwin.S src/powerpc/darwin_closure.S
 @POWERPC_FREEBSD_TRUE@am__append_18 = src/powerpc/ffi.c src/powerpc/sysv.S src/powerpc/ppc_closure.S
 @AARCH64_TRUE@am__append_19 = src/aarch64/sysv.S src/aarch64/ffi.c
 @ARM_TRUE@am__append_20 = src/arm/sysv.S src/arm/ffi.c
@@ -154,8 +154,8 @@ am_libffi_la_OBJECTS = src/prep_cif.lo src/types.lo src/raw_api.lo \
 @X86_FREEBSD_TRUE@am__objects_5 = src/x86/ffi.lo src/x86/freebsd.lo
 @X86_WIN32_TRUE@am__objects_6 = src/x86/ffi.lo src/x86/win32.lo
 @X86_WIN64_TRUE@am__objects_7 = src/x86/ffi.lo src/x86/win64.lo
-@X86_DARWIN_TRUE@am__objects_8 = src/x86/ffi.lo src/x86/darwin.lo \
-@X86_DARWIN_TRUE@	src/x86/ffi64.lo src/x86/darwin64.lo
+@DARWIN_TRUE@am__objects_8 = src/x86/ffi.lo src/x86/darwin.lo \
+@DARWIN_TRUE@	src/x86/ffi64.lo src/x86/darwin64.lo
 @SPARC_TRUE@am__objects_9 = src/sparc/ffi.lo src/sparc/v8.lo \
 @SPARC_TRUE@	src/sparc/v9.lo
 @ALPHA_TRUE@am__objects_10 = src/alpha/ffi.lo src/alpha/osf.lo
@@ -171,9 +171,9 @@ am_libffi_la_OBJECTS = src/prep_cif.lo src/types.lo src/raw_api.lo \
 @POWERPC_AIX_TRUE@am__objects_16 = src/powerpc/ffi_darwin.lo \
 @POWERPC_AIX_TRUE@	src/powerpc/aix.lo \
 @POWERPC_AIX_TRUE@	src/powerpc/aix_closure.lo
-@POWERPC_DARWIN_TRUE@am__objects_17 = src/powerpc/ffi_darwin.lo \
-@POWERPC_DARWIN_TRUE@	src/powerpc/darwin.lo \
-@POWERPC_DARWIN_TRUE@	src/powerpc/darwin_closure.lo
+@DARWIN_TRUE@am__objects_17 = src/powerpc/ffi_darwin.lo \
+@DARWIN_TRUE@	src/powerpc/darwin.lo \
+@DARWIN_TRUE@	src/powerpc/darwin_closure.lo
 @POWERPC_FREEBSD_TRUE@am__objects_18 = src/powerpc/ffi.lo \
 @POWERPC_FREEBSD_TRUE@	src/powerpc/sysv.lo \
 @POWERPC_FREEBSD_TRUE@	src/powerpc/ppc_closure.lo

@@ -25,6 +25,8 @@
    OTHER DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
+#if defined(__ppc__) || defined(__ppc64__)
+
 #define LIBFFI_ASM
 #define L(x) x
 
@@ -574,3 +576,6 @@ L_darwin64_pass_struct_floats$lazy_ptr:
 	.g_long	dyld_stub_binding_helper
 #  endif
 #endif
+
+#endif /* __ppc__ || __ppc64__ */
+

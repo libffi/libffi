@@ -27,6 +27,8 @@
    OTHER DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
+#if defined(__ppc__) || defined(__ppc64__)
+
 #include <ffi.h>
 #include <ffi_common.h>
 
@@ -1357,3 +1359,6 @@ ffi_closure_helper_DARWIN (ffi_closure *closure, void *rvalue,
   /* Tell ffi_closure_ASM to perform return type promotions.  */
   return cif->rtype;
 }
+
+#endif /* __ppc__ || __ppc64__ */
+
