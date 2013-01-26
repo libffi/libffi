@@ -677,8 +677,8 @@ AARCH64_FALSE
 AARCH64_TRUE
 POWERPC_FREEBSD_FALSE
 POWERPC_FREEBSD_TRUE
-POWERPC_DARWIN_FALSE
-POWERPC_DARWIN_TRUE
+DARWIN_FALSE
+DARWIN_TRUE
 POWERPC_AIX_FALSE
 POWERPC_AIX_TRUE
 POWERPC_FALSE
@@ -695,8 +695,6 @@ IA64_FALSE
 IA64_TRUE
 ALPHA_FALSE
 ALPHA_TRUE
-X86_DARWIN_FALSE
-X86_DARWIN_TRUE
 X86_WIN64_FALSE
 X86_WIN64_TRUE
 X86_WIN32_FALSE
@@ -13354,7 +13352,7 @@ case "$host" in
 	fi
 	;;
   i?86-*-darwin*)
-	TARGET=X86_DARWIN; TARGETDIR=x86
+	TARGET=DARWIN; TARGETDIR=universal
 	;;
   i?86-*-solaris2.1[0-9]*)
 	TARGETDIR=x86
@@ -13409,7 +13407,7 @@ case "$host" in
 	TARGET=POWERPC; TARGETDIR=powerpc
 	;;
   powerpc-*-darwin* | powerpc64-*-darwin*)
-	TARGET=POWERPC_DARWIN; TARGETDIR=powerpc
+	TARGET=DARWIN; TARGETDIR=universal
 	;;
   powerpc-*-aix* | rs6000-*-aix*)
 	TARGET=POWERPC_AIX; TARGETDIR=powerpc
@@ -13444,7 +13442,7 @@ case "$host" in
         ;;
 
   x86_64-*-darwin*)
-	TARGET=X86_DARWIN; TARGETDIR=x86
+	TARGET=DARWIN; TARGETDIR=universal
 	;;
 
   x86_64-*-cygwin* | x86_64-*-mingw*)
@@ -13471,6 +13469,28 @@ esac
 
 if test $TARGETDIR = unknown; then
   as_fn_error $? "\"libffi has not been ported to $host.\"" "$LINENO" 5
+fi
+if test $TARGETDIR = universal; then
+    mkdir -p src/universal
+    cat > src/universal/ffitarget.h << eof
+#if defined(__ppc__) || defined(__ppc64__)
+#define POWERPC_DARWIN
+
+eof
+    cat src/powerpc/ffitarget.h >> src/universal/ffitarget.h
+    cat >> src/universal/ffitarget.h << eof
+
+#elif defined(__i386__) || defined(__x86_64__)
+#define X86_DARWIN
+
+eof
+    cat src/x86/ffitarget.h >> src/universal/ffitarget.h
+    cat >> src/universal/ffitarget.h << eof
+
+#else
+#error "Unknown architecture"
+#endif
+eof
 fi
 
  if test x$TARGET = xMIPS; then
@@ -13529,12 +13549,12 @@ else
   X86_WIN64_FALSE=
 fi
 
- if test x$TARGET = xX86_DARWIN; then
-  X86_DARWIN_TRUE=
-  X86_DARWIN_FALSE='#'
+ if test x$TARGET = xDARWIN; then
+  DARWIN_TRUE=
+  DARWIN_FALSE='#'
 else
-  X86_DARWIN_TRUE='#'
-  X86_DARWIN_FALSE=
+  DARWIN_TRUE='#'
+  DARWIN_FALSE=
 fi
 
  if test x$TARGET = xALPHA; then
@@ -13599,14 +13619,6 @@ fi
 else
   POWERPC_AIX_TRUE='#'
   POWERPC_AIX_FALSE=
-fi
-
- if test x$TARGET = xPOWERPC_DARWIN; then
-  POWERPC_DARWIN_TRUE=
-  POWERPC_DARWIN_FALSE='#'
-else
-  POWERPC_DARWIN_TRUE='#'
-  POWERPC_DARWIN_FALSE=
 fi
 
  if test x$TARGET = xPOWERPC_FREEBSD; then
@@ -15007,8 +15019,8 @@ if test -z "${X86_WIN64_TRUE}" && test -z "${X86_WIN64_FALSE}"; then
   as_fn_error $? "conditional \"X86_WIN64\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${X86_DARWIN_TRUE}" && test -z "${X86_DARWIN_FALSE}"; then
-  as_fn_error $? "conditional \"X86_DARWIN\" was never defined.
+if test -z "${DARWIN_TRUE}" && test -z "${DARWIN_FALSE}"; then
+  as_fn_error $? "conditional \"DARWIN\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${ALPHA_TRUE}" && test -z "${ALPHA_FALSE}"; then
@@ -15041,10 +15053,6 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${POWERPC_AIX_TRUE}" && test -z "${POWERPC_AIX_FALSE}"; then
   as_fn_error $? "conditional \"POWERPC_AIX\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${POWERPC_DARWIN_TRUE}" && test -z "${POWERPC_DARWIN_FALSE}"; then
-  as_fn_error $? "conditional \"POWERPC_DARWIN\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${POWERPC_FREEBSD_TRUE}" && test -z "${POWERPC_FREEBSD_FALSE}"; then

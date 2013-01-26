@@ -27,6 +27,8 @@
    DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
+#if defined(__i386__) || defined(__x86_64__)
+
 #include <ffi.h>
 #include <ffi_common.h>
 
@@ -654,3 +656,6 @@ ffi_closure_unix64_inner(ffi_closure *closure, void *rvalue,
 }
 
 #endif /* __x86_64__ */
+
+#endif /* __i386__ || __x86_64__ */
+

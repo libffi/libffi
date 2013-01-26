@@ -135,7 +135,7 @@ case "$host" in
 	fi
 	;;
   i?86-*-darwin*)
-	TARGET=X86_DARWIN; TARGETDIR=x86
+	TARGET=DARWIN; TARGETDIR=universal
 	;;
   i?86-*-solaris2.1[[0-9]]*)
 	TARGETDIR=x86
@@ -190,7 +190,7 @@ case "$host" in
 	TARGET=POWERPC; TARGETDIR=powerpc
 	;;
   powerpc-*-darwin* | powerpc64-*-darwin*)
-	TARGET=POWERPC_DARWIN; TARGETDIR=powerpc
+	TARGET=DARWIN; TARGETDIR=universal
 	;;
   powerpc-*-aix* | rs6000-*-aix*)
 	TARGET=POWERPC_AIX; TARGETDIR=powerpc
@@ -225,7 +225,7 @@ case "$host" in
         ;;
 
   x86_64-*-darwin*)
-	TARGET=X86_DARWIN; TARGETDIR=x86
+	TARGET=DARWIN; TARGETDIR=universal
 	;;
 
   x86_64-*-cygwin* | x86_64-*-mingw*)
@@ -253,6 +253,28 @@ AC_SUBST(AM_LTLDFLAGS)
 if test $TARGETDIR = unknown; then
   AC_MSG_ERROR(["libffi has not been ported to $host."])
 fi
+if test $TARGETDIR = universal; then
+    mkdir -p src/universal
+    cat > src/universal/ffitarget.h << eof
+#if defined(__ppc__) || defined(__ppc64__)
+#define POWERPC_DARWIN
+
+eof
+    cat src/powerpc/ffitarget.h >> src/universal/ffitarget.h
+    cat >> src/universal/ffitarget.h << eof
+
+#elif defined(__i386__) || defined(__x86_64__)
+#define X86_DARWIN
+
+eof
+    cat src/x86/ffitarget.h >> src/universal/ffitarget.h
+    cat >> src/universal/ffitarget.h << eof
+
+#else
+#error "Unknown architecture"
+#endif
+eof
+fi
 
 AM_CONDITIONAL(MIPS, test x$TARGET = xMIPS)
 AM_CONDITIONAL(BFIN, test x$TARGET = xBFIN)
@@ -261,7 +283,7 @@ AM_CONDITIONAL(X86, test x$TARGET = xX86)
 AM_CONDITIONAL(X86_FREEBSD, test x$TARGET = xX86_FREEBSD)
 AM_CONDITIONAL(X86_WIN32, test x$TARGET = xX86_WIN32)
 AM_CONDITIONAL(X86_WIN64, test x$TARGET = xX86_WIN64)
-AM_CONDITIONAL(X86_DARWIN, test x$TARGET = xX86_DARWIN)
+AM_CONDITIONAL(DARWIN, test x$TARGET = xDARWIN)
 AM_CONDITIONAL(ALPHA, test x$TARGET = xALPHA)
 AM_CONDITIONAL(IA64, test x$TARGET = xIA64)
 AM_CONDITIONAL(M32R, test x$TARGET = xM32R)
@@ -270,7 +292,6 @@ AM_CONDITIONAL(MICROBLAZE, test x$TARGET = xMICROBLAZE)
 AM_CONDITIONAL(MOXIE, test x$TARGET = xMOXIE)
 AM_CONDITIONAL(POWERPC, test x$TARGET = xPOWERPC)
 AM_CONDITIONAL(POWERPC_AIX, test x$TARGET = xPOWERPC_AIX)
-AM_CONDITIONAL(POWERPC_DARWIN, test x$TARGET = xPOWERPC_DARWIN)
 AM_CONDITIONAL(POWERPC_FREEBSD, test x$TARGET = xPOWERPC_FREEBSD)
 AM_CONDITIONAL(AARCH64, test x$TARGET = xAARCH64)
 AM_CONDITIONAL(ARM, test x$TARGET = xARM)

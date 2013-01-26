@@ -28,6 +28,8 @@
    DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
+#if defined(__i386__) || defined(__x86_64__)
+
 #if !defined(__x86_64__) || defined(_WIN64)
 
 #ifdef _WIN64
@@ -840,4 +842,6 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *fake_avalue)
 #endif
 
 #endif /* !__x86_64__  || X86_WIN64 */
+
+#endif /* __i386__ || __x86_64__ */
 

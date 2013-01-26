@@ -24,6 +24,8 @@
    OTHER DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
+#if defined(__ppc__) || defined(__ppc64__)
+
 #define LIBFFI_ASM
 #if defined(__ppc64__)
 #define MODE_CHOICE(x, y) y
@@ -380,4 +382,6 @@ LASFDE1:
 	.align LOG2_GPR_BYTES
 LEFDE1:
 	.align 1
+
+#endif /* __ppc__ || __ppc64__ */
 
