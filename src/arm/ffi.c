@@ -492,13 +492,15 @@ ffi_prep_incoming_args_VFP(char *stack, void **rvalue,
           /* if regp points above the end of the register area */
           if(regp >= eo_regp)
             {
-              /* sanity check that we haven't read from the stack area before
-               * reaching this point */
-              FFI_ASSERT(argp <= regp);
-              FFI_ASSERT(argp == stack + 16);
+            // if the stack is not in use yet, let it start where regp ended
+            // after reading the last argument passed in a core register and
+            // possibly on the stack
+            if(!stack_used)
+              {
               argp = regp;
-              done_with_regs = 1;
-              stack_used = 1;
+              }
+            done_with_regs = 1;
+            stack_used = 1;
             }
             continue;
           }
