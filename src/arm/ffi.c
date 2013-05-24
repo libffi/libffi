@@ -489,20 +489,23 @@ ffi_prep_incoming_args_VFP(char *stack, void **rvalue,
 
           p_argv++;
           regp = tregp + z;
-          /* if regp points above the end of the register area */
+          // if we read past the last core register, make sure we have not read
+          // from the stack before and continue reading after regp
+          if(regp > eo_regp)
+            {
+            if(stack_used)
+              {
+                abort(); // we should never read past the end of the register
+                         // are if the stack is already in use
+              }
+            argp = regp;
+            }
           if(regp >= eo_regp)
             {
-            // if the stack is not in use yet, let it start where regp ended
-            // after reading the last argument passed in a core register and
-            // possibly on the stack
-            if(!stack_used)
-              {
-              argp = regp;
-              }
             done_with_regs = 1;
             stack_used = 1;
             }
-            continue;
+          continue;
           }
       }
     stack_used = 1;
