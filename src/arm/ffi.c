@@ -4,8 +4,8 @@
            Copyright (c) 2011 Anthony Green
 	   Copyright (c) 2011 Free Software Foundation
            Copyright (c) 1998, 2008, 2011  Red Hat, Inc.
-	   
-   ARM Foreign Function Interface 
+
+   ARM Foreign Function Interface
 
    Permission is hereby granted, free of charge, to any person obtaining
    a copy of this software and associated documentation files (the
@@ -313,7 +313,7 @@ void ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
   unsigned int temp;
   
   /* If the return value is a struct and we don't have a return	*/
-  /* value address then we need to make one		        */
+  /* value address then we need to make one			*/
 
   if ((rvalue == NULL) && 
       (cif->flags == FFI_TYPE_STRUCT))
@@ -773,7 +773,7 @@ ffi_prep_closure_loc (ffi_closure* closure,
 #endif
   else
     return FFI_BAD_ABI;
-    
+
 #if FFI_EXEC_TRAMPOLINE_TABLE
   void **config = FFI_TRAMPOLINE_CODELOC_CONFIG(codeloc);
   config[0] = closure;
