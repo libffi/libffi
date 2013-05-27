@@ -1,3 +1,6 @@
+2013-05-24  David Schneider  <david.schneider@bivab.de>
+
+	 * src/arm/ffi.c: more robust argument handling for closures on arm hardfloat
 2013-03-28  David Schneider  <david.schneider@bivab.de>
 
 	 * src/arm/ffi.c: Fix support for ARM hard-float calling convention.
