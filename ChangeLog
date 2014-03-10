@@ -1,3 +1,7 @@
+2014-03-10  Gervase Markham <gerv@gerv.net>
+
+	* msvcc.sh: Upgrade license to MPL 2.
+
 2014-03-01  Anthony Green  <green@moxielogic.com>
 
 	* Makefile.am (EXTRA_DIST): Replace old scripts with
