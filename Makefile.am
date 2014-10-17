@@ -48,9 +48,9 @@ EXTRA_DIST = LICENSE ChangeLog.v1 ChangeLog.libgcj			\
 	 src/xtensa/ffitarget.h src/xtensa/ffi.c src/xtensa/sysv.S	\
 	 ChangeLog.libffi m4/libtool.m4 m4/lt~obsolete.m4		\
 	 m4/ltoptions.m4 m4/ltsugar.m4 m4/ltversion.m4			\
-	 m4/ltversion.m4 src/arm/gentramp.sh src/debug.c msvcc.sh	\
+	 m4/ltversion.m4 src/debug.c msvcc.sh				\
 	 generate-darwin-source-and-headers.py				\
-	 libffi.xcodeproj/project.pbxproj src/arm/trampoline.S		\
+	 libffi.xcodeproj/project.pbxproj				\
 	 libtool-ldflags ChangeLog.libffi-3.1
 
 info_TEXINFOS = doc/libffi.texi
@@ -190,9 +190,6 @@ nodist_libffi_la_SOURCES += src/arc/arcompact.S src/arc/ffi.c
 endif
 if ARM
 nodist_libffi_la_SOURCES += src/arm/sysv.S src/arm/ffi.c
-if FFI_EXEC_TRAMPOLINE_TABLE
-nodist_libffi_la_SOURCES += src/arm/trampoline.S
-endif
 endif
 if AVR32
 nodist_libffi_la_SOURCES += src/avr32/sysv.S src/avr32/ffi.c

@@ -189,138 +189,127 @@ ARM_FUNC_END(ffi_call_SYSV)
 
 ARM_FUNC_START(ffi_closure_SYSV, 1)
 	UNWIND	.fnstart
-	UNWIND .pad #16
-	add	ip, sp, #16
-	stmfd	sp!, {ip, lr}
-	UNWIND .save	{r0, lr}
-	add	r2, sp, #8
-	UNWIND .pad #16
-	sub	sp, sp, #16
-	str	sp, [sp, #8]
-	add	r1, sp, #8
-	bl	CNAME(ffi_closure_inner)
-	cmp	r0, #FFI_TYPE_INT
-	beq	.Lretint
+	cfi_startproc
+	stmdb	sp!, {r0-r3}			@ save argument regs
+	cfi_adjust_cfa_offset(16)
+	mov	r0, ip				@ load closure
+	add	ip, sp, #16			@ compute entry sp
+	sub	sp, sp, #32			@ allocate rvalue space
+	stmdb	sp!, {sp,lr}
 
-	cmp	r0, #FFI_TYPE_FLOAT
-#if defined(__SOFTFP__) || defined(__ARM_EABI__)
-	beq	.Lretint
-#else
-	beq	.Lretfloat
-#endif
+	/* Remember that EABI unwind info only applies at call sites.
+	   We need do nothing except note the save of the stack pointer
+	   and the link registers.  */
+	UNWIND	.save {sp,lr}
+	cfi_adjust_cfa_offset(8)
+	cfi_rel_offset(lr, 4)
 
-	cmp	r0, #FFI_TYPE_DOUBLE
-#if defined(__SOFTFP__) || defined(__ARM_EABI__)
-	beq	.Lretlonglong
-#else
-	beq	.Lretdouble
-#endif
+	add	r1, sp, #8			@ load respp
+	add	r2, sp, #8+32			@ load args
+	mov	r3, #0				@ load vfp_args
 
-	cmp	r0, #FFI_TYPE_LONGDOUBLE
-#if defined(__SOFTFP__) || defined(__ARM_EABI__)
-	beq	.Lretlonglong
-#else
-	beq	.Lretlongdouble
-#endif
+	bl	CNAME(ffi_closure_inner_SYSV)
 
-	cmp	r0, #FFI_TYPE_SINT64
-	beq	.Lretlonglong
-.Lclosure_epilogue:
-	add	sp, sp, #16
-	ldmfd	sp, {sp, pc}
-.Lretint:
-	ldr	r0, [sp]
-	b	.Lclosure_epilogue
-.Lretlonglong:
-	ldr	r0, [sp]
-	ldr	r1, [sp, #4]
-	b	.Lclosure_epilogue
-
-#if !defined(__SOFTFP__) && !defined(__ARM_EABI__)
-.Lretfloat:
-	ldfs	f0, [sp]
-	b	.Lclosure_epilogue
-.Lretdouble:
-	ldfd	f0, [sp]
-	b	.Lclosure_epilogue
-.Lretlongdouble:
-	ldfd	f0, [sp]
-	b	.Lclosure_epilogue
-#endif
-	UNWIND .fnend
+	@ Load values returned in registers.
+	add	r2, sp, #8			@ load respp
+	adr	r3, CNAME(ffi_closure_ret)
+	add	pc, r3, r0, lsl #3
+	cfi_endproc
+	UNWIND	.fnend
 ARM_FUNC_END(ffi_closure_SYSV)
 
-
-/* Below are VFP hard-float ABI call and closure implementations.
-   Add VFP FPU directive here. This is only compiled into the library
-   under EABI.  */
-#ifdef __ARM_EABI__
 ARM_FUNC_START(ffi_closure_VFP, 1)
 	UNWIND	.fnstart
-	fstmfdd	sp!, {d0-d7}
-	@ r0-r3, then d0-d7
-	UNWIND .pad #80
-	add	ip, sp, #80
-	stmfd	sp!, {ip, lr}
-	UNWIND .save	{r0, lr}
-	add	r2, sp, #72
-	add	r3, sp, #8
-	UNWIND .pad #72
-	sub	sp, sp, #72
-	str	sp, [sp, #64]
-	add	r1, sp, #64
-	bl	CNAME(ffi_closure_inner)
+	cfi_startproc
+	stmdb	sp!, {r0-r3}			@ save argument regs
+	cfi_adjust_cfa_offset(16)
+	sub	sp, sp, #64+32			@ allocate vfp+rvalue space
+	cfi_adjust_cfa_offset(64+32)
+	stc	p11, cr0, [sp], {16}		@ vstm sp, {d0-d7}
+	mov	r0, ip				@ load closure
+	add	ip, sp, #16+64+32		@ compute entry sp
+	stmdb	sp!, {ip,lr}
 
-	cmp	r0, #FFI_TYPE_INT
-	beq	.Lretint_vfp
+	/* See above.  */
+	UNWIND	.save {sp,lr}
+	cfi_adjust_cfa_offset(8)
+	cfi_rel_offset(sp, 0)
+	cfi_rel_offset(lr, 4)
 
-	cmp	r0, #FFI_TYPE_FLOAT
-	beq	.Lretfloat_vfp
+	add	r1, sp, #8+64			@ load respp
+	add	r2, sp, #8+64+32		@ load args
+	add	r3, sp, #8			@ load vfp_args
 
-	cmp	r0, #FFI_TYPE_DOUBLE
-	cmpne	r0, #FFI_TYPE_LONGDOUBLE
-	beq	.Lretdouble_vfp
+	bl	CNAME(ffi_closure_inner_VFP)
 
-	cmp	r0, #FFI_TYPE_SINT64
-	beq	.Lretlonglong_vfp
-
-	cmp	r0, #FFI_TYPE_STRUCT_VFP_FLOAT
-	beq	.Lretfloat_struct_vfp
-
-	cmp	r0, #FFI_TYPE_STRUCT_VFP_DOUBLE
-	beq	.Lretdouble_struct_vfp
-	
-.Lclosure_epilogue_vfp:
-	add	sp, sp, #72
-	ldmfd	sp, {sp, pc}
-
-.Lretfloat_vfp:
-	flds	s0, [sp]
-	b	.Lclosure_epilogue_vfp
-.Lretdouble_vfp:
-	fldd	d0, [sp]
-	b	.Lclosure_epilogue_vfp
-.Lretint_vfp:
-	ldr	r0, [sp]
-	b	.Lclosure_epilogue_vfp
-.Lretlonglong_vfp:
-	ldmia	sp, {r0, r1}
-	b	.Lclosure_epilogue_vfp
-.Lretfloat_struct_vfp:
-	fldmiad	sp, {d0-d1}
-	b	.Lclosure_epilogue_vfp
-.Lretdouble_struct_vfp:
-	fldmiad	sp, {d0-d3}
-	b	.Lclosure_epilogue_vfp
-	UNWIND .fnend
+	@ Load values returned in registers.
+	add	r2, sp, #8+64			@ load respp
+	adr	r3, CNAME(ffi_closure_ret)
+	add	pc, r3, r0, lsl #3
+	cfi_endproc
+	UNWIND	.fnend
 ARM_FUNC_END(ffi_closure_VFP)
-#endif
+
+/* Load values returned in registers for both closure entry points.
+   Note that we use LDM with SP in the register set.  This is deprecated
+   by ARM, but not yet unpredictable.  */
+
+ARM_FUNC_START(ffi_closure_ret, 0)
+	cfi_startproc
+	cfi_rel_offset(sp, 0)
+	cfi_rel_offset(lr, 4)
+0:
+E ARM_TYPE_VFP_S
+	ldc	p10, cr0, [r2]			@ vldr s0, [r2]
+	ldm	sp, {sp,pc}
+E ARM_TYPE_VFP_D
+	ldc	p11, cr0, [r2]			@ vldr d0, [r2]
+	ldm	sp, {sp,pc}
+E ARM_TYPE_VFP_N
+	ldc	p11, cr0, [r2], {8}		@ vldm r2, {d0-d3}
+	ldm	sp, {sp,pc}
+E ARM_TYPE_INT64
+	ldr	r1, [r2, #4]
+	nop
+E ARM_TYPE_INT
+	ldr	r0, [r2]
+	ldm	sp, {sp,pc}
+E ARM_TYPE_VOID
+	ldm	sp, {sp,pc}
+	nop
+E ARM_TYPE_STRUCT
+	ldm	sp, {sp,pc}
+	cfi_endproc
+ARM_FUNC_END(ffi_closure_ret)
+
+#if FFI_EXEC_TRAMPOLINE_TABLE
+
+/* ??? The iOS support should be updated.  The first insn used to
+   be STMFD, but that's been moved into ffi_closure_SYSV.  If the
+   writable page is put after this one we can make use of the
+   pc+8 feature of the architecture.  We can also reduce the size
+   of the thunk to 8 and pack more of these into the page.
+
+   In the meantime, simply replace the STMFD with a NOP so as to
+   keep all the magic numbers the same within ffi.c.  */
+
+	.align	12
+ARM_FUNC_START(ffi_closure_trampoline_table_page)
+.rept	4096 / 12
+	nop
+	ldr	ip, [pc, #-4092]
+	ldr	pc, [pc, #-4092]
+.endr
+
+#else
 
 ARM_FUNC_START(ffi_arm_trampoline, 1)
-	stmfd sp!, {r0-r3}
-	ldr r0, [pc]
-	ldr pc, [pc]
+0:	adr	ip, 0b
+	ldr	pc, 1f
+1:	.long	0
 ARM_FUNC_END(ffi_arm_trampoline)
+
+#endif /* FFI_EXEC_TRAMPOLINE_TABLE */
 
 #if defined __ELF__ && defined __linux__
 	.section	.note.GNU-stack,"",%progbits
