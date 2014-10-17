@@ -34,7 +34,7 @@
 #include <stdlib.h>
 
 /* Forward declares. */
-static int vfp_type_p (ffi_type *);
+static int vfp_type_p (const ffi_type *);
 static void layout_vfp_args (ffi_cif *);
 
 int ffi_prep_args_SYSV (char *stack, extended_cif *ecif, float *vfp_space);
@@ -141,7 +141,6 @@ ffi_prep_args_VFP (char *stack, extended_cif * ecif, float *vfp_space)
   register ffi_type **p_arg;
   char stack_used = 0;
   char done_with_regs = 0;
-  char is_vfp_type;
 
   /* Make sure we are using FFI_VFP.  */
   FFI_ASSERT (ecif->cif->abi == FFI_VFP);
@@ -164,7 +163,7 @@ ffi_prep_args_VFP (char *stack, extended_cif * ecif, float *vfp_space)
   for (i = ecif->cif->nargs, p_arg = ecif->cif->arg_types;
        (i != 0); i--, p_arg++, p_argv++)
     {
-      is_vfp_type = vfp_type_p (*p_arg);
+      int is_vfp_type = vfp_type_p (*p_arg);
 
       /* Allocated in VFP registers. */
       if (vi < ecif->cif->vfp_nargs && is_vfp_type)
@@ -214,7 +213,6 @@ ffi_prep_args_VFP (char *stack, extended_cif * ecif, float *vfp_space)
 ffi_status
 ffi_prep_cif_machdep (ffi_cif * cif)
 {
-  int type_code;
   /* Round the stack up to a multiple of 8 bytes.  This isn't needed
      everywhere, but it is on some platforms, and it doesn't harm anything
      when it isn't needed.  */
@@ -235,13 +233,25 @@ ffi_prep_cif_machdep (ffi_cif * cif)
       break;
 
     case FFI_TYPE_STRUCT:
-      if (cif->abi == FFI_VFP && (type_code = vfp_type_p (cif->rtype)) != 0)
+      if (cif->abi == FFI_VFP)
 	{
-	  /* A Composite Type passed in VFP registers, either
-	     FFI_TYPE_STRUCT_VFP_FLOAT or FFI_TYPE_STRUCT_VFP_DOUBLE. */
-	  cif->flags = (unsigned) type_code;
+	  int h = vfp_type_p (cif->rtype);
+	  if (h)
+	    {
+	      int ele_count = h >> 8;
+	      int type_code = h & 0xff;
+	      if (ele_count > 1)
+		{
+		  if (type_code == FFI_TYPE_FLOAT)
+		    type_code = FFI_TYPE_STRUCT_VFP_FLOAT;
+		  else
+		    type_code = FFI_TYPE_STRUCT_VFP_DOUBLE;
+		}
+	      cif->flags = type_code;
+	      break;
+	    }
 	}
-      else if (cif->rtype->size <= 4)
+      if (cif->rtype->size <= 4)
 	{
 	  /* A Composite Type not larger than 4 bytes is returned in r0.  */
 	  cif->flags = (unsigned) FFI_TYPE_INT;
@@ -446,7 +456,6 @@ ffi_prep_incoming_args_VFP (char *stack, void **rvalue,
   register ffi_type **p_arg;
   char done_with_regs = 0;
   char stack_used = 0;
-  char is_vfp_type;
 
   FFI_ASSERT (cif->abi == FFI_VFP);
   regp = stack;
@@ -462,8 +471,8 @@ ffi_prep_incoming_args_VFP (char *stack, void **rvalue,
 
   for (i = cif->nargs, p_arg = cif->arg_types; (i != 0); i--, p_arg++)
     {
+      int is_vfp_type = vfp_type_p (*p_arg);
       size_t z;
-      is_vfp_type = vfp_type_p (*p_arg);
 
       if (vi < cif->vfp_nargs && is_vfp_type)
 	{
@@ -820,81 +829,150 @@ ffi_prep_closure_loc (ffi_closure * closure,
 
 /* Below are routines for VFP hard-float support. */
 
+/* A subroutine of vfp_type_p.  Given a structure type, return the type code
+   of the first non-structure element.  Recurse for structure elements.
+   Return -1 if the structure is in fact empty, i.e. no nested elements.  */
+
 static int
-rec_vfp_type_p (ffi_type * t, int *elt, int *elnum)
+is_hfa0 (const ffi_type *ty)
 {
-  switch (t->type)
+  ffi_type **elements = ty->elements;
+  int i, ret = -1;
+
+  if (elements != NULL)
+    for (i = 0; elements[i]; ++i)
+      {
+        ret = elements[i]->type;
+        if (ret == FFI_TYPE_STRUCT)
+          {
+            ret = is_hfa0 (elements[i]);
+            if (ret < 0)
+              continue;
+          }
+        break;
+      }
+
+  return ret;
+}
+
+/* A subroutine of vfp_type_p.  Given a structure type, return true if all
+   of the non-structure elements are the same as CANDIDATE.  */
+
+static int
+is_hfa1 (const ffi_type *ty, int candidate)
+{
+  ffi_type **elements = ty->elements;
+  int i;
+
+  if (elements != NULL)
+    for (i = 0; elements[i]; ++i)
+      {
+        int t = elements[i]->type;
+        if (t == FFI_TYPE_STRUCT)
+          {
+            if (!is_hfa1 (elements[i], candidate))
+              return 0;
+          }
+        else if (t != candidate)
+          return 0;
+      }
+
+  return 1;
+}
+
+/* Determine if TY is an homogenous floating point aggregate (HFA).
+   That is, a structure consisting of 1 to 4 members of all the same type,
+   where that type is a floating point scalar.
+
+   Returns non-zero iff TY is an HFA.  The result is an encoded value where
+   bits 0-7 contain the type code, and bits 8-10 contain the element count.  */
+
+static int
+vfp_type_p (const ffi_type *ty)
+{
+  ffi_type **elements;
+  int candidate, i;
+  size_t size, ele_count;
+
+  /* Quickest tests first.  */
+  switch (ty->type)
     {
+    default:
+      return 0;
     case FFI_TYPE_FLOAT:
     case FFI_TYPE_DOUBLE:
-      *elt = (int) t->type;
-      *elnum = 1;
-      return 1;
-
-    case FFI_TYPE_STRUCT_VFP_FLOAT:
-      *elt = FFI_TYPE_FLOAT;
-      *elnum = t->size / sizeof (float);
-      return 1;
-
-    case FFI_TYPE_STRUCT_VFP_DOUBLE:
-      *elt = FFI_TYPE_DOUBLE;
-      *elnum = t->size / sizeof (double);
-      return 1;
-
-    case FFI_TYPE_STRUCT:;
-      {
-	int base_elt = 0, total_elnum = 0;
-	ffi_type **el = t->elements;
-	while (*el)
-	  {
-	    int el_elt = 0, el_elnum = 0;
-	    if (!rec_vfp_type_p (*el, &el_elt, &el_elnum)
-		|| (base_elt && base_elt != el_elt)
-		|| total_elnum + el_elnum > 4)
-	      return 0;
-	    base_elt = el_elt;
-	    total_elnum += el_elnum;
-	    el++;
-	  }
-	*elnum = total_elnum;
-	*elt = base_elt;
-	return 1;
-      }
-    default:;
+      return 0x100 + ty->type;
+    case FFI_TYPE_STRUCT:
+      break;
     }
-  return 0;
-}
 
-static int
-vfp_type_p (ffi_type * t)
-{
-  int elt, elnum;
-  if (rec_vfp_type_p (t, &elt, &elnum))
+  /* No HFA types are smaller than 4 bytes, or larger than 32 bytes.  */
+  size = ty->size;
+  if (size < 4 || size > 32)
+    return 0;
+
+  /* Find the type of the first non-structure member.  */
+  elements = ty->elements;
+  candidate = elements[0]->type;
+  if (candidate == FFI_TYPE_STRUCT)
     {
-      if (t->type == FFI_TYPE_STRUCT)
-	{
-	  if (elnum == 1)
-	    t->type = elt;
-	  else
-	    t->type = (elt == FFI_TYPE_FLOAT
-		       ? FFI_TYPE_STRUCT_VFP_FLOAT
-		       : FFI_TYPE_STRUCT_VFP_DOUBLE);
-	}
-      return (int) t->type;
+      for (i = 0; ; ++i)
+        {
+          candidate = is_hfa0 (elements[i]);
+          if (candidate >= 0)
+            break;
+        }
     }
-  return 0;
+
+  /* If the first member is not a floating point type, it's not an HFA.
+     Also quickly re-check the size of the structure.  */
+  switch (candidate)
+    {
+    case FFI_TYPE_FLOAT:
+      ele_count = size / sizeof(float);
+      if (size != ele_count * sizeof(float))
+        return 0;
+      break;
+    case FFI_TYPE_DOUBLE:
+      ele_count = size / sizeof(double);
+      if (size != ele_count * sizeof(double))
+        return 0;
+      break;
+    default:
+      return 0;
+    }
+  if (ele_count > 4)
+    return 0;
+
+  /* Finally, make sure that all scalar elements are the same type.  */
+  for (i = 0; elements[i]; ++i)
+    {
+      if (elements[i]->type == FFI_TYPE_STRUCT)
+        {
+          if (!is_hfa1 (elements[i], candidate))
+            return 0;
+        }
+      else if (elements[i]->type != candidate)
+        return 0;
+    }
+
+  /* All tests succeeded.  Encode the result.  */
+  return (ele_count << 8) | candidate;
 }
 
 static int
-place_vfp_arg (ffi_cif * cif, ffi_type * t)
+place_vfp_arg (ffi_cif *cif, int h)
 {
-  short reg = cif->vfp_reg_free;
-  int nregs = t->size / sizeof (float);
-  int align = ((t->type == FFI_TYPE_STRUCT_VFP_FLOAT
-		|| t->type == FFI_TYPE_FLOAT) ? 1 : 2);
+  unsigned short reg = cif->vfp_reg_free;
+  int align = 1, nregs = h >> 8;
+
+  if ((h & 0xff) == FFI_TYPE_DOUBLE)
+    align = 2, nregs *= 2;
+
   /* Align register number. */
   if ((reg & 1) && align == 2)
     reg++;
+
   while (reg + nregs <= 16)
     {
       int s, new_used = 0;
@@ -940,10 +1018,8 @@ layout_vfp_args (ffi_cif * cif)
 
   for (i = 0; i < cif->nargs; i++)
     {
-      ffi_type *t = cif->arg_types[i];
-      if (vfp_type_p (t) && place_vfp_arg (cif, t) == 1)
-	{
-	  break;
-	}
+      int h = vfp_type_p (cif->arg_types[i]);
+      if (h && place_vfp_arg (cif, h) == 1)
+	break;
     }
 }
