@@ -53,7 +53,7 @@ typedef enum ffi_abi {
 
 #define FFI_EXTRA_CIF_FIELDS			\
   int vfp_used;					\
-  short vfp_reg_free, vfp_nargs;		\
+  unsigned short vfp_reg_free, vfp_nargs;	\
   signed char vfp_args[16]			\
 
 /* Internally used. */
