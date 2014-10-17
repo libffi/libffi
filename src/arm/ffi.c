@@ -364,157 +364,87 @@ ffi_call (ffi_cif * cif, void (*fn) (void), void *rvalue, void **avalue)
       ffi_prep_args_SYSV (cif, flags, new_rvalue, avalue, stack);
       ffi_call_SYSV (stack, frame, fn);
     }
- 
+
   if (rvalue && rvalue != new_rvalue)
     memcpy (rvalue, new_rvalue, rtype->size);
 }
 
-/** private members **/
-
-static void ffi_prep_incoming_args_SYSV (char *stack, void **ret,
-					 void **args, ffi_cif *cif,
-					 float *vfp_stack);
-
-static void ffi_prep_incoming_args_VFP (char *stack, void **ret,
-					void **args, ffi_cif *cif,
-					float *vfp_stack);
-
-void ffi_closure_SYSV (ffi_closure *);
-
-void ffi_closure_VFP (ffi_closure *);
-
-/* This function is jumped to by the trampoline */
-
-unsigned int FFI_HIDDEN
-ffi_closure_inner (ffi_closure *closure,
-		   void **respp, void *args, void *vfp_args)
+static void *
+ffi_prep_incoming_args_SYSV (ffi_cif *cif, void *rvalue,
+			     char *argp, void **avalue)
 {
-  // our various things...
-  ffi_cif *cif;
-  void **arg_area;
+  ffi_type **arg_types = cif->arg_types;
+  int i, n;
 
-  cif = closure->cif;
-  arg_area = (void **) alloca (cif->nargs * sizeof (void *));
-
-  /* this call will initialize ARG_AREA, such that each
-   * element in that array points to the corresponding
-   * value on the stack; and if the function returns
-   * a structure, it will re-set RESP to point to the
-   * structure return address.  */
-  if (cif->abi == FFI_VFP)
-    ffi_prep_incoming_args_VFP (args, respp, arg_area, cif, vfp_args);
-  else
-    ffi_prep_incoming_args_SYSV (args, respp, arg_area, cif, vfp_args);
-
-  (closure->fun) (cif, *respp, arg_area, closure->user_data);
-
-  return cif->flags;
-}
-
-/*@-exportheader@*/
-static void
-ffi_prep_incoming_args_SYSV (char *stack, void **rvalue,
-			     void **avalue, ffi_cif *cif,
-			     /* Used only under VFP hard-float ABI. */
-			     float *vfp_stack)
-/*@=exportheader@*/
-{
-  register unsigned int i;
-  register void **p_argv;
-  register char *argp;
-  register ffi_type **p_arg;
-
-  argp = stack;
-
-  if (cif->flags == FFI_TYPE_STRUCT)
+  if (cif->flags == ARM_TYPE_STRUCT)
     {
-      *rvalue = *(void **) argp;
+      rvalue = *(void **) argp;
       argp += 4;
     }
 
-  p_argv = avalue;
-
-  for (i = cif->nargs, p_arg = cif->arg_types; (i != 0); i--, p_arg++)
+  for (i = 0, n = cif->nargs; i < n; i++)
     {
-      size_t z;
+      ffi_type *ty = arg_types[i];
+      size_t z = ty->size;
 
-      argp = ffi_align (*p_arg, argp);
-
-      z = (*p_arg)->size;
-
-      /* because we're little endian, this is what it turns into.   */
-
-      *p_argv = (void *) argp;
-
-      p_argv++;
+      argp = ffi_align (ty, argp);
+      avalue[i] = (void *) argp;
       argp += z;
     }
 
-  return;
+  return rvalue;
 }
 
-/*@-exportheader@*/
-static void
-ffi_prep_incoming_args_VFP (char *stack, void **rvalue,
-			    void **avalue, ffi_cif * cif,
-			    /* Used only under VFP hard-float ABI. */
-			    float *vfp_stack)
-/*@=exportheader@*/
+static void *
+ffi_prep_incoming_args_VFP (ffi_cif *cif, void *rvalue, char *stack,
+			    char *vfp_space, void **avalue)
 {
-  register unsigned int i, vi = 0;
-  register void **p_argv;
-  register char *argp, *regp, *eo_regp;
-  register ffi_type **p_arg;
+  ffi_type **arg_types = cif->arg_types;
+  int i, n, vi = 0;
+  char *argp, *regp, *eo_regp;
   char done_with_regs = 0;
   char stack_used = 0;
 
-  FFI_ASSERT (cif->abi == FFI_VFP);
   regp = stack;
   eo_regp = argp = regp + 16;
 
-  if (cif->flags == FFI_TYPE_STRUCT)
+  if (cif->flags == ARM_TYPE_STRUCT)
     {
-      *rvalue = *(void **) regp;
+      rvalue = *(void **) regp;
       regp += 4;
     }
 
-  p_argv = avalue;
-
-  for (i = cif->nargs, p_arg = cif->arg_types; (i != 0); i--, p_arg++)
+  for (i = 0, n = cif->nargs; i < n; i++)
     {
-      int is_vfp_type = vfp_type_p (*p_arg);
-      size_t z;
+      ffi_type *ty = arg_types[i];
+      int is_vfp_type = vfp_type_p (ty);
+      size_t z = ty->size;
 
       if (vi < cif->vfp_nargs && is_vfp_type)
 	{
-	  *p_argv++ = (void *) (vfp_stack + cif->vfp_args[vi++]);
+	  avalue[i] = vfp_space + cif->vfp_args[vi++] * 4;
 	  continue;
 	}
       else if (!done_with_regs && !is_vfp_type)
 	{
-	  char *tregp = ffi_align (*p_arg, regp);
+	  char *tregp = ffi_align (ty, regp);
 
-	  z = (*p_arg)->size;
 	  z = (z < 4) ? 4 : z;	// pad
 
-	  /* if the arguments either fits into the registers or uses registers
-	   * and stack, while we haven't read other things from the stack */
+	  /* If the arguments either fits into the registers or uses registers
+	     and stack, while we haven't read other things from the stack */
 	  if (tregp + z <= eo_regp || !stack_used)
 	    {
-	      /* because we're little endian, this is what it turns into. */
-	      *p_argv = (void *) tregp;
-
-	      p_argv++;
+	      /* Because we're little endian, this is what it turns into.  */
+	      avalue[i] = (void *) tregp;
 	      regp = tregp + z;
-	      // if we read past the last core register, make sure we have not read
-	      // from the stack before and continue reading after regp
+
+	      /* If we read past the last core register, make sure we
+		 have not read from the stack before and continue
+		 reading after regp.  */
 	      if (regp > eo_regp)
 		{
-		  if (stack_used)
-		    {
-		      abort ();	// we should never read past the end of the register
-		      // are if the stack is already in use
-		    }
+		  FFI_ASSERT (!stack_used);
 		  argp = regp;
 		}
 	      if (regp >= eo_regp)
@@ -525,26 +455,41 @@ ffi_prep_incoming_args_VFP (char *stack, void **rvalue,
 	      continue;
 	    }
 	}
+
       stack_used = 1;
-
-      argp = ffi_align (*p_arg, argp);
-
-      z = (*p_arg)->size;
-
-      /* because we're little endian, this is what it turns into.   */
-
-      *p_argv = (void *) argp;
-
-      p_argv++;
+      argp = ffi_align (ty, argp);
+      avalue[i] = (void *) argp;
       argp += z;
     }
 
-  return;
+  return rvalue;
 }
 
-/* How to make a trampoline.  */
+int FFI_HIDDEN
+ffi_closure_inner_SYSV (ffi_closure *closure, void *rvalue, char *argp)
+{
+  ffi_cif *cif = closure->cif;
+  void **avalue = (void **) alloca (cif->nargs * sizeof (void *));
 
-extern unsigned int ffi_arm_trampoline[3];
+  rvalue = ffi_prep_incoming_args_SYSV (cif, rvalue, argp, avalue);
+  closure->fun (cif, rvalue, avalue, closure->user_data);
+  return cif->flags;
+}
+
+int FFI_HIDDEN
+ffi_closure_inner_VFP (ffi_closure *closure, void *rvalue,
+		       char *argp, char *vfp_space)
+{
+  ffi_cif *cif = closure->cif;
+  void **avalue = (void **) alloca (cif->nargs * sizeof (void *));
+
+  rvalue = ffi_prep_incoming_args_VFP (cif, rvalue, argp, vfp_space, avalue);
+  closure->fun (cif, rvalue, avalue, closure->user_data);
+  return cif->flags;
+}
+
+void ffi_closure_SYSV (void) FFI_HIDDEN;
+void ffi_closure_VFP (void) FFI_HIDDEN;
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
@@ -788,19 +733,7 @@ ffi_closure_free (void *ptr)
 
 #else
 
-#define FFI_INIT_TRAMPOLINE(TRAMP,FUN,CTX)				\
-({ unsigned char *__tramp = (unsigned char*)(TRAMP);			\
-   unsigned int  __fun = (unsigned int)(FUN);				\
-   unsigned int  __ctx = (unsigned int)(CTX);				\
-   unsigned char *insns = (unsigned char *)(CTX);                       \
-   memcpy (__tramp, ffi_arm_trampoline, sizeof ffi_arm_trampoline);     \
-   *(unsigned int*) &__tramp[12] = __ctx;				\
-   *(unsigned int*) &__tramp[16] = __fun;				\
-   __clear_cache((&__tramp[0]), (&__tramp[19])); /* Clear data mapping.  */ \
-   __clear_cache(insns, insns + 3 * sizeof (unsigned int));             \
-                                                 /* Clear instruction   \
-                                                    mapping.  */        \
- })
+extern unsigned int ffi_arm_trampoline[2] FFI_HIDDEN;
 
 #endif
 
@@ -812,15 +745,15 @@ ffi_prep_closure_loc (ffi_closure * closure,
 		      void (*fun) (ffi_cif *, void *, void **, void *),
 		      void *user_data, void *codeloc)
 {
-  void (*closure_func) (ffi_closure *) = NULL;
+  void (*closure_func) (void) = ffi_closure_SYSV;
 
-  if (cif->abi == FFI_SYSV)
-    closure_func = &ffi_closure_SYSV;
-#ifdef __ARM_EABI__
-  else if (cif->abi == FFI_VFP)
-    closure_func = &ffi_closure_VFP;
-#endif
-  else
+  if (cif->abi == FFI_VFP)
+    {
+      /* We only need take the vfp path if there are vfp arguments.  */
+      if (cif->vfp_used)
+	closure_func = ffi_closure_VFP;
+    }
+  else if (cif->abi != FFI_SYSV)
     return FFI_BAD_ABI;
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
@@ -828,12 +761,15 @@ ffi_prep_closure_loc (ffi_closure * closure,
   config[0] = closure;
   config[1] = closure_func;
 #else
-  FFI_INIT_TRAMPOLINE (&closure->tramp[0], closure_func, codeloc);
+  memcpy (closure->tramp, ffi_arm_trampoline, 8);
+  __clear_cache(closure->tramp, closure->tramp + 8);	/* clear data map */
+  __clear_cache(codeloc, codeloc + 8);			/* clear insn map */
+  *(void (**)(void))(closure->tramp + 8) = closure_func;
 #endif
 
   closure->cif = cif;
-  closure->user_data = user_data;
   closure->fun = fun;
+  closure->user_data = user_data;
 
   return FFI_OK;
 }
