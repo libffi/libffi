@@ -45,6 +45,20 @@ extern void ffi_call_osf(void *, unsigned long, unsigned, void *, void (*)(void)
   FFI_HIDDEN;
 extern void ffi_closure_osf(void) FFI_HIDDEN;
 
+/* Promote a float value to its in-register double representation.
+   Unlike actually casting to double, this does not trap on NaN.  */
+static inline UINT64 lds(void *ptr)
+{
+  UINT64 ret;
+  asm("lds %0,%1" : "=f"(ret) : "m"(*(UINT32 *)ptr));
+  return ret;
+}
+
+/* And the reverse.  */
+static inline void sts(void *ptr, UINT64 val)
+{
+  asm("sts %1,%0" : "=m"(*(UINT32 *)ptr) : "f"(val));
+}
 
 ffi_status
 ffi_prep_cif_machdep(ffi_cif *cif)
@@ -127,71 +141,67 @@ ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
   avn = cif->nargs;
   arg_types = cif->arg_types;
 
-  while (i < avn)
+  for (i = 0, avn = cif->nargs; i < avn; i++)
     {
-      size_t size = (*arg_types)->size;
+      ffi_type *ty = arg_types[i];
+      void *valp = avalue[i];
+      unsigned long val;
+      size_t size;
 
-      switch ((*arg_types)->type)
+      switch (ty->type)
 	{
 	case FFI_TYPE_SINT8:
-	  *(SINT64 *) argp = *(SINT8 *)(* avalue);
+	  val = *(SINT8 *)valp;
 	  break;
 		  
 	case FFI_TYPE_UINT8:
-	  *(SINT64 *) argp = *(UINT8 *)(* avalue);
+	  val = *(UINT8 *)valp;
 	  break;
 		  
 	case FFI_TYPE_SINT16:
-	  *(SINT64 *) argp = *(SINT16 *)(* avalue);
+	  val = *(SINT16 *)valp;
 	  break;
 		  
 	case FFI_TYPE_UINT16:
-	  *(SINT64 *) argp = *(UINT16 *)(* avalue);
+	  val = *(UINT16 *)valp;
 	  break;
 		  
 	case FFI_TYPE_SINT32:
 	case FFI_TYPE_UINT32:
 	  /* Note that unsigned 32-bit quantities are sign extended.  */
-	  *(SINT64 *) argp = *(SINT32 *)(* avalue);
+	  val = *(SINT32 *)valp;
 	  break;
-		  
+
 	case FFI_TYPE_SINT64:
 	case FFI_TYPE_UINT64:
 	case FFI_TYPE_POINTER:
-	  *(UINT64 *) argp = *(UINT64 *)(* avalue);
+	case FFI_TYPE_DOUBLE:
+	  val = *(UINT64 *)valp;
+	  break;
+
+	case FFI_TYPE_LONGDOUBLE:
+	  /* Note that 128-bit long double is passed by reference.  */
+	  val = (unsigned long)valp;
 	  break;
 
 	case FFI_TYPE_FLOAT:
 	  if (argp - stack < 6)
-	    {
-	      /* Note the conversion -- all the fp regs are loaded as
-		 doubles.  The in-register format is the same.  */
-	      *(double *) argp = *(float *)(* avalue);
-	    }
+	    val = lds(valp);
 	  else
-	    *(float *) argp = *(float *)(* avalue);
-	  break;
-
-	case FFI_TYPE_DOUBLE:
-	  *(double *) argp = *(double *)(* avalue);
-	  break;
-
-	case FFI_TYPE_LONGDOUBLE:
-	  /* 128-bit long double is passed by reference.  */
-	  *(long double **) argp = (long double *)(* avalue);
-	  size = sizeof (long double *);
+	    val = *(UINT32 *)valp;
 	  break;
 
 	case FFI_TYPE_STRUCT:
-	  memcpy(argp, *avalue, (*arg_types)->size);
-	  break;
+	  size = ty->size;
+	  memcpy(argp, valp, size);
+	  argp += ALIGN(size, FFI_SIZEOF_ARG) / FFI_SIZEOF_ARG;
+	  continue;
 
 	default:
-	  FFI_ASSERT(0);
+	  abort();
 	}
 
-      argp += ALIGN(size, FFI_SIZEOF_ARG) / FFI_SIZEOF_ARG;
-      i++, arg_types++, avalue++;
+      *argp++ = val;
     }
 
   flags = (flags >> ALPHA_ST_SHIFT) & 0xff;
@@ -255,14 +265,13 @@ ffi_closure_osf_inner(ffi_closure *closure, void *rvalue, unsigned long *argp)
       argn = 1;
     }
 
-  i = 0;
-  avn = cif->nargs;
   arg_types = cif->arg_types;
   
   /* Grab the addresses of the arguments from the stack frame.  */
-  while (i < avn)
+  for (i = 0, avn = cif->nargs; i < avn; i++)
     {
       size_t size = arg_types[i]->size;
+      void *valp = &argp[argn];
 
       switch (arg_types[i]->type)
 	{
@@ -276,28 +285,26 @@ ffi_closure_osf_inner(ffi_closure *closure, void *rvalue, unsigned long *argp)
 	case FFI_TYPE_UINT64:
 	case FFI_TYPE_POINTER:
 	case FFI_TYPE_STRUCT:
-	  avalue[i] = &argp[argn];
 	  break;
 
 	case FFI_TYPE_FLOAT:
+	  /* Floats coming from registers need conversion from double
+	     back to float format.  */
 	  if (argn < 6)
 	    {
-	      /* Floats coming from registers need conversion from double
-	         back to float format.  */
-	      *(float *)&argp[argn - 6] = *(double *)&argp[argn - 6];
-	      avalue[i] = &argp[argn - 6];
+	      valp = &argp[argn - 6];
+	      sts(valp, argp[argn - 6]);
 	    }
-	  else
-	    avalue[i] = &argp[argn];
 	  break;
 
 	case FFI_TYPE_DOUBLE:
-	  avalue[i] = &argp[argn - (argn < 6 ? 6 : 0)];
+	  if (argn < 6)
+	    valp = &argp[argn - 6];
 	  break;
 
 	case FFI_TYPE_LONGDOUBLE:
 	  /* 128-bit long double is passed by reference.  */
-	  avalue[i] = (long double *) argp[argn];
+	  valp = (long double *) argp[argn];
 	  size = sizeof (long double *);
 	  break;
 
@@ -305,8 +312,8 @@ ffi_closure_osf_inner(ffi_closure *closure, void *rvalue, unsigned long *argp)
 	  abort ();
 	}
 
+      avalue[i] = valp;
       argn += ALIGN(size, FFI_SIZEOF_ARG) / FFI_SIZEOF_ARG;
-      i++;
     }
 
   /* Invoke the closure.  */
