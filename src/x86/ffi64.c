@@ -32,6 +32,7 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 #ifdef __x86_64__
 
@@ -62,10 +63,12 @@ struct register_args
   /* Registers for argument passing.  */
   UINT64 gpr[MAX_GPR_REGS];
   union big_int_union sse[MAX_SSE_REGS];
+  UINT64 rax;	/* ssecount */
+  UINT64 r10;	/* static chain */
 };
 
 extern void ffi_call_unix64 (void *args, unsigned long bytes, unsigned flags,
-			     void *raddr, void (*fnaddr)(void), unsigned ssecount);
+			     void *raddr, void (*fnaddr)(void)) FFI_HIDDEN;
 
 /* All reference to register classes here is identical to the code in
    gcc/config/i386/i386.c. Do *not* change one without the other.  */
@@ -358,6 +361,9 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   enum x86_64_reg_class classes[MAX_CLASSES];
   size_t bytes, n;
 
+  if (cif->abi != FFI_UNIX64)
+    return FFI_BAD_ABI;
+
   gprcount = ssecount = 0;
 
   flags = cif->rtype->type;
@@ -419,8 +425,9 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   return FFI_OK;
 }
 
-void
-ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+static void
+ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
+	      void **avalue, void *closure)
 {
   enum x86_64_reg_class classes[MAX_CLASSES];
   char *stack, *argp;
@@ -444,6 +451,8 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
   stack = alloca (sizeof (struct register_args) + cif->bytes + 4*8);
   reg_args = (struct register_args *) stack;
   argp = stack + sizeof (struct register_args);
+
+  reg_args->r10 = (uintptr_t) closure;
 
   gprcount = ssecount = 0;
 
@@ -521,13 +530,27 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 	    }
 	}
     }
+  reg_args->rax = ssecount;
 
   ffi_call_unix64 (stack, cif->bytes + sizeof (struct register_args),
-		   cif->flags, rvalue, fn, ssecount);
+		   cif->flags, rvalue, fn);
 }
 
+void
+ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+{
+  ffi_call_int (cif, fn, rvalue, avalue, NULL);
+}
 
-extern void ffi_closure_unix64(void);
+void
+ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
+	     void **avalue, void *closure)
+{
+  ffi_call_int (cif, fn, rvalue, avalue, closure);
+}
+
+extern void ffi_closure_unix64(void) FFI_HIDDEN;
+extern void ffi_closure_unix64_sse(void) FFI_HIDDEN;
 
 ffi_status
 ffi_prep_closure_loc (ffi_closure* closure,
@@ -536,29 +559,26 @@ ffi_prep_closure_loc (ffi_closure* closure,
 		      void *user_data,
 		      void *codeloc)
 {
-  volatile unsigned short *tramp;
+  static const unsigned char trampoline[16] = {
+    /* leaq  -0x7(%rip),%r10   # 0x0  */
+    0x4c, 0x8d, 0x15, 0xf9, 0xff, 0xff, 0xff,
+    /* jmpq  *0x3(%rip)        # 0x10 */
+    0xff, 0x25, 0x03, 0x00, 0x00, 0x00,
+    /* nopl  (%rax) */
+    0x0f, 0x1f, 0x00
+  };
+  void (*dest)(void);
 
-  /* Sanity check on the cif ABI.  */
-  {
-    int abi = cif->abi;
-    if (UNLIKELY (! (abi > FFI_FIRST_ABI && abi < FFI_LAST_ABI)))
-      return FFI_BAD_ABI;
-  }
+  if (cif->abi != FFI_UNIX64)
+    return FFI_BAD_ABI;
 
-  tramp = (volatile unsigned short *) &closure->tramp[0];
+  if (cif->flags & (1 << 11))
+    dest = ffi_closure_unix64_sse;
+  else
+    dest = ffi_closure_unix64;
 
-  tramp[0] = 0xbb49;		/* mov <code>, %r11	*/
-  *((unsigned long long * volatile) &tramp[1])
-    = (unsigned long) ffi_closure_unix64;
-  tramp[5] = 0xba49;		/* mov <data>, %r10	*/
-  *((unsigned long long * volatile) &tramp[6])
-    = (unsigned long) codeloc;
-
-  /* Set the carry bit iff the function uses any sse registers.
-     This is clc or stc, together with the first byte of the jmp.  */
-  tramp[10] = cif->flags & (1 << 11) ? 0x49f9 : 0x49f8;
-
-  tramp[11] = 0xe3ff;			/* jmp *%r11    */
+  memcpy (closure->tramp, trampoline, sizeof(trampoline));
+  *(UINT64 *)(closure->tramp + 16) = (uintptr_t)dest;
 
   closure->cif = cif;
   closure->fun = fun;
@@ -567,18 +587,20 @@ ffi_prep_closure_loc (ffi_closure* closure,
   return FFI_OK;
 }
 
-int
-ffi_closure_unix64_inner(ffi_closure *closure, void *rvalue,
-			 struct register_args *reg_args, char *argp)
+int FFI_HIDDEN
+ffi_closure_unix64_inner(ffi_cif *cif,
+			 void (*fun)(ffi_cif*, void*, void**, void*),
+			 void *user_data,
+			 void *rvalue,
+			 struct register_args *reg_args,
+			 char *argp)
 {
-  ffi_cif *cif;
   void **avalue;
   ffi_type **arg_types;
   long i, avn;
   int gprcount, ssecount, ngpr, nsse;
   int ret;
 
-  cif = closure->cif;
   avalue = alloca(cif->nargs * sizeof(void *));
   gprcount = ssecount = 0;
 
@@ -667,10 +689,29 @@ ffi_closure_unix64_inner(ffi_closure *closure, void *rvalue,
     }
 
   /* Invoke the closure.  */
-  closure->fun (cif, rvalue, avalue, closure->user_data);
+  fun (cif, rvalue, avalue, user_data);
 
   /* Tell assembly how to perform return type promotions.  */
   return ret;
+}
+
+extern void ffi_go_closure_unix64(void) FFI_HIDDEN;
+extern void ffi_go_closure_unix64_sse(void) FFI_HIDDEN;
+
+ffi_status
+ffi_prep_go_closure (ffi_go_closure* closure, ffi_cif* cif,
+		     void (*fun)(ffi_cif*, void*, void**, void*))
+{
+  if (cif->abi != FFI_UNIX64)
+    return FFI_BAD_ABI;
+
+  closure->tramp = (cif->flags & (1 << 11)
+		    ? ffi_go_closure_unix64_sse
+		    : ffi_go_closure_unix64);
+  closure->cif = cif;
+  closure->fun = fun;
+
+  return FFI_OK;
 }
 
 #endif /* __x86_64__ */
