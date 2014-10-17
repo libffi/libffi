@@ -40,30 +40,19 @@ static void layout_vfp_args (ffi_cif *);
 int ffi_prep_args_SYSV (char *stack, extended_cif *ecif, float *vfp_space);
 int ffi_prep_args_VFP (char *stack, extended_cif *ecif, float *vfp_space);
 
-static char *
-ffi_align (ffi_type **p_arg, char *argp)
+static void *
+ffi_align (ffi_type *ty, void *p)
 {
   /* Align if necessary */
-  register size_t alignment = (*p_arg)->alignment;
-  if (alignment < 4)
-    {
-      alignment = 4;
-    }
+  size_t alignment;
 #ifdef _WIN32_WCE
-  if (alignment > 4)
-    {
-      alignment = 4;
-    }
+  alignment = 4;
+#else
+  alignment = ty->alignment;
+  if (alignment < 4)
+    alignment = 4;
 #endif
-  if ((alignment - 1) & (unsigned) argp)
-    {
-      argp = (char *) ALIGN (argp, alignment);
-    }
-  if ((*p_arg)->type == FFI_TYPE_STRUCT)
-    {
-      argp = (char *) ALIGN (argp, 4);
-    }
-  return argp;
+  return (void *) ALIGN (p, alignment);
 }
 
 static size_t
@@ -148,7 +137,7 @@ ffi_prep_args_SYSV (char *stack, extended_cif *ecif, float *vfp_space)
   for (i = ecif->cif->nargs, p_arg = ecif->cif->arg_types;
        (i != 0); i--, p_arg++, p_argv++)
     {
-      argp = ffi_align (p_arg, argp);
+      argp = ffi_align (*p_arg, argp);
       argp += ffi_put_arg (p_arg, p_argv, argp);
     }
 
@@ -199,7 +188,7 @@ ffi_prep_args_VFP (char *stack, extended_cif * ecif, float *vfp_space)
       /* Try allocating in core registers. */
       else if (!done_with_regs && !is_vfp_type)
 	{
-	  char *tregp = ffi_align (p_arg, regp);
+	  char *tregp = ffi_align (*p_arg, regp);
 	  size_t size = (*p_arg)->size;
 	  size = (size < 4) ? 4 : size;	// pad
 	  /* Check if there is space left in the aligned register
@@ -226,7 +215,7 @@ ffi_prep_args_VFP (char *stack, extended_cif * ecif, float *vfp_space)
 	}
       /* Base case, arguments are passed on the stack */
       stack_used = 1;
-      argp = ffi_align (p_arg, argp);
+      argp = ffi_align (*p_arg, argp);
       argp += ffi_put_arg (p_arg, p_argv, argp);
     }
   /* Indicate the VFP registers used. */
@@ -440,7 +429,7 @@ ffi_prep_incoming_args_SYSV (char *stack, void **rvalue,
     {
       size_t z;
 
-      argp = ffi_align (p_arg, argp);
+      argp = ffi_align (*p_arg, argp);
 
       z = (*p_arg)->size;
 
@@ -495,7 +484,7 @@ ffi_prep_incoming_args_VFP (char *stack, void **rvalue,
 	}
       else if (!done_with_regs && !is_vfp_type)
 	{
-	  char *tregp = ffi_align (p_arg, regp);
+	  char *tregp = ffi_align (*p_arg, regp);
 
 	  z = (*p_arg)->size;
 	  z = (z < 4) ? 4 : z;	// pad
@@ -530,7 +519,7 @@ ffi_prep_incoming_args_VFP (char *stack, void **rvalue,
 	}
       stack_used = 1;
 
-      argp = ffi_align (p_arg, argp);
+      argp = ffi_align (*p_arg, argp);
 
       z = (*p_arg)->size;
 
