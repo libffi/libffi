@@ -56,58 +56,46 @@ ffi_align (ffi_type *ty, void *p)
 }
 
 static size_t
-ffi_put_arg (ffi_type **arg_type, void **arg, char *stack)
+ffi_put_arg (ffi_type *ty, void *src, void *dst)
 {
-  register char *argp = stack;
-  register ffi_type **p_arg = arg_type;
-  register void **p_argv = arg;
-  register size_t z = (*p_arg)->size;
+  size_t z = ty->size;
 
-  if (z < sizeof (int))
+  switch (ty->type)
     {
-      z = sizeof (int);
-      switch ((*p_arg)->type)
-	{
-	case FFI_TYPE_SINT8:
-	  *(signed int *) argp = (signed int) *(SINT8 *) (*p_argv);
-	  break;
+    case FFI_TYPE_SINT8:
+      *(UINT32 *)dst = *(SINT8 *)src;
+      break;
+    case FFI_TYPE_UINT8:
+      *(UINT32 *)dst = *(UINT8 *)src;
+      break;
+    case FFI_TYPE_SINT16:
+      *(UINT32 *)dst = *(SINT16 *)src;
+      break;
+    case FFI_TYPE_UINT16:
+      *(UINT32 *)dst = *(UINT16 *)src;
+      break;
 
-	case FFI_TYPE_UINT8:
-	  *(unsigned int *) argp = (unsigned int) *(UINT8 *) (*p_argv);
-	  break;
+    case FFI_TYPE_INT:
+    case FFI_TYPE_SINT32:
+    case FFI_TYPE_UINT32:
+    case FFI_TYPE_POINTER:
+    case FFI_TYPE_FLOAT:
+      *(UINT32 *)dst = *(UINT32 *)src;
+      break;
 
-	case FFI_TYPE_SINT16:
-	  *(signed int *) argp = (signed int) *(SINT16 *) (*p_argv);
-	  break;
+    case FFI_TYPE_SINT64:
+    case FFI_TYPE_UINT64:
+    case FFI_TYPE_DOUBLE:
+      *(UINT64 *)dst = *(UINT64 *)src;
+      break;
 
-	case FFI_TYPE_UINT16:
-	  *(unsigned int *) argp = (unsigned int) *(UINT16 *) (*p_argv);
-	  break;
-
-	case FFI_TYPE_STRUCT:
-	  memcpy (argp, *p_argv, (*p_arg)->size);
-	  break;
-
-	default:
-	  FFI_ASSERT (0);
-	}
+    case FFI_TYPE_STRUCT:
+    default:
+      memcpy (dst, src, z);
+      break;
     }
-  else if (z == sizeof (int))
-    {
-      if ((*p_arg)->type == FFI_TYPE_FLOAT)
-	*(float *) argp = *(float *) (*p_argv);
-      else
-	*(unsigned int *) argp = (unsigned int) *(UINT32 *) (*p_argv);
-    }
-  else if (z == sizeof (double) && (*p_arg)->type == FFI_TYPE_DOUBLE)
-    {
-      *(double *) argp = *(double *) (*p_argv);
-    }
-  else
-    {
-      memcpy (argp, *p_argv, z);
-    }
-  return z;
+
+  return ALIGN (z, 4);
 }
 
 /* ffi_prep_args is called by the assembly routine once stack space
@@ -138,7 +126,7 @@ ffi_prep_args_SYSV (char *stack, extended_cif *ecif, float *vfp_space)
        (i != 0); i--, p_arg++, p_argv++)
     {
       argp = ffi_align (*p_arg, argp);
-      argp += ffi_put_arg (p_arg, p_argv, argp);
+      argp += ffi_put_arg (*p_arg, *p_argv, argp);
     }
 
   return 0;
@@ -182,7 +170,7 @@ ffi_prep_args_VFP (char *stack, extended_cif * ecif, float *vfp_space)
       if (vi < ecif->cif->vfp_nargs && is_vfp_type)
 	{
 	  char *vfp_slot = (char *) (vfp_space + ecif->cif->vfp_args[vi++]);
-	  ffi_put_arg (p_arg, p_argv, vfp_slot);
+	  ffi_put_arg (*p_arg, *p_argv, vfp_slot);
 	  continue;
 	}
       /* Try allocating in core registers. */
@@ -195,7 +183,7 @@ ffi_prep_args_VFP (char *stack, extended_cif * ecif, float *vfp_space)
 	     area to place the argument.  */
 	  if (tregp + size <= eo_regp)
 	    {
-	      regp = tregp + ffi_put_arg (p_arg, p_argv, tregp);
+	      regp = tregp + ffi_put_arg (*p_arg, *p_argv, tregp);
 	      done_with_regs = (regp == argp);
 	      // ensure we did not write into the stack area
 	      FFI_ASSERT (regp <= argp);
@@ -208,7 +196,7 @@ ffi_prep_args_VFP (char *stack, extended_cif * ecif, float *vfp_space)
 	    {
 	      stack_used = 1;
 	      done_with_regs = 1;
-	      argp = tregp + ffi_put_arg (p_arg, p_argv, tregp);
+	      argp = tregp + ffi_put_arg (*p_arg, *p_argv, tregp);
 	      FFI_ASSERT (eo_regp < argp);
 	      continue;
 	    }
@@ -216,7 +204,7 @@ ffi_prep_args_VFP (char *stack, extended_cif * ecif, float *vfp_space)
       /* Base case, arguments are passed on the stack */
       stack_used = 1;
       argp = ffi_align (*p_arg, argp);
-      argp += ffi_put_arg (p_arg, p_argv, argp);
+      argp += ffi_put_arg (*p_arg, *p_argv, argp);
     }
   /* Indicate the VFP registers used. */
   return ecif->cif->vfp_used;
