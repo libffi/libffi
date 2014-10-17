@@ -121,6 +121,7 @@ typedef enum ffi_abi {
 /* ---- Definitions for closures ----------------------------------------- */
 
 #define FFI_CLOSURES 1
+
 #define FFI_TYPE_SMALL_STRUCT_1B (FFI_TYPE_LAST + 1)
 #define FFI_TYPE_SMALL_STRUCT_2B (FFI_TYPE_LAST + 2)
 #define FFI_TYPE_SMALL_STRUCT_4B (FFI_TYPE_LAST + 3)
@@ -129,6 +130,7 @@ typedef enum ffi_abi {
 #if defined (X86_64) || (defined (__x86_64__) && defined (X86_DARWIN))
 #define FFI_TRAMPOLINE_SIZE 24
 #define FFI_NATIVE_RAW_API 0
+#define FFI_GO_CLOSURES 1
 #else
 #ifdef X86_WIN32
 #define FFI_TRAMPOLINE_SIZE 52
