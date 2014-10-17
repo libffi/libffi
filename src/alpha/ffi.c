@@ -28,6 +28,7 @@
 #include <ffi.h>
 #include <ffi_common.h>
 #include <stdlib.h>
+#include "internal.h"
 
 /* Force FFI_TYPE_LONGDOUBLE to be different than FFI_TYPE_DOUBLE;
    all further uses in this file will refer to the 128-bit type.  */
@@ -48,6 +49,8 @@ extern void ffi_closure_osf(void) FFI_HIDDEN;
 ffi_status
 ffi_prep_cif_machdep(ffi_cif *cif)
 {
+  int flags;
+
   /* Adjust cif->bytes to represent a minimum 6 words for the temporary
      register argument loading area.  */
   if (cif->bytes < 6*FFI_SIZEOF_ARG)
@@ -56,21 +59,46 @@ ffi_prep_cif_machdep(ffi_cif *cif)
   /* Set the return type flag */
   switch (cif->rtype->type)
     {
-    case FFI_TYPE_STRUCT:
+    case FFI_TYPE_VOID:
+      flags = ALPHA_FLAGS(ALPHA_ST_VOID, ALPHA_LD_VOID);
+      break;
+    case FFI_TYPE_INT:
+    case FFI_TYPE_UINT32:
+    case FFI_TYPE_SINT32:
+      flags = ALPHA_FLAGS(ALPHA_ST_INT, ALPHA_LD_INT32);
+      break;
     case FFI_TYPE_FLOAT:
+      flags = ALPHA_FLAGS(ALPHA_ST_FLOAT, ALPHA_LD_FLOAT);
+      break;
     case FFI_TYPE_DOUBLE:
-      cif->flags = cif->rtype->type;
+      flags = ALPHA_FLAGS(ALPHA_ST_DOUBLE, ALPHA_LD_DOUBLE);
       break;
-
+    case FFI_TYPE_UINT8:
+      flags = ALPHA_FLAGS(ALPHA_ST_INT, ALPHA_LD_UINT8);
+      break;
+    case FFI_TYPE_SINT8:
+      flags = ALPHA_FLAGS(ALPHA_ST_INT, ALPHA_LD_SINT8);
+      break;
+    case FFI_TYPE_UINT16:
+      flags = ALPHA_FLAGS(ALPHA_ST_INT, ALPHA_LD_UINT16);
+      break;
+    case FFI_TYPE_SINT16:
+      flags = ALPHA_FLAGS(ALPHA_ST_INT, ALPHA_LD_SINT16);
+      break;
+    case FFI_TYPE_UINT64:
+    case FFI_TYPE_SINT64:
+    case FFI_TYPE_POINTER:
+      flags = ALPHA_FLAGS(ALPHA_ST_INT, ALPHA_LD_INT64);
+      break;
     case FFI_TYPE_LONGDOUBLE:
-      /* 128-bit long double is returned in memory, like a struct.  */
-      cif->flags = FFI_TYPE_STRUCT;
+    case FFI_TYPE_STRUCT:
+      /* Passed in memory, with a hidden pointer.  */
+      flags = ALPHA_RET_IN_MEM;
       break;
-
     default:
-      cif->flags = FFI_TYPE_INT;
-      break;
+      abort();
     }
+  cif->flags = flags;
   
   return FFI_OK;
 }
@@ -80,20 +108,20 @@ void
 ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 {
   unsigned long *stack, *argp;
-  long i, avn;
+  long i, avn, flags = cif->flags;
   ffi_type **arg_types;
   
   /* If the return value is a struct and we don't have a return
      value address then we need to make one.  */
-  if (rvalue == NULL && cif->flags == FFI_TYPE_STRUCT)
+  if (rvalue == NULL && flags == ALPHA_RET_IN_MEM)
     rvalue = alloca(cif->rtype->size);
 
   /* Allocate the space for the arguments, plus 4 words of temp
      space for ffi_call_osf.  */
   argp = stack = alloca(cif->bytes + 4*FFI_SIZEOF_ARG);
 
-  if (cif->flags == FFI_TYPE_STRUCT)
-    *(void **) argp++ = rvalue;
+  if (flags == ALPHA_RET_IN_MEM)
+    *argp++ = (unsigned long)rvalue;
 
   i = 0;
   avn = cif->nargs;
@@ -166,7 +194,8 @@ ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
       i++, arg_types++, avalue++;
     }
 
-  ffi_call_osf(stack, cif->bytes, cif->flags, rvalue, fn);
+  flags = (flags >> ALPHA_ST_SHIFT) & 0xff;
+  ffi_call_osf(stack, cif->bytes, flags, rvalue, fn);
 }
 
 
@@ -211,16 +240,16 @@ ffi_closure_osf_inner(ffi_closure *closure, void *rvalue, unsigned long *argp)
   ffi_cif *cif;
   void **avalue;
   ffi_type **arg_types;
-  long i, avn, argn;
+  long i, avn, argn, flags;
 
   cif = closure->cif;
   avalue = alloca(cif->nargs * sizeof(void *));
-
+  flags = cif->flags;
   argn = 0;
 
   /* Copy the caller's structure return address to that the closure
      returns the data directly to the caller.  */
-  if (cif->flags == FFI_TYPE_STRUCT)
+  if (flags == ALPHA_RET_IN_MEM)
     {
       rvalue = (void *) argp[0];
       argn = 1;
@@ -284,5 +313,5 @@ ffi_closure_osf_inner(ffi_closure *closure, void *rvalue, unsigned long *argp)
   closure->fun (cif, rvalue, avalue, closure->user_data);
 
   /* Tell ffi_closure_osf how to perform return type promotions.  */
-  return cif->rtype->type;
+  return (flags >> ALPHA_LD_SHIFT) & 0xff;
 }
