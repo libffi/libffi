@@ -117,6 +117,14 @@ E ALPHA_ST_FLOAT
 E ALPHA_ST_DOUBLE
 	stt	$f0, 0($2)
 	ret
+E ALPHA_ST_CPLXF
+	sts	$f0, 0($2)
+	sts	$f1, 4($2)
+	ret
+E ALPHA_ST_CPLXD
+	stt	$f0, 0($2)
+	stt	$f1, 8($2)
+	ret
 
 	cfi_endproc
 	.end	ffi_call_osf
@@ -226,6 +234,16 @@ E ALPHA_LD_FLOAT
 
 E ALPHA_LD_DOUBLE
 	ldt	$f0, 16($sp)
+	epilogue
+
+E ALPHA_LD_CPLXF
+	lds	$f0, 16($sp)
+	lds	$f1, 20($sp)
+	epilogue
+
+E ALPHA_LD_CPLXD
+	ldt	$f0, 16($sp)
+	ldt	$f1, 24($sp)
 	epilogue
 
 	cfi_endproc
