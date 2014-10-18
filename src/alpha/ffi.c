@@ -41,9 +41,11 @@
 # define FFI_TYPE_LONGDOUBLE 4
 #endif
 
-extern void ffi_call_osf(void *, unsigned long, unsigned, void *, void (*)(void))
-  FFI_HIDDEN;
+extern void ffi_call_osf(void *stack, void *frame, unsigned flags,
+			 void *raddr, void (*fn)(void), void *closure)
+	FFI_HIDDEN;
 extern void ffi_closure_osf(void) FFI_HIDDEN;
+extern void ffi_go_closure_osf(void) FFI_HIDDEN;
 
 /* Promote a float value to its in-register double representation.
    Unlike actually casting to double, this does not trap on NaN.  */
@@ -222,12 +224,14 @@ extend_basic_type(void *valp, int type, int argn)
     }
 }
 
-void
-ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+static void
+ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
+	      void **avalue, void *closure)
 {
   unsigned long *argp;
   long i, avn, argn, flags = cif->flags;
   ffi_type **arg_types;
+  void *frame;
 
   /* If the return value is a struct and we don't have a return
      value address then we need to make one.  */
@@ -236,7 +240,8 @@ ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 
   /* Allocate the space for the arguments, plus 4 words of temp
      space for ffi_call_osf.  */
-  argp = alloca(cif->bytes + 4*FFI_SIZEOF_ARG);
+  argp = frame = alloca(cif->bytes + 4*FFI_SIZEOF_ARG);
+  frame += cif->bytes;
 
   argn = 0;
   if (flags == ALPHA_RET_IN_MEM)
@@ -301,9 +306,21 @@ ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
     }
 
   flags = (flags >> ALPHA_ST_SHIFT) & 0xff;
-  ffi_call_osf(argp, cif->bytes, flags, rvalue, fn);
+  ffi_call_osf(argp, frame, flags, rvalue, fn, closure);
 }
 
+void
+ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+{
+  ffi_call_int(cif, fn, rvalue, avalue, NULL);
+}
+
+void
+ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
+	     void **avalue, void *closure)
+{
+  ffi_call_int(cif, fn, rvalue, avalue, closure);
+}
 
 ffi_status
 ffi_prep_closure_loc (ffi_closure* closure,
@@ -339,15 +356,31 @@ ffi_prep_closure_loc (ffi_closure* closure,
   return FFI_OK;
 }
 
-long FFI_HIDDEN
-ffi_closure_osf_inner(ffi_closure *closure, void *rvalue, unsigned long *argp)
+ffi_status
+ffi_prep_go_closure (ffi_go_closure* closure,
+		     ffi_cif* cif,
+		     void (*fun)(ffi_cif*, void*, void**, void*))
 {
-  ffi_cif *cif;
+  if (cif->abi != FFI_OSF)
+    return FFI_BAD_ABI;
+
+  closure->tramp = (void *)ffi_go_closure_osf;
+  closure->cif = cif;
+  closure->fun = fun;
+
+  return FFI_OK;
+}
+
+long FFI_HIDDEN
+ffi_closure_osf_inner (ffi_cif *cif,
+		       void (*fun)(ffi_cif*, void*, void**, void*),
+		       void *user_data,
+		       void *rvalue, unsigned long *argp)
+{
   void **avalue;
   ffi_type **arg_types;
   long i, avn, argn, flags;
 
-  cif = closure->cif;
   avalue = alloca(cif->nargs * sizeof(void *));
   flags = cif->flags;
   argn = 0;
@@ -481,7 +514,7 @@ ffi_closure_osf_inner(ffi_closure *closure, void *rvalue, unsigned long *argp)
     }
 
   /* Invoke the closure.  */
-  closure->fun (cif, rvalue, avalue, closure->user_data);
+  fun (cif, rvalue, avalue, user_data);
 
   /* Tell ffi_closure_osf how to perform return type promotions.  */
   return (flags >> ALPHA_LD_SHIFT) & 0xff;
