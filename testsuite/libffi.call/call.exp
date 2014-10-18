@@ -27,6 +27,7 @@ run-many-tests $tlist ""
 # ??? We really should preprocess ffi.h and grep
 # for FFI_TARGET_HAS_COMPLEX_TYPE.
 if { [istarget aarch64*]
+     || [istarget alpha*]
      || [istarget i?86*]
      || [istarget s390*]
      || [istarget x86_64*] } {
