@@ -39,10 +39,10 @@
 	.org	99b + \index * 16
 .endm
 
-/* ffi_call_osf (void *args, unsigned long bytes, unsigned flags,
-		 void *raddr, void (*fnaddr)(void));
+/* ffi_call_osf (void *stack, void *frame, unsigned flags,
+		 void *raddr, void (*fnaddr)(void), void *closure)
 
-   Bit o trickiness here -- ARGS+BYTES is the base of the stack frame
+   Bit o trickiness here -- FRAME is the base of the stack frame
    for this function.  This has been allocated by ffi_call.  We also
    deallocate some of the stack that has been alloca'd.  */
 
@@ -52,22 +52,21 @@
 	FFI_HIDDEN(ffi_call_osf)
 
 ffi_call_osf:
-	.frame	$15, 32, $26, 0
-	.mask   0x4008000, -32
 	cfi_startproc
-	addq	$16,$17,$1
+	cfi_def_cfa($17, 32)
 	mov	$16, $30
-	stq	$26, 0($1)
-	stq	$15, 8($1)
-	stq	$18, 16($1)
-	mov	$1, $15
+	stq	$26, 0($17)
+	stq	$15, 8($17)
+	mov	$17, $15
 	.prologue 0
-	cfi_def_cfa($15, 32)
+	cfi_def_cfa_register($15)
 	cfi_rel_offset($26, 0)
 	cfi_rel_offset($15, 8)
 
-	stq	$19, 24($1)
-	mov	$20, $27
+	stq	$18, 16($17)		# save flags into frame
+	stq	$19, 24($17)		# save rvalue into frame
+	mov	$20, $27		# fn into place for call
+	mov	$21, $1			# closure into static chain
 
 	# Load up all of the (potential) argument registers.
 	ldq	$16, 0($30)
@@ -89,16 +88,16 @@ ffi_call_osf:
 	jsr	$26, ($27), 0
 0:
 	ldah	$29, 0($26)		!gpdisp!1
-	ldq	$2, 24($15)
+	ldq	$2, 24($15)		# reload rvalue
 	lda	$29, 0($29)		!gpdisp!1
-	ldq	$3, 16($15)
+	ldq	$3, 16($15)		# reload flags
 	lda	$1, 99f-0b($26)
 	ldq	$26, 0($15)
 	ldq	$15, 8($15)
 	cfi_restore($26)
 	cfi_restore($15)
 	cfi_def_cfa($sp, 0)
-	cmoveq	$2, ALPHA_ST_VOID, $3	# mash null return to void
+	cmoveq	$2, ALPHA_ST_VOID, $3	# mash null rvalue to void
 	addq	$3, $3, $3
 	s8addq	$3, $1, $1		# 99f + stcode * 16
 	jmp	$31, ($1), $st_int
@@ -136,13 +135,37 @@ E ALPHA_ST_CPLXD
 #define CLOSURE_FS	(16*8)
 
 	.align	4
+	.globl	ffi_go_closure_osf
+	.ent	ffi_go_closure_osf
+	FFI_HIDDEN(ffi_go_closure_osf)
+
+ffi_go_closure_osf:
+	cfi_startproc
+	ldgp	$29, 0($27)
+	subq	$30, CLOSURE_FS, $30
+	cfi_adjust_cfa_offset(CLOSURE_FS)
+	stq	$26, 0($30)
+	.prologue 1
+	cfi_rel_offset($26, 0)
+
+	stq	$16, 10*8($30)
+	stq	$17, 11*8($30)
+	stq	$18, 12*8($30)
+
+	ldq	$16, 8($1)			# load cif
+	ldq	$17, 16($1)			# load fun
+	mov	$1, $18				# closure is user_data
+	br	$do_closure
+
+	cfi_endproc
+	.end	ffi_go_closure_osf
+
+	.align	4
 	.globl	ffi_closure_osf
 	.ent	ffi_closure_osf
 	FFI_HIDDEN(ffi_closure_osf)
 
 ffi_closure_osf:
-	.frame	$30, CLOSURE_FS, $26, 0
-	.mask	0x4000000, -CLOSURE_FS
 	cfi_startproc
 	ldgp	$29, 0($27)
 	subq	$30, CLOSURE_FS, $30
@@ -152,23 +175,28 @@ ffi_closure_osf:
 	cfi_rel_offset($26, 0)
 
 	# Store all of the potential argument registers in va_list format.
+	stq	$16, 10*8($30)
+	stq	$17, 11*8($30)
+	stq	$18, 12*8($30)
+
+	ldq	$16, 24($1)			# load cif
+	ldq	$17, 32($1)			# load fun
+	ldq	$18, 40($1)			# load user_data
+
+$do_closure:
+	stq	$19, 13*8($30)
+	stq	$20, 14*8($30)
+	stq	$21, 15*8($30)
 	stt	$f16, 4*8($30)
 	stt	$f17, 5*8($30)
 	stt	$f18, 6*8($30)
 	stt	$f19, 7*8($30)
 	stt	$f20, 8*8($30)
 	stt	$f21, 9*8($30)
-	stq	$16, 10*8($30)
-	stq	$17, 11*8($30)
-	stq	$18, 12*8($30)
-	stq	$19, 13*8($30)
-	stq	$20, 14*8($30)
-	stq	$21, 15*8($30)
 
 	# Call ffi_closure_osf_inner to do the bulk of the work.
-	mov	$1, $16
-	lda	$17, 2*8($30)
-	lda	$18, 10*8($30)
+	lda	$19, 2*8($30)
+	lda	$20, 10*8($30)
 	jsr	$26, ffi_closure_osf_inner
 0:
 	ldah	$29, 0($26)			!gpdisp!2
