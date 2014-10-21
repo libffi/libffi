@@ -87,9 +87,12 @@ ffi_put_arg (ffi_type *ty, void *src, void *dst)
       break;
 
     case FFI_TYPE_STRUCT:
-    default:
+    case FFI_TYPE_COMPLEX:
       memcpy (dst, src, z);
       break;
+
+    default:
+      abort();
     }
 
   return ALIGN (z, 4);
@@ -249,6 +252,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
       break;
 
     case FFI_TYPE_STRUCT:
+    case FFI_TYPE_COMPLEX:
       if (cabi == FFI_VFP)
 	{
 	  int h = vfp_type_p (cif->rtype);
@@ -790,7 +794,7 @@ is_hfa0 (const ffi_type *ty)
     for (i = 0; elements[i]; ++i)
       {
         ret = elements[i]->type;
-        if (ret == FFI_TYPE_STRUCT)
+        if (ret == FFI_TYPE_STRUCT || ret == FFI_TYPE_COMPLEX)
           {
             ret = is_hfa0 (elements[i]);
             if (ret < 0)
@@ -815,7 +819,7 @@ is_hfa1 (const ffi_type *ty, int candidate)
     for (i = 0; elements[i]; ++i)
       {
         int t = elements[i]->type;
-        if (t == FFI_TYPE_STRUCT)
+        if (t == FFI_TYPE_STRUCT || t == FFI_TYPE_COMPLEX)
           {
             if (!is_hfa1 (elements[i], candidate))
               return 0;
@@ -842,13 +846,21 @@ vfp_type_p (const ffi_type *ty)
   size_t size, ele_count;
 
   /* Quickest tests first.  */
+  candidate = ty->type;
   switch (ty->type)
     {
     default:
       return 0;
     case FFI_TYPE_FLOAT:
     case FFI_TYPE_DOUBLE:
-      return 0x100 + ty->type;
+      ele_count = 1;
+      goto done;
+    case FFI_TYPE_COMPLEX:
+      candidate = ty->elements[0]->type;
+      if (candidate != FFI_TYPE_FLOAT && candidate != FFI_TYPE_DOUBLE)
+	return 0;
+      ele_count = 2;
+      goto done;
     case FFI_TYPE_STRUCT:
       break;
     }
@@ -861,7 +873,7 @@ vfp_type_p (const ffi_type *ty)
   /* Find the type of the first non-structure member.  */
   elements = ty->elements;
   candidate = elements[0]->type;
-  if (candidate == FFI_TYPE_STRUCT)
+  if (candidate == FFI_TYPE_STRUCT || candidate == FFI_TYPE_COMPLEX)
     {
       for (i = 0; ; ++i)
         {
@@ -894,16 +906,18 @@ vfp_type_p (const ffi_type *ty)
   /* Finally, make sure that all scalar elements are the same type.  */
   for (i = 0; elements[i]; ++i)
     {
-      if (elements[i]->type == FFI_TYPE_STRUCT)
+      int t = elements[i]->type;
+      if (t == FFI_TYPE_STRUCT || t == FFI_TYPE_COMPLEX)
         {
           if (!is_hfa1 (elements[i], candidate))
             return 0;
         }
-      else if (elements[i]->type != candidate)
+      else if (t != candidate)
         return 0;
     }
 
   /* All tests succeeded.  Encode the result.  */
+ done:
   return (ele_count << 8) | candidate;
 }
 
