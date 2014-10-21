@@ -202,17 +202,7 @@ ffi_status
 ffi_prep_cif_machdep (ffi_cif *cif)
 {
   int flags = 0, cabi = cif->abi;
-  size_t bytes;
-
-  /* Round the stack up to a multiple of 8 bytes.  This isn't needed
-     everywhere, but it is on some platforms, and it doesn't harm anything
-     when it isn't needed.  */
-  bytes = ALIGN (cif->bytes, 8);
-
-  /* Minimum stack space is the 4 register arguments that we pop.  */
-  if (bytes < 4*4)
-    bytes = 4*4;
-  cif->bytes = bytes;
+  size_t bytes = cif->bytes;
 
   /* Map out the register placements of VFP register args.  The VFP
      hard-float calling conventions are slightly more sophisticated
@@ -270,12 +260,29 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	 A Composite Type larger than 4 bytes, or whose size cannot
 	 be determined statically ... is stored in memory at an
 	 address passed [in r0].  */
-      flags = (cif->rtype->size <= 4 ? ARM_TYPE_INT : ARM_TYPE_STRUCT);
+      if (cif->rtype->size <= 4)
+	flags = ARM_TYPE_INT;
+      else
+	{
+	  flags = ARM_TYPE_STRUCT;
+	  bytes += 4;
+	}
       break;
 
     default:
       abort();
     }
+
+  /* Round the stack up to a multiple of 8 bytes.  This isn't needed
+     everywhere, but it is on some platforms, and it doesn't harm anything
+     when it isn't needed.  */
+  bytes = ALIGN (bytes, 8);
+
+  /* Minimum stack space is the 4 register arguments that we pop.  */
+  if (bytes < 4*4)
+    bytes = 4*4;
+
+  cif->bytes = bytes;
   cif->flags = flags;
 
   return FFI_OK;
