@@ -57,6 +57,7 @@ typedef enum ffi_abi {
   signed char vfp_args[16]			\
 
 #define FFI_TARGET_SPECIFIC_VARIADIC
+#define FFI_TARGET_HAS_COMPLEX_TYPE
 
 /* ---- Definitions for closures ----------------------------------------- */
 
