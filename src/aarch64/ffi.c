@@ -35,13 +35,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 # define FFI_TYPE_LONGDOUBLE 4
 #endif
 
-/* Stack alignment requirement in bytes */
-#if defined (__APPLE__)
-#define AARCH64_STACK_ALIGN 1
-#else
-#define AARCH64_STACK_ALIGN 16
-#endif
-
 #define N_X_ARG_REG 8
 #define N_V_ARG_REG 8
 
@@ -799,8 +792,7 @@ ffi_status
 ffi_prep_cif_machdep (ffi_cif *cif)
 {
   /* Round the stack up to a multiple of the stack alignment requirement. */
-  cif->bytes =
-    (cif->bytes + (AARCH64_STACK_ALIGN - 1)) & ~ (AARCH64_STACK_ALIGN - 1);
+  cif->bytes = ALIGN(cif->bytes, 16);
 
   /* Initialize our flags. We are interested if this CIF will touch a
      vector register, if so we will enable context save and load to
