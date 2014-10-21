@@ -242,88 +242,132 @@ is_floating_type (unsigned short type)
 	  || type == FFI_TYPE_LONGDOUBLE);
 }
 
-/* Test for a homogeneous structure.  */
-
-static unsigned short
-get_homogeneous_type (ffi_type *ty)
-{
-  if (ty->type == FFI_TYPE_STRUCT && ty->elements)
-    {
-      unsigned i;
-      unsigned short candidate_type
-	= get_homogeneous_type (ty->elements[0]);
-      for (i =1; ty->elements[i]; i++)
-	{
-	  unsigned short iteration_type = 0;
-	  /* If we have a nested struct, we must find its homogeneous type.
-	     If that fits with our candidate type, we are still
-	     homogeneous.  */
-	  if (ty->elements[i]->type == FFI_TYPE_STRUCT
-	      && ty->elements[i]->elements)
-	    {
-	      iteration_type = get_homogeneous_type (ty->elements[i]);
-	    }
-	  else
-	    {
-	      iteration_type = ty->elements[i]->type;
-	    }
-
-	  /* If we are not homogeneous, return FFI_TYPE_STRUCT.  */
-	  if (candidate_type != iteration_type)
-	    return FFI_TYPE_STRUCT;
-	}
-      return candidate_type;
-    }
-
-  /* Base case, we have no more levels of nesting, so we
-     are a basic type, and so, trivially homogeneous in that type.  */
-  return ty->type;
-}
-
-/* Determine the number of elements within a STRUCT.
-
-   Note, we must handle nested structs.
-
-   If ty is not a STRUCT this function will return 0.  */
-
-static unsigned
-element_count (ffi_type *ty)
-{
-  if (ty->type == FFI_TYPE_STRUCT && ty->elements)
-    {
-      unsigned n;
-      unsigned elems = 0;
-      for (n = 0; ty->elements[n]; n++)
-	{
-	  if (ty->elements[n]->type == FFI_TYPE_STRUCT
-	      && ty->elements[n]->elements)
-	    elems += element_count (ty->elements[n]);
-	  else
-	    elems++;
-	}
-      return elems;
-    }
-  return 0;
-}
-
-/* Test for a homogeneous floating point aggregate.
-
-   A homogeneous floating point aggregate is a homogeneous aggregate of
-   a half- single- or double- precision floating point type with one
-   to four elements.  Note that this includes nested structs of the
-   basic type.  */
+/* A subroutine of is_hfa.  Given a structure type, return the type code
+   of the first non-structure element.  Recurse for structure elements.
+   Return -1 if the structure is in fact empty, i.e. no nested elements.  */
 
 static int
-is_hfa (ffi_type *ty)
+is_hfa0 (const ffi_type *ty)
 {
-  if (ty->type == FFI_TYPE_STRUCT
-      && ty->elements[0]
-      && is_floating_type (get_homogeneous_type (ty)))
+  ffi_type **elements = ty->elements;
+  int i, ret = -1;
+
+  if (elements != NULL)
+    for (i = 0; elements[i]; ++i)
+      {
+        ret = elements[i]->type;
+        if (ret == FFI_TYPE_STRUCT)
+          {
+            ret = is_hfa0 (elements[i]);
+            if (ret < 0)
+              continue;
+          }
+        break;
+      }
+
+  return ret;
+}
+
+/* A subroutine of is_hfa.  Given a structure type, return true if all
+   of the non-structure elements are the same as CANDIDATE.  */
+
+static int
+is_hfa1 (const ffi_type *ty, int candidate)
+{
+  ffi_type **elements = ty->elements;
+  int i;
+
+  if (elements != NULL)
+    for (i = 0; elements[i]; ++i)
+      {
+        int t = elements[i]->type;
+        if (t == FFI_TYPE_STRUCT)
+          {
+            if (!is_hfa1 (elements[i], candidate))
+              return 0;
+          }
+        else if (t != candidate)
+          return 0;
+      }
+
+  return 1;
+}
+
+/* Determine if TY is an homogenous floating point aggregate (HFA).
+   That is, a structure consisting of 1 to 4 members of all the same type,
+   where that type is a floating point scalar.
+
+   Returns non-zero iff TY is an HFA.  The result is an encoded value where
+   bits 0-7 contain the type code, and bits 8-10 contain the element count.  */
+
+static int
+is_hfa(const ffi_type *ty)
+{
+  ffi_type **elements;
+  int candidate, i;
+  size_t size, ele_count;
+
+  /* Quickest tests first.  */
+  if (ty->type != FFI_TYPE_STRUCT)
+    return 0;
+
+  /* No HFA types are smaller than 4 bytes, or larger than 64 bytes.  */
+  size = ty->size;
+  if (size < 4 || size > 64)
+    return 0;
+
+  /* Find the type of the first non-structure member.  */
+  elements = ty->elements;
+  candidate = elements[0]->type;
+  if (candidate == FFI_TYPE_STRUCT)
     {
-      unsigned n = element_count (ty);
-      return n >= 1 && n <= 4;
+      for (i = 0; ; ++i)
+        {
+          candidate = is_hfa0 (elements[i]);
+          if (candidate >= 0)
+            break;
+        }
     }
-  return 0;
+
+  /* If the first member is not a floating point type, it's not an HFA.
+     Also quickly re-check the size of the structure.  */
+  switch (candidate)
+    {
+    case FFI_TYPE_FLOAT:
+      ele_count = size / sizeof(float);
+      if (size != ele_count * sizeof(float))
+        return 0;
+      break;
+    case FFI_TYPE_DOUBLE:
+      ele_count = size / sizeof(double);
+      if (size != ele_count * sizeof(double))
+        return 0;
+      break;
+    case FFI_TYPE_LONGDOUBLE:
+      ele_count = size / sizeof(long double);
+      if (size != ele_count * sizeof(long double))
+        return 0;
+      break;
+    default:
+      return 0;
+    }
+  if (ele_count > 4)
+    return 0;
+
+  /* Finally, make sure that all scalar elements are the same type.  */
+  for (i = 0; elements[i]; ++i)
+    {
+      if (elements[i]->type == FFI_TYPE_STRUCT)
+        {
+          if (!is_hfa1 (elements[i], candidate))
+            return 0;
+        }
+      else if (elements[i]->type != candidate)
+        return 0;
+    }
+
+  /* All tests succeeded.  Encode the result.  */
+  return (ele_count << 8) | candidate;
 }
 
 /* Test if an ffi_type is a candidate for passing in a register.
@@ -559,7 +603,10 @@ copy_hfa_to_reg_or_stack (void *memory,
 			  unsigned char *stack,
 			  struct arg_state *state)
 {
-  unsigned elems = element_count (ty);
+  int h = is_hfa (ty);
+  int type = h & 0xff;
+  unsigned elems = h >> 8;
+
   if (available_v (state) < elems)
     {
       /* There are insufficient V registers. Further V register allocations
@@ -573,7 +620,6 @@ copy_hfa_to_reg_or_stack (void *memory,
   else
     {
       int i;
-      unsigned short type = get_homogeneous_type (ty);
       for (i = 0; i < elems; i++)
 	{
 	  void *reg = allocate_to_v (context, state);
@@ -813,6 +859,7 @@ void
 ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 {
   extended_cif ecif;
+  int h;
 
   ecif.cif = cif;
   ecif.avalue = avalue;
@@ -861,11 +908,12 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 		}
 
               case FFI_TYPE_STRUCT:
-                if (is_hfa (cif->rtype))
+		h = is_hfa (cif->rtype);
+                if (h)
 		  {
 		    int j;
-		    unsigned short type = get_homogeneous_type (cif->rtype);
-		    unsigned elems = element_count (cif->rtype);
+		    int type = h & 0xff;
+		    int elems = h >> 8;
 		    for (j = 0; j < elems; j++)
 		      {
 			void *reg = get_basic_type_addr (type, &context, j);
@@ -967,7 +1015,7 @@ ffi_closure_SYSV_inner (ffi_closure *closure, struct call_context *context,
   ffi_cif *cif = closure->cif;
   void **avalue = (void**) alloca (cif->nargs * sizeof (void*));
   void *rvalue = NULL;
-  int i;
+  int i, h;
   struct arg_state state;
 
   arg_init (&state, ALIGN(cif->bytes, 16));
@@ -1002,9 +1050,10 @@ ffi_closure_SYSV_inner (ffi_closure *closure, struct call_context *context,
 #endif
 
 	case FFI_TYPE_STRUCT:
-	  if (is_hfa (ty))
+	  h = is_hfa (ty);
+	  if (h)
 	    {
-	      unsigned n = element_count (ty);
+	      unsigned n = h >> 8;
 	      if (available_v (&state) < n)
 		{
 		  state.nsrn = N_V_ARG_REG;
@@ -1013,7 +1062,7 @@ ffi_closure_SYSV_inner (ffi_closure *closure, struct call_context *context,
 		}
 	      else
 		{
-		  switch (get_homogeneous_type (ty))
+		  switch (h & 0xff)
 		    {
 		    case FFI_TYPE_FLOAT:
 		      {
@@ -1027,9 +1076,9 @@ ffi_closure_SYSV_inner (ffi_closure *closure, struct call_context *context,
 			   correctly. The fake can be tossed once the
 			   closure function has returned hence alloca()
 			   is sufficient. */
-			int j;
+			unsigned j;
 			UINT32 *p = avalue[i] = alloca (ty->size);
-			for (j = 0; j < element_count (ty); j++)
+			for (j = 0; j < n; j++)
 			  memcpy (&p[j],
 				  allocate_to_s (context, &state),
 				  sizeof (*p));
@@ -1048,9 +1097,9 @@ ffi_closure_SYSV_inner (ffi_closure *closure, struct call_context *context,
 			   correctly. The fake can be tossed once the
 			   closure function has returned hence alloca()
 			   is sufficient. */
-			int j;
+			unsigned j;
 			UINT64 *p = avalue[i] = alloca (ty->size);
-			for (j = 0; j < element_count (ty); j++)
+			for (j = 0; j < n; j++)
 			  memcpy (&p[j],
 				  allocate_to_d (context, &state),
 				  sizeof (*p));
@@ -1143,11 +1192,12 @@ ffi_closure_SYSV_inner (ffi_closure *closure, struct call_context *context,
             break;
 	  }
         case FFI_TYPE_STRUCT:
-          if (is_hfa (cif->rtype))
+	  h = is_hfa (cif->rtype);
+          if (h)
 	    {
 	      int j;
-	      unsigned short type = get_homogeneous_type (cif->rtype);
-	      unsigned elems = element_count (cif->rtype);
+	      int type = h & 0xff;
+	      int elems = h >> 8;
 	      for (j = 0; j < elems; j++)
 		{
 		  void *reg = get_basic_type_addr (type, context, j);
