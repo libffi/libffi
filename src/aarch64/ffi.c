@@ -71,152 +71,6 @@ ffi_clear_cache (void *start, void *end)
 #endif
 }
 
-static void *
-get_x_addr (struct call_context *context, unsigned n)
-{
-  return &context->x[n];
-}
-
-static void *
-get_s_addr (struct call_context *context, unsigned n)
-{
-#if defined __AARCH64EB__
-  return &context->v[n].d[1].s[1];
-#else
-  return &context->v[n].d[0].s[0];
-#endif
-}
-
-static void *
-get_d_addr (struct call_context *context, unsigned n)
-{
-#if defined __AARCH64EB__
-  return &context->v[n].d[1];
-#else
-  return &context->v[n].d[0];
-#endif
-}
-
-static void *
-get_v_addr (struct call_context *context, unsigned n)
-{
-  return &context->v[n];
-}
-
-/* Return the memory location at which a basic type would reside
-   were it to have been stored in register n.  */
-
-static void *
-get_basic_type_addr (unsigned short type, struct call_context *context,
-		     unsigned n)
-{
-  switch (type)
-    {
-    case FFI_TYPE_FLOAT:
-      return get_s_addr (context, n);
-    case FFI_TYPE_DOUBLE:
-      return get_d_addr (context, n);
-    case FFI_TYPE_LONGDOUBLE:
-      return get_v_addr (context, n);
-    case FFI_TYPE_UINT8:
-    case FFI_TYPE_SINT8:
-    case FFI_TYPE_UINT16:
-    case FFI_TYPE_SINT16:
-    case FFI_TYPE_UINT32:
-    case FFI_TYPE_SINT32:
-    case FFI_TYPE_INT:
-    case FFI_TYPE_POINTER:
-    case FFI_TYPE_UINT64:
-    case FFI_TYPE_SINT64:
-      return get_x_addr (context, n);
-    case FFI_TYPE_VOID:
-      return NULL;
-    default:
-      FFI_ASSERT (0);
-      return NULL;
-    }
-}
-
-/* Return the alignment width for each of the basic types.  */
-
-static size_t
-get_basic_type_alignment (unsigned short type)
-{
-  switch (type)
-    {
-    case FFI_TYPE_FLOAT:
-#if defined (__APPLE__)
-      return sizeof (UINT32);
-#endif
-    case FFI_TYPE_DOUBLE:
-      return sizeof (UINT64);
-    case FFI_TYPE_LONGDOUBLE:
-      return sizeof (long double);
-    case FFI_TYPE_UINT8:
-    case FFI_TYPE_SINT8:
-#if defined (__APPLE__)
-	  return sizeof (UINT8);
-#endif
-    case FFI_TYPE_UINT16:
-    case FFI_TYPE_SINT16:
-#if defined (__APPLE__)
-	  return sizeof (UINT16);
-#endif
-    case FFI_TYPE_UINT32:
-    case FFI_TYPE_INT:
-    case FFI_TYPE_SINT32:
-#if defined (__APPLE__)
-	  return sizeof (UINT32);
-#endif
-    case FFI_TYPE_POINTER:
-    case FFI_TYPE_UINT64:
-    case FFI_TYPE_SINT64:
-      return sizeof (UINT64);
-
-    default:
-      FFI_ASSERT (0);
-      return 0;
-    }
-}
-
-/* Return the size in bytes for each of the basic types.  */
-
-static size_t
-get_basic_type_size (unsigned short type)
-{
-  switch (type)
-    {
-    case FFI_TYPE_FLOAT:
-      return sizeof (UINT32);
-    case FFI_TYPE_DOUBLE:
-      return sizeof (UINT64);
-    case FFI_TYPE_LONGDOUBLE:
-      return sizeof (long double);
-    case FFI_TYPE_UINT8:
-      return sizeof (UINT8);
-    case FFI_TYPE_SINT8:
-      return sizeof (SINT8);
-    case FFI_TYPE_UINT16:
-      return sizeof (UINT16);
-    case FFI_TYPE_SINT16:
-      return sizeof (SINT16);
-    case FFI_TYPE_UINT32:
-      return sizeof (UINT32);
-    case FFI_TYPE_INT:
-    case FFI_TYPE_SINT32:
-      return sizeof (SINT32);
-    case FFI_TYPE_POINTER:
-    case FFI_TYPE_UINT64:
-      return sizeof (UINT64);
-    case FFI_TYPE_SINT64:
-      return sizeof (SINT64);
-
-    default:
-      FFI_ASSERT (0);
-      return 0;
-    }
-}
-
 extern void
 ffi_call_SYSV (unsigned (*)(struct call_context *context, unsigned char *,
 			    extended_cif *),
@@ -468,157 +322,195 @@ arg_init (struct arg_state *state, size_t call_frame_size)
 #endif
 }
 
-/* Return the number of available consecutive core argument
-   registers.  */
-
-static unsigned
-available_x (struct arg_state *state)
-{
-  return N_X_ARG_REG - state->ngrn;
-}
-
-/* Return the number of available consecutive vector argument
-   registers.  */
-
-static unsigned
-available_v (struct arg_state *state)
-{
-  return N_V_ARG_REG - state->nsrn;
-}
-
-static void *
-allocate_to_x (struct call_context *context, struct arg_state *state)
-{
-  FFI_ASSERT (state->ngrn < N_X_ARG_REG);
-  return get_x_addr (context, (state->ngrn)++);
-}
-
-static void *
-allocate_to_s (struct call_context *context, struct arg_state *state)
-{
-  FFI_ASSERT (state->nsrn < N_V_ARG_REG);
-  return get_s_addr (context, (state->nsrn)++);
-}
-
-static void *
-allocate_to_d (struct call_context *context, struct arg_state *state)
-{
-  FFI_ASSERT (state->nsrn < N_V_ARG_REG);
-  return get_d_addr (context, (state->nsrn)++);
-}
-
-static void *
-allocate_to_v (struct call_context *context, struct arg_state *state)
-{
-  FFI_ASSERT (state->nsrn < N_V_ARG_REG);
-  return get_v_addr (context, (state->nsrn)++);
-}
-
 /* Allocate an aligned slot on the stack and return a pointer to it.  */
 static void *
-allocate_to_stack (struct arg_state *state, void *stack, size_t alignment,
-		   size_t size)
+allocate_to_stack (struct arg_state *state, void *stack,
+		   size_t alignment, size_t size)
 {
-  void *allocation;
+  size_t nsaa = state->nsaa;
 
   /* Round up the NSAA to the larger of 8 or the natural
      alignment of the argument's type.  */
-  state->nsaa = ALIGN (state->nsaa, alignment);
-  state->nsaa = ALIGN (state->nsaa, alignment);
 #if defined (__APPLE__)
-  if (state->allocating_variadic)
-    state->nsaa = ALIGN (state->nsaa, 8);
+  if (state->allocating_variadic && alignment < 8)
+    alignment = 8;
 #else
-  state->nsaa = ALIGN (state->nsaa, 8);
+  if (alignment < 8)
+    alignment = 8;
 #endif
+    
+  nsaa = ALIGN (nsaa, alignment);
+  state->nsaa = nsaa + size;
 
-  allocation = stack + state->nsaa;
+  return (char *)stack + nsaa;
+}
 
-  state->nsaa += size;
-  return allocation;
+static ffi_arg
+extend_integer_type (void *source, int type)
+{
+  switch (type)
+    {
+    case FFI_TYPE_UINT8:
+      return *(UINT8 *) source;
+    case FFI_TYPE_SINT8:
+      return *(SINT8 *) source;
+    case FFI_TYPE_UINT16:
+      return *(UINT16 *) source;
+    case FFI_TYPE_SINT16:
+      return *(SINT16 *) source;
+    case FFI_TYPE_UINT32:
+      return *(UINT32 *) source;
+    case FFI_TYPE_INT:
+    case FFI_TYPE_SINT32:
+      return *(SINT32 *) source;
+    case FFI_TYPE_UINT64:
+    case FFI_TYPE_SINT64:
+      return *(UINT64 *) source;
+      break;
+    case FFI_TYPE_POINTER:
+      return *(uintptr_t *) source;
+    default:
+      abort();
+    }
 }
 
 static void
-copy_basic_type (void *dest, void *source, unsigned short type)
+extend_hfa_type (void *dest, void *src, int h)
 {
-  /* This is necessary to ensure that basic types are copied
-     sign extended to 64-bits as libffi expects.  */
-  switch (type)
+  int n = (h >> 8);
+  int t = h & 0xff;
+  int f = (t - FFI_TYPE_FLOAT) * 4 + 4 - n;
+  void *x0;
+
+  asm volatile (
+	"adr	%0, 0f\n"
+"	add	%0, %0, %1\n"
+"	br	%0\n"
+"0:	ldp	s16, s17, [%3]\n"	/* S4 */
+"	ldp	s18, s19, [%3, #8]\n"
+"	b	4f\n"
+"	ldp	s16, s17, [%3]\n"	/* S3 */
+"	ldr	s18, [%3, #8]\n"
+"	b	3f\n"
+"	ldp	s16, s17, [%3]\n"	/* S2 */
+"	b	2f\n"
+"	nop\n"
+"	ldr	s16, [%3]\n"		/* S1 */
+"	b	1f\n"
+"	nop\n"
+"	ldp	d16, d17, [%3]\n"	/* D4 */
+"	ldp	d18, d19, [%3, #16]\n"
+"	b	4f\n"
+"	ldp	d16, d17, [%3]\n"	/* D3 */
+"	ldr	d18, [%3, #16]\n"
+"	b	3f\n"
+"	ldp	d16, d17, [%3]\n"	/* D2 */
+"	b	2f\n"
+"	nop\n"
+"	ldr	d16, [%3]\n"		/* D1 */
+"	b	1f\n"
+"	nop\n"
+"	ldp	q16, q17, [%3]\n"	/* Q4 */
+"	ldp	q18, q19, [%3, #16]\n"
+"	b	4f\n"
+"	ldp	q16, q17, [%3]\n"	/* Q3 */
+"	ldr	q18, [%3, #16]\n"
+"	b	3f\n"
+"	ldp	q16, q17, [%3]\n"	/* Q2 */
+"	b	2f\n"
+"	nop\n"
+"	ldr	q16, [%3]\n"		/* Q1 */
+"	b	1f\n"
+"4:	str	q19, [%2, #48]\n"
+"3:	str	q18, [%2, #32]\n"
+"2:	str	q17, [%2, #16]\n"
+"1:	str	q16, [%2]"
+    : "=&r"(x0)
+    : "r"(f * 12), "r"(dest), "r"(src)
+    : "memory", "v16", "v17", "v18", "v19");
+}
+
+static void *
+compress_hfa_type (void *dest, void *reg, int h)
+{
+  int n = h >> 8;
+  switch (h & 0xff)
     {
     case FFI_TYPE_FLOAT:
-      *(float *) dest = *(float *) source;
+      switch (n)
+	{
+	default:
+	  if (dest == reg)
+	    {
+#ifdef __AARCH64EB__
+	      dest += 12;
+#endif
+	    }
+	  else
+	    *(float *)dest = *(float *)reg;
+	  break;
+	case 2:
+	  asm("ldp q16, q17, [%1]\n\t"
+	      "st2 { v16.s, v17.s }[0], [%0]"
+	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17");
+	  break;
+	case 3:
+	  asm("ldp q16, q17, [%1]\n\t"
+	      "ldr q18, [%1, #32]\n\t"
+	      "st3 { v16.s, v17.s, v18.s }[0], [%0]"
+	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18");
+	  break;
+	case 4:
+	  asm("ldp q16, q17, [%1]\n\t"
+	      "ldp q18, q19, [%1, #32]\n\t"
+	      "st4 { v16.s, v17.s, v18.s, v19.s }[0], [%0]"
+	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18", "v19");
+	  break;
+	}
       break;
+
     case FFI_TYPE_DOUBLE:
-      *(double *) dest = *(double *) source;
+      switch (n)
+	{
+	default:
+	  if (dest == reg)
+	    {
+#ifdef __AARCH64EB__
+	      dest += 8;
+#endif
+	    }
+	  else
+	    *(double *)dest = *(double *)reg;
+	  break;
+	case 2:
+	  asm("ldp q16, q17, [%1]\n\t"
+	      "st2 { v16.d, v17.d }[0], [%0]"
+	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17");
+	  break;
+	case 3:
+	  asm("ldp q16, q17, [%1]\n\t"
+	      "ldr q18, [%1, #32]\n\t"
+	      "st3 { v16.d, v17.d, v18.d }[0], [%0]"
+	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18");
+	  break;
+	case 4:
+	  asm("ldp q16, q17, [%1]\n\t"
+	      "ldp q18, q19, [%1, #32]\n\t"
+	      "st4 { v16.d, v17.d, v18.d, v19.d }[0], [%0]"
+	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18", "v19");
+	  break;
+	}
       break;
+
     case FFI_TYPE_LONGDOUBLE:
-      *(long double *) dest = *(long double *) source;
-      break;
-    case FFI_TYPE_UINT8:
-      *(ffi_arg *) dest = *(UINT8 *) source;
-      break;
-    case FFI_TYPE_SINT8:
-      *(ffi_sarg *) dest = *(SINT8 *) source;
-      break;
-    case FFI_TYPE_UINT16:
-      *(ffi_arg *) dest = *(UINT16 *) source;
-      break;
-    case FFI_TYPE_SINT16:
-      *(ffi_sarg *) dest = *(SINT16 *) source;
-      break;
-    case FFI_TYPE_UINT32:
-      *(ffi_arg *) dest = *(UINT32 *) source;
-      break;
-    case FFI_TYPE_INT:
-    case FFI_TYPE_SINT32:
-      *(ffi_sarg *) dest = *(SINT32 *) source;
-      break;
-    case FFI_TYPE_POINTER:
-    case FFI_TYPE_UINT64:
-      *(ffi_arg *) dest = *(UINT64 *) source;
-      break;
-    case FFI_TYPE_SINT64:
-      *(ffi_sarg *) dest = *(SINT64 *) source;
-      break;
-    case FFI_TYPE_VOID:
+      if (dest != reg)
+	return memcpy (dest, reg, 16 * n);
       break;
 
     default:
       FFI_ASSERT (0);
     }
-}
-
-static void
-copy_hfa_to_reg_or_stack (void *memory,
-			  ffi_type *ty,
-			  struct call_context *context,
-			  unsigned char *stack,
-			  struct arg_state *state)
-{
-  int h = is_hfa (ty);
-  int type = h & 0xff;
-  unsigned elems = h >> 8;
-
-  if (available_v (state) < elems)
-    {
-      /* There are insufficient V registers. Further V register allocations
-	 are prevented, the NSAA is adjusted (by allocate_to_stack ())
-	 and the argument is copied to memory at the adjusted NSAA.  */
-      state->nsrn = N_V_ARG_REG;
-      memcpy (allocate_to_stack (state, stack, ty->alignment, ty->size),
-	      memory,
-	      ty->size);
-    }
-  else
-    {
-      int i;
-      for (i = 0; i < elems; i++)
-	{
-	  void *reg = allocate_to_v (context, state);
-	  copy_basic_type (reg, memory, type);
-	  memory += get_basic_type_size (type);
-	}
-    }
+  return dest;
 }
 
 /* Either allocate an appropriate register for the argument type, or if
@@ -626,65 +518,15 @@ copy_hfa_to_reg_or_stack (void *memory,
    to the allocated space.  */
 
 static void *
-allocate_to_register_or_stack (struct call_context *context,
-			       unsigned char *stack,
-			       struct arg_state *state,
-			       unsigned short type)
+allocate_int_to_reg_or_stack (struct call_context *context,
+			      struct arg_state *state,
+			      void *stack, size_t size)
 {
-  size_t alignment = get_basic_type_alignment (type);
-  size_t size = alignment;
-  switch (type)
-    {
-    case FFI_TYPE_FLOAT:
-      /* This is the only case for which the allocated stack size
-	 should not match the alignment of the type.  */
-      size = sizeof (UINT32);
-      /* Fall through.  */
-    case FFI_TYPE_DOUBLE:
-      if (state->nsrn < N_V_ARG_REG)
-	return allocate_to_d (context, state);
-      state->nsrn = N_V_ARG_REG;
-      break;
-    case FFI_TYPE_LONGDOUBLE:
-      if (state->nsrn < N_V_ARG_REG)
-	return allocate_to_v (context, state);
-      state->nsrn = N_V_ARG_REG;
-      break;
-    case FFI_TYPE_UINT8:
-    case FFI_TYPE_SINT8:
-    case FFI_TYPE_UINT16:
-    case FFI_TYPE_SINT16:
-    case FFI_TYPE_UINT32:
-    case FFI_TYPE_SINT32:
-    case FFI_TYPE_INT:
-    case FFI_TYPE_POINTER:
-    case FFI_TYPE_UINT64:
-    case FFI_TYPE_SINT64:
-      if (state->ngrn < N_X_ARG_REG)
-	return allocate_to_x (context, state);
-      state->ngrn = N_X_ARG_REG;
-      break;
-    default:
-      FFI_ASSERT (0);
-    }
+  if (state->ngrn < N_X_ARG_REG)
+    return &context->x[state->ngrn++];
 
-    return allocate_to_stack (state, stack, alignment, size);
-}
-
-/* Copy a value to an appropriate register, or if none are
-   available, to the stack.  */
-
-static void
-copy_to_register_or_stack (struct call_context *context,
-			   unsigned char *stack,
-			   struct arg_state *state,
-			   void *value,
-			   unsigned short type)
-{
-  copy_basic_type (
-	  allocate_to_register_or_stack (context, stack, state, type),
-	  value,
-	  type);
+  state->ngrn = N_X_ARG_REG;
+  return allocate_to_stack (state, stack, size, size);
 }
 
 /* Marshall the arguments from FFI representation to procedure call
@@ -694,15 +536,21 @@ static unsigned
 aarch64_prep_args (struct call_context *context, unsigned char *stack,
 		   extended_cif *ecif)
 {
-  int i;
+  ffi_cif *cif = ecif->cif;
+  void **avalue = ecif->avalue;
+  int i, nargs = cif->nargs;
   struct arg_state state;
 
-  arg_init (&state, ALIGN(ecif->cif->bytes, 16));
+  arg_init (&state, cif->bytes);
 
-  for (i = 0; i < ecif->cif->nargs; i++)
+  for (i = 0; i < nargs; i++)
     {
-      ffi_type *ty = ecif->cif->arg_types[i];
-      switch (ty->type)
+      ffi_type *ty = cif->arg_types[i];
+      size_t s = ty->size;
+      int h, t = ty->type;
+      void *a = avalue[i];
+
+      switch (t)
 	{
 	case FFI_TYPE_VOID:
 	  FFI_ASSERT (0);
@@ -710,82 +558,114 @@ aarch64_prep_args (struct call_context *context, unsigned char *stack,
 
 	/* If the argument is a basic type the argument is allocated to an
 	   appropriate register, or if none are available, to the stack.  */
-	case FFI_TYPE_FLOAT:
-	case FFI_TYPE_DOUBLE:
-	case FFI_TYPE_LONGDOUBLE:
+	case FFI_TYPE_INT:
 	case FFI_TYPE_UINT8:
 	case FFI_TYPE_SINT8:
 	case FFI_TYPE_UINT16:
 	case FFI_TYPE_SINT16:
 	case FFI_TYPE_UINT32:
-	case FFI_TYPE_INT:
 	case FFI_TYPE_SINT32:
-	case FFI_TYPE_POINTER:
 	case FFI_TYPE_UINT64:
 	case FFI_TYPE_SINT64:
-	  copy_to_register_or_stack (context, stack, &state,
-				     ecif->avalue[i], ty->type);
+	case FFI_TYPE_POINTER:
+	do_pointer:
+	  {
+	    ffi_arg ext = extend_integer_type (a, t);
+	    if (state.ngrn < N_X_ARG_REG)
+	      context->x[state.ngrn++] = ext;
+	    else
+	      {
+		void *d = allocate_to_stack (&state, stack, ty->alignment, s);
+		state.ngrn = N_X_ARG_REG;
+		/* Note that the default abi extends each argument
+		   to a full 64-bit slot, while the iOS abi allocates
+		   only enough space. */
+#ifdef __APPLE__
+		memcpy(d, a, s);
+#else
+		*(ffi_arg *)d = ext;
+#endif
+	      }
+	  }
 	  break;
 
+	case FFI_TYPE_FLOAT:
+	case FFI_TYPE_DOUBLE:
+	case FFI_TYPE_LONGDOUBLE:
+	  /* Scalar float is a degenerate case of HFA.  */
+	  h = t + 0x100;
+	  goto do_hfa;
+
 	case FFI_TYPE_STRUCT:
-	  if (is_hfa (ty))
-	    {
-	      copy_hfa_to_reg_or_stack (ecif->avalue[i], ty, context,
-					stack, &state);
-	    }
-	  else if (ty->size > 16)
-	    {
-	      /* If the argument is a composite type that is larger than 16
-		 bytes, then the argument has been copied to memory, and
-		 the argument is replaced by a pointer to the copy.  */
+	  {
+	    void *dest;
+	    int elems;
 
-	      copy_to_register_or_stack (context, stack, &state,
-					 &(ecif->avalue[i]), FFI_TYPE_POINTER);
-	    }
-	  else if (available_x (&state) >= (ty->size + 7) / 8)
-	    {
-	      /* If the argument is a composite type and the size in
-		 double-words is not more than the number of available
-		 X registers, then the argument is copied into consecutive
-		 X registers.  */
-	      int j;
-	      for (j = 0; j < (ty->size + 7) / 8; j++)
-		{
-		  memcpy (allocate_to_x (context, &state),
-			  &(((UINT64 *) ecif->avalue[i])[j]),
-			  sizeof (UINT64));
+	    h = is_hfa (ty);
+	    if (h)
+	      {
+	    do_hfa:
+		elems = h >> 8;
+	        if (state.nsrn + elems <= N_V_ARG_REG)
+		  {
+		    dest = &context->v[state.nsrn];
+		    state.nsrn += elems;
+		    extend_hfa_type (dest, a, h);
+		    break;
+		  }
+		state.nsrn = N_V_ARG_REG;
+		dest = allocate_to_stack (&state, stack, ty->alignment, s);
+	      }
+	    else if (s > 16)
+	      {
+		/* If the argument is a composite type that is larger than 16
+		   bytes, then the argument has been copied to memory, and
+		   the argument is replaced by a pointer to the copy.  */
+		a = &avalue[i];
+		t = FFI_TYPE_POINTER;
+		goto do_pointer;
+	      }
+	    else
+	      {
+		size_t n = (s + 7) / 8;
+		if (state.ngrn + n <= N_X_ARG_REG)
+		  {
+		    /* If the argument is a composite type and the size in
+		       double-words is not more than the number of available
+		       X registers, then the argument is copied into
+		       consecutive X registers.  */
+		    dest = &context->x[state.ngrn];
+		    state.ngrn += n;
+		  }
+		else
+		  {
+		    /* Otherwise, there are insufficient X registers. Further
+		       X register allocations are prevented, the NSAA is
+		       adjusted and the argument is copied to memory at the
+		       adjusted NSAA.  */
+		    state.ngrn = N_X_ARG_REG;
+		    dest = allocate_to_stack (&state, stack, ty->alignment, s);
+		  }
 		}
-	    }
-	  else
-	    {
-	      /* Otherwise, there are insufficient X registers. Further X
-		 register allocations are prevented, the NSAA is adjusted
-		 (by allocate_to_stack ()) and the argument is copied to
-		 memory at the adjusted NSAA.  */
-	      state.ngrn = N_X_ARG_REG;
-
-	      memcpy (allocate_to_stack (&state, stack, ty->alignment,
-					 ty->size), ecif->avalue + i, ty->size);
+	      memcpy (dest, a, s);
 	    }
 	  break;
 
 	default:
-	  FFI_ASSERT (0);
-	  break;
+	  abort();
 	}
 
 #if defined (__APPLE__)
-      if (i + 1 == ecif->cif->aarch64_nfixedargs)
+      if (i + 1 == cif->aarch64_nfixedargs)
 	{
 	  state.ngrn = N_X_ARG_REG;
 	  state.nsrn = N_V_ARG_REG;
-
 	  state.allocating_variadic = 1;
 	}
 #endif
     }
 
-  return ecif->cif->aarch64_flags;
+  return cif->aarch64_flags;
 }
 
 ffi_status
@@ -846,94 +726,61 @@ void
 ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 {
   extended_cif ecif;
-  int h;
+  struct call_context context;
+  size_t stack_bytes;
+  int h, t;
 
   ecif.cif = cif;
   ecif.avalue = avalue;
   ecif.rvalue = rvalue;
 
-  switch (cif->abi)
+  stack_bytes = cif->bytes;
+
+  memset (&context, 0, sizeof (context));
+  if (is_register_candidate (cif->rtype))
     {
-    case FFI_SYSV:
-      {
-        struct call_context context;
-	size_t stack_bytes;
+      ffi_call_SYSV (aarch64_prep_args, &context, &ecif, stack_bytes, fn);
 
-	/* Figure out the total amount of stack space we need, the
-	   above call frame space needs to be 16 bytes aligned to
-	   ensure correct alignment of the first object inserted in
-	   that space hence the ALIGN applied to cif->bytes.*/
-	stack_bytes = ALIGN(cif->bytes, 16);
+      t = cif->rtype->type;
+      switch (t)
+	{
+	case FFI_TYPE_INT:
+	case FFI_TYPE_UINT8:
+	case FFI_TYPE_SINT8:
+	case FFI_TYPE_UINT16:
+	case FFI_TYPE_SINT16:
+	case FFI_TYPE_UINT32:
+	case FFI_TYPE_SINT32:
+	case FFI_TYPE_POINTER:
+	case FFI_TYPE_UINT64:
+	case FFI_TYPE_SINT64:
+	  *(ffi_arg *)rvalue = extend_integer_type (&context.x[0], t);
+	  break;
 
-	memset (&context, 0, sizeof (context));
-        if (is_register_candidate (cif->rtype))
-          {
-            ffi_call_SYSV (aarch64_prep_args, &context, &ecif, stack_bytes, fn);
-            switch (cif->rtype->type)
-              {
-              case FFI_TYPE_VOID:
-              case FFI_TYPE_FLOAT:
-              case FFI_TYPE_DOUBLE:
-              case FFI_TYPE_LONGDOUBLE:
-              case FFI_TYPE_UINT8:
-              case FFI_TYPE_SINT8:
-              case FFI_TYPE_UINT16:
-              case FFI_TYPE_SINT16:
-              case FFI_TYPE_UINT32:
-              case FFI_TYPE_SINT32:
-              case FFI_TYPE_POINTER:
-              case FFI_TYPE_UINT64:
-              case FFI_TYPE_INT:
-              case FFI_TYPE_SINT64:
-		{
-		  void *addr = get_basic_type_addr (cif->rtype->type,
-						    &context, 0);
-		  copy_basic_type (rvalue, addr, cif->rtype->type);
-		  break;
-		}
+	case FFI_TYPE_FLOAT:
+	case FFI_TYPE_DOUBLE:
+	case FFI_TYPE_LONGDOUBLE:
+	  compress_hfa_type (rvalue, &context.v[0], 0x100 + t);
+	  break;
 
-              case FFI_TYPE_STRUCT:
-		h = is_hfa (cif->rtype);
-                if (h)
-		  {
-		    int j;
-		    int type = h & 0xff;
-		    int elems = h >> 8;
-		    for (j = 0; j < elems; j++)
-		      {
-			void *reg = get_basic_type_addr (type, &context, j);
-			copy_basic_type (rvalue, reg, type);
-			rvalue += get_basic_type_size (type);
-		      }
-		  }
-                else if ((cif->rtype->size + 7) / 8 < N_X_ARG_REG)
-                  {
-                    size_t size = ALIGN (cif->rtype->size, sizeof (UINT64));
-                    memcpy (rvalue, get_x_addr (&context, 0), size);
-                  }
-                else
-                  {
-                    FFI_ASSERT (0);
-                  }
-                break;
+	case FFI_TYPE_STRUCT:
+	  h = is_hfa (cif->rtype);
+	  if (h)
+	    compress_hfa_type (rvalue, &context.v[0], h);
+	  else if ((cif->rtype->size + 7) / 8 < N_X_ARG_REG)
+	    memcpy (rvalue, &context.x[0], cif->rtype->size);
+	  else
+	    abort();
+	  break;
 
-              default:
-                FFI_ASSERT (0);
-                break;
-              }
-          }
-        else
-          {
-	    context.x8 = (uintptr_t)rvalue;
-            ffi_call_SYSV (aarch64_prep_args, &context, &ecif,
-			   stack_bytes, fn);
-          }
-        break;
-      }
-
-    default:
-      FFI_ASSERT (0);
-      break;
+	default:
+	  abort();
+	}
+    }
+  else
+    {
+      context.x8 = (uintptr_t)rvalue;
+      ffi_call_SYSV (aarch64_prep_args, &context, &ecif, stack_bytes, fn);
     }
 }
 
@@ -1000,203 +847,158 @@ ffi_closure_SYSV_inner (ffi_closure *closure, struct call_context *context,
   ffi_cif *cif = closure->cif;
   void **avalue = (void**) alloca (cif->nargs * sizeof (void*));
   void *rvalue = NULL;
-  int i, h;
+  int i, h, nargs = cif->nargs;
   struct arg_state state;
+  ffi_type *rtype;
 
   arg_init (&state, ALIGN(cif->bytes, 16));
 
-  for (i = 0; i < cif->nargs; i++)
+  for (i = 0; i < nargs; i++)
     {
       ffi_type *ty = cif->arg_types[i];
+      int t = ty->type;
+      size_t n, s = ty->size;
 
-      switch (ty->type)
+      switch (t)
 	{
 	case FFI_TYPE_VOID:
 	  FFI_ASSERT (0);
 	  break;
 
+	case FFI_TYPE_INT:
 	case FFI_TYPE_UINT8:
 	case FFI_TYPE_SINT8:
 	case FFI_TYPE_UINT16:
 	case FFI_TYPE_SINT16:
 	case FFI_TYPE_UINT32:
 	case FFI_TYPE_SINT32:
-	case FFI_TYPE_INT:
-	case FFI_TYPE_POINTER:
 	case FFI_TYPE_UINT64:
 	case FFI_TYPE_SINT64:
+	case FFI_TYPE_POINTER:
+	  avalue[i] = allocate_int_to_reg_or_stack (context, &state, stack, s);
+	  break;
+
 	case FFI_TYPE_FLOAT:
 	case FFI_TYPE_DOUBLE:
 	case FFI_TYPE_LONGDOUBLE:
-	  avalue[i] = allocate_to_register_or_stack (context, stack,
-						     &state, ty->type);
-	  break;
+	  /* Scalar float is a degenerate case of HFA.  */
+	  h = t + 0x100;
+	  goto do_hfa;
 
 	case FFI_TYPE_STRUCT:
 	  h = is_hfa (ty);
 	  if (h)
 	    {
-	      unsigned n = h >> 8;
-	      if (available_v (&state) < n)
+	    do_hfa:
+	      n = h >> 8;
+	      if (state.nsrn + n <= N_V_ARG_REG)
 		{
-		  state.nsrn = N_V_ARG_REG;
-		  avalue[i] = allocate_to_stack (&state, stack, ty->alignment,
-						 ty->size);
+		  void *reg = &context->v[state.nsrn];
+		  state.nsrn += n;
+
+		  /* Eeek! We need a pointer to the structure, however the
+		     homogeneous float elements are being passed in individual
+		     registers, therefore for float and double the structure
+		     is not represented as a contiguous sequence of bytes in
+		     our saved register context.  We don't need the original
+		     contents of the register storage, so we reformat the
+		     structure into the same memory.  */
+		  avalue[i] = compress_hfa_type (reg, reg, h);
 		}
 	      else
 		{
-		  switch (h & 0xff)
-		    {
-		    case FFI_TYPE_FLOAT:
-		      {
-			/* Eeek! We need a pointer to the structure,
-			   however the homogeneous float elements are
-			   being passed in individual S registers,
-			   therefore the structure is not represented as
-			   a contiguous sequence of bytes in our saved
-			   register context. We need to fake up a copy
-			   of the structure laid out in memory
-			   correctly. The fake can be tossed once the
-			   closure function has returned hence alloca()
-			   is sufficient. */
-			unsigned j;
-			UINT32 *p = avalue[i] = alloca (ty->size);
-			for (j = 0; j < n; j++)
-			  memcpy (&p[j],
-				  allocate_to_s (context, &state),
-				  sizeof (*p));
-			break;
-		      }
-
-		    case FFI_TYPE_DOUBLE:
-		      {
-			/* Eeek! We need a pointer to the structure,
-			   however the homogeneous float elements are
-			   being passed in individual S registers,
-			   therefore the structure is not represented as
-			   a contiguous sequence of bytes in our saved
-			   register context. We need to fake up a copy
-			   of the structure laid out in memory
-			   correctly. The fake can be tossed once the
-			   closure function has returned hence alloca()
-			   is sufficient. */
-			unsigned j;
-			UINT64 *p = avalue[i] = alloca (ty->size);
-			for (j = 0; j < n; j++)
-			  memcpy (&p[j],
-				  allocate_to_d (context, &state),
-				  sizeof (*p));
-			break;
-		      }
-
-		    case FFI_TYPE_LONGDOUBLE:
-			  memcpy (&avalue[i],
-				  allocate_to_v (context, &state),
-				  sizeof (*avalue));
-		      break;
-
-		    default:
-		      FFI_ASSERT (0);
-		      break;
-		    }
+		  state.nsrn = N_V_ARG_REG;
+		  avalue[i] = allocate_to_stack (&state, stack,
+						 ty->alignment, s);
 		}
 	    }
-	  else if (ty->size > 16)
+	  else if (s > 16)
 	    {
 	      /* Replace Composite type of size greater than 16 with a
 		 pointer.  */
-	      memcpy (&avalue[i],
-		      allocate_to_register_or_stack (context, stack,
-						     &state, FFI_TYPE_POINTER),
-		      sizeof (avalue[i]));
-	    }
-	  else if (available_x (&state) >= (ty->size + 7) / 8)
-	    {
-	      avalue[i] = get_x_addr (context, state.ngrn);
-	      state.ngrn += (ty->size + 7) / 8;
+	      avalue[i] = *(void **)
+		allocate_int_to_reg_or_stack (context, &state, stack,
+					      sizeof (void *));
 	    }
 	  else
 	    {
-	      state.ngrn = N_X_ARG_REG;
-
-	      avalue[i] = allocate_to_stack (&state, stack, ty->alignment,
-					     ty->size);
+	      n = (s + 7) / 8;
+	      if (state.ngrn + n <= N_X_ARG_REG)
+		{
+		  avalue[i] = &context->x[state.ngrn];
+		  state.ngrn += n;
+		}
+	      else
+		{
+		  state.ngrn = N_X_ARG_REG;
+		  avalue[i] = allocate_to_stack (&state, stack,
+						 ty->alignment, s);
+		}
 	    }
 	  break;
 
 	default:
-	  FFI_ASSERT (0);
-	  break;
+	  abort();
 	}
     }
 
-  /* Figure out where the return value will be passed, either in
-     registers or in a memory block allocated by the caller and passed
-     in x8.  */
-
-  if (is_register_candidate (cif->rtype))
+  /* Figure out where the return value will be passed, either in registers
+     or in a memory block allocated by the caller and passed in x8.  */
+  rtype = cif->rtype;
+  if (is_register_candidate (rtype))
     {
+      size_t s = rtype->size;
+      int t;
+
       /* Register candidates are *always* returned in registers. */
 
       /* Allocate a scratchpad for the return value, we will let the
          callee scrible the result into the scratch pad then move the
          contents into the appropriate return value location for the
          call convention.  */
-      rvalue = alloca (cif->rtype->size);
+      rvalue = alloca (s);
       (closure->fun) (cif, rvalue, avalue, closure->user_data);
 
       /* Copy the return value into the call context so that it is returned
          as expected to our caller.  */
-      switch (cif->rtype->type)
+      t = rtype->type;
+      switch (t)
         {
         case FFI_TYPE_VOID:
           break;
 
+        case FFI_TYPE_INT:
         case FFI_TYPE_UINT8:
         case FFI_TYPE_UINT16:
         case FFI_TYPE_UINT32:
-        case FFI_TYPE_POINTER:
         case FFI_TYPE_UINT64:
         case FFI_TYPE_SINT8:
         case FFI_TYPE_SINT16:
-        case FFI_TYPE_INT:
         case FFI_TYPE_SINT32:
         case FFI_TYPE_SINT64:
+        case FFI_TYPE_POINTER:
+	  context->x[0] = extend_integer_type (rvalue, t);
+          break;
+
         case FFI_TYPE_FLOAT:
         case FFI_TYPE_DOUBLE:
         case FFI_TYPE_LONGDOUBLE:
-	  {
-	    void *addr = get_basic_type_addr (cif->rtype->type, context, 0);
-	    copy_basic_type (addr, rvalue, cif->rtype->type);
-            break;
-	  }
+	  extend_hfa_type (&context->v[0], rvalue, 0x100 + t);
+	  break;
+
         case FFI_TYPE_STRUCT:
 	  h = is_hfa (cif->rtype);
           if (h)
-	    {
-	      int j;
-	      int type = h & 0xff;
-	      int elems = h >> 8;
-	      for (j = 0; j < elems; j++)
-		{
-		  void *reg = get_basic_type_addr (type, context, j);
-		  copy_basic_type (reg, rvalue, type);
-		  rvalue += get_basic_type_size (type);
-		}
-	    }
-          else if ((cif->rtype->size + 7) / 8 < N_X_ARG_REG)
-            {
-              size_t size = ALIGN (cif->rtype->size, sizeof (UINT64)) ;
-              memcpy (get_x_addr (context, 0), rvalue, size);
-            }
+	    extend_hfa_type (&context->v[0], rvalue, h);
           else
-            {
-              FFI_ASSERT (0);
+	    {
+	      FFI_ASSERT (s <= 16);
+              memcpy (&context->x[0], rvalue, s);
             }
           break;
+
         default:
-          FFI_ASSERT (0);
-          break;
+          abort();
         }
     }
   else
