@@ -160,22 +160,15 @@ CNAME(ffi_call_SYSV):
 
         blr     x24
 
-        /* Save the core argument passing registers.  */
-        stp     x0, x1, [x21, #16*N_V_ARG_REG + 0]
-        stp     x2, x3, [x21, #16*N_V_ARG_REG + 16]
-        stp     x4, x5, [x21, #16*N_V_ARG_REG + 32]
-        stp     x6, x7, [x21, #16*N_V_ARG_REG + 48]
-
-        /* Note nothing useful ever comes back in x8!  */
+        /* Save the core return registers.  */
+        stp     x0, x1, [x21, #16*N_V_ARG_REG]
 
         /* Figure out if we should touch the vector registers.  */
         tbz     x23, #AARCH64_FLAG_ARG_V_BIT, 1f
 
-        /* Save the vector argument passing registers.  */
+        /* Save the vector return registers.  */
         stp     q0, q1, [x21, #0]
         stp     q2, q3, [x21, #32]
-        stp     q4, q5, [x21, #64]
-        stp     q6, q7, [x21, #96]
 1:
         /* All done, unwind our stack frame.  */
         ldp     x21, x22, [x29,  # - ffi_call_SYSV_FS]
@@ -299,15 +292,9 @@ CNAME(ffi_closure_SYSV):
         /* Load the result passing vector registers.  */
         ldp     q0, q1, [x21, #0]
         ldp     q2, q3, [x21, #32]
-        ldp     q4, q5, [x21, #64]
-        ldp     q6, q7, [x21, #96]
 1:
         /* Load the result passing core registers.  */
         ldp     x0, x1, [x21, #16*N_V_ARG_REG + 0]
-        ldp     x2, x3, [x21, #16*N_V_ARG_REG + 16]
-        ldp     x4, x5, [x21, #16*N_V_ARG_REG + 32]
-        ldp     x6, x7, [x21, #16*N_V_ARG_REG + 48]
-        /* Note nothing useful is returned in x8.  */
 
         /* We are done, unwind our frame.  */
         ldp     x21, x22, [x29,  #-16]
