@@ -22,6 +22,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #define LIBFFI_ASM
 #include <fficonfig.h>
 #include <ffi.h>
+#include "internal.h"
 
 #ifdef HAVE_MACHINE_ASM_H
 #include <machine/asm.h>
@@ -43,12 +44,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #define cfi_def_cfa_register(reg)	.cfi_def_cfa_register reg
 
         .text
+        .align 2
+
         .globl CNAME(ffi_call_SYSV)
 #ifdef __ELF__
         .type CNAME(ffi_call_SYSV), #function
-#endif
-#ifdef __APPLE__
-        .align 2
 #endif
 
 /* ffi_call_SYSV()
@@ -142,42 +142,40 @@ CNAME(ffi_call_SYSV):
         mov     x23, x0
 
         /* Figure out if we should touch the vector registers.  */
-        tbz     x23, #AARCH64_FFI_WITH_V_BIT, 1f
+        tbz     x23, #AARCH64_FLAG_ARG_V_BIT, 1f
 
         /* Load the vector argument passing registers.  */
-        ldp     q0, q1, [x21, #8*32 +  0]
-        ldp     q2, q3, [x21, #8*32 + 32]
-        ldp     q4, q5, [x21, #8*32 + 64]
-        ldp     q6, q7, [x21, #8*32 + 96]
+        ldp     q0, q1, [x21, #0]
+        ldp     q2, q3, [x21, #32]
+        ldp     q4, q5, [x21, #64]
+        ldp     q6, q7, [x21, #96]
 1:
-        /* Load the core argument passing registers.  */
-        ldp     x0, x1, [x21,  #0]
-        ldp     x2, x3, [x21, #16]
-        ldp     x4, x5, [x21, #32]
-        ldp     x6, x7, [x21, #48]
-
-        /* Don't forget x8 which may be holding the address of a return buffer.
-	 */
-        ldr     x8,     [x21, #8*8]
+        /* Load the core argument passing registers, including
+	   the structure return pointer.  */
+        ldp     x0, x1, [x21, #16*N_V_ARG_REG + 0]
+        ldp     x2, x3, [x21, #16*N_V_ARG_REG + 16]
+        ldp     x4, x5, [x21, #16*N_V_ARG_REG + 32]
+        ldp     x6, x7, [x21, #16*N_V_ARG_REG + 48]
+        ldr     x8,     [x21, #16*N_V_ARG_REG + 64]
 
         blr     x24
 
         /* Save the core argument passing registers.  */
-        stp     x0, x1, [x21,  #0]
-        stp     x2, x3, [x21, #16]
-        stp     x4, x5, [x21, #32]
-        stp     x6, x7, [x21, #48]
+        stp     x0, x1, [x21, #16*N_V_ARG_REG + 0]
+        stp     x2, x3, [x21, #16*N_V_ARG_REG + 16]
+        stp     x4, x5, [x21, #16*N_V_ARG_REG + 32]
+        stp     x6, x7, [x21, #16*N_V_ARG_REG + 48]
 
         /* Note nothing useful ever comes back in x8!  */
 
         /* Figure out if we should touch the vector registers.  */
-        tbz     x23, #AARCH64_FFI_WITH_V_BIT, 1f
+        tbz     x23, #AARCH64_FLAG_ARG_V_BIT, 1f
 
         /* Save the vector argument passing registers.  */
-        stp     q0, q1, [x21, #8*32 + 0]
-        stp     q2, q3, [x21, #8*32 + 32]
-        stp     q4, q5, [x21, #8*32 + 64]
-        stp     q6, q7, [x21, #8*32 + 96]
+        stp     q0, q1, [x21, #0]
+        stp     q2, q3, [x21, #32]
+        stp     q4, q5, [x21, #64]
+        stp     q6, q7, [x21, #96]
 1:
         /* All done, unwind our stack frame.  */
         ldp     x21, x22, [x29,  # - ffi_call_SYSV_FS]
@@ -203,7 +201,7 @@ CNAME(ffi_call_SYSV):
         .size CNAME(ffi_call_SYSV), .-CNAME(ffi_call_SYSV)
 #endif
 
-#define ffi_closure_SYSV_FS (8 * 2 + AARCH64_CALL_CONTEXT_SIZE)
+#define ffi_closure_SYSV_FS (8 * 2 + CALL_CONTEXT_SIZE)
 
 /* ffi_closure_SYSV
 
@@ -243,10 +241,9 @@ CNAME(ffi_call_SYSV):
    Voila!  */
 
         .text
-        .globl CNAME(ffi_closure_SYSV)
-#ifdef __APPLE__
         .align 2
-#endif
+
+        .globl CNAME(ffi_closure_SYSV)
         .cfi_startproc
 CNAME(ffi_closure_SYSV):
         stp     x29, x30, [sp, #-16]!
@@ -268,24 +265,23 @@ CNAME(ffi_closure_SYSV):
         /* Preserve our struct trampoline_data *  */
         mov     x22, x17
 
-        /* Save the rest of the argument passing registers.  */
-        stp     x0, x1, [x21, #0]
-        stp     x2, x3, [x21, #16]
-        stp     x4, x5, [x21, #32]
-        stp     x6, x7, [x21, #48]
-        /* Don't forget we may have been given a result scratch pad address.
-	 */
-        str     x8,     [x21, #64]
+        /* Save the rest of the argument passing registers, including
+	   the structure return pointer.  */
+        stp     x0, x1, [x21, #16*N_V_ARG_REG + 0]
+        stp     x2, x3, [x21, #16*N_V_ARG_REG + 16]
+        stp     x4, x5, [x21, #16*N_V_ARG_REG + 32]
+        stp     x6, x7, [x21, #16*N_V_ARG_REG + 48]
+        str     x8,     [x21, #16*N_V_ARG_REG + 64]
 
         /* Figure out if we should touch the vector registers.  */
         ldr     x0, [x22, #8]
-        tbz     x0, #AARCH64_FFI_WITH_V_BIT, 1f
+        tbz     x0, #AARCH64_FLAG_ARG_V_BIT, 1f
 
         /* Save the argument passing vector registers.  */
-        stp     q0, q1, [x21, #8*32 + 0]
-        stp     q2, q3, [x21, #8*32 + 32]
-        stp     q4, q5, [x21, #8*32 + 64]
-        stp     q6, q7, [x21, #8*32 + 96]
+        stp     q0, q1, [x21, #0]
+        stp     q2, q3, [x21, #32]
+        stp     q4, q5, [x21, #64]
+        stp     q6, q7, [x21, #96]
 1:
         /* Load &ffi_closure..  */
         ldr     x0, [x22, #0]
@@ -298,19 +294,19 @@ CNAME(ffi_closure_SYSV):
 
         /* Figure out if we should touch the vector registers.  */
         ldr     x0, [x22, #8]
-        tbz     x0, #AARCH64_FFI_WITH_V_BIT, 1f
+        tbz     x0, #AARCH64_FLAG_ARG_V_BIT, 1f
 
         /* Load the result passing vector registers.  */
-        ldp     q0, q1, [x21, #8*32 + 0]
-        ldp     q2, q3, [x21, #8*32 + 32]
-        ldp     q4, q5, [x21, #8*32 + 64]
-        ldp     q6, q7, [x21, #8*32 + 96]
+        ldp     q0, q1, [x21, #0]
+        ldp     q2, q3, [x21, #32]
+        ldp     q4, q5, [x21, #64]
+        ldp     q6, q7, [x21, #96]
 1:
         /* Load the result passing core registers.  */
-        ldp     x0, x1, [x21,  #0]
-        ldp     x2, x3, [x21, #16]
-        ldp     x4, x5, [x21, #32]
-        ldp     x6, x7, [x21, #48]
+        ldp     x0, x1, [x21, #16*N_V_ARG_REG + 0]
+        ldp     x2, x3, [x21, #16*N_V_ARG_REG + 16]
+        ldp     x4, x5, [x21, #16*N_V_ARG_REG + 32]
+        ldp     x6, x7, [x21, #16*N_V_ARG_REG + 48]
         /* Note nothing useful is returned in x8.  */
 
         /* We are done, unwind our frame.  */

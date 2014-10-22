@@ -21,8 +21,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <ffi.h>
 #include <ffi_common.h>
+#include "internal.h"
 
 /* Force FFI_TYPE_LONGDOUBLE to be different than FFI_TYPE_DOUBLE;
    all further uses in this file will refer to the 128-bit type.  */
@@ -35,38 +37,35 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 # define FFI_TYPE_LONGDOUBLE 4
 #endif
 
-#define N_X_ARG_REG 8
-#define N_V_ARG_REG 8
-
-#define AARCH64_FFI_WITH_V (1 << AARCH64_FFI_WITH_V_BIT)
-
 union _d
 {
   UINT64 d;
   UINT32 s[2];
 };
 
+struct _v
+{
+  union _d d[2] __attribute__((aligned(16)));
+};
+
 struct call_context
 {
-  UINT64 x [AARCH64_N_XREG];
-  struct
-  {
-    union _d d[2];
-  } v [AARCH64_N_VREG];
+  struct _v v[N_V_ARG_REG];
+  UINT64 x[N_X_ARG_REG];
+  UINT64 x8;
 };
 
 #if defined (__clang__) && defined (__APPLE__)
-extern void
-sys_icache_invalidate (void *start, size_t len);
+extern void sys_icache_invalidate (void *start, size_t len);
 #endif
 
 static inline void
 ffi_clear_cache (void *start, void *end)
 {
 #if defined (__clang__) && defined (__APPLE__)
-	sys_icache_invalidate (start, (char *)end - (char *)start);
+  sys_icache_invalidate (start, (char *)end - (char *)start);
 #elif defined (__GNUC__)
-	__builtin___clear_cache (start, end);
+  __builtin___clear_cache (start, end);
 #else
 #error "Missing builtin to flush instruction cache"
 #endif
@@ -802,7 +801,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 
   if (is_v_register_candidate (cif->rtype))
     {
-      cif->aarch64_flags |= AARCH64_FFI_WITH_V;
+      cif->aarch64_flags |= AARCH64_FLAG_ARG_V;
     }
   else
     {
@@ -810,7 +809,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
       for (i = 0; i < cif->nargs; i++)
         if (is_v_register_candidate (cif->arg_types[i]))
           {
-            cif->aarch64_flags |= AARCH64_FFI_WITH_V;
+            cif->aarch64_flags |= AARCH64_FLAG_ARG_V;
             break;
           }
     }
@@ -924,7 +923,7 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
           }
         else
           {
-            memcpy (get_x_addr (&context, 8), &rvalue, sizeof (UINT64));
+	    context.x8 = (uintptr_t)rvalue;
             ffi_call_SYSV (aarch64_prep_args, &context, &ecif,
 			   stack_bytes, fn);
           }
@@ -1201,7 +1200,7 @@ ffi_closure_SYSV_inner (ffi_closure *closure, struct call_context *context,
     }
   else
     {
-      memcpy (&rvalue, get_x_addr (context, 8), sizeof (UINT64));
+      rvalue = (void *)(uintptr_t)context->x8;
       (closure->fun) (cif, rvalue, avalue, closure->user_data);
     }
 }
