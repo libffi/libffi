@@ -1,5 +1,4 @@
-/* Copyright (c) 2009, 2010, 2011, 2012 ARM Ltd.
-
+/* 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
 ``Software''), to deal in the Software without restriction, including
@@ -19,39 +18,9 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 
-#ifndef LIBFFI_TARGET_H
-#define LIBFFI_TARGET_H
+#define AARCH64_FLAG_ARG_V_BIT	0
+#define AARCH64_FLAG_ARG_V	(1 << AARCH64_FLAG_ARG_V_BIT)
 
-#ifndef LIBFFI_H
-#error "Please do not include ffitarget.h directly into your source.  Use ffi.h instead."
-#endif
-
-#ifndef LIBFFI_ASM
-typedef unsigned long ffi_arg;
-typedef signed long ffi_sarg;
-
-typedef enum ffi_abi
-  {
-    FFI_FIRST_ABI = 0,
-    FFI_SYSV,
-    FFI_LAST_ABI,
-    FFI_DEFAULT_ABI = FFI_SYSV
-  } ffi_abi;
-#endif
-
-/* ---- Definitions for closures ----------------------------------------- */
-
-#define FFI_CLOSURES 1
-#define FFI_TRAMPOLINE_SIZE 36
-#define FFI_NATIVE_RAW_API 0
-
-/* ---- Internal ---- */
-
-#if defined (__APPLE__)
-#define FFI_TARGET_SPECIFIC_VARIADIC
-#define FFI_EXTRA_CIF_FIELDS unsigned aarch64_flags; unsigned aarch64_nfixedargs
-#else
-#define FFI_EXTRA_CIF_FIELDS unsigned aarch64_flags
-#endif
-
-#endif
+#define N_X_ARG_REG		8
+#define N_V_ARG_REG		8
+#define CALL_CONTEXT_SIZE	(N_V_ARG_REG * 16 + N_X_ARG_REG * 8 + 16)
