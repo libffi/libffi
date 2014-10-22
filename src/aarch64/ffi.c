@@ -523,30 +523,90 @@ allocate_int_to_reg_or_stack (struct call_context *context,
 ffi_status
 ffi_prep_cif_machdep (ffi_cif *cif)
 {
+  ffi_type *rtype = cif->rtype;
+  size_t bytes = cif->bytes;
+  int flags, aarch64_flags, i, n;
+
+  switch (rtype->type)
+    {
+    case FFI_TYPE_VOID:
+      flags = AARCH64_RET_VOID;
+      break;
+    case FFI_TYPE_UINT8:
+      flags = AARCH64_RET_UINT8;
+      break;
+    case FFI_TYPE_UINT16:
+      flags = AARCH64_RET_UINT16;
+      break;
+    case FFI_TYPE_UINT32:
+      flags = AARCH64_RET_UINT32;
+      break;
+    case FFI_TYPE_SINT8:
+      flags = AARCH64_RET_SINT8;
+      break;
+    case FFI_TYPE_SINT16:
+      flags = AARCH64_RET_SINT16;
+      break;
+    case FFI_TYPE_INT:
+    case FFI_TYPE_SINT32:
+      flags = AARCH64_RET_SINT32;
+      break;
+    case FFI_TYPE_SINT64:
+    case FFI_TYPE_UINT64:
+      flags = AARCH64_RET_INT64;
+      break;
+    case FFI_TYPE_POINTER:
+      flags = (sizeof(void *) == 4 ? AARCH64_RET_UINT32 : AARCH64_RET_INT64);
+      break;
+
+    case FFI_TYPE_FLOAT:
+      flags = AARCH64_RET_S1;
+      break;
+    case FFI_TYPE_DOUBLE:
+      flags = AARCH64_RET_D1;
+      break;
+    case FFI_TYPE_LONGDOUBLE:
+      flags = AARCH64_RET_Q1;
+      break;
+
+    case FFI_TYPE_STRUCT:
+      {
+	int h = is_hfa (rtype);
+	size_t s = rtype->size;
+
+	if (h)
+	  flags = (h & 0xff) * 4 + 4 - (h >> 8);
+	else if (s > 16)
+	  {
+	    flags = AARCH64_RET_VOID | AARCH64_RET_IN_MEM;
+	    bytes += 8;
+	  }
+	else if (s == 16)
+	  flags = AARCH64_RET_INT128;
+	else if (s == 8)
+	  flags = AARCH64_RET_INT64;
+	else
+	  flags = AARCH64_RET_INT128 | AARCH64_RET_NEED_COPY;
+      }
+      break;
+
+    default:
+      abort();
+    }
+
+  aarch64_flags = 0;
+  for (i = 0, n = cif->nargs; i < n; i++)
+    if (is_v_register_candidate (cif->arg_types[i]))
+      {
+	aarch64_flags = AARCH64_FLAG_ARG_V;
+	flags |= AARCH64_FLAG_ARG_V;
+	break;
+      }
+
   /* Round the stack up to a multiple of the stack alignment requirement. */
-  cif->bytes = ALIGN(cif->bytes, 16);
-
-  /* Initialize our flags. We are interested if this CIF will touch a
-     vector register, if so we will enable context save and load to
-     those registers, otherwise not. This is intended to be friendly
-     to lazy float context switching in the kernel.  */
-  cif->aarch64_flags = 0;
-
-  if (is_v_register_candidate (cif->rtype))
-    {
-      cif->aarch64_flags |= AARCH64_FLAG_ARG_V;
-    }
-  else
-    {
-      int i;
-      for (i = 0; i < cif->nargs; i++)
-        if (is_v_register_candidate (cif->arg_types[i]))
-          {
-            cif->aarch64_flags |= AARCH64_FLAG_ARG_V;
-            break;
-          }
-    }
-
+  cif->bytes = ALIGN(bytes, 16);
+  cif->flags = flags;
+  cif->aarch64_flags = aarch64_flags;
 #if defined (__APPLE__)
   cif->aarch64_nfixedargs = 0;
 #endif
@@ -555,51 +615,65 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 }
 
 #if defined (__APPLE__)
-
 /* Perform Apple-specific cif processing for variadic calls */
 ffi_status ffi_prep_cif_machdep_var(ffi_cif *cif,
 				    unsigned int nfixedargs,
 				    unsigned int ntotalargs)
 {
-  ffi_status status;
-
-  status = ffi_prep_cif_machdep (cif);
-
+  ffi_status status = ffi_prep_cif_machdep (cif);
   cif->aarch64_nfixedargs = nfixedargs;
-
   return status;
 }
+#endif /* __APPLE__ */
 
-#endif
-
-extern void ffi_call_SYSV (void *stack, void *frame,
-			   void (*fn)(void), int flags) FFI_HIDDEN;
+extern void ffi_call_SYSV (struct call_context *context, void *frame,
+			   void (*fn)(void), void *rvalue, int flags)
+	FFI_HIDDEN;
 
 /* Call a function with the provided arguments and capture the return
    value.  */
 void
-ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+ffi_call (ffi_cif *cif, void (*fn)(void), void *orig_rvalue, void **avalue)
 {
   struct call_context *context;
-  void *stack, *frame;
+  void *stack, *frame, *rvalue;
   struct arg_state state;
-  size_t stack_bytes;
-  int i, nargs = cif->nargs;
-  int h, t;
+  size_t stack_bytes, rtype_size, rsize;
+  int i, nargs, flags;
   ffi_type *rtype;
 
-  /* Allocate consectutive stack for everything we'll need.  */
+  flags = cif->flags;
+  rtype = cif->rtype;
+  rtype_size = rtype->size;
   stack_bytes = cif->bytes;
-  stack = alloca (stack_bytes + 32 + sizeof(struct call_context));
+
+  /* If the target function returns a structure via hidden pointer,
+     then we cannot allow a null rvalue.  Otherwise, mash a null
+     rvalue to void return type.  */
+  rsize = 0;
+  if (flags & AARCH64_RET_IN_MEM)
+    {
+      if (orig_rvalue == NULL)
+	rsize = rtype_size;
+    }
+  else if (orig_rvalue == NULL)
+    flags &= AARCH64_FLAG_ARG_V;
+  else if (flags & AARCH64_RET_NEED_COPY)
+    rsize = 16;
+
+  /* Allocate consectutive stack for everything we'll need.  */
+  context = alloca (sizeof(struct call_context) + stack_bytes + 32 + rsize);
+  stack = context + 1;
   frame = stack + stack_bytes;
-  context = frame + 32;
+  rvalue = (rsize ? frame + 32 : orig_rvalue);
 
   arg_init (&state);
-  for (i = 0; i < nargs; i++)
+  for (i = 0, nargs = cif->nargs; i < nargs; i++)
     {
       ffi_type *ty = cif->arg_types[i];
       size_t s = ty->size;
       void *a = avalue[i];
+      int h, t;
 
       t = ty->type;
       switch (t)
@@ -717,54 +791,10 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 #endif
     }
 
-  rtype = cif->rtype;
-  if (is_register_candidate (rtype))
-    {
-      ffi_call_SYSV (stack, frame, fn, cif->aarch64_flags);
+  ffi_call_SYSV (context, frame, fn, rvalue, flags);
 
-      t = rtype->type;
-      switch (t)
-	{
-	case FFI_TYPE_INT:
-	case FFI_TYPE_UINT8:
-	case FFI_TYPE_SINT8:
-	case FFI_TYPE_UINT16:
-	case FFI_TYPE_SINT16:
-	case FFI_TYPE_UINT32:
-	case FFI_TYPE_SINT32:
-	case FFI_TYPE_POINTER:
-	case FFI_TYPE_UINT64:
-	case FFI_TYPE_SINT64:
-	  *(ffi_arg *)rvalue = extend_integer_type (&context->x[0], t);
-	  break;
-
-	case FFI_TYPE_FLOAT:
-	case FFI_TYPE_DOUBLE:
-	case FFI_TYPE_LONGDOUBLE:
-	  compress_hfa_type (rvalue, &context->v[0], 0x100 + t);
-	  break;
-
-	case FFI_TYPE_STRUCT:
-	  h = is_hfa (cif->rtype);
-	  if (h)
-	    compress_hfa_type (rvalue, &context->v[0], h);
-	  else
-	    {
-	      FFI_ASSERT (rtype->size <= 16);
-	      memcpy (rvalue, &context->x[0], rtype->size);
-	    }
-	  break;
-
-	default:
-	  FFI_ASSERT (0);
-	  break;
-	}
-    }
-  else
-    {
-      context->x8 = (uintptr_t)rvalue;
-      ffi_call_SYSV (stack, frame, fn, cif->aarch64_flags);
-    }
+  if (flags & AARCH64_RET_NEED_COPY)
+    memcpy (orig_rvalue, rvalue, rtype_size);
 }
 
 static unsigned char trampoline [] =
