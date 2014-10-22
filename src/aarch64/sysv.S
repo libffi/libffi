@@ -22,6 +22,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #define LIBFFI_ASM
 #include <fficonfig.h>
 #include <ffi.h>
+#include <ffi_cfi.h>
 #include "internal.h"
 
 #ifdef HAVE_MACHINE_ASM_H
@@ -38,158 +39,77 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #endif
 #endif
 
-#define cfi_adjust_cfa_offset(off)	.cfi_adjust_cfa_offset off
-#define cfi_rel_offset(reg, off)	.cfi_rel_offset reg, off
-#define cfi_restore(reg)		.cfi_restore reg
-#define cfi_def_cfa_register(reg)	.cfi_def_cfa_register reg
+	.text
+	.align 2
 
-        .text
-        .align 2
-
-        .globl CNAME(ffi_call_SYSV)
+	.globl CNAME(ffi_call_SYSV)
 #ifdef __ELF__
-        .type CNAME(ffi_call_SYSV), #function
+	.type	CNAME(ffi_call_SYSV), #function
+	.hidden	CNAME(ffi_call_SYSV)
 #endif
 
-/* ffi_call_SYSV()
-
-   Create a stack frame, setup an argument context, call the callee
-   and extract the result.
-
-   The maximum required argument stack size is provided,
-   ffi_call_SYSV() allocates that stack space then calls the
-   prepare_fn to populate register context and stack.  The
-   argument passing registers are loaded from the register
-   context and the callee called, on return the register passing
-   register are saved back to the context.  Our caller will
-   extract the return value from the final state of the saved
-   register context.
-
-   Prototype:
-
-   extern unsigned
-   ffi_call_SYSV (void (*)(struct call_context *context, unsigned char *,
-			   extended_cif *),
-                  struct call_context *context,
-                  extended_cif *,
-                  size_t required_stack_size,
-                  void (*fn)(void));
+/* ffi_call_SYSV
+   extern void ffi_call_SYSV (void *stack, void *frame,
+			      void (*fn)(void), int flags);
 
    Therefore on entry we have:
 
-   x0 prepare_fn
-   x1 &context
-   x2 &ecif
-   x3 bytes
-   x4 fn
+   x0 stack
+   x1 frame
+   x2 fn
+   x3 flags
+*/
 
-   This function uses the following stack frame layout:
-
-   ==
-                saved x30(lr)
-   x29(fp)->    saved x29(fp)
-                saved x24
-                saved x23
-                saved x22
-   sp'    ->    saved x21
-                ...
-   sp     ->    (constructed callee stack arguments)
-   ==
-
-   Voila! */
-
-#define ffi_call_SYSV_FS (8 * 4)
-
-        .cfi_startproc
+	cfi_startproc
 CNAME(ffi_call_SYSV):
-        stp     x29, x30, [sp, #-16]!
-	cfi_adjust_cfa_offset (16)
-        cfi_rel_offset (x29, 0)
-        cfi_rel_offset (x30, 8)
+	/* Use a stack frame allocated by our caller.  */
+	cfi_def_cfa(x1, 32);
+	stp	x29, x30, [x1]
+	mov	x29, x1
+	mov	sp, x0
+	cfi_def_cfa_register(x29)
+	cfi_rel_offset (x29, 0)
+	cfi_rel_offset (x30, 8)
 
-        mov     x29, sp
-	cfi_def_cfa_register (x29)
-        sub     sp, sp, #ffi_call_SYSV_FS
+	str	w3, [x29, #16]		/* save flags */
+	mov	x9, x2			/* save fn */
 
-        stp     x21, x22, [sp, #0]
-        cfi_rel_offset (x21, 0 - ffi_call_SYSV_FS)
-        cfi_rel_offset (x22, 8 - ffi_call_SYSV_FS)
-
-        stp     x23, x24, [sp, #16]
-        cfi_rel_offset (x23, 16 - ffi_call_SYSV_FS)
-        cfi_rel_offset (x24, 24 - ffi_call_SYSV_FS)
-
-        mov     x21, x1
-        mov     x22, x2
-        mov     x24, x4
-
-        /* Allocate the stack space for the actual arguments, many
-           arguments will be passed in registers, but we assume
-           worst case and allocate sufficient stack for ALL of
-           the arguments.  */
-        sub     sp, sp, x3
-
-        /* unsigned (*prepare_fn) (struct call_context *context,
-				   unsigned char *stack, extended_cif *ecif);
-	 */
-        mov     x23, x0
-        mov     x0, x1
-        mov     x1, sp
-        /* x2 already in place */
-        blr     x23
-
-        /* Preserve the flags returned.  */
-        mov     x23, x0
-
-        /* Figure out if we should touch the vector registers.  */
-        tbz     x23, #AARCH64_FLAG_ARG_V_BIT, 1f
-
-        /* Load the vector argument passing registers.  */
-        ldp     q0, q1, [x21, #0]
-        ldp     q2, q3, [x21, #32]
-        ldp     q4, q5, [x21, #64]
-        ldp     q6, q7, [x21, #96]
+	/* Load the vector argument passing registers, if necessary.  */
+	tbz	w3, #AARCH64_FLAG_ARG_V_BIT, 1f
+	ldp     q0, q1, [x29, #32 + 0]
+	ldp     q2, q3, [x29, #32 + 32]
+	ldp     q4, q5, [x29, #32 + 64]
+	ldp     q6, q7, [x29, #32 + 96]
 1:
-        /* Load the core argument passing registers, including
+	/* Load the core argument passing registers, including
 	   the structure return pointer.  */
-        ldp     x0, x1, [x21, #16*N_V_ARG_REG + 0]
-        ldp     x2, x3, [x21, #16*N_V_ARG_REG + 16]
-        ldp     x4, x5, [x21, #16*N_V_ARG_REG + 32]
-        ldp     x6, x7, [x21, #16*N_V_ARG_REG + 48]
-        ldr     x8,     [x21, #16*N_V_ARG_REG + 64]
+	ldp     x0, x1, [x29, #32 + 16*N_V_ARG_REG + 0]
+	ldp     x2, x3, [x29, #32 + 16*N_V_ARG_REG + 16]
+	ldp     x4, x5, [x29, #32 + 16*N_V_ARG_REG + 32]
+	ldp     x6, x7, [x29, #32 + 16*N_V_ARG_REG + 48]
+	ldr     x8,     [x29, #32 + 16*N_V_ARG_REG + 64]
 
-        blr     x24
+	blr     x9			/* call fn */
 
-        /* Save the core return registers.  */
-        stp     x0, x1, [x21, #16*N_V_ARG_REG]
+	ldr	w3, [x29, #16]		/* reload flags */
 
-        /* Figure out if we should touch the vector registers.  */
-        tbz     x23, #AARCH64_FLAG_ARG_V_BIT, 1f
-
-        /* Save the vector return registers.  */
-        stp     q0, q1, [x21, #0]
-        stp     q2, q3, [x21, #32]
-1:
-        /* All done, unwind our stack frame.  */
-        ldp     x21, x22, [x29,  # - ffi_call_SYSV_FS]
-        cfi_restore (x21)
-        cfi_restore (x22)
-
-        ldp     x23, x24, [x29,  # - ffi_call_SYSV_FS + 16]
-        cfi_restore (x23)
-        cfi_restore (x24)
-
-        mov     sp, x29
+	/* Partially deconstruct the stack frame.  */
+	mov     sp, x29
 	cfi_def_cfa_register (sp)
+	ldp     x29, x30, [x29]
 
-        ldp     x29, x30, [sp], #16
-	cfi_adjust_cfa_offset (-16)
-        cfi_restore (x29)
-        cfi_restore (x30)
+	/* Save the core return registers.  */
+	stp     x0, x1, [sp, #32 + 16*N_V_ARG_REG]
 
-        ret
+	/* Save the vector return registers, if necessary.  */
+	tbz     w3, #AARCH64_FLAG_ARG_V_BIT, 1f
+	stp     q0, q1, [sp, #32 + 0]
+	stp     q2, q3, [sp, #32 + 32]
+1:
+	/* All done.  */
+	ret
 
-        .cfi_endproc
+	cfi_endproc
 #ifdef __ELF__
         .size CNAME(ffi_call_SYSV), .-CNAME(ffi_call_SYSV)
 #endif
@@ -237,7 +157,7 @@ CNAME(ffi_call_SYSV):
         .align 2
 
         .globl CNAME(ffi_closure_SYSV)
-        .cfi_startproc
+        cfi_startproc
 CNAME(ffi_closure_SYSV):
         stp     x29, x30, [sp, #-16]!
 	cfi_adjust_cfa_offset (16)
@@ -310,7 +230,7 @@ CNAME(ffi_closure_SYSV):
         cfi_restore (x30)
 
         ret
-        .cfi_endproc
+	cfi_endproc
 #ifdef __ELF__
         .size CNAME(ffi_closure_SYSV), .-CNAME(ffi_closure_SYSV)
 #endif

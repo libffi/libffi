@@ -72,14 +72,6 @@ ffi_clear_cache (void *start, void *end)
 }
 
 extern void
-ffi_call_SYSV (unsigned (*)(struct call_context *context, unsigned char *,
-			    extended_cif *),
-               struct call_context *context,
-               extended_cif *,
-               size_t,
-               void (*fn)(void));
-
-extern void
 ffi_closure_SYSV (ffi_closure *);
 
 /* Test for an FFI floating point representation.  */
@@ -311,12 +303,11 @@ struct arg_state
 
 /* Initialize a procedure call argument marshalling state.  */
 static void
-arg_init (struct arg_state *state, size_t call_frame_size)
+arg_init (struct arg_state *state)
 {
   state->ngrn = 0;
   state->nsrn = 0;
   state->nsaa = 0;
-
 #if defined (__APPLE__)
   state->allocating_variadic = 0;
 #endif
@@ -529,27 +520,88 @@ allocate_int_to_reg_or_stack (struct call_context *context,
   return allocate_to_stack (state, stack, size, size);
 }
 
-/* Marshall the arguments from FFI representation to procedure call
-   context and stack.  */
-
-static unsigned
-aarch64_prep_args (struct call_context *context, unsigned char *stack,
-		   extended_cif *ecif)
+ffi_status
+ffi_prep_cif_machdep (ffi_cif *cif)
 {
-  ffi_cif *cif = ecif->cif;
-  void **avalue = ecif->avalue;
-  int i, nargs = cif->nargs;
+  /* Round the stack up to a multiple of the stack alignment requirement. */
+  cif->bytes = ALIGN(cif->bytes, 16);
+
+  /* Initialize our flags. We are interested if this CIF will touch a
+     vector register, if so we will enable context save and load to
+     those registers, otherwise not. This is intended to be friendly
+     to lazy float context switching in the kernel.  */
+  cif->aarch64_flags = 0;
+
+  if (is_v_register_candidate (cif->rtype))
+    {
+      cif->aarch64_flags |= AARCH64_FLAG_ARG_V;
+    }
+  else
+    {
+      int i;
+      for (i = 0; i < cif->nargs; i++)
+        if (is_v_register_candidate (cif->arg_types[i]))
+          {
+            cif->aarch64_flags |= AARCH64_FLAG_ARG_V;
+            break;
+          }
+    }
+
+#if defined (__APPLE__)
+  cif->aarch64_nfixedargs = 0;
+#endif
+
+  return FFI_OK;
+}
+
+#if defined (__APPLE__)
+
+/* Perform Apple-specific cif processing for variadic calls */
+ffi_status ffi_prep_cif_machdep_var(ffi_cif *cif,
+				    unsigned int nfixedargs,
+				    unsigned int ntotalargs)
+{
+  ffi_status status;
+
+  status = ffi_prep_cif_machdep (cif);
+
+  cif->aarch64_nfixedargs = nfixedargs;
+
+  return status;
+}
+
+#endif
+
+extern void ffi_call_SYSV (void *stack, void *frame,
+			   void (*fn)(void), int flags) FFI_HIDDEN;
+
+/* Call a function with the provided arguments and capture the return
+   value.  */
+void
+ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+{
+  struct call_context *context;
+  void *stack, *frame;
   struct arg_state state;
+  size_t stack_bytes;
+  int i, nargs = cif->nargs;
+  int h, t;
+  ffi_type *rtype;
 
-  arg_init (&state, cif->bytes);
+  /* Allocate consectutive stack for everything we'll need.  */
+  stack_bytes = cif->bytes;
+  stack = alloca (stack_bytes + 32 + sizeof(struct call_context));
+  frame = stack + stack_bytes;
+  context = frame + 32;
 
+  arg_init (&state);
   for (i = 0; i < nargs; i++)
     {
       ffi_type *ty = cif->arg_types[i];
       size_t s = ty->size;
-      int h, t = ty->type;
       void *a = avalue[i];
 
+      t = ty->type;
       switch (t)
 	{
 	case FFI_TYPE_VOID:
@@ -665,83 +717,12 @@ aarch64_prep_args (struct call_context *context, unsigned char *stack,
 #endif
     }
 
-  return cif->aarch64_flags;
-}
-
-ffi_status
-ffi_prep_cif_machdep (ffi_cif *cif)
-{
-  /* Round the stack up to a multiple of the stack alignment requirement. */
-  cif->bytes = ALIGN(cif->bytes, 16);
-
-  /* Initialize our flags. We are interested if this CIF will touch a
-     vector register, if so we will enable context save and load to
-     those registers, otherwise not. This is intended to be friendly
-     to lazy float context switching in the kernel.  */
-  cif->aarch64_flags = 0;
-
-  if (is_v_register_candidate (cif->rtype))
+  rtype = cif->rtype;
+  if (is_register_candidate (rtype))
     {
-      cif->aarch64_flags |= AARCH64_FLAG_ARG_V;
-    }
-  else
-    {
-      int i;
-      for (i = 0; i < cif->nargs; i++)
-        if (is_v_register_candidate (cif->arg_types[i]))
-          {
-            cif->aarch64_flags |= AARCH64_FLAG_ARG_V;
-            break;
-          }
-    }
+      ffi_call_SYSV (stack, frame, fn, cif->aarch64_flags);
 
-#if defined (__APPLE__)
-  cif->aarch64_nfixedargs = 0;
-#endif
-
-  return FFI_OK;
-}
-
-#if defined (__APPLE__)
-
-/* Perform Apple-specific cif processing for variadic calls */
-ffi_status ffi_prep_cif_machdep_var(ffi_cif *cif,
-				    unsigned int nfixedargs,
-				    unsigned int ntotalargs)
-{
-  ffi_status status;
-
-  status = ffi_prep_cif_machdep (cif);
-
-  cif->aarch64_nfixedargs = nfixedargs;
-
-  return status;
-}
-
-#endif
-
-/* Call a function with the provided arguments and capture the return
-   value.  */
-void
-ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
-{
-  extended_cif ecif;
-  struct call_context context;
-  size_t stack_bytes;
-  int h, t;
-
-  ecif.cif = cif;
-  ecif.avalue = avalue;
-  ecif.rvalue = rvalue;
-
-  stack_bytes = cif->bytes;
-
-  memset (&context, 0, sizeof (context));
-  if (is_register_candidate (cif->rtype))
-    {
-      ffi_call_SYSV (aarch64_prep_args, &context, &ecif, stack_bytes, fn);
-
-      t = cif->rtype->type;
+      t = rtype->type;
       switch (t)
 	{
 	case FFI_TYPE_INT:
@@ -754,33 +735,35 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 	case FFI_TYPE_POINTER:
 	case FFI_TYPE_UINT64:
 	case FFI_TYPE_SINT64:
-	  *(ffi_arg *)rvalue = extend_integer_type (&context.x[0], t);
+	  *(ffi_arg *)rvalue = extend_integer_type (&context->x[0], t);
 	  break;
 
 	case FFI_TYPE_FLOAT:
 	case FFI_TYPE_DOUBLE:
 	case FFI_TYPE_LONGDOUBLE:
-	  compress_hfa_type (rvalue, &context.v[0], 0x100 + t);
+	  compress_hfa_type (rvalue, &context->v[0], 0x100 + t);
 	  break;
 
 	case FFI_TYPE_STRUCT:
 	  h = is_hfa (cif->rtype);
 	  if (h)
-	    compress_hfa_type (rvalue, &context.v[0], h);
-	  else if ((cif->rtype->size + 7) / 8 < N_X_ARG_REG)
-	    memcpy (rvalue, &context.x[0], cif->rtype->size);
+	    compress_hfa_type (rvalue, &context->v[0], h);
 	  else
-	    abort();
+	    {
+	      FFI_ASSERT (rtype->size <= 16);
+	      memcpy (rvalue, &context->x[0], rtype->size);
+	    }
 	  break;
 
 	default:
-	  abort();
+	  FFI_ASSERT (0);
+	  break;
 	}
     }
   else
     {
-      context.x8 = (uintptr_t)rvalue;
-      ffi_call_SYSV (aarch64_prep_args, &context, &ecif, stack_bytes, fn);
+      context->x8 = (uintptr_t)rvalue;
+      ffi_call_SYSV (stack, frame, fn, cif->aarch64_flags);
     }
 }
 
@@ -851,7 +834,7 @@ ffi_closure_SYSV_inner (ffi_closure *closure, struct call_context *context,
   struct arg_state state;
   ffi_type *rtype;
 
-  arg_init (&state, ALIGN(cif->bytes, 16));
+  arg_init (&state);
 
   for (i = 0; i < nargs; i++)
     {
