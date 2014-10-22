@@ -40,9 +40,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #endif
 
 	.text
-	.align 2
+	.align 4
 
-	.globl CNAME(ffi_call_SYSV)
+	.globl	CNAME(ffi_call_SYSV)
 #ifdef __ELF__
 	.type	CNAME(ffi_call_SYSV), #function
 	.hidden	CNAME(ffi_call_SYSV)
@@ -50,14 +50,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 
 /* ffi_call_SYSV
    extern void ffi_call_SYSV (void *stack, void *frame,
-			      void (*fn)(void), int flags);
+			      void (*fn)(void), void *rvalue, int flags);
 
    Therefore on entry we have:
 
    x0 stack
    x1 frame
    x2 fn
-   x3 flags
+   x3 rvalue
+   x4 flags
 */
 
 	cfi_startproc
@@ -71,43 +72,111 @@ CNAME(ffi_call_SYSV):
 	cfi_rel_offset (x29, 0)
 	cfi_rel_offset (x30, 8)
 
-	str	w3, [x29, #16]		/* save flags */
 	mov	x9, x2			/* save fn */
+	mov	x8, x3			/* install structure return */
+	stp	x3, x4, [x29, #16]	/* save rvalue and flags */
 
 	/* Load the vector argument passing registers, if necessary.  */
-	tbz	w3, #AARCH64_FLAG_ARG_V_BIT, 1f
-	ldp     q0, q1, [x29, #32 + 0]
-	ldp     q2, q3, [x29, #32 + 32]
-	ldp     q4, q5, [x29, #32 + 64]
-	ldp     q6, q7, [x29, #32 + 96]
+	tbz	w4, #AARCH64_FLAG_ARG_V_BIT, 1f
+	ldp     q0, q1, [sp, #0]
+	ldp     q2, q3, [sp, #32]
+	ldp     q4, q5, [sp, #64]
+	ldp     q6, q7, [sp, #96]
 1:
 	/* Load the core argument passing registers, including
 	   the structure return pointer.  */
-	ldp     x0, x1, [x29, #32 + 16*N_V_ARG_REG + 0]
-	ldp     x2, x3, [x29, #32 + 16*N_V_ARG_REG + 16]
-	ldp     x4, x5, [x29, #32 + 16*N_V_ARG_REG + 32]
-	ldp     x6, x7, [x29, #32 + 16*N_V_ARG_REG + 48]
-	ldr     x8,     [x29, #32 + 16*N_V_ARG_REG + 64]
+	ldp     x0, x1, [sp, #16*N_V_ARG_REG + 0]
+	ldp     x2, x3, [sp, #16*N_V_ARG_REG + 16]
+	ldp     x4, x5, [sp, #16*N_V_ARG_REG + 32]
+	ldp     x6, x7, [sp, #16*N_V_ARG_REG + 48]
+
+	/* Deallocate the context, leaving the stacked arguments.  */
+	add	sp, sp, #CALL_CONTEXT_SIZE
 
 	blr     x9			/* call fn */
 
-	ldr	w3, [x29, #16]		/* reload flags */
+	ldp	x3, x4, [x29, #16]	/* reload rvalue and flags */
 
 	/* Partially deconstruct the stack frame.  */
 	mov     sp, x29
 	cfi_def_cfa_register (sp)
 	ldp     x29, x30, [x29]
 
-	/* Save the core return registers.  */
-	stp     x0, x1, [sp, #32 + 16*N_V_ARG_REG]
+	/* Save the return value as directed.  */
+	adr	x5, 0f
+	and	w4, w4, #AARCH64_RET_MASK
+	add	x5, x5, x4, lsl #3
+	br	x5
 
-	/* Save the vector return registers, if necessary.  */
-	tbz     w3, #AARCH64_FLAG_ARG_V_BIT, 1f
-	stp     q0, q1, [sp, #32 + 0]
-	stp     q2, q3, [sp, #32 + 32]
-1:
-	/* All done.  */
+	/* Note that each table entry is 2 insns, and thus 8 bytes.
+	   For integer data, note that we're storing into ffi_arg
+	   and therefore we want to extend to 64 bits; these types
+	   have two consecutive entries allocated for them.  */
+	.align	4
+0:	ret				/* VOID */
+	nop
+1:	str	x0, [x3]		/* INT64 */
 	ret
+2:	stp	x0, x1, [x3]		/* INT128 */
+	ret
+3:	brk	#1000			/* UNUSED */
+	ret
+4:	brk	#1000			/* UNUSED */
+	ret
+5:	brk	#1000			/* UNUSED */
+	ret
+6:	brk	#1000			/* UNUSED */
+	ret
+7:	brk	#1000			/* UNUSED */
+	ret
+8:	st4	{ v0.s-v3.s }[0], [x3]	/* S4 */
+	ret
+9:	st3	{ v0.s-v2.s }[0], [x3]	/* S3 */
+	ret
+10:	stp	s0, s1, [x3]		/* S2 */
+	ret
+11:	str	s0, [x3]		/* S1 */
+	ret
+12:	st4	{ v0.d-v3.d }[0], [x3]	/* D4 */
+	ret
+13:	st3	{ v0.d-v2.d }[0], [x3]	/* D3 */
+	ret
+14:	stp	d0, d1, [x3]		/* D2 */
+	ret
+15:	str	d0, [x3]		/* D1 */
+	ret
+16:	str	q3, [x3, #48]		/* Q4 */
+	nop
+17:	str	q2, [x3, #32]		/* Q3 */
+	nop
+18:	stp	q0, q1, [x3]		/* Q2 */
+	ret
+19:	str	q0, [x3]		/* Q1 */
+	ret
+20:	uxtb	w0, w0			/* UINT8 */
+	str	x0, [x3]
+21:	ret				/* reserved */
+	nop
+22:	uxth	w0, w0			/* UINT16 */
+	str	x0, [x3]
+23:	ret				/* reserved */
+	nop
+24:	mov	w0, w0			/* UINT32 */
+	str	x0, [x3]
+25:	ret				/* reserved */
+	nop
+26:	sxtb	x0, w0			/* SINT8 */
+	str	x0, [x3]
+27:	ret				/* reserved */
+	nop
+28:	sxth	x0, w0			/* SINT16 */
+	str	x0, [x3]
+29:	ret				/* reserved */
+	nop
+30:	sxtw	x0, w0			/* SINT32 */
+	str	x0, [x3]
+31:	ret				/* reserved */
+	nop
 
 	cfi_endproc
 #ifdef __ELF__
@@ -154,9 +223,13 @@ CNAME(ffi_call_SYSV):
    Voila!  */
 
         .text
-        .align 2
+        .align 4
 
-        .globl CNAME(ffi_closure_SYSV)
+        .globl	CNAME(ffi_closure_SYSV)
+#ifdef __ELF__
+	.type	CNAME(ffi_closure_SYSV), #function
+	.hidden	CNAME(ffi_closure_SYSV)
+#endif
         cfi_startproc
 CNAME(ffi_closure_SYSV):
         stp     x29, x30, [sp, #-16]!
