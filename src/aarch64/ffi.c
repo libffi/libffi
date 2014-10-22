@@ -383,6 +383,7 @@ is_register_candidate (ffi_type *ty)
   switch (ty->type)
     {
     case FFI_TYPE_VOID:
+      return 0;
     case FFI_TYPE_FLOAT:
     case FFI_TYPE_DOUBLE:
     case FFI_TYPE_LONGDOUBLE:
