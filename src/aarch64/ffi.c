@@ -436,7 +436,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 {
   ffi_type *rtype = cif->rtype;
   size_t bytes = cif->bytes;
-  int flags, aarch64_flags, i, n;
+  int flags, i, n;
 
   switch (rtype->type)
     {
@@ -496,11 +496,9 @@ ffi_prep_cif_machdep (ffi_cif *cif)
       abort();
     }
 
-  aarch64_flags = 0;
   for (i = 0, n = cif->nargs; i < n; i++)
     if (is_vfp_type (cif->arg_types[i]))
       {
-	aarch64_flags = AARCH64_FLAG_ARG_V;
 	flags |= AARCH64_FLAG_ARG_V;
 	break;
       }
@@ -508,7 +506,6 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   /* Round the stack up to a multiple of the stack alignment requirement. */
   cif->bytes = ALIGN(bytes, 16);
   cif->flags = flags;
-  cif->aarch64_flags = aarch64_flags;
 #if defined (__APPLE__)
   cif->aarch64_nfixedargs = 0;
 #endif
