@@ -85,7 +85,7 @@ is_hfa0 (const ffi_type *ty)
     for (i = 0; elements[i]; ++i)
       {
         ret = elements[i]->type;
-        if (ret == FFI_TYPE_STRUCT)
+        if (ret == FFI_TYPE_STRUCT || ret == FFI_TYPE_COMPLEX)
           {
             ret = is_hfa0 (elements[i]);
             if (ret < 0)
@@ -110,7 +110,7 @@ is_hfa1 (const ffi_type *ty, int candidate)
     for (i = 0; elements[i]; ++i)
       {
         int t = elements[i]->type;
-        if (t == FFI_TYPE_STRUCT)
+        if (t == FFI_TYPE_STRUCT || t == FFI_TYPE_COMPLEX)
           {
             if (!is_hfa1 (elements[i], candidate))
               return 0;
@@ -138,16 +138,27 @@ is_vfp_type (const ffi_type *ty)
   size_t size, ele_count;
 
   /* Quickest tests first.  */
-  switch (ty->type)
+  candidate = ty->type;
+  switch (candidate)
     {
     default:
       return 0;
     case FFI_TYPE_FLOAT:
-      return AARCH64_RET_S1;
     case FFI_TYPE_DOUBLE:
-      return AARCH64_RET_D1;
     case FFI_TYPE_LONGDOUBLE:
-      return AARCH64_RET_Q1;
+      ele_count = 1;
+      goto done;
+    case FFI_TYPE_COMPLEX:
+      candidate = ty->elements[0]->type;
+      switch (candidate)
+	{
+	case FFI_TYPE_FLOAT:
+	case FFI_TYPE_DOUBLE:
+	case FFI_TYPE_LONGDOUBLE:
+	  ele_count = 2;
+	  goto done;
+	}
+      return 0;
     case FFI_TYPE_STRUCT:
       break;
     }
@@ -160,7 +171,7 @@ is_vfp_type (const ffi_type *ty)
   /* Find the type of the first non-structure member.  */
   elements = ty->elements;
   candidate = elements[0]->type;
-  if (candidate == FFI_TYPE_STRUCT)
+  if (candidate == FFI_TYPE_STRUCT || candidate == FFI_TYPE_COMPLEX)
     {
       for (i = 0; ; ++i)
         {
@@ -198,16 +209,18 @@ is_vfp_type (const ffi_type *ty)
   /* Finally, make sure that all scalar elements are the same type.  */
   for (i = 0; elements[i]; ++i)
     {
-      if (elements[i]->type == FFI_TYPE_STRUCT)
+      int t = elements[i]->type;
+      if (t == FFI_TYPE_STRUCT || t == FFI_TYPE_COMPLEX)
         {
           if (!is_hfa1 (elements[i], candidate))
             return 0;
         }
-      else if (elements[i]->type != candidate)
+      else if (t != candidate)
         return 0;
     }
 
   /* All tests succeeded.  Encode the result.  */
+ done:
   return candidate * 4 + (4 - ele_count);
 }
 
@@ -474,6 +487,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
     case FFI_TYPE_DOUBLE:
     case FFI_TYPE_LONGDOUBLE:
     case FFI_TYPE_STRUCT:
+    case FFI_TYPE_COMPLEX:
       flags = is_vfp_type (rtype);
       if (flags == 0)
 	{
@@ -618,6 +632,7 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *orig_rvalue, void **avalue)
 	case FFI_TYPE_DOUBLE:
 	case FFI_TYPE_LONGDOUBLE:
 	case FFI_TYPE_STRUCT:
+	case FFI_TYPE_COMPLEX:
 	  {
 	    void *dest;
 
@@ -788,6 +803,7 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
 	case FFI_TYPE_DOUBLE:
 	case FFI_TYPE_LONGDOUBLE:
 	case FFI_TYPE_STRUCT:
+	case FFI_TYPE_COMPLEX:
 	  h = is_vfp_type (ty);
 	  if (h)
 	    {
