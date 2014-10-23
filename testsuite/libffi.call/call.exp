@@ -26,10 +26,11 @@ run-many-tests $tlist ""
 
 # ??? We really should preprocess ffi.h and grep
 # for FFI_TARGET_HAS_COMPLEX_TYPE.
-if { [istarget s390*]
-     || [istarget x86_64*]
-     || [istarget i?86*] } {
-  run-many-tests $ctlist ""
+if { [istarget aarch64*]
+     || [istarget i?86*]
+     || [istarget s390*]
+     || [istarget x86_64*] } {
+    run-many-tests $ctlist ""
 } else {
     foreach test $ctlist {
 	unsupported "$test"

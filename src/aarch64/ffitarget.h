@@ -52,4 +52,6 @@ typedef enum ffi_abi
 #define FFI_EXTRA_CIF_FIELDS unsigned aarch64_nfixedargs
 #endif
 
+#define FFI_TARGET_HAS_COMPLEX_TYPE
+
 #endif
