@@ -49,9 +49,7 @@ typedef enum ffi_abi
 
 #if defined (__APPLE__)
 #define FFI_TARGET_SPECIFIC_VARIADIC
-#define FFI_EXTRA_CIF_FIELDS unsigned aarch64_flags; unsigned aarch64_nfixedargs
-#else
-#define FFI_EXTRA_CIF_FIELDS unsigned aarch64_flags
+#define FFI_EXTRA_CIF_FIELDS unsigned aarch64_nfixedargs
 #endif
 
 #endif
