@@ -71,9 +71,6 @@ ffi_clear_cache (void *start, void *end)
 #endif
 }
 
-extern void
-ffi_closure_SYSV (ffi_closure *);
-
 /* Test for an FFI floating point representation.  */
 
 static unsigned
@@ -209,69 +206,6 @@ is_hfa(const ffi_type *ty)
 
   /* All tests succeeded.  Encode the result.  */
   return (ele_count << 8) | candidate;
-}
-
-/* Test if an ffi_type is a candidate for passing in a register.
-
-   This test does not check that sufficient registers of the
-   appropriate class are actually available, merely that IFF
-   sufficient registers are available then the argument will be passed
-   in register(s).
-
-   Note that an ffi_type that is deemed to be a register candidate
-   will always be returned in registers.
-
-   Returns 1 if a register candidate else 0.  */
-
-static int
-is_register_candidate (ffi_type *ty)
-{
-  switch (ty->type)
-    {
-    case FFI_TYPE_VOID:
-      return 0;
-    case FFI_TYPE_FLOAT:
-    case FFI_TYPE_DOUBLE:
-    case FFI_TYPE_LONGDOUBLE:
-    case FFI_TYPE_UINT8:
-    case FFI_TYPE_UINT16:
-    case FFI_TYPE_UINT32:
-    case FFI_TYPE_UINT64:
-    case FFI_TYPE_POINTER:
-    case FFI_TYPE_SINT8:
-    case FFI_TYPE_SINT16:
-    case FFI_TYPE_SINT32:
-    case FFI_TYPE_INT:
-    case FFI_TYPE_SINT64:
-      return 1;
-
-    case FFI_TYPE_STRUCT:
-      if (is_hfa (ty))
-        {
-          return 1;
-        }
-      else if (ty->size > 16)
-        {
-          /* Too large. Will be replaced with a pointer to memory. The
-             pointer MAY be passed in a register, but the value will
-             not. This test specifically fails since the argument will
-             never be passed by value in registers. */
-          return 0;
-        }
-      else
-        {
-          /* Might be passed in registers depending on the number of
-             registers required. */
-          return (ty->size + 7) / 8 < N_X_ARG_REG;
-        }
-      break;
-
-    default:
-      FFI_ASSERT (0);
-      break;
-    }
-
-  return 0;
 }
 
 /* Test if an ffi_type argument or result is a candidate for a vector
@@ -797,42 +731,42 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *orig_rvalue, void **avalue)
     memcpy (orig_rvalue, rvalue, rtype_size);
 }
 
-static unsigned char trampoline [] =
-{ 0x70, 0x00, 0x00, 0x58,	/* ldr	x16, 1f	*/
-  0x91, 0x00, 0x00, 0x10,	/* adr	x17, 2f	*/
-  0x00, 0x02, 0x1f, 0xd6	/* br	x16	*/
-};
-
 /* Build a trampoline.  */
 
-#define FFI_INIT_TRAMPOLINE(TRAMP,FUN,CTX,FLAGS)			\
-  ({unsigned char *__tramp = (unsigned char*)(TRAMP);			\
-    UINT64  __fun = (UINT64)(FUN);					\
-    UINT64  __ctx = (UINT64)(CTX);					\
-    UINT64  __flags = (UINT64)(FLAGS);					\
-    memcpy (__tramp, trampoline, sizeof (trampoline));			\
-    memcpy (__tramp + 12, &__fun, sizeof (__fun));			\
-    memcpy (__tramp + 20, &__ctx, sizeof (__ctx));			\
-    memcpy (__tramp + 28, &__flags, sizeof (__flags));			\
-    ffi_clear_cache(__tramp, __tramp + FFI_TRAMPOLINE_SIZE);		\
-  })
+extern void ffi_closure_SYSV (void) FFI_HIDDEN;
+extern void ffi_closure_SYSV_V (void) FFI_HIDDEN;
 
 ffi_status
-ffi_prep_closure_loc (ffi_closure* closure,
+ffi_prep_closure_loc (ffi_closure *closure,
                       ffi_cif* cif,
                       void (*fun)(ffi_cif*,void*,void**,void*),
                       void *user_data,
                       void *codeloc)
 {
+  static const unsigned char trampoline[16] = {
+    0x90, 0x00, 0x00, 0x58,	/* ldr	x16, tramp+16	*/
+    0xf1, 0xff, 0xff, 0x10,	/* adr	x17, tramp+0	*/
+    0x00, 0x02, 0x1f, 0xd6	/* br	x16		*/
+  };
+  char *tramp = closure->tramp;
+  void (*start)(void);
+
   if (cif->abi != FFI_SYSV)
     return FFI_BAD_ABI;
 
-  FFI_INIT_TRAMPOLINE (&closure->tramp[0], &ffi_closure_SYSV, codeloc,
-		       cif->aarch64_flags);
-
-  closure->cif  = cif;
+  closure->cif = cif;
+  closure->fun = fun;
   closure->user_data = user_data;
-  closure->fun  = fun;
+
+  memcpy (tramp, trampoline, sizeof(trampoline));
+
+  if (cif->flags & AARCH64_FLAG_ARG_V)
+    start = ffi_closure_SYSV_V;
+  else
+    start = ffi_closure_SYSV;
+  *(UINT64 *)(tramp + 16) = (uintptr_t)start;
+
+  ffi_clear_cache(tramp, tramp + FFI_TRAMPOLINE_SIZE);
 
   return FFI_OK;
 }
@@ -853,20 +787,20 @@ ffi_prep_closure_loc (ffi_closure* closure,
    descriptors, invokes the wrapped function, then marshalls the return
    value back into the call context.  */
 
-void FFI_HIDDEN
-ffi_closure_SYSV_inner (ffi_closure *closure, struct call_context *context,
-			void *stack)
+int FFI_HIDDEN
+ffi_closure_SYSV_inner (ffi_cif *cif,
+			void (*fun)(ffi_cif*,void*,void**,void*),
+			void *user_data,
+			struct call_context *context,
+			void *stack, void *rvalue)
 {
-  ffi_cif *cif = closure->cif;
   void **avalue = (void**) alloca (cif->nargs * sizeof (void*));
-  void *rvalue = NULL;
-  int i, h, nargs = cif->nargs;
+  int i, h, nargs, flags;
   struct arg_state state;
-  ffi_type *rtype;
 
   arg_init (&state);
 
-  for (i = 0; i < nargs; i++)
+  for (i = 0, nargs = cif->nargs; i < nargs; i++)
     {
       ffi_type *ty = cif->arg_types[i];
       int t = ty->type;
@@ -955,69 +889,11 @@ ffi_closure_SYSV_inner (ffi_closure *closure, struct call_context *context,
 	}
     }
 
-  /* Figure out where the return value will be passed, either in registers
-     or in a memory block allocated by the caller and passed in x8.  */
-  rtype = cif->rtype;
-  if (is_register_candidate (rtype))
-    {
-      size_t s = rtype->size;
-      int t;
+  flags = cif->flags;
+  if (flags & AARCH64_RET_IN_MEM)
+    rvalue = (void *)(uintptr_t)context->x8;
 
-      /* Register candidates are *always* returned in registers. */
+  fun (cif, rvalue, avalue, user_data);
 
-      /* Allocate a scratchpad for the return value, we will let the
-         callee scrible the result into the scratch pad then move the
-         contents into the appropriate return value location for the
-         call convention.  */
-      rvalue = alloca (s);
-      (closure->fun) (cif, rvalue, avalue, closure->user_data);
-
-      /* Copy the return value into the call context so that it is returned
-         as expected to our caller.  */
-      t = rtype->type;
-      switch (t)
-        {
-        case FFI_TYPE_VOID:
-          break;
-
-        case FFI_TYPE_INT:
-        case FFI_TYPE_UINT8:
-        case FFI_TYPE_UINT16:
-        case FFI_TYPE_UINT32:
-        case FFI_TYPE_UINT64:
-        case FFI_TYPE_SINT8:
-        case FFI_TYPE_SINT16:
-        case FFI_TYPE_SINT32:
-        case FFI_TYPE_SINT64:
-        case FFI_TYPE_POINTER:
-	  context->x[0] = extend_integer_type (rvalue, t);
-          break;
-
-        case FFI_TYPE_FLOAT:
-        case FFI_TYPE_DOUBLE:
-        case FFI_TYPE_LONGDOUBLE:
-	  extend_hfa_type (&context->v[0], rvalue, 0x100 + t);
-	  break;
-
-        case FFI_TYPE_STRUCT:
-	  h = is_hfa (cif->rtype);
-          if (h)
-	    extend_hfa_type (&context->v[0], rvalue, h);
-          else
-	    {
-	      FFI_ASSERT (s <= 16);
-              memcpy (&context->x[0], rvalue, s);
-            }
-          break;
-
-        default:
-          abort();
-        }
-    }
-  else
-    {
-      rvalue = (void *)(uintptr_t)context->x8;
-      (closure->fun) (cif, rvalue, avalue, closure->user_data);
-    }
+  return flags;
 }
-
