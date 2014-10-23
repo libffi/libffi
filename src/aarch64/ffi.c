@@ -539,13 +539,14 @@ ffi_status ffi_prep_cif_machdep_var(ffi_cif *cif,
 #endif /* __APPLE__ */
 
 extern void ffi_call_SYSV (struct call_context *context, void *frame,
-			   void (*fn)(void), void *rvalue, int flags)
-	FFI_HIDDEN;
+			   void (*fn)(void), void *rvalue, int flags,
+			   void *closure) FFI_HIDDEN;
 
 /* Call a function with the provided arguments and capture the return
    value.  */
-void
-ffi_call (ffi_cif *cif, void (*fn)(void), void *orig_rvalue, void **avalue)
+static void
+ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
+	      void **avalue, void *closure)
 {
   struct call_context *context;
   void *stack, *frame, *rvalue;
@@ -698,11 +699,26 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *orig_rvalue, void **avalue)
 #endif
     }
 
-  ffi_call_SYSV (context, frame, fn, rvalue, flags);
+  ffi_call_SYSV (context, frame, fn, rvalue, flags, closure);
 
   if (flags & AARCH64_RET_NEED_COPY)
     memcpy (orig_rvalue, rvalue, rtype_size);
 }
+
+void
+ffi_call (ffi_cif *cif, void (*fn) (void), void *rvalue, void **avalue)
+{
+  ffi_call_int (cif, fn, rvalue, avalue, NULL);
+}
+
+#ifdef FFI_GO_CLOSURES
+void
+ffi_call_go (ffi_cif *cif, void (*fn) (void), void *rvalue,
+	     void **avalue, void *closure)
+{
+  ffi_call_int (cif, fn, rvalue, avalue, closure);
+}
+#endif /* FFI_GO_CLOSURES */
 
 /* Build a trampoline.  */
 
@@ -743,6 +759,32 @@ ffi_prep_closure_loc (ffi_closure *closure,
 
   return FFI_OK;
 }
+
+#ifdef FFI_GO_CLOSURES
+extern void ffi_go_closure_SYSV (void) FFI_HIDDEN;
+extern void ffi_go_closure_SYSV_V (void) FFI_HIDDEN;
+
+ffi_status
+ffi_prep_go_closure (ffi_go_closure *closure, ffi_cif* cif,
+                     void (*fun)(ffi_cif*,void*,void**,void*))
+{
+  void (*start)(void);
+
+  if (cif->abi != FFI_SYSV)
+    return FFI_BAD_ABI;
+
+  if (cif->flags & AARCH64_FLAG_ARG_V)
+    start = ffi_go_closure_SYSV_V;
+  else
+    start = ffi_go_closure_SYSV;
+
+  closure->tramp = start;
+  closure->cif = cif;
+  closure->fun = fun;
+
+  return FFI_OK;
+}
+#endif /* FFI_GO_CLOSURES */
 
 /* Primary handler to setup and invoke a function within a closure.
 

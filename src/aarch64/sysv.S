@@ -50,7 +50,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 
 /* ffi_call_SYSV
    extern void ffi_call_SYSV (void *stack, void *frame,
-			      void (*fn)(void), void *rvalue, int flags);
+			      void (*fn)(void), void *rvalue,
+			      int flags, void *closure);
 
    Therefore on entry we have:
 
@@ -59,6 +60,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
    x2 fn
    x3 rvalue
    x4 flags
+   x5 closure
 */
 
 	cfi_startproc
@@ -74,6 +76,9 @@ CNAME(ffi_call_SYSV):
 
 	mov	x9, x2			/* save fn */
 	mov	x8, x3			/* install structure return */
+#ifdef FFI_GO_CLOSURES
+	mov	x18, x5			/* install static chain */
+#endif
 	stp	x3, x4, [x29, #16]	/* save rvalue and flags */
 
 	/* Load the vector argument passing registers, if necessary.  */
@@ -245,6 +250,7 @@ CNAME(ffi_closure_SYSV):
 	/* Load ffi_closure_inner arguments.  */
 	ldp	x0, x1, [x17, #FFI_TRAMPOLINE_SIZE]	/* load cif, fn */
 	ldr	x2, [x17, #FFI_TRAMPOLINE_SIZE+16]	/* load user_data */
+.Ldo_closure:
 	add	x3, sp, #16				/* load context */
 	add	x4, sp, #ffi_closure_SYSV_FS		/* load stack */
 	add	x5, sp, #16+CALL_CONTEXT_SIZE		/* load rvalue */
@@ -336,3 +342,57 @@ CNAME(ffi_closure_SYSV):
 	.hidden	CNAME(ffi_closure_SYSV)
 	.size	CNAME(ffi_closure_SYSV), . - CNAME(ffi_closure_SYSV)
 #endif
+
+#ifdef FFI_GO_CLOSURES
+	.align 4
+CNAME(ffi_go_closure_SYSV_V):
+	cfi_startproc
+	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
+	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
+	cfi_rel_offset (x29, 0)
+	cfi_rel_offset (x30, 8)
+
+	/* Save the argument passing vector registers.  */
+	stp     q0, q1, [sp, #16 + 0]
+	stp     q2, q3, [sp, #16 + 32]
+	stp     q4, q5, [sp, #16 + 64]
+	stp     q6, q7, [sp, #16 + 96]
+	b	0f
+	cfi_endproc
+
+	.globl	CNAME(ffi_go_closure_SYSV_V)
+#ifdef __ELF__
+	.type	CNAME(ffi_go_closure_SYSV_V), #function
+	.hidden	CNAME(ffi_go_closure_SYSV_V)
+	.size	CNAME(ffi_go_closure_SYSV_V), . - CNAME(ffi_go_closure_SYSV_V)
+#endif
+
+	.align	4
+	cfi_startproc
+CNAME(ffi_go_closure_SYSV):
+	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
+	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
+	cfi_rel_offset (x29, 0)
+	cfi_rel_offset (x30, 8)
+0:
+	mov     x29, sp
+
+	/* Save the argument passing core registers.  */
+	stp     x0, x1, [sp, #16 + 16*N_V_ARG_REG + 0]
+	stp     x2, x3, [sp, #16 + 16*N_V_ARG_REG + 16]
+	stp     x4, x5, [sp, #16 + 16*N_V_ARG_REG + 32]
+	stp     x6, x7, [sp, #16 + 16*N_V_ARG_REG + 48]
+
+	/* Load ffi_closure_inner arguments.  */
+	ldp	x0, x1, [x18, #8]			/* load cif, fn */
+	mov	x2, x18					/* load user_data */
+	b	.Ldo_closure
+	cfi_endproc
+
+	.globl	CNAME(ffi_go_closure_SYSV)
+#ifdef __ELF__
+	.type	CNAME(ffi_go_closure_SYSV), #function
+	.hidden	CNAME(ffi_go_closure_SYSV)
+	.size	CNAME(ffi_go_closure_SYSV), . - CNAME(ffi_go_closure_SYSV)
+#endif
+#endif /* FFI_GO_CLOSURES */

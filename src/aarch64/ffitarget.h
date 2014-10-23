@@ -50,6 +50,10 @@ typedef enum ffi_abi
 #if defined (__APPLE__)
 #define FFI_TARGET_SPECIFIC_VARIADIC
 #define FFI_EXTRA_CIF_FIELDS unsigned aarch64_nfixedargs
+#else
+/* iOS reserves x18 for the system.  Disable Go closures until
+   a new static chain is chosen.  */
+#define FFI_GO_CLOSURES 1
 #endif
 
 #define FFI_TARGET_HAS_COMPLEX_TYPE
