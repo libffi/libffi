@@ -71,16 +71,7 @@ ffi_clear_cache (void *start, void *end)
 #endif
 }
 
-/* Test for an FFI floating point representation.  */
-
-static unsigned
-is_floating_type (unsigned short type)
-{
-  return (type == FFI_TYPE_FLOAT || type == FFI_TYPE_DOUBLE
-	  || type == FFI_TYPE_LONGDOUBLE);
-}
-
-/* A subroutine of is_hfa.  Given a structure type, return the type code
+/* A subroutine of is_vfp_type.  Given a structure type, return the type code
    of the first non-structure element.  Recurse for structure elements.
    Return -1 if the structure is in fact empty, i.e. no nested elements.  */
 
@@ -106,7 +97,7 @@ is_hfa0 (const ffi_type *ty)
   return ret;
 }
 
-/* A subroutine of is_hfa.  Given a structure type, return true if all
+/* A subroutine of is_vfp_type.  Given a structure type, return true if all
    of the non-structure elements are the same as CANDIDATE.  */
 
 static int
@@ -131,23 +122,35 @@ is_hfa1 (const ffi_type *ty, int candidate)
   return 1;
 }
 
-/* Determine if TY is an homogenous floating point aggregate (HFA).
+/* Determine if TY may be allocated to the FP registers.  This is both an
+   fp scalar type as well as an homogenous floating point aggregate (HFA).
    That is, a structure consisting of 1 to 4 members of all the same type,
-   where that type is a floating point scalar.
+   where that type is an fp scalar.
 
-   Returns non-zero iff TY is an HFA.  The result is an encoded value where
-   bits 0-7 contain the type code, and bits 8-10 contain the element count.  */
+   Returns non-zero iff TY is an HFA.  The result is the AARCH64_RET_*
+   constant for the type.  */
 
 static int
-is_hfa(const ffi_type *ty)
+is_vfp_type (const ffi_type *ty)
 {
   ffi_type **elements;
   int candidate, i;
   size_t size, ele_count;
 
   /* Quickest tests first.  */
-  if (ty->type != FFI_TYPE_STRUCT)
-    return 0;
+  switch (ty->type)
+    {
+    default:
+      return 0;
+    case FFI_TYPE_FLOAT:
+      return AARCH64_RET_S1;
+    case FFI_TYPE_DOUBLE:
+      return AARCH64_RET_D1;
+    case FFI_TYPE_LONGDOUBLE:
+      return AARCH64_RET_Q1;
+    case FFI_TYPE_STRUCT:
+      break;
+    }
 
   /* No HFA types are smaller than 4 bytes, or larger than 64 bytes.  */
   size = ty->size;
@@ -205,17 +208,7 @@ is_hfa(const ffi_type *ty)
     }
 
   /* All tests succeeded.  Encode the result.  */
-  return (ele_count << 8) | candidate;
-}
-
-/* Test if an ffi_type argument or result is a candidate for a vector
-   register.  */
-
-static int
-is_v_register_candidate (ffi_type *ty)
-{
-  return is_floating_type (ty->type)
-	   || (ty->type == FFI_TYPE_STRUCT && is_hfa (ty));
+  return candidate * 4 + (4 - ele_count);
 }
 
 /* Representation of the procedure call argument marshalling
@@ -302,9 +295,7 @@ extend_integer_type (void *source, int type)
 static void
 extend_hfa_type (void *dest, void *src, int h)
 {
-  int n = (h >> 8);
-  int t = h & 0xff;
-  int f = (t - FFI_TYPE_FLOAT) * 4 + 4 - n;
+  int f = h - AARCH64_RET_S4;
   void *x0;
 
   asm volatile (
@@ -358,82 +349,68 @@ extend_hfa_type (void *dest, void *src, int h)
 static void *
 compress_hfa_type (void *dest, void *reg, int h)
 {
-  int n = h >> 8;
-  switch (h & 0xff)
+  switch (h)
     {
-    case FFI_TYPE_FLOAT:
-      switch (n)
+    case AARCH64_RET_S1:
+      if (dest == reg)
 	{
-	default:
-	  if (dest == reg)
-	    {
 #ifdef __AARCH64EB__
-	      dest += 12;
+	  dest += 12;
 #endif
-	    }
-	  else
-	    *(float *)dest = *(float *)reg;
-	  break;
-	case 2:
-	  asm("ldp q16, q17, [%1]\n\t"
-	      "st2 { v16.s, v17.s }[0], [%0]"
-	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17");
-	  break;
-	case 3:
-	  asm("ldp q16, q17, [%1]\n\t"
-	      "ldr q18, [%1, #32]\n\t"
-	      "st3 { v16.s, v17.s, v18.s }[0], [%0]"
-	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18");
-	  break;
-	case 4:
-	  asm("ldp q16, q17, [%1]\n\t"
-	      "ldp q18, q19, [%1, #32]\n\t"
-	      "st4 { v16.s, v17.s, v18.s, v19.s }[0], [%0]"
-	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18", "v19");
-	  break;
 	}
+      else
+	*(float *)dest = *(float *)reg;
+      break;
+    case AARCH64_RET_S2:
+      asm ("ldp q16, q17, [%1]\n\t"
+	   "st2 { v16.s, v17.s }[0], [%0]"
+	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17");
+      break;
+    case AARCH64_RET_S3:
+      asm ("ldp q16, q17, [%1]\n\t"
+	   "ldr q18, [%1, #32]\n\t"
+	   "st3 { v16.s, v17.s, v18.s }[0], [%0]"
+	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18");
+      break;
+    case AARCH64_RET_S4:
+      asm ("ldp q16, q17, [%1]\n\t"
+	   "ldp q18, q19, [%1, #32]\n\t"
+	   "st4 { v16.s, v17.s, v18.s, v19.s }[0], [%0]"
+	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18", "v19");
       break;
 
-    case FFI_TYPE_DOUBLE:
-      switch (n)
+    case AARCH64_RET_D1:
+      if (dest == reg)
 	{
-	default:
-	  if (dest == reg)
-	    {
 #ifdef __AARCH64EB__
-	      dest += 8;
+	  dest += 8;
 #endif
-	    }
-	  else
-	    *(double *)dest = *(double *)reg;
-	  break;
-	case 2:
-	  asm("ldp q16, q17, [%1]\n\t"
-	      "st2 { v16.d, v17.d }[0], [%0]"
-	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17");
-	  break;
-	case 3:
-	  asm("ldp q16, q17, [%1]\n\t"
-	      "ldr q18, [%1, #32]\n\t"
-	      "st3 { v16.d, v17.d, v18.d }[0], [%0]"
-	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18");
-	  break;
-	case 4:
-	  asm("ldp q16, q17, [%1]\n\t"
-	      "ldp q18, q19, [%1, #32]\n\t"
-	      "st4 { v16.d, v17.d, v18.d, v19.d }[0], [%0]"
-	      : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18", "v19");
-	  break;
 	}
+      else
+	*(double *)dest = *(double *)reg;
       break;
-
-    case FFI_TYPE_LONGDOUBLE:
-      if (dest != reg)
-	return memcpy (dest, reg, 16 * n);
+    case AARCH64_RET_D2:
+      asm ("ldp q16, q17, [%1]\n\t"
+	   "st2 { v16.d, v17.d }[0], [%0]"
+	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17");
+      break;
+    case AARCH64_RET_D3:
+      asm ("ldp q16, q17, [%1]\n\t"
+	   "ldr q18, [%1, #32]\n\t"
+	   "st3 { v16.d, v17.d, v18.d }[0], [%0]"
+	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18");
+      break;
+    case AARCH64_RET_D4:
+      asm ("ldp q16, q17, [%1]\n\t"
+	   "ldp q18, q19, [%1, #32]\n\t"
+	   "st4 { v16.d, v17.d, v18.d, v19.d }[0], [%0]"
+	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18", "v19");
       break;
 
     default:
-      FFI_ASSERT (0);
+      if (dest != reg)
+	return memcpy (dest, reg, 16 * (4 - (h & 3)));
+      break;
     }
   return dest;
 }
@@ -494,34 +471,25 @@ ffi_prep_cif_machdep (ffi_cif *cif)
       break;
 
     case FFI_TYPE_FLOAT:
-      flags = AARCH64_RET_S1;
-      break;
     case FFI_TYPE_DOUBLE:
-      flags = AARCH64_RET_D1;
-      break;
     case FFI_TYPE_LONGDOUBLE:
-      flags = AARCH64_RET_Q1;
-      break;
-
     case FFI_TYPE_STRUCT:
-      {
-	int h = is_hfa (rtype);
-	size_t s = rtype->size;
-
-	if (h)
-	  flags = (h & 0xff) * 4 + 4 - (h >> 8);
-	else if (s > 16)
-	  {
-	    flags = AARCH64_RET_VOID | AARCH64_RET_IN_MEM;
-	    bytes += 8;
-	  }
-	else if (s == 16)
-	  flags = AARCH64_RET_INT128;
-	else if (s == 8)
-	  flags = AARCH64_RET_INT64;
-	else
-	  flags = AARCH64_RET_INT128 | AARCH64_RET_NEED_COPY;
-      }
+      flags = is_vfp_type (rtype);
+      if (flags == 0)
+	{
+	  size_t s = rtype->size;
+	  if (s > 16)
+	    {
+	      flags = AARCH64_RET_VOID | AARCH64_RET_IN_MEM;
+	      bytes += 8;
+	    }
+	  else if (s == 16)
+	    flags = AARCH64_RET_INT128;
+	  else if (s == 8)
+	    flags = AARCH64_RET_INT64;
+	  else
+	    flags = AARCH64_RET_INT128 | AARCH64_RET_NEED_COPY;
+	}
       break;
 
     default:
@@ -530,7 +498,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 
   aarch64_flags = 0;
   for (i = 0, n = cif->nargs; i < n; i++)
-    if (is_v_register_candidate (cif->arg_types[i]))
+    if (is_vfp_type (cif->arg_types[i]))
       {
 	aarch64_flags = AARCH64_FLAG_ARG_V;
 	flags |= AARCH64_FLAG_ARG_V;
@@ -652,20 +620,14 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *orig_rvalue, void **avalue)
 	case FFI_TYPE_FLOAT:
 	case FFI_TYPE_DOUBLE:
 	case FFI_TYPE_LONGDOUBLE:
-	  /* Scalar float is a degenerate case of HFA.  */
-	  h = t + 0x100;
-	  goto do_hfa;
-
 	case FFI_TYPE_STRUCT:
 	  {
 	    void *dest;
-	    int elems;
 
-	    h = is_hfa (ty);
+	    h = is_vfp_type (ty);
 	    if (h)
 	      {
-	    do_hfa:
-		elems = h >> 8;
+		int elems = 4 - (h & 3);
 	        if (state.nsrn + elems <= N_V_ARG_REG)
 		  {
 		    dest = &context->v[state.nsrn];
@@ -828,16 +790,11 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
 	case FFI_TYPE_FLOAT:
 	case FFI_TYPE_DOUBLE:
 	case FFI_TYPE_LONGDOUBLE:
-	  /* Scalar float is a degenerate case of HFA.  */
-	  h = t + 0x100;
-	  goto do_hfa;
-
 	case FFI_TYPE_STRUCT:
-	  h = is_hfa (ty);
+	  h = is_vfp_type (ty);
 	  if (h)
 	    {
-	    do_hfa:
-	      n = h >> 8;
+	      n = 4 - (h & 3);
 	      if (state.nsrn + n <= N_V_ARG_REG)
 		{
 		  void *reg = &context->v[state.nsrn];
