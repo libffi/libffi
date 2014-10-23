@@ -52,7 +52,6 @@ struct call_context
 {
   struct _v v[N_V_ARG_REG];
   UINT64 x[N_X_ARG_REG];
-  UINT64 x8;
 };
 
 #if defined (__clang__) && defined (__APPLE__)
@@ -766,7 +765,7 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
 			void (*fun)(ffi_cif*,void*,void**,void*),
 			void *user_data,
 			struct call_context *context,
-			void *stack, void *rvalue)
+			void *stack, void *rvalue, void *struct_rvalue)
 {
   void **avalue = (void**) alloca (cif->nargs * sizeof (void*));
   int i, h, nargs, flags;
@@ -861,7 +860,7 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
 
   flags = cif->flags;
   if (flags & AARCH64_RET_IN_MEM)
-    rvalue = (void *)(uintptr_t)context->x8;
+    rvalue = struct_rvalue;
 
   fun (cif, rvalue, avalue, user_data);
 

@@ -241,7 +241,6 @@ CNAME(ffi_closure_SYSV):
 	stp     x2, x3, [sp, #16 + 16*N_V_ARG_REG + 16]
 	stp     x4, x5, [sp, #16 + 16*N_V_ARG_REG + 32]
 	stp     x6, x7, [sp, #16 + 16*N_V_ARG_REG + 48]
-	str     x8,     [sp, #16 + 16*N_V_ARG_REG + 64]
 
 	/* Load ffi_closure_inner arguments.  */
 	ldp	x0, x1, [x17, #FFI_TRAMPOLINE_SIZE]	/* load cif, fn */
@@ -249,6 +248,7 @@ CNAME(ffi_closure_SYSV):
 	add	x3, sp, #16				/* load context */
 	add	x4, sp, #ffi_closure_SYSV_FS		/* load stack */
 	add	x5, sp, #16+CALL_CONTEXT_SIZE		/* load rvalue */
+	mov	x6, x8					/* load struct_rval */
 	bl      CNAME(ffi_closure_SYSV_inner)
 
 	/* Load the return value as directed.  */
