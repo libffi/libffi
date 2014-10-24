@@ -44,7 +44,8 @@
 /* ffi_prep_args is called by the assembly routine once stack space
    has been allocated for the function's arguments */
 
-void ffi_prep_args_v8(char *stack, extended_cif *ecif)
+void FFI_HIDDEN
+ffi_prep_args_v8(char *stack, extended_cif *ecif)
 {
   int i;
   void **p_argv;
@@ -127,7 +128,8 @@ void ffi_prep_args_v8(char *stack, extended_cif *ecif)
   return;
 }
 
-int ffi_prep_args_v9(char *stack, extended_cif *ecif)
+int FFI_HIDDEN
+ffi_prep_args_v9(char *stack, extended_cif *ecif)
 {
   int i, ret = 0;
   int tmp;
@@ -254,7 +256,8 @@ int ffi_prep_args_v9(char *stack, extended_cif *ecif)
 }
 
 /* Perform machine dependent cif processing */
-ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
+ffi_status FFI_HIDDEN
+ffi_prep_cif_machdep(ffi_cif *cif)
 {
   int wordsize;
 
@@ -337,7 +340,8 @@ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
   return FFI_OK;
 }
 
-int ffi_v9_layout_struct(ffi_type *arg, int off, char *ret, char *intg, char *flt)
+static int
+ffi_v9_layout_struct(ffi_type *arg, int off, char *ret, char *intg, char *flt)
 {
   ffi_type **ptr = &arg->elements[0];
 
@@ -371,14 +375,14 @@ int ffi_v9_layout_struct(ffi_type *arg, int off, char *ret, char *intg, char *fl
 
 #ifdef SPARC64
 extern int ffi_call_v9(void *, extended_cif *, unsigned, 
-		       unsigned, unsigned *, void (*fn)(void));
+		       unsigned, unsigned *, void (*fn)(void)) FFI_HIDDEN;
 #else
 extern int ffi_call_v8(void *, extended_cif *, unsigned, 
-		       unsigned, unsigned *, void (*fn)(void));
+		       unsigned, unsigned *, void (*fn)(void)) FFI_HIDDEN;
 #endif
 
 #ifndef __GNUC__
-void ffi_flush_icache (void *, size_t);
+void ffi_flush_icache (void *, size_t) FFI_HIDDEN;
 #endif
 
 void ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
@@ -478,9 +482,9 @@ void ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 
 
 #ifdef SPARC64
-extern void ffi_closure_v9(void);
+extern void ffi_closure_v9(void) FFI_HIDDEN;
 #else
-extern void ffi_closure_v8(void);
+extern void ffi_closure_v8(void) FFI_HIDDEN;
 #endif
 
 ffi_status
@@ -534,9 +538,9 @@ ffi_prep_closure_loc (ffi_closure* closure,
   return FFI_OK;
 }
 
-int
-ffi_closure_sparc_inner_v8(ffi_closure *closure,
-  void *rvalue, unsigned long *gpr, unsigned long *scratch)
+int FFI_HIDDEN
+ffi_closure_sparc_inner_v8(ffi_closure *closure, void *rvalue,
+			   unsigned long *gpr, unsigned long *scratch)
 {
   ffi_cif *cif;
   ffi_type **arg_types;
@@ -592,9 +596,9 @@ ffi_closure_sparc_inner_v8(ffi_closure *closure,
   return cif->rtype->type;
 }
 
-int
-ffi_closure_sparc_inner_v9(ffi_closure *closure,
-  void *rvalue, unsigned long *gpr, double *fpr)
+int FFI_HIDDEN
+ffi_closure_sparc_inner_v9(ffi_closure *closure, void *rvalue,
+			   unsigned long *gpr, double *fpr)
 {
   ffi_cif *cif;
   ffi_type **arg_types;

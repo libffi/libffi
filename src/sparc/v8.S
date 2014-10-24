@@ -28,18 +28,31 @@
 #define LIBFFI_ASM	
 #include <fficonfig.h>
 #include <ffi.h>
+#include <ffi_cfi.h>
 
 #define STACKFRAME 96		/* Minimum stack framesize for SPARC */
 #define ARGS (64+4)		/* Offset of register area in frame */
 
-#ifndef __GNUC__	
-	.text
-        .align 8
-.globl ffi_flush_icache
-.globl _ffi_flush_icache
+#define C2(X, Y)  X ## Y
+#define C1(X, Y)  C2(X, Y)
 
-ffi_flush_icache:
-_ffi_flush_icache:	
+#ifdef __USER_LABEL_PREFIX__
+# define C(Y)	C1(__USER_LABEL_PREFIX__, Y)
+#else
+# define C(Y)	Y
+#endif
+#define L(Y)	C1(.L, Y)
+
+	.text
+
+#ifndef __GNUC__	
+        .align 8
+	.globl	C(ffi_flush_icache)
+	.type	C(ffi_flush_icache),@function
+	FFI_HIDDEN(C(ffi_flush_icache))
+
+C(ffi_flush_icache):
+	cfi_startproc
         add %o0, %o1, %o2
 #ifdef SPARC64	
 1:	flush %o0
@@ -56,20 +69,20 @@ _ffi_flush_icache:
 	nop
 	retl
 	nop
-.ffi_flush_icache_end:
-	.size	ffi_flush_icache,.ffi_flush_icache_end-ffi_flush_icache
+	cfi_endproc
+	.size	C(ffi_flush_icache), . - C(ffi_flush_icache)
 #endif
 
-	.text
         .align 8
-.globl ffi_call_v8
-.globl _ffi_call_v8
+	.globl	C(ffi_call_v8)
+	.type	C(ffi_call_v8),@function
+	FFI_HIDDEN(C(ffi_call_v8))
 	
-ffi_call_v8:
-_ffi_call_v8:
-.LLFB1:
+C(ffi_call_v8):
+	cfi_startproc
 	save	%sp, -STACKFRAME, %sp
-.LLCFI0:
+	cfi_def_cfa_register(%fp)
+	cfi_window_save
 	
 	sub	%sp, %i2, %sp	! alloca() space in stack for frame to set up
 	add	%sp, STACKFRAME, %l0	! %l0 has start of 
@@ -91,81 +104,81 @@ _ffi_call_v8:
 
 	! If the return value pointer is NULL, assume no return value.
 	tst	%i4
-	bz	done
+	bz	L(done)
 	nop
 
 	cmp	%i3, FFI_TYPE_INT
-	be,a	done
+	be,a	L(done)
 	st	%o0, [%i4]	! (delay)
 
 	cmp	%i3, FFI_TYPE_FLOAT
-	be,a	done
+	be,a	L(done)
 	st	%f0, [%i4+0]	! (delay)
 
 	cmp	%i3, FFI_TYPE_DOUBLE
-	be,a	double
+	be,a	L(double)
 	st	%f0, [%i4+0]	! (delay)
 
 	cmp	%i3, FFI_TYPE_SINT8
-	be,a	sint8
+	be,a	L(sint8)
 	sll	%o0, 24, %o0	! (delay)
 
 	cmp	%i3, FFI_TYPE_UINT8
-	be,a	uint8
+	be,a	L(uint8)
 	sll	%o0, 24, %o0	! (delay)
 
 	cmp	%i3, FFI_TYPE_SINT16
-	be,a	sint16
+	be,a	L(sint16)
 	sll	%o0, 16, %o0	! (delay)
 
 	cmp	%i3, FFI_TYPE_UINT16
-	be,a	uint16
+	be,a	L(uint16)
 	sll	%o0, 16, %o0	! (delay)
 
 	cmp	%i3, FFI_TYPE_SINT64
-	be,a	longlong
+	be,a	L(longlong)
 	st	%o0, [%i4+0]	! (delay)
-done:
+
+L(done):
 	ret
 	restore
 
-double:
+L(double):
 	st	%f1, [%i4+4]
 	ret
 	restore
 
-sint8:
+L(sint8):
 	sra	%o0, 24, %o0
 	st	%o0, [%i4+0]
 	ret
 	restore
 
-uint8:
+L(uint8):
 	srl	%o0, 24, %o0
 	st	%o0, [%i4+0]
 	ret
 	restore
 
-sint16:
+L(sint16):
 	sra	%o0, 16, %o0
 	st	%o0, [%i4+0]
 	ret
 	restore
 
-uint16:
+L(uint16):
 	srl	%o0, 16, %o0
 	st	%o0, [%i4+0]
 	ret
 	restore
 
-longlong:
+L(longlong):
 	st	%o1, [%i4+4]
 	ret
 	restore
-.LLFE1:
+	cfi_endproc
 
-.ffi_call_v8_end:
-	.size	ffi_call_v8,.ffi_call_v8_end-ffi_call_v8
+	.size	C(ffi_call_v8),. - C(ffi_call_v8)
 
 
 #undef STACKFRAME
@@ -178,15 +191,16 @@ longlong:
 
    Receives the closure argument in %g2.   */
 
-	.text
 	.align 8
-	.globl ffi_closure_v8
+	.globl	C(ffi_closure_v8)
+	.type	C(ffi_closure_v8),@function
+	FFI_HIDDEN(C(ffi_closure_v8))
 
-ffi_closure_v8:
+C(ffi_closure_v8):
 #ifdef HAVE_AS_REGISTER_PSEUDO_OP
 		.register	%g2, #scratch
 #endif
-.LLFB2:
+	cfi_startproc
 	! Reserve frame space for all arguments in case
 	! we need to align them on a 8-byte boundary.
 	ld	[%g2+FFI_TRAMPOLINE_SIZE], %g1
@@ -196,7 +210,8 @@ ffi_closure_v8:
 	! %g1 == STACKFRAME + 8*nargs
 	neg	%g1
 	save	%sp, %g1, %sp
-.LLCFI1:
+	cfi_def_cfa_register(%fp)
+	cfi_window_save
 
 	! Store all of the potential argument registers in va_list format.
 	st	%i0, [%fp+68+0]
@@ -216,130 +231,47 @@ ffi_closure_v8:
 	! Load up the return value in the proper type.
 	! See ffi_prep_cif_machdep for the list of cases.
 	cmp	%o0, FFI_TYPE_VOID
-	be	done1
+	be	L(done1)
 
 	cmp	%o0, FFI_TYPE_INT
-	be	done1
+	be	L(done1)
 	 ld	[%fp-8], %i0
 
 	cmp	%o0, FFI_TYPE_FLOAT
-	be,a	done1
+	be,a	L(done1)
 	 ld	[%fp-8], %f0
 
 	cmp	%o0, FFI_TYPE_DOUBLE
-	be,a	done1
+	be,a	L(done1)
 	 ldd	[%fp-8], %f0
 
 #if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
 	cmp	%o0, FFI_TYPE_LONGDOUBLE
-	be	done2
+	be	L(done2)
 #endif
 
 	cmp	%o0, FFI_TYPE_STRUCT
-	be	done2
+	be	L(done2)
 
 	cmp	%o0, FFI_TYPE_SINT64
-	be,a	done1
+	be,a	L(done1)
 	 ldd	[%fp-8], %i0
 
 	cmp	%o0, FFI_TYPE_UINT64
-	be,a	done1
+	be,a	L(done1)
 	 ldd	[%fp-8], %i0
 
 	ld	[%fp-8], %i0
-done1:
+L(done1):
 	jmp	%i7+8
 	 restore
-done2:
+L(done2):
 	! Skip 'unimp'.
 	jmp	%i7+12
 	 restore
-.LLFE2:
 
-.ffi_closure_v8_end:
-	.size	ffi_closure_v8,.ffi_closure_v8_end-ffi_closure_v8
-
-#ifdef SPARC64
-#define WS 8
-#define nword	xword
-#define uanword	uaxword
-#else
-#define WS 4
-#define nword	long
-#define uanword	uaword
-#endif
-
-#ifdef HAVE_RO_EH_FRAME
-	.section	".eh_frame",#alloc
-#else
-	.section	".eh_frame",#alloc,#write
-#endif
-.LLframe1:
-	.uaword	.LLECIE1-.LLSCIE1	! Length of Common Information Entry
-.LLSCIE1:
-	.uaword	0x0	! CIE Identifier Tag
-	.byte	0x1	! CIE Version
-	.ascii "zR\0"	! CIE Augmentation
-	.byte	0x1	! uleb128 0x1; CIE Code Alignment Factor
-	.byte	0x80-WS	! sleb128 -WS; CIE Data Alignment Factor
-	.byte	0xf	! CIE RA Column
-	.byte	0x1	! uleb128 0x1; Augmentation size
-#ifdef HAVE_AS_SPARC_UA_PCREL
-	.byte	0x1b	! FDE Encoding (pcrel sdata4)
-#else
-	.byte	0x50	! FDE Encoding (aligned absolute)
-#endif
-	.byte	0xc	! DW_CFA_def_cfa
-	.byte	0xe	! uleb128 0xe
-	.byte	0x0	! uleb128 0x0
-	.align	WS
-.LLECIE1:
-.LLSFDE1:
-	.uaword	.LLEFDE1-.LLASFDE1	! FDE Length
-.LLASFDE1:
-	.uaword	.LLASFDE1-.LLframe1	! FDE CIE offset
-#ifdef HAVE_AS_SPARC_UA_PCREL
-	.uaword	%r_disp32(.LLFB1)
-	.uaword	.LLFE1-.LLFB1	! FDE address range
-#else
-	.align	WS
-	.nword	.LLFB1
-	.uanword .LLFE1-.LLFB1	! FDE address range
-#endif
-	.byte	0x0	! uleb128 0x0; Augmentation size
-	.byte	0x4	! DW_CFA_advance_loc4
-	.uaword	.LLCFI0-.LLFB1
-	.byte	0xd	! DW_CFA_def_cfa_register
-	.byte	0x1e	! uleb128 0x1e
-	.byte	0x2d	! DW_CFA_GNU_window_save
-	.byte	0x9	! DW_CFA_register
-	.byte	0xf	! uleb128 0xf
-	.byte	0x1f	! uleb128 0x1f
-	.align	WS
-.LLEFDE1:
-.LLSFDE2:
-	.uaword	.LLEFDE2-.LLASFDE2	! FDE Length
-.LLASFDE2:
-	.uaword	.LLASFDE2-.LLframe1	! FDE CIE offset
-#ifdef HAVE_AS_SPARC_UA_PCREL
-	.uaword	%r_disp32(.LLFB2)
-	.uaword	.LLFE2-.LLFB2	! FDE address range
-#else
-	.align	WS
-	.nword	.LLFB2
-	.uanword .LLFE2-.LLFB2	! FDE address range
-#endif
-	.byte	0x0	! uleb128 0x0; Augmentation size
-	.byte	0x4	! DW_CFA_advance_loc4
-	.uaword	.LLCFI1-.LLFB2
-	.byte	0xd	! DW_CFA_def_cfa_register
-	.byte	0x1e	! uleb128 0x1e
-	.byte	0x2d	! DW_CFA_GNU_window_save
-	.byte	0x9	! DW_CFA_register
-	.byte	0xf	! uleb128 0xf
-	.byte	0x1f	! uleb128 0x1f
-	.align	WS
-.LLEFDE2:
+	cfi_endproc
+	.size	C(ffi_closure_v8), . - C(ffi_closure_v8)
 
 #if defined __ELF__ && defined __linux__
 	.section	.note.GNU-stack,"",@progbits
