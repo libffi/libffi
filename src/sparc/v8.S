@@ -29,9 +29,9 @@
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_cfi.h>
+#include "internal.h"
 
-#define STACKFRAME 96		/* Minimum stack framesize for SPARC */
-#define ARGS (64+4)		/* Offset of register area in frame */
+#ifndef SPARC64
 
 #define C2(X, Y)  X ## Y
 #define C1(X, Y)  C2(X, Y)
@@ -53,25 +53,23 @@
 
 C(ffi_flush_icache):
 	cfi_startproc
-        add %o0, %o1, %o2
-#ifdef SPARC64	
-1:	flush %o0
-#else	
 1:	iflush %o0
-#endif
-	add %o0, 8, %o0
-	cmp %o0, %o2
-	blt 1b
+	iflush %o+8
 	nop
 	nop
 	nop
 	nop
 	nop
 	retl
-	nop
+	 nop
 	cfi_endproc
 	.size	C(ffi_flush_icache), . - C(ffi_flush_icache)
 #endif
+
+.macro E index
+	.align	16
+	.org	2b + \index * 16
+.endm
 
         .align 8
 	.globl	C(ffi_call_v8)
@@ -80,104 +78,104 @@ C(ffi_flush_icache):
 	
 C(ffi_call_v8):
 	cfi_startproc
-	save	%sp, -STACKFRAME, %sp
+	! Allocate a stack frame sized by ffi_call.
+	save	%sp, %o4, %sp
 	cfi_def_cfa_register(%fp)
 	cfi_window_save
-	
-	sub	%sp, %i2, %sp	! alloca() space in stack for frame to set up
-	add	%sp, STACKFRAME, %l0	! %l0 has start of 
-					! frame to set up
 
-	mov	%l0, %o0	! call routine to set up frame
-	call	%i0
-	mov	%i1, %o1	! (delay)
+	mov	%i0, %o0		! copy cif
+	add	%sp, 64+32, %o1		! load args area
+	mov	%i2, %o2		! copy rvalue
+	call	C(ffi_prep_args_v8)
+	 mov	%i3, %o3		! copy avalue
 
-	ld	[%l0+ARGS], %o0	! call foreign function
-	ld	[%l0+ARGS+4], %o1
-	ld	[%l0+ARGS+8], %o2
-	ld	[%l0+ARGS+12], %o3
-	ld	[%l0+ARGS+16], %o4
-	ld	[%l0+ARGS+20], %o5
-	call	%i5
-	mov	%l0, %sp	! (delay) switch to frame
-	nop			! STRUCT returning functions skip 12 instead of 8 bytes
+	add	%sp, 32, %sp		! deallocate prep frame
+	and	%o0, SPARC_FLAG_RET_MASK, %l0	! save return type
+	ld	[%sp+64+4], %o0		! load all argument registers
+	ld	[%sp+64+8], %o1
+	ld	[%sp+64+12], %o2
+	ld	[%sp+64+16], %o3
+	cmp	%l0, SPARC_RET_STRUCT	! struct return needs an unimp 4
+	ld	[%sp+64+20], %o4
+	be	8f
+	 ld	[%sp+64+24], %o5
 
-	! If the return value pointer is NULL, assume no return value.
-	tst	%i4
-	bz	L(done)
+	! Call foreign function
+	call	%i1
+	 nop
+
+0:	call	1f		! load pc in %o7
+	 sll	%l0, 4, %l0
+1:	add	%o7, %l0, %o7	! o7 = 0b + ret_type*16
+	jmp	%o7+(2f-0b)
+	 nop
+
+	! Note that each entry is 4 insns, enforced by the E macro.
+	.align	16
+2:
+E SPARC_RET_VOID
+	ret
+	 restore
+E SPARC_RET_STRUCT
+	unimp
+E SPARC_RET_FLOAT
+	st	%f0, [%i2]
+	ret
+	 restore
+E SPARC_RET_DOUBLE
+	std	%f0, [%i2]
+	ret
+	 restore
 	nop
-
-	cmp	%i3, FFI_TYPE_INT
-	be,a	L(done)
-	st	%o0, [%i4]	! (delay)
-
-	cmp	%i3, FFI_TYPE_FLOAT
-	be,a	L(done)
-	st	%f0, [%i4+0]	! (delay)
-
-	cmp	%i3, FFI_TYPE_DOUBLE
-	be,a	L(double)
-	st	%f0, [%i4+0]	! (delay)
-
-	cmp	%i3, FFI_TYPE_SINT8
-	be,a	L(sint8)
-	sll	%o0, 24, %o0	! (delay)
-
-	cmp	%i3, FFI_TYPE_UINT8
-	be,a	L(uint8)
-	sll	%o0, 24, %o0	! (delay)
-
-	cmp	%i3, FFI_TYPE_SINT16
-	be,a	L(sint16)
-	sll	%o0, 16, %o0	! (delay)
-
-	cmp	%i3, FFI_TYPE_UINT16
-	be,a	L(uint16)
-	sll	%o0, 16, %o0	! (delay)
-
-	cmp	%i3, FFI_TYPE_SINT64
-	be,a	L(longlong)
-	st	%o0, [%i4+0]	! (delay)
-
-L(done):
+E SPARC_RET_UINT8
+	and	%o0, 0xff, %o0
+	st	%o0, [%i2]
 	ret
-	restore
-
-L(double):
-	st	%f1, [%i4+4]
+	 restore
+E SPARC_RET_SINT8
+	sll	%o0, 24, %o0
+	b	7f
+	 sra	%o0, 24, %o0
+E SPARC_RET_UINT16
+	sll	%o0, 16, %o0
+	b	7f
+	 srl	%o0, 16, %o0
+E SPARC_RET_SINT16
+	sll	%o0, 16, %o0
+	b	7f
+	 sra	%o0, 16, %o0
+E SPARC_RET_INT64
+	std	%o0, [%i2]
 	ret
-	restore
-
-L(sint8):
-	sra	%o0, 24, %o0
-	st	%o0, [%i4+0]
+	 restore
+E SPARC_RET_UINT32
+7:	st	%o0, [%i2]
 	ret
-	restore
+	 restore
 
-L(uint8):
-	srl	%o0, 24, %o0
-	st	%o0, [%i4+0]
-	ret
-	restore
+	! Unused entries.  Don't allow bad data to do worse things.
+E 10
+	unimp
+E 11
+	unimp
+E 12
+	unimp
+E 13
+	unimp
+E 14
+	unimp
+E 15
+	unimp
 
-L(sint16):
-	sra	%o0, 16, %o0
-	st	%o0, [%i4+0]
+	! Struct returning functions expect and skip the unimp here.
+	.align	8
+8:	call	%i1
+	 nop
+	unimp	4
 	ret
-	restore
+	 restore
 
-L(uint16):
-	srl	%o0, 16, %o0
-	st	%o0, [%i4+0]
-	ret
-	restore
-
-L(longlong):
-	st	%o1, [%i4+4]
-	ret
-	restore
 	cfi_endproc
-
 	.size	C(ffi_call_v8),. - C(ffi_call_v8)
 
 
@@ -185,7 +183,8 @@ L(longlong):
 #define	STACKFRAME	104	/* 16*4 register window +
 				   1*4 struct return +	
 				   6*4 args backing store +
-				   3*4 locals */
+				   2*4 return storage +
+				   1*4 alignment */
 
 /* ffi_closure_v8(...)
 
@@ -201,15 +200,7 @@ C(ffi_closure_v8):
 		.register	%g2, #scratch
 #endif
 	cfi_startproc
-	! Reserve frame space for all arguments in case
-	! we need to align them on a 8-byte boundary.
-	ld	[%g2+FFI_TRAMPOLINE_SIZE], %g1
-	ld	[%g1+4], %g1
-	sll	%g1, 3, %g1
-	add	%g1, STACKFRAME, %g1
-	! %g1 == STACKFRAME + 8*nargs
-	neg	%g1
-	save	%sp, %g1, %sp
+	save	%sp, -STACKFRAME, %sp
 	cfi_def_cfa_register(%fp)
 	cfi_window_save
 
@@ -224,55 +215,75 @@ C(ffi_closure_v8):
 	! Call ffi_closure_sparc_inner to do the bulk of the work.
 	mov	%g2, %o0
 	add	%fp, -8, %o1
-	add	%fp,  64, %o2
 	call	ffi_closure_sparc_inner_v8
-	 add	%fp, -16, %o3
+	 add	%fp,  64, %o2
 
-	! Load up the return value in the proper type.
-	! See ffi_prep_cif_machdep for the list of cases.
-	cmp	%o0, FFI_TYPE_VOID
-	be	L(done1)
+0:	call	1f
+	 and	%o0, SPARC_FLAG_RET_MASK, %o0
+1:	sll	%o0, 4, %o0	! o0 = o0 * 16
+	add	%o7, %o0, %o7	! o7 = 0b + o0*16
+	jmp	%o7+(2f-0b)
+	 nop
 
-	cmp	%o0, FFI_TYPE_INT
-	be	L(done1)
-	 ld	[%fp-8], %i0
-
-	cmp	%o0, FFI_TYPE_FLOAT
-	be,a	L(done1)
-	 ld	[%fp-8], %f0
-
-	cmp	%o0, FFI_TYPE_DOUBLE
-	be,a	L(done1)
-	 ldd	[%fp-8], %f0
-
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
-	cmp	%o0, FFI_TYPE_LONGDOUBLE
-	be	L(done2)
-#endif
-
-	cmp	%o0, FFI_TYPE_STRUCT
-	be	L(done2)
-
-	cmp	%o0, FFI_TYPE_SINT64
-	be,a	L(done1)
-	 ldd	[%fp-8], %i0
-
-	cmp	%o0, FFI_TYPE_UINT64
-	be,a	L(done1)
-	 ldd	[%fp-8], %i0
-
-	ld	[%fp-8], %i0
-L(done1):
-	jmp	%i7+8
+	! Note that each entry is 4 insns, enforced by the E macro.
+	.align	16
+2:
+E SPARC_RET_VOID
+	ret
 	 restore
-L(done2):
-	! Skip 'unimp'.
+E SPARC_RET_STRUCT
 	jmp	%i7+12
 	 restore
+E SPARC_RET_FLOAT
+	ld	[%fp-8], %f0
+	ret
+	 restore
+E SPARC_RET_DOUBLE
+	ldd	[%fp-8], %f0
+	ret
+	 restore
+E SPARC_RET_UINT8
+	ldub	[%fp-8+3], %i0
+	ret
+	 restore
+E SPARC_RET_SINT8
+	ldsb	[%fp-8+3], %i0
+	ret
+	 restore
+E SPARC_RET_UINT16
+	lduh	[%fp-8+2], %i0
+	ret
+	 restore
+E SPARC_RET_SINT16
+	ldsh	[%fp-8+2], %i0
+	ret
+	 restore
+E SPARC_RET_INT64
+	ldd	[%fp-8], %i0
+	ret
+	 restore
+E SPARC_RET_UINT32
+	ld	[%fp-8], %i0
+	ret
+	 restore
+
+	! Unused entries.  Don't allow bad data to do worse things.
+E 10
+	unimp
+E 11
+	unimp
+E 12
+	unimp
+E 13
+	unimp
+E 14
+	unimp
+E 15
+	unimp
 
 	cfi_endproc
 	.size	C(ffi_closure_v8), . - C(ffi_closure_v8)
-
+#endif /* !SPARC64 */
 #if defined __ELF__ && defined __linux__
 	.section	.note.GNU-stack,"",@progbits
 #endif
