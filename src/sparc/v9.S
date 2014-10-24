@@ -28,10 +28,9 @@
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_cfi.h>
+#include "internal.h"
 
 #ifdef SPARC64
-/* Only compile this in for 64bit builds, because otherwise the object file
-   will have inproper architecture due to used instructions.  */
 
 #define C2(X, Y)  X ## Y
 #define C1(X, Y)  C2(X, Y)
@@ -43,12 +42,14 @@
 #endif
 #define L(Y)	C1(.L, Y)
 
+.macro E index
+	.align	16
+	.org	2b + \index * 16
+.endm
 
-#define STACKFRAME 176		/* Minimum stack framesize for SPARC 64-bit */
 #define STACK_BIAS 2047
-#define ARGS (128)		/* Offset of register area in frame */
 
-.text
+	.text
         .align 8
 	.globl	C(ffi_call_v9)
 	.type	C(ffi_call_v9),@function
@@ -56,86 +57,135 @@
 
 C(ffi_call_v9):
 	cfi_startproc
-	save	%sp, -STACKFRAME, %sp
+	save	%sp, %o4, %sp
 	cfi_def_cfa_register(%fp)
 	cfi_window_save
 	
-	sub	%sp, %i2, %sp	! alloca() space in stack for frame to set up
-	add	%sp, STACKFRAME+STACK_BIAS, %l0	! %l0 has start of 
-						! frame to set up
+	mov	%i0, %o0			! copy cif
+	add	%sp, STACK_BIAS+128+48, %o1	! load args area
+	mov	%i2, %o2			! copy rvalue
+	call	C(ffi_prep_args_v9)
+	 mov	%i3, %o3			! copy avalue
 
-	mov	%l0, %o0	! call routine to set up frame
-	call	%i0
-	 mov	%i1, %o1	! (delay)
-	brz,pt	%o0, 1f
-	 ldx	[%l0+ARGS], %o0	! call foreign function
+	andcc	%o0, SPARC_FLAG_FP_ARGS, %g0	! need fp regs?
+	add	%sp, 48, %sp			! deallocate prep frame
+	be,pt	%xcc, 1f
+	 mov	%o0, %l0			! save flags
 
-	ldd	[%l0+ARGS], %f0
-	ldd	[%l0+ARGS+8], %f2
-	ldd	[%l0+ARGS+16], %f4
-	ldd	[%l0+ARGS+24], %f6
-	ldd	[%l0+ARGS+32], %f8
-	ldd	[%l0+ARGS+40], %f10
-	ldd	[%l0+ARGS+48], %f12
-	ldd	[%l0+ARGS+56], %f14
-	ldd	[%l0+ARGS+64], %f16
-	ldd	[%l0+ARGS+72], %f18
-	ldd	[%l0+ARGS+80], %f20
-	ldd	[%l0+ARGS+88], %f22
-	ldd	[%l0+ARGS+96], %f24
-	ldd	[%l0+ARGS+104], %f26
-	ldd	[%l0+ARGS+112], %f28
-	ldd	[%l0+ARGS+120], %f30
+	ldd	[%sp+STACK_BIAS+128], %f0	! load all fp arg regs
+	ldd	[%sp+STACK_BIAS+128+8], %f2
+	ldd	[%sp+STACK_BIAS+128+16], %f4
+	ldd	[%sp+STACK_BIAS+128+24], %f6
+	ldd	[%sp+STACK_BIAS+128+32], %f8
+	ldd	[%sp+STACK_BIAS+128+40], %f10
+	ldd	[%sp+STACK_BIAS+128+48], %f12
+	ldd	[%sp+STACK_BIAS+128+56], %f14
+	ldd	[%sp+STACK_BIAS+128+64], %f16
+	ldd	[%sp+STACK_BIAS+128+72], %f18
+	ldd	[%sp+STACK_BIAS+128+80], %f20
+	ldd	[%sp+STACK_BIAS+128+88], %f22
+	ldd	[%sp+STACK_BIAS+128+96], %f24
+	ldd	[%sp+STACK_BIAS+128+104], %f26
+	ldd	[%sp+STACK_BIAS+128+112], %f28
+	ldd	[%sp+STACK_BIAS+128+120], %f30
 
-1:	ldx	[%l0+ARGS+8], %o1
-	ldx	[%l0+ARGS+16], %o2
-	ldx	[%l0+ARGS+24], %o3
-	ldx	[%l0+ARGS+32], %o4
-	ldx	[%l0+ARGS+40], %o5
-	call	%i5
-	 sub	%l0, STACK_BIAS, %sp	! (delay) switch to frame
+1:	ldx	[%sp+STACK_BIAS+128], %o0	! load all int arg regs
+	ldx	[%sp+STACK_BIAS+128+8], %o1
+	ldx	[%sp+STACK_BIAS+128+16], %o2
+	ldx	[%sp+STACK_BIAS+128+24], %o3
+	ldx	[%sp+STACK_BIAS+128+32], %o4
+	call	%i1
+	 ldx	[%sp+STACK_BIAS+128+40], %o5
 
-	! If the return value pointer is NULL, assume no return value.
-	brz,pn	%i4, L(done)
+0:	call	1f		! load pc in %o7
+	 and	%l0, SPARC_FLAG_RET_MASK, %l1
+1:	sll	%l1, 4, %l1
+	add	%o7, %l1, %o7	! o7 = 0b + ret_type*16
+	jmp	%o7+(2f-0b)
 	 nop
 
-	cmp	%i3, FFI_TYPE_INT
-	be,a,pt	%icc, L(done)
-	 stx	%o0, [%i4+0]	! (delay)
-
-	cmp	%i3, FFI_TYPE_FLOAT
-	be,a,pn	%icc, L(done)
-	 st	%f0, [%i4+0]	! (delay)
-
-	cmp	%i3, FFI_TYPE_DOUBLE
-	be,a,pn	%icc, L(done)
-	 std	%f0, [%i4+0]	! (delay)
-
-	cmp	%i3, FFI_TYPE_STRUCT
-	be,pn	%icc, L(dostruct)
-
-	cmp	%i3, FFI_TYPE_LONGDOUBLE
-	bne,pt	%icc, L(done)
+	.align	16
+2:
+E SPARC_RET_VOID
+	return	%i7+8
 	 nop
-	std	%f0, [%i4+0]
-	std	%f2, [%i4+8]
+E SPARC_RET_STRUCT
+	add	%sp, STACK_BIAS-64+128+48, %l2
+	sub	%sp, 64, %sp
+	b	8f
+	 stx	%o0, [%l2]
+E SPARC_RET_FLOAT
+	return	%i7+8
+	 st	%f0, [%o2]
+E SPARC_RET_DOUBLE
+	return	%i7+8
+	 std	%f0, [%o2]
+E SPARC_RET_UINT8
+	and	%o0, 0xff, %i0
+	return	%i7+8
+	  stx	%o0, [%o2]
+E SPARC_RET_SINT8
+	sll	%o0, 24, %o0
+	sra	%o0, 24, %i0
+	return	%i7+8
+	 stx	%o0, [%o2]
+E SPARC_RET_UINT16
+	sll	%o0, 16, %o0
+	srl	%o0, 16, %i0
+	return	%i7+8
+	 stx	%o0, [%o2]
+E SPARC_RET_SINT16
+	sll	%o0, 16, %o0
+	sra	%o0, 16, %i0
+	return	%i7+8
+	 stx	%o0, [%o2]
+E SPARC_RET_INT64
+	stx	%o0, [%i2]
+	return	%i7+8
+	 nop
+E SPARC_RET_UINT32
+	srl	%o0, 0, %i0
+	return	%i7+8
+	 stx	%o0, [%o2]
+E SPARC_RET_SINT32
+	sra	%o0, 0, %i0
+	return	%i7+8
+	 stx	%o0, [%o2]
+E SPARC_RET_LDOUBLE
+	std	%f0, [%i2]
+	return	%i7+8
+	 std	%f2, [%o2+8]
 
-L(done):
-	ret
-	 restore
+	! Unused entries.  Don't allow bad data to do worse things.
+E 12
+	unimp
+E 13
+	unimp
+E 14
+	unimp
+E 15
+	unimp
 
-L(dostruct):
-	/* This will not work correctly for unions. */
-	stx	%o0, [%i4+0]
-	stx	%o1, [%i4+8]
-	stx	%o2, [%i4+16]
-	stx	%o3, [%i4+24]
-	std	%f0, [%i4+32]
-	std	%f2, [%i4+40]
-	std	%f4, [%i4+48]
-	std	%f6, [%i4+56]
-	ret
-	 restore
+	! Finish the SPARC_RET_STRUCT sequence.
+	.align	8
+8:	stx	%o1, [%l2+8]
+	stx	%o2, [%l2+16]
+	stx	%o3, [%l2+24]
+	std	%f0, [%l2+32]
+	std	%f2, [%l2+40]
+	std	%f4, [%l2+48]
+	std	%f6, [%l2+56]
+
+	! Copy the structure into place.
+	ldx	[%i0+16], %o0			! load rtype from cif
+	mov	0, %o1				! load off
+	mov	%i2, %o2			! load dst
+	mov	%l2, %o3			! load src_int
+	call	C(ffi_v9_layout_struct)
+	 add	%l2, 32, %o4			! load src_fp
+
+	return	%i7+8
+	 nop
 
 	cfi_endproc
 	.size	C(ffi_call_v9), . - C(ffi_call_v9)
@@ -195,54 +245,90 @@ C(ffi_closure_v9):
 	call	C(ffi_closure_sparc_inner_v9)
 	 add	%fp, STACK_BIAS-128, %o3
 
-	! Load up the return value in the proper type.
-	! See ffi_prep_cif_machdep for the list of cases.
-	cmp	%o0, FFI_TYPE_VOID
-	be,pn	%icc, L(done1)
+0:	call	1f		! load pc in %o7
+	 and	%o0, SPARC_FLAG_RET_MASK, %o0
+1:	sll	%o0, 4, %o0	! o2 = i2 * 16
+	add	%o7, %o0, %o7	! o7 = 0b + i2*16
+	jmp	%o7+(2f-0b)
+	 nop
 
-	cmp	%o0, FFI_TYPE_INT
-	be,pn	%icc, L(integer)
-
-	cmp	%o0, FFI_TYPE_FLOAT
-	be,a,pn	%icc, L(done1)
-	 ld	[FP-160], %f0
-
-	cmp	%o0, FFI_TYPE_DOUBLE
-	be,a,pn	%icc, L(done1)
-	 ldd	[FP-160], %f0
-
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
-	cmp	%o0, FFI_TYPE_LONGDOUBLE
-	be,a,pn	%icc, L(longdouble1)
-	 ldd	[FP-160], %f0
-#endif
-
-	! FFI_TYPE_STRUCT
-	ldx	[FP-152], %i1
-	ldx	[FP-144], %i2
-	ldx	[FP-136], %i3
-	ldd	[FP-160], %f0
-	ldd	[FP-152], %f2
-	ldd	[FP-144], %f4
-	ldd	[FP-136], %f6
-
-L(integer):
+	! Note that we cannot load the data in the delay slot of
+	! the return insn because the data is in the stack frame
+	! that is deallocated by the return.
+	.align	16
+2:
+E SPARC_RET_VOID
+	return	%i7+8
+	 nop
+E SPARC_RET_STRUCT
 	ldx	[FP-160], %i0
+	ldd	[FP-160], %f0
+	b	8f
+	 ldx	[FP-152], %i1
+E SPARC_RET_FLOAT
+	ld	[FP-160], %f0
+	return	%i7+8
+	 nop
+E SPARC_RET_DOUBLE
+	ldd	[FP-160], %f0
+	return	%i7+8
+	 nop
+E SPARC_RET_UINT8
+	ldub	[FP-160+7], %i0
+	return	%i7+8
+	 nop
+E SPARC_RET_SINT8
+	ldsb	[FP-160+7], %i0
+	return	%i7+8
+	 nop
+E SPARC_RET_UINT16
+	lduh	[FP-160+6], %i0
+	return	%i7+8
+	 nop
+E SPARC_RET_SINT16
+	ldsh	[FP-160+6], %i0
+	return	%i7+8
+	 nop
+E SPARC_RET_INT64
+	ldx	[FP-160], %i0
+	return	%i7+8
+	 nop
+E SPARC_RET_UINT32
+	lduw	[FP-160+4], %i0
+	return	%i7+8
+	 nop
+E SPARC_RET_SINT32
+	ldsw	[FP-160+4], %i0
+	return	%i7+8
+	 nop
+E SPARC_RET_LDOUBLE
+	ldd	[FP-160], %f0
+	ldd	[FP-160+8], %f2
+	return	%i7+8
+	 nop
 
-L(done1):
-	ret
-	 restore
+	! Unused entries.  Don't allow bad data to do worse things.
+E 12
+	unimp
+E 13
+	unimp
+E 14
+	unimp
+E 15
+	unimp
 
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
-L(longdouble1):
-	ldd	[FP-152], %f2
-	ret
-	 restore
-#endif
+	! Finish the SPARC_RET_STRUCT sequence.
+	.align	8
+8:	ldd	[FP-152], %f2
+	ldx	[FP-144], %i2
+	ldd	[FP-144], %f4
+	ldx	[FP-136], %i3
+	ldd	[FP-136], %f6
+	return	%i7+8
+	 nop
 
 	cfi_endproc
 	.size	C(ffi_closure_v9), . - C(ffi_closure_v9)
-
 #endif /* SPARC64 */
 #ifdef __linux__
 	.section	.note.GNU-stack,"",@progbits

@@ -147,9 +147,6 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
 #if !defined FFI_TARGET_SPECIFIC_STACK_SPACE_ALLOCATION
   /* Make space for the return structure pointer */
   if (cif->rtype->type == FFI_TYPE_STRUCT
-#ifdef SPARC
-      && (cif->abi != FFI_V9 || cif->rtype->size > 32)
-#endif
 #ifdef TILE
       && (cif->rtype->size > 10 * FFI_SIZEOF_ARG)
 #endif
@@ -179,14 +176,6 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
       FFI_ASSERT_VALID_TYPE(*ptr);
 
 #if !defined FFI_TARGET_SPECIFIC_STACK_SPACE_ALLOCATION
-#ifdef SPARC
-      if (((*ptr)->type == FFI_TYPE_STRUCT
-	   && ((*ptr)->size > 16 || cif->abi != FFI_V9))
-	  || ((*ptr)->type == FFI_TYPE_LONGDOUBLE
-	      && cif->abi != FFI_V9))
-	bytes += sizeof(void*);
-      else
-#endif
 	{
 	  /* Add any padding if necessary */
 	  if (((*ptr)->alignment - 1) & bytes)
