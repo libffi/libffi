@@ -27,8 +27,18 @@
 
 #include <ffi.h>
 #include <ffi_common.h>
-
 #include <stdlib.h>
+
+/* Force FFI_TYPE_LONGDOUBLE to be different than FFI_TYPE_DOUBLE;
+   all further uses in this file will refer to the 128-bit type.  */
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+# if FFI_TYPE_LONGDOUBLE != 4
+#  error FFI_TYPE_LONGDOUBLE out of date
+# endif
+#else
+# undef FFI_TYPE_LONGDOUBLE
+# define FFI_TYPE_LONGDOUBLE 4
+#endif
 
 
 /* ffi_prep_args is called by the assembly routine once stack space
@@ -72,10 +82,7 @@ void ffi_prep_args_v8(char *stack, extended_cif *ecif)
       size_t z;
 
 	  if ((*p_arg)->type == FFI_TYPE_STRUCT
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
-	      || (*p_arg)->type == FFI_TYPE_LONGDOUBLE
-#endif
-	      )
+	      || (*p_arg)->type == FFI_TYPE_LONGDOUBLE)
 	    {
 	      *(unsigned int *) argp = (unsigned long)(* p_argv);
 	      z = sizeof(int);
@@ -176,9 +183,7 @@ int ffi_prep_args_v9(char *stack, extended_cif *ecif)
 	  /* FALLTHROUGH */
 	case FFI_TYPE_FLOAT:
 	case FFI_TYPE_DOUBLE:
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
 	case FFI_TYPE_LONGDOUBLE:
-#endif
 	  ret = 1; /* We should promote into FP regs as well as integer.  */
 	  break;
 	}
@@ -296,9 +301,7 @@ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
     case FFI_TYPE_VOID:
     case FFI_TYPE_FLOAT:
     case FFI_TYPE_DOUBLE:
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
     case FFI_TYPE_LONGDOUBLE:
-#endif
       cif->flags = cif->rtype->type;
       break;
 
@@ -351,9 +354,7 @@ int ffi_v9_layout_struct(ffi_type *arg, int off, char *ret, char *intg, char *fl
 	  break;
 	case FFI_TYPE_FLOAT:
 	case FFI_TYPE_DOUBLE:
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
 	case FFI_TYPE_LONGDOUBLE:
-#endif
 	  memmove(ret + off, flt + off, (*ptr)->size);
 	  off += (*ptr)->size;
 	  break;
@@ -412,10 +413,7 @@ void ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
       FFI_ASSERT(0);
 #else
       if (rvalue && (cif->rtype->type == FFI_TYPE_STRUCT
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
-	  || cif->flags == FFI_TYPE_LONGDOUBLE
-#endif
-	  ))
+	  || cif->flags == FFI_TYPE_LONGDOUBLE))
 	{
 	  /* For v8, we need an "unimp" with size of returning struct */
 	  /* behind "call", so we alloc some executable space for it. */
@@ -551,11 +549,7 @@ ffi_closure_sparc_inner_v8(ffi_closure *closure,
 
   /* Copy the caller's structure return address so that the closure
      returns the data directly to the caller.  */
-  if (cif->flags == FFI_TYPE_STRUCT
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE  
-      || cif->flags == FFI_TYPE_LONGDOUBLE
-#endif
-     )
+  if (cif->flags == FFI_TYPE_STRUCT || cif->flags == FFI_TYPE_LONGDOUBLE)
     rvalue = (void *) gpr[0];
 
   /* Always skip the structure return address.  */
@@ -565,10 +559,7 @@ ffi_closure_sparc_inner_v8(ffi_closure *closure,
   for (i = 0; i < cif->nargs; i++)
     {
       if (arg_types[i]->type == FFI_TYPE_STRUCT
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
-	  || arg_types[i]->type == FFI_TYPE_LONGDOUBLE
-#endif
-         )
+	  || arg_types[i]->type == FFI_TYPE_LONGDOUBLE)
 	{
 	  /* Straight copy of invisible reference.  */
 	  avalue[i] = (void *)gpr[argn++];
@@ -656,17 +647,12 @@ ffi_closure_sparc_inner_v9(ffi_closure *closure,
 	  argn += ALIGN(arg_types[i]->size, FFI_SIZEOF_ARG) / FFI_SIZEOF_ARG;
 
 	  /* Align on a 16-byte boundary.  */
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
 	  if (arg_types[i]->type == FFI_TYPE_LONGDOUBLE && (argn % 2) != 0)
 	    argn++;
-#endif
 	  if (i < fp_slot_max
 	      && (arg_types[i]->type == FFI_TYPE_FLOAT
 		  || arg_types[i]->type == FFI_TYPE_DOUBLE
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
-		  || arg_types[i]->type == FFI_TYPE_LONGDOUBLE
-#endif
-		  ))
+		  || arg_types[i]->type == FFI_TYPE_LONGDOUBLE))
 	    avalue[i] = ((char *) &fpr[argn]) - arg_types[i]->size;
 	  else
 	    avalue[i] = ((char *) &gpr[argn]) - arg_types[i]->size;
