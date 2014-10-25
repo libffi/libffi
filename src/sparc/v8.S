@@ -118,15 +118,6 @@ E SPARC_RET_VOID
 	 restore
 E SPARC_RET_STRUCT
 	unimp
-E SPARC_RET_FLOAT
-	st	%f0, [%i2]
-	ret
-	 restore
-E SPARC_RET_DOUBLE
-	std	%f0, [%i2]
-	ret
-	 restore
-	nop
 E SPARC_RET_UINT8
 	and	%o0, 0xff, %o0
 	st	%o0, [%i2]
@@ -144,28 +135,34 @@ E SPARC_RET_SINT16
 	sll	%o0, 16, %o0
 	b	7f
 	 sra	%o0, 16, %o0
-E SPARC_RET_INT64
-	std	%o0, [%i2]
-	ret
-	 restore
 E SPARC_RET_UINT32
 7:	st	%o0, [%i2]
 	ret
 	 restore
-
-	! Unused entries.  Don't allow bad data to do worse things.
-E 10
+E SPARC_RET_SINT32
 	unimp
-E 11
+E SPARC_RET_INT64
+	std	%o0, [%i2]
+	ret
+	 restore
+E SPARC_RET_INT128
 	unimp
-E 12
+E SPARC_RET_F_8
 	unimp
-E 13
+E SPARC_RET_F_6
 	unimp
-E 14
+E SPARC_RET_F_4
 	unimp
-E 15
+E SPARC_RET_F_2
+	std	%f0, [%i2]
+	ret
+	 restore
+E SPARC_RET_F_3
 	unimp
+E SPARC_RET_F_1
+	st	%f0, [%i2]
+	ret
+	 restore
 
 	! Struct returning functions expect and skip the unimp here.
 	.align	8
@@ -234,14 +231,6 @@ E SPARC_RET_VOID
 E SPARC_RET_STRUCT
 	jmp	%i7+12
 	 restore
-E SPARC_RET_FLOAT
-	ld	[%fp-8], %f0
-	ret
-	 restore
-E SPARC_RET_DOUBLE
-	ldd	[%fp-8], %f0
-	ret
-	 restore
 E SPARC_RET_UINT8
 	ldub	[%fp-8+3], %i0
 	ret
@@ -258,28 +247,34 @@ E SPARC_RET_SINT16
 	ldsh	[%fp-8+2], %i0
 	ret
 	 restore
-E SPARC_RET_INT64
-	ldd	[%fp-8], %i0
-	ret
-	 restore
 E SPARC_RET_UINT32
 	ld	[%fp-8], %i0
 	ret
 	 restore
-
-	! Unused entries.  Don't allow bad data to do worse things.
-E 10
+E SPARC_RET_SINT32
 	unimp
-E 11
+E SPARC_RET_INT64
+	ldd	[%fp-8], %i0
+	ret
+	 restore
+E SPARC_RET_INT128
 	unimp
-E 12
+E SPARC_RET_F_8
 	unimp
-E 13
+E SPARC_RET_F_6
 	unimp
-E 14
+E SPARC_RET_F_4
 	unimp
-E 15
+E SPARC_RET_F_2
+	ldd	[%fp-8], %f0
+	ret
+	 restore
+E SPARC_RET_F_3
 	unimp
+E SPARC_RET_F_1
+	ld	[%fp-8], %f0
+	ret
+	 restore
 
 	cfi_endproc
 	.size	C(ffi_closure_v8), . - C(ffi_closure_v8)
