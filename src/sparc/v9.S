@@ -114,12 +114,6 @@ E SPARC_RET_STRUCT
 	sub	%sp, 64, %sp
 	b	8f
 	 stx	%o0, [%l2]
-E SPARC_RET_FLOAT
-	return	%i7+8
-	 st	%f0, [%o2]
-E SPARC_RET_DOUBLE
-	return	%i7+8
-	 std	%f0, [%o2]
 E SPARC_RET_UINT8
 	and	%o0, 0xff, %i0
 	return	%i7+8
@@ -139,10 +133,6 @@ E SPARC_RET_SINT16
 	sra	%o0, 16, %i0
 	return	%i7+8
 	 stx	%o0, [%o2]
-E SPARC_RET_INT64
-	stx	%o0, [%i2]
-	return	%i7+8
-	 nop
 E SPARC_RET_UINT32
 	srl	%o0, 0, %i0
 	return	%i7+8
@@ -151,20 +141,40 @@ E SPARC_RET_SINT32
 	sra	%o0, 0, %i0
 	return	%i7+8
 	 stx	%o0, [%o2]
-E SPARC_RET_LDOUBLE
-	std	%f0, [%i2]
+E SPARC_RET_INT64
+	stx	%o0, [%i2]
 	return	%i7+8
-	 std	%f2, [%o2+8]
-
-	! Unused entries.  Don't allow bad data to do worse things.
-E 12
-	unimp
-E 13
-	unimp
-E 14
-	unimp
-E 15
-	unimp
+	 nop
+E SPARC_RET_INT128
+	stx	%o0, [%i2]
+	stx	%o1, [%i2+8]
+	return	%i7+8
+	 nop
+E SPARC_RET_F_8
+	st	%f7, [%i2+7*4]
+	nop
+	st	%f6, [%i2+6*4]
+	nop
+E SPARC_RET_F_6
+	st	%f5, [%i2+5*4]
+	nop
+	st	%f4, [%i2+4*4]
+	nop
+E SPARC_RET_F_4
+	std	%f2, [%i2+2*4]
+	return	%i7+8
+	 std	%f0, [%o2]
+E SPARC_RET_F_2
+	return	%i7+8
+	 std	%f0, [%o2]
+E SPARC_RET_F_3
+	st	%f2, [%i2+2*4]
+	nop
+	st	%f1, [%i2+1*4]
+	nop
+E SPARC_RET_F_1
+	return	%i7+8
+	 st	%f0, [%o2]
 
 	! Finish the SPARC_RET_STRUCT sequence.
 	.align	8
@@ -264,14 +274,6 @@ E SPARC_RET_STRUCT
 	ldd	[FP-160], %f0
 	b	8f
 	 ldx	[FP-152], %i1
-E SPARC_RET_FLOAT
-	ld	[FP-160], %f0
-	return	%i7+8
-	 nop
-E SPARC_RET_DOUBLE
-	ldd	[FP-160], %f0
-	return	%i7+8
-	 nop
 E SPARC_RET_UINT8
 	ldub	[FP-160+7], %i0
 	return	%i7+8
@@ -288,10 +290,6 @@ E SPARC_RET_SINT16
 	ldsh	[FP-160+6], %i0
 	return	%i7+8
 	 nop
-E SPARC_RET_INT64
-	ldx	[FP-160], %i0
-	return	%i7+8
-	 nop
 E SPARC_RET_UINT32
 	lduw	[FP-160+4], %i0
 	return	%i7+8
@@ -300,21 +298,43 @@ E SPARC_RET_SINT32
 	ldsw	[FP-160+4], %i0
 	return	%i7+8
 	 nop
-E SPARC_RET_LDOUBLE
+E SPARC_RET_INT64
+	ldx	[FP-160], %i0
+	return	%i7+8
+	 nop
+E SPARC_RET_INT128
+	ldx	[FP-160], %i0
+	ldx	[FP-160+8], %i1
+	return	%i7+8
+	 nop
+E SPARC_RET_F_8
+	ld	[FP-160+7*4], %f7
+	nop
+	ld	[FP-160+6*4], %f6
+	nop
+E SPARC_RET_F_6
+	ld	[FP-160+5*4], %f5
+	nop
+	ld	[FP-160+4*4], %f4
+	nop
+E SPARC_RET_F_4
 	ldd	[FP-160], %f0
 	ldd	[FP-160+8], %f2
 	return	%i7+8
 	 nop
-
-	! Unused entries.  Don't allow bad data to do worse things.
-E 12
-	unimp
-E 13
-	unimp
-E 14
-	unimp
-E 15
-	unimp
+E SPARC_RET_F_2
+	ldd	[FP-160], %f0
+	return	%i7+8
+	 nop
+E SPARC_RET_F_3
+	ld	[FP-160+2*4], %f2
+	nop
+	ld	[FP-160+1*4], %f1
+	nop
+E SPARC_RET_F_1
+	ld	[FP-160], %f0
+	return	%i7+8
+	 nop
 
 	! Finish the SPARC_RET_STRUCT sequence.
 	.align	8

@@ -59,10 +59,10 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       flags = SPARC_RET_VOID;
       break;
     case FFI_TYPE_FLOAT:
-      flags = SPARC_RET_FLOAT;
+      flags = SPARC_RET_F_1;
       break;
     case FFI_TYPE_DOUBLE:
-      flags = SPARC_RET_DOUBLE;
+      flags = SPARC_RET_F_2;
       break;
     case FFI_TYPE_LONGDOUBLE:
     case FFI_TYPE_STRUCT:

@@ -66,7 +66,6 @@ ffi_struct_float_mask (ffi_type *struct_type, int size_mask)
 	{
 	case FFI_TYPE_STRUCT:
 	  size_mask = ffi_struct_float_mask (t, size_mask);
-	  size_mask = ALIGN(size_mask, FFI_SIZEOF_ARG);
 	  continue;
 	case FFI_TYPE_FLOAT:
 	case FFI_TYPE_DOUBLE:
@@ -154,13 +153,13 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       flags = SPARC_RET_VOID;
       break;
     case FFI_TYPE_FLOAT:
-      flags = SPARC_RET_FLOAT;
+      flags = SPARC_RET_F_1;
       break;
     case FFI_TYPE_DOUBLE:
-      flags = SPARC_RET_DOUBLE;
+      flags = SPARC_RET_F_2;
       break;
     case FFI_TYPE_LONGDOUBLE:
-      flags = SPARC_RET_LDOUBLE;
+      flags = SPARC_RET_F_4;
       break;
 
     case FFI_TYPE_STRUCT:
@@ -171,8 +170,37 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 	}
       else
 	{
-	  flags = ffi_struct_float_mask (rtype, 0) << SPARC_FLTMASK_SHIFT;
-	  flags |= SPARC_RET_STRUCT;
+	  int size_mask = ffi_struct_float_mask (rtype, 0);
+	  int word_size = (size_mask >> 2) & 0x3f;
+	  int all_mask = (1 << word_size) - 1;
+	  int fp_mask = size_mask >> 8;
+
+	  flags = (size_mask << SPARC_FLTMASK_SHIFT) | SPARC_RET_STRUCT;
+
+	  /* For special cases of all-int or all-fp, we can return
+	     the value directly without popping through a struct copy.  */
+	  if (fp_mask == 0)
+	    {
+	      if (rtype->alignment >= 8)
+		{
+		  if (rtype->size == 8)
+		    flags = SPARC_RET_INT64;
+		  else if (rtype->size == 16)
+		    flags = SPARC_RET_INT128;
+		}
+	    }
+	  else if (fp_mask == all_mask)
+	    switch (word_size)
+	      {
+	      case 1: flags = SPARC_RET_F_1; break;
+	      case 2: flags = SPARC_RET_F_2; break;
+	      case 3: flags = SPARC_RET_F_3; break;
+	      case 4: flags = SPARC_RET_F_4; break;
+	      /* 5 word structures skipped; handled via RET_STRUCT.  */
+	      case 6: flags = SPARC_RET_F_6; break;
+	      /* 7 word structures skipped; handled via RET_STRUCT.  */
+	      case 8: flags = SPARC_RET_F_8; break;
+	      }
 	}
       break;
 
