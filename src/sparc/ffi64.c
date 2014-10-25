@@ -42,40 +42,102 @@
 #endif
 
 #ifdef SPARC64
-/* Perform machine dependent cif processing */
 
-int FFI_HIDDEN
-ffi_v9_layout_struct (ffi_type *arg, int off, void *d, void *si, void *sf)
+/* Flatten the contents of a structure to the parts that are passed in
+   floating point registers.  The return is a bit mask wherein bit N
+   set means bytes [4*n, 4*n+3] are passed in %fN.
+
+   We encode both the (running) size (maximum 32) and mask (maxumum 255)
+   into one integer.  The size is placed in the low byte, so that align
+   and addition work correctly.  The mask is placed in the second byte.  */
+
+static int
+ffi_struct_float_mask (ffi_type *struct_type, int size_mask)
 {
   ffi_type **elts, *t;
 
-  for (elts = arg->elements; (t = *elts) != NULL; elts++)
+  for (elts = struct_type->elements; (t = *elts) != NULL; elts++)
     {
       size_t z = t->size;
-      void *src = si;
+      int o, m;
 
-      off = ALIGN(off, t->alignment);
+      size_mask = ALIGN(size_mask, t->alignment);
       switch (t->type)
 	{
 	case FFI_TYPE_STRUCT:
-	  off = ffi_v9_layout_struct(t, off, d, si, sf);
-	  off = ALIGN(off, FFI_SIZEOF_ARG);
+	  size_mask = ffi_struct_float_mask (t, size_mask);
+	  size_mask = ALIGN(size_mask, FFI_SIZEOF_ARG);
 	  continue;
 	case FFI_TYPE_FLOAT:
 	case FFI_TYPE_DOUBLE:
 	case FFI_TYPE_LONGDOUBLE:
-	  /* Note that closures start with the argument offset,
-	     so that we know when to stop looking at fp regs.  */
-	  if (off < 128)
-	    src = sf;
+	  m = (1 << (z / 4)) - 1;	/* compute mask for type */
+	  o = (size_mask >> 2) & 0x3f;	/* extract word offset */
+	  size_mask |= m << (o + 8);	/* insert mask into place */
 	  break;
 	}
-      memcpy(d + off, src + off, z);
-      off += z;
+      size_mask += z;
     }
 
-  return off;
+  size_mask = ALIGN(size_mask, struct_type->alignment);
+  FFI_ASSERT ((size_mask & 0xff) == struct_type->size);
+
+  return size_mask;
 }
+
+/* Merge floating point data into integer data.  If the structure is
+   entirely floating point, simply return a pointer to the fp data.  */
+
+static void *
+ffi_struct_float_merge (int size_mask, void *vi, void *vf)
+{
+  int size = size_mask & 0xff;
+  int mask = size_mask >> 8;
+  int n = size >> 2;
+
+  if (mask == 0)
+    return vi;
+  else if (mask == (1 << n) - 1)
+    return vf;
+  else
+    {
+      unsigned int *wi = vi, *wf = vf;
+      int i;
+
+      for (i = 0; i < n; ++i)
+	if ((mask >> i) & 1)
+	  wi[i] = wf[i];
+
+      return vi;
+    }
+}
+
+/* Similar, but place the data into VD in the end.  */
+
+void FFI_HIDDEN
+ffi_struct_float_copy (int size_mask, void *vd, void *vi, void *vf)
+{
+  int size = size_mask & 0xff;
+  int mask = size_mask >> 8;
+  int n = size >> 2;
+
+  if (mask == 0)
+    ;
+  else if (mask == (1 << n) - 1)
+    vi = vf;
+  else
+    {
+      unsigned int *wd = vd, *wi = vi, *wf = vf;
+      int i;
+
+      for (i = 0; i < n; ++i)
+	wd[i] = ((mask >> i) & 1 ? wf : wi)[i];
+      return;
+    }
+  memcpy (vd, vi, size);
+}
+
+/* Perform machine dependent cif processing */
 
 ffi_status FFI_HIDDEN
 ffi_prep_cif_machdep(ffi_cif *cif)
@@ -108,7 +170,10 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 	  bytes = 8;
 	}
       else
-	flags = SPARC_RET_STRUCT;
+	{
+	  flags = ffi_struct_float_mask (rtype, 0) << SPARC_FLTMASK_SHIFT;
+	  flags |= SPARC_RET_STRUCT;
+	}
       break;
 
     case FFI_TYPE_SINT8:
@@ -343,7 +408,7 @@ ffi_closure_sparc_inner_v9(ffi_closure *closure, void *rvalue,
   ffi_cif *cif;
   ffi_type **arg_types;
   void **avalue;
-  int i, argn, nargs, flags;
+  int i, argn, argx, nargs, flags;
 
   cif = closure->cif;
   arg_types = cif->arg_types;
@@ -364,12 +429,13 @@ ffi_closure_sparc_inner_v9(ffi_closure *closure, void *rvalue,
     argn = 0;
 
   /* Grab the addresses of the arguments from the stack frame.  */
-  for (i = 0; i < nargs; i++)
+  for (i = 0; i < nargs; i++, argn = argx)
     {
       ffi_type *ty = arg_types[i];
-      void *a = &gpr[argn++];
+      void *a = &gpr[argn];
       size_t z;
 
+      argx = argn + 1;
       switch (ty->type)
 	{
 	case FFI_TYPE_STRUCT:
@@ -378,25 +444,31 @@ ffi_closure_sparc_inner_v9(ffi_closure *closure, void *rvalue,
 	    a = *(void **)a;
 	  else
 	    {
-	      if (--argn < 16)
-	        ffi_v9_layout_struct(arg_types[i], 8*argn, gpr, gpr, fpr);
-	      argn += ALIGN (z, 8) / 8;
+	      argx = argn + ALIGN (z, 8) / 8;
+	      if (argn < 16)
+		{
+		  int size_mask = ffi_struct_float_mask (ty, 0);
+		  int argn_mask = (0xffff00 >> argn) & 0xff00;
+
+		  /* Eliminate fp registers off the end.  */
+		  size_mask = (size_mask & 0xff) | (size_mask & argn_mask);
+		  a = ffi_struct_float_merge (size_mask, gpr+argn, fpr+argn);
+		}
 	    }
 	  break;
 
 	case FFI_TYPE_LONGDOUBLE:
-	  if (--argn & 1)
-	    argn++;
+	  argn = ALIGN (argn, 2);
 	  a = (argn < 16 ? fpr : gpr) + argn;
-	  argn += 2;
+	  argx = argn + 2;
 	  break;
 	case FFI_TYPE_DOUBLE:
 	  if (argn <= 16)
-	    a = fpr + argn - 1;
+	    a = fpr + argn;
 	  break;
 	case FFI_TYPE_FLOAT:
 	  if (argn <= 16)
-	    a = fpr + argn - 1;
+	    a = fpr + argn;
 	  a += 4;
 	  break;
 
