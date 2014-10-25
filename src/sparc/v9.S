@@ -177,12 +177,11 @@ E 15
 	std	%f6, [%l2+56]
 
 	! Copy the structure into place.
-	ldx	[%i0+16], %o0			! load rtype from cif
-	mov	0, %o1				! load off
-	mov	%i2, %o2			! load dst
-	mov	%l2, %o3			! load src_int
-	call	C(ffi_v9_layout_struct)
-	 add	%l2, 32, %o4			! load src_fp
+	srl	%l0, SPARC_FLTMASK_SHIFT, %o0	! load size_mask
+	mov	%i2, %o1			! load dst
+	mov	%l2, %o2			! load src_gp
+	call	C(ffi_struct_float_copy)
+	 add	%l2, 32, %o3			! load src_fp
 
 	return	%i7+8
 	 nop
