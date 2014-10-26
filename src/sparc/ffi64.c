@@ -52,14 +52,28 @@
    and addition work correctly.  The mask is placed in the second byte.  */
 
 static int
-ffi_struct_float_mask (ffi_type *struct_type, int size_mask)
+ffi_struct_float_mask (ffi_type *outer_type, int size_mask)
 {
-  ffi_type **elts, *t;
+  ffi_type **elts;
+  ffi_type *t;
 
-  for (elts = struct_type->elements; (t = *elts) != NULL; elts++)
+  if (outer_type->type == FFI_TYPE_COMPLEX)
+    {
+      int m = 0, tt = outer_type->elements[0]->type;
+      size_t z = outer_type->size;
+
+      if (tt == FFI_TYPE_FLOAT
+	  || tt == FFI_TYPE_DOUBLE
+	  || tt == FFI_TYPE_LONGDOUBLE)
+        m = (1 << (z / 4)) - 1;
+      return (m << 8) | z;
+    }
+  FFI_ASSERT (outer_type->type == FFI_TYPE_STRUCT);
+
+  for (elts = outer_type->elements; (t = *elts) != NULL; elts++)
     {
       size_t z = t->size;
-      int o, m;
+      int o, m, tt;
 
       size_mask = ALIGN(size_mask, t->alignment);
       switch (t->type)
@@ -67,6 +81,13 @@ ffi_struct_float_mask (ffi_type *struct_type, int size_mask)
 	case FFI_TYPE_STRUCT:
 	  size_mask = ffi_struct_float_mask (t, size_mask);
 	  continue;
+	case FFI_TYPE_COMPLEX:
+	  tt = t->elements[0]->type;
+	  if (tt != FFI_TYPE_FLOAT
+	      && tt != FFI_TYPE_DOUBLE
+	      && tt != FFI_TYPE_LONGDOUBLE)
+	    break;
+	  /* FALLTHRU */
 	case FFI_TYPE_FLOAT:
 	case FFI_TYPE_DOUBLE:
 	case FFI_TYPE_LONGDOUBLE:
@@ -78,8 +99,8 @@ ffi_struct_float_mask (ffi_type *struct_type, int size_mask)
       size_mask += z;
     }
 
-  size_mask = ALIGN(size_mask, struct_type->alignment);
-  FFI_ASSERT ((size_mask & 0xff) == struct_type->size);
+  size_mask = ALIGN(size_mask, outer_type->alignment);
+  FFI_ASSERT ((size_mask & 0xff) == outer_type->size);
 
   return size_mask;
 }
@@ -162,6 +183,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       flags = SPARC_RET_F_4;
       break;
 
+    case FFI_TYPE_COMPLEX:
     case FFI_TYPE_STRUCT:
       if (rtype->size > 32)
 	{
@@ -194,7 +216,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 	      {
 	      case 1: flags = SPARC_RET_F_1; break;
 	      case 2: flags = SPARC_RET_F_2; break;
-	      case 3: flags = SPARC_RET_F_3; break;
+	      case 3: flags = SP_V9_RET_F_3; break;
 	      case 4: flags = SPARC_RET_F_4; break;
 	      /* 5 word structures skipped; handled via RET_STRUCT.  */
 	      case 6: flags = SPARC_RET_F_6; break;
@@ -218,7 +240,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       break;
     case FFI_TYPE_INT:
     case FFI_TYPE_SINT32:
-      flags = SPARC_RET_SINT32;
+      flags = SP_V9_RET_SINT32;
       break;
     case FFI_TYPE_UINT32:
       flags = SPARC_RET_UINT32;
@@ -242,6 +264,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 
       switch (ty->type)
 	{
+	case FFI_TYPE_COMPLEX:
 	case FFI_TYPE_STRUCT:
 	  /* Large structs passed by reference.  */
 	  if (z > 16)
@@ -249,7 +272,12 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 	      a = z = 8;
 	      break;
 	    }
-	  /* ??? FALLTHRU -- check for fp members in the struct.  */
+	  /* Small structs may be passed in integer or fp regs or both.  */
+	  if (bytes >= 16*8)
+	    break;
+	  if ((ffi_struct_float_mask (ty, 0) & 0xff00) == 0)
+	    break;
+	  /* FALLTHRU */
 	case FFI_TYPE_FLOAT:
 	case FFI_TYPE_DOUBLE:
 	case FFI_TYPE_LONGDOUBLE:
@@ -351,6 +379,7 @@ ffi_prep_args_v9(ffi_cif *cif, unsigned long *argp, void *rvalue, void **avalue)
 	  break;
 
 	case FFI_TYPE_LONGDOUBLE:
+	case FFI_TYPE_COMPLEX:
 	case FFI_TYPE_STRUCT:
 	  z = ty->size;
 	  if (z > 16)
@@ -466,6 +495,7 @@ ffi_closure_sparc_inner_v9(ffi_closure *closure, void *rvalue,
       argx = argn + 1;
       switch (ty->type)
 	{
+	case FFI_TYPE_COMPLEX:
 	case FFI_TYPE_STRUCT:
 	  z = ty->size;
 	  if (z > 16)

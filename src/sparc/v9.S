@@ -137,7 +137,7 @@ E SPARC_RET_UINT32
 	srl	%o0, 0, %i0
 	return	%i7+8
 	 stx	%o0, [%o2]
-E SPARC_RET_SINT32
+E SP_V9_RET_SINT32
 	sra	%o0, 0, %i0
 	return	%i7+8
 	 stx	%o0, [%o2]
@@ -167,7 +167,7 @@ E SPARC_RET_F_4
 E SPARC_RET_F_2
 	return	%i7+8
 	 std	%f0, [%o2]
-E SPARC_RET_F_3
+E SP_V9_RET_F_3
 	st	%f2, [%i2+2*4]
 	nop
 	st	%f1, [%i2+1*4]
@@ -294,7 +294,7 @@ E SPARC_RET_UINT32
 	lduw	[FP-160+4], %i0
 	return	%i7+8
 	 nop
-E SPARC_RET_SINT32
+E SP_V9_RET_SINT32
 	ldsw	[FP-160+4], %i0
 	return	%i7+8
 	 nop
@@ -326,7 +326,7 @@ E SPARC_RET_F_2
 	ldd	[FP-160], %f0
 	return	%i7+8
 	 nop
-E SPARC_RET_F_3
+E SP_V9_RET_F_3
 	ld	[FP-160+2*4], %f2
 	nop
 	ld	[FP-160+1*4], %f1

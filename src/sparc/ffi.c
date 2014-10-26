@@ -90,6 +90,40 @@ ffi_prep_cif_machdep(ffi_cif *cif)
     case FFI_TYPE_UINT64:
       flags = SPARC_RET_INT64;
       break;
+    case FFI_TYPE_COMPLEX:
+      rtt = rtype->elements[0]->type;
+      switch (rtt)
+	{
+	case FFI_TYPE_FLOAT:
+	  flags = SPARC_RET_F_2;
+	  break;
+	case FFI_TYPE_DOUBLE:
+	  flags = SPARC_RET_F_4;
+	  break;
+	case FFI_TYPE_LONGDOUBLE:
+	  flags = SPARC_RET_F_8;
+	  break;
+	case FFI_TYPE_SINT64:
+	case FFI_TYPE_UINT64:
+	  flags = SPARC_RET_INT128;
+	  break;
+	case FFI_TYPE_INT:
+	case FFI_TYPE_SINT32:
+	case FFI_TYPE_UINT32:
+	  flags = SPARC_RET_INT64;
+	  break;
+	case FFI_TYPE_SINT16:
+	case FFI_TYPE_UINT16:
+	  flags = SP_V8_RET_CPLX16;
+	  break;
+	case FFI_TYPE_SINT8:
+	case FFI_TYPE_UINT8:
+	  flags = SP_V8_RET_CPLX8;
+	  break;
+	default:
+	  abort();
+	}
+      break;
     default:
       abort();
     }
@@ -102,11 +136,24 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       size_t z = ty->size;
       int tt = ty->type;
 
-      if (tt == FFI_TYPE_STRUCT || tt == FFI_TYPE_LONGDOUBLE)
-	/* Passed by reference.  */
-	z = 4;
-      else
-	z = ALIGN(z, 4);
+      switch (tt)
+	{
+	case FFI_TYPE_STRUCT:
+	case FFI_TYPE_LONGDOUBLE:
+	by_reference:
+	  /* Passed by reference.  */
+	  z = 4;
+	  break;
+
+	case FFI_TYPE_COMPLEX:
+	  tt = ty->elements[0]->type;
+	  if (tt == FFI_TYPE_FLOAT || z > 8)
+	    goto by_reference;
+	  /* FALLTHRU */
+
+	default:
+	  z = ALIGN(z, 4);
+	}
       bytes += z;
     }
 
@@ -169,11 +216,14 @@ ffi_prep_args_v8(ffi_cif *cif, unsigned long *argp, void *rvalue, void **avalue)
     {
       ffi_type *ty = p_arg[i];
       void *a = avalue[i];
+      int tt = ty->type;
+      size_t z;
 
-      switch (ty->type)
+      switch (tt)
 	{
 	case FFI_TYPE_STRUCT:
 	case FFI_TYPE_LONGDOUBLE:
+	by_reference:
 	  *argp++ = (unsigned long)a;
 	  break;
 
@@ -203,6 +253,23 @@ ffi_prep_args_v8(ffi_cif *cif, unsigned long *argp, void *rvalue, void **avalue)
 	  break;
 	case FFI_TYPE_SINT16:
 	  *argp++ = *(SINT16 *)a;
+	  break;
+
+        case FFI_TYPE_COMPLEX:
+	  tt = ty->elements[0]->type;
+	  z = ty->size;
+	  if (tt == FFI_TYPE_FLOAT || z > 8)
+	    goto by_reference;
+	  if (z < 4)
+	    {
+	      memcpy((char *)argp + 4 - z, a, z);
+	      argp++;
+	    }
+	  else
+	    {
+	      memcpy(argp, a, z);
+	      argp += z / 4;
+	    }
 	  break;
 
 	default:
@@ -299,11 +366,13 @@ ffi_closure_sparc_inner_v8(ffi_closure *closure, void *rvalue,
       ffi_type *ty = arg_types[i];
       int tt = ty->type;
       void *a = argp;
+      size_t z;
 
       switch (tt)
 	{
 	case FFI_TYPE_STRUCT:
 	case FFI_TYPE_LONGDOUBLE:
+	by_reference:
 	  /* Straight copy of invisible reference.  */
 	  a = (void *)*argp;
 	  break;
@@ -334,6 +403,17 @@ ffi_closure_sparc_inner_v8(ffi_closure *closure, void *rvalue,
         case FFI_TYPE_UINT8:
         case FFI_TYPE_SINT8:
 	  a += 3;
+	  break;
+
+        case FFI_TYPE_COMPLEX:
+	  tt = ty->elements[0]->type;
+	  z = ty->size;
+	  if (tt == FFI_TYPE_FLOAT || z > 8)
+	    goto by_reference;
+	  if (z < 4)
+	    a += 4 - z;
+	  else if (z > 4)
+	    argp++;
 	  break;
 
 	default:

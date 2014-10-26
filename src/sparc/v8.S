@@ -1,8 +1,8 @@
 /* -----------------------------------------------------------------------
    v8.S - Copyright (c) 2013  The Written Word, Inc.
 	  Copyright (c) 1996, 1997, 2003, 2004, 2008  Red Hat, Inc.
-   
-   SPARC Foreign Function Interface 
+
+   SPARC Foreign Function Interface
 
    Permission is hereby granted, free of charge, to any person obtaining
    a copy of this software and associated documentation files (the
@@ -25,7 +25,7 @@
    DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
-#define LIBFFI_ASM	
+#define LIBFFI_ASM
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_cfi.h>
@@ -45,7 +45,7 @@
 
 	.text
 
-#ifndef __GNUC__	
+#ifndef __GNUC__
         .align 8
 	.globl	C(ffi_flush_icache)
 	.type	C(ffi_flush_icache),@function
@@ -75,7 +75,7 @@ C(ffi_flush_icache):
 	.globl	C(ffi_call_v8)
 	.type	C(ffi_call_v8),@function
 	FFI_HIDDEN(C(ffi_call_v8))
-	
+
 C(ffi_call_v8):
 	cfi_startproc
 	! Allocate a stack frame sized by ffi_call.
@@ -139,26 +139,44 @@ E SPARC_RET_UINT32
 7:	st	%o0, [%i2]
 	ret
 	 restore
-E SPARC_RET_SINT32
-	unimp
+E SP_V8_RET_CPLX16
+	sth	%o0, [%i2+2]
+	b	9f
+	 srl	%o0, 16, %o0
 E SPARC_RET_INT64
-	std	%o0, [%i2]
+	st	%o0, [%i2]
+	st	%o1, [%i2+4]
 	ret
 	 restore
 E SPARC_RET_INT128
-	unimp
-E SPARC_RET_F_8
-	unimp
-E SPARC_RET_F_6
-	unimp
-E SPARC_RET_F_4
-	unimp
-E SPARC_RET_F_2
-	std	%f0, [%i2]
+	std	%o0, [%i2]
+	std	%o2, [%i2+8]
 	ret
 	 restore
-E SPARC_RET_F_3
-	unimp
+E SPARC_RET_F_8
+	st	%f7, [%i2+7*4]
+	nop
+	st	%f6, [%i2+6*4]
+	nop
+E SPARC_RET_F_6
+	st	%f5, [%i2+5*4]
+	nop
+	st	%f4, [%i2+4*4]
+	nop
+E SPARC_RET_F_4
+	st	%f3, [%i2+3*4]
+	nop
+	st	%f2, [%i2+2*4]
+	nop
+E SPARC_RET_F_2
+	st	%f1, [%i2+4]
+	st	%f0, [%i2]
+	ret
+	 restore
+E SP_V8_RET_CPLX8
+	stb	%o0, [%i2+1]
+	b	10f
+	 srl	%o0, 8, %o0
 E SPARC_RET_F_1
 	st	%f0, [%i2]
 	ret
@@ -172,16 +190,22 @@ E SPARC_RET_F_1
 	ret
 	 restore
 
+	.align	8
+9:	sth	%o0, [%i2]
+	ret
+	 restore
+	.align	8
+10:	stb	%o0, [%i2]
+	ret
+	 restore
+
 	cfi_endproc
 	.size	C(ffi_call_v8),. - C(ffi_call_v8)
 
 
-#undef STACKFRAME
-#define	STACKFRAME	104	/* 16*4 register window +
-				   1*4 struct return +	
-				   6*4 args backing store +
-				   2*4 return storage +
-				   1*4 alignment */
+/* 16*4 register window + 1*4 struct return + 6*4 args backing store
+   + 8*4 return storage + 1*4 alignment.  */
+#define	STACKFRAME	(16*4 + 4 + 6*4 + 8*4 + 4)
 
 /* ffi_closure_v8(...)
 
@@ -211,7 +235,7 @@ C(ffi_closure_v8):
 
 	! Call ffi_closure_sparc_inner to do the bulk of the work.
 	mov	%g2, %o0
-	add	%fp, -8, %o1
+	add	%fp, -8*4, %o1
 	call	ffi_closure_sparc_inner_v8
 	 add	%fp,  64, %o2
 
@@ -220,8 +244,8 @@ C(ffi_closure_v8):
 1:	sll	%o0, 4, %o0	! o0 = o0 * 16
 	add	%o7, %o0, %o7	! o7 = 0b + o0*16
 	jmp	%o7+(2f-0b)
-	 nop
-
+	 add	%fp, -8*4, %i2
+	 
 	! Note that each entry is 4 insns, enforced by the E macro.
 	.align	16
 2:
@@ -232,47 +256,63 @@ E SPARC_RET_STRUCT
 	jmp	%i7+12
 	 restore
 E SPARC_RET_UINT8
-	ldub	[%fp-8+3], %i0
+	ldub	[%i2+3], %i0
 	ret
 	 restore
 E SPARC_RET_SINT8
-	ldsb	[%fp-8+3], %i0
+	ldsb	[%i2+3], %i0
 	ret
 	 restore
 E SPARC_RET_UINT16
-	lduh	[%fp-8+2], %i0
+	lduh	[%i2+2], %i0
 	ret
 	 restore
 E SPARC_RET_SINT16
-	ldsh	[%fp-8+2], %i0
+	ldsh	[%i2+2], %i0
 	ret
 	 restore
 E SPARC_RET_UINT32
-	ld	[%fp-8], %i0
+	ld	[%i2], %i0
 	ret
 	 restore
-E SPARC_RET_SINT32
-	unimp
+E SP_V8_RET_CPLX16
+	ld	[%i2], %i0
+	ret
+	 restore
 E SPARC_RET_INT64
-	ldd	[%fp-8], %i0
+	ldd	[%i2], %i0
 	ret
 	 restore
 E SPARC_RET_INT128
-	unimp
-E SPARC_RET_F_8
-	unimp
-E SPARC_RET_F_6
-	unimp
-E SPARC_RET_F_4
-	unimp
-E SPARC_RET_F_2
-	ldd	[%fp-8], %f0
+	ldd	[%i2], %i0
+	ldd	[%i2+8], %i2
 	ret
 	 restore
-E SPARC_RET_F_3
-	unimp
+E SPARC_RET_F_8
+	ld	[%i2+7*4], %f7
+	nop
+	ld	[%i2+6*4], %f6
+	nop
+E SPARC_RET_F_6
+	ld	[%i2+5*4], %f5
+	nop
+	ld	[%i2+4*4], %f4
+	nop
+E SPARC_RET_F_4
+	ld	[%i2+3*4], %f3
+	nop
+	ld	[%i2+2*4], %f2
+	nop
+E SPARC_RET_F_2
+	ldd	[%i2], %f0
+	ret
+	 restore
+E SP_V8_RET_CPLX8
+	lduh	[%i2], %i0
+	ret
+	 restore
 E SPARC_RET_F_1
-	ld	[%fp-8], %f0
+	ld	[%i2], %f0
 	ret
 	 restore
 
