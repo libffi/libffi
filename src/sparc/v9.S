@@ -94,8 +94,9 @@ C(ffi_call_v9):
 	ldx	[%sp+STACK_BIAS+128+16], %o2
 	ldx	[%sp+STACK_BIAS+128+24], %o3
 	ldx	[%sp+STACK_BIAS+128+32], %o4
+	ldx	[%sp+STACK_BIAS+128+40], %o5
 	call	%i1
-	 ldx	[%sp+STACK_BIAS+128+40], %o5
+	 mov	%i5, %g5			! load static chain
 
 0:	call	1f		! load pc in %o7
 	 and	%l0, SPARC_FLAG_RET_MASK, %l1
@@ -211,6 +212,25 @@ E SPARC_RET_F_1
    Receives the closure argument in %g1.   */
 
 	.align 8
+	.globl	C(ffi_go_closure_v9)
+	.type	C(ffi_go_closure_v9),@function
+	FFI_HIDDEN(C(ffi_go_closure_v9))
+
+C(ffi_go_closure_v9):
+	cfi_startproc
+	save	%sp, -STACKFRAME, %sp
+	cfi_def_cfa_register(%fp)
+	cfi_window_save
+
+	ldx	[%g5+8], %o0
+	ldx	[%g5+16], %o1
+	b	0f
+	 mov	%g5, %o2
+
+	cfi_endproc
+	.size	C(ffi_go_closure_v9), . - C(ffi_go_closure_v9)
+
+	.align 8
 	.globl	C(ffi_closure_v9)
 	.type	C(ffi_closure_v9),@function
 	FFI_HIDDEN(C(ffi_closure_v9))
@@ -221,6 +241,10 @@ C(ffi_closure_v9):
 	cfi_def_cfa_register(%fp)
 	cfi_window_save
 
+	ldx	[%g1+FFI_TRAMPOLINE_SIZE], %o0
+	ldx	[%g1+FFI_TRAMPOLINE_SIZE+8], %o1
+	ldx	[%g1+FFI_TRAMPOLINE_SIZE+16], %o2
+0:
 	! Store all of the potential argument registers in va_list format.
 	stx	%i0, [FP+128+0]
 	stx	%i1, [FP+128+8]
@@ -248,11 +272,10 @@ C(ffi_closure_v9):
 	std     %f30, [FP-8]
 
 	! Call ffi_closure_sparc_inner to do the bulk of the work.
-	mov	%g1, %o0
-	add	%fp, STACK_BIAS-160, %o1
-	add	%fp, STACK_BIAS+128, %o2
+	add	%fp, STACK_BIAS-160, %o3
+	add	%fp, STACK_BIAS+128, %o4
 	call	C(ffi_closure_sparc_inner_v9)
-	 add	%fp, STACK_BIAS-128, %o3
+	 add	%fp, STACK_BIAS-128, %o5
 
 0:	call	1f		! load pc in %o7
 	 and	%o0, SPARC_FLAG_RET_MASK, %o0

@@ -63,6 +63,7 @@ typedef enum ffi_abi {
 /* ---- Definitions for closures ----------------------------------------- */
 
 #define FFI_CLOSURES 1
+#define FFI_GO_CLOSURES 1
 #define FFI_NATIVE_RAW_API 0
 
 #ifdef SPARC64
