@@ -102,7 +102,7 @@ C(ffi_call_v8):
 
 	! Call foreign function
 	call	%i1
-	 nop
+	 mov	%i5, %g2		! load static chain
 
 0:	call	1f		! load pc in %o7
 	 sll	%l0, 4, %l0
@@ -185,7 +185,7 @@ E SPARC_RET_F_1
 	! Struct returning functions expect and skip the unimp here.
 	.align	8
 8:	call	%i1
-	 nop
+	 mov	%i5, %g2		! load static chain
 	unimp	4
 	ret
 	 restore
@@ -211,20 +211,43 @@ E SPARC_RET_F_1
 
    Receives the closure argument in %g2.   */
 
+#ifdef HAVE_AS_REGISTER_PSEUDO_OP
+	.register	%g2, #scratch
+#endif
+
+	.align 8
+	.globl	C(ffi_go_closure_v8)
+	.type	C(ffi_go_closure_v8),@function
+	FFI_HIDDEN(C(ffi_go_closure_v8))
+
+C(ffi_go_closure_v8):
+	cfi_startproc
+	save	%sp, -STACKFRAME, %sp
+	cfi_def_cfa_register(%fp)
+	cfi_window_save
+
+	ld	[%g2+4], %o0			! load cif
+	ld	[%g2+8], %o1			! load fun
+	b	0f
+	 mov	%g2, %o2			! load user_data
+	cfi_endproc
+	.size	C(ffi_go_closure_v8), . - C(ffi_go_closure_v8)
+
 	.align 8
 	.globl	C(ffi_closure_v8)
 	.type	C(ffi_closure_v8),@function
 	FFI_HIDDEN(C(ffi_closure_v8))
 
 C(ffi_closure_v8):
-#ifdef HAVE_AS_REGISTER_PSEUDO_OP
-		.register	%g2, #scratch
-#endif
 	cfi_startproc
 	save	%sp, -STACKFRAME, %sp
 	cfi_def_cfa_register(%fp)
 	cfi_window_save
 
+	ld	[%g2+FFI_TRAMPOLINE_SIZE], %o0		! load cif
+	ld	[%g2+FFI_TRAMPOLINE_SIZE+4], %o1	! load fun
+	ld	[%g2+FFI_TRAMPOLINE_SIZE+8], %o2	! load user_data
+0:
 	! Store all of the potential argument registers in va_list format.
 	st	%i0, [%fp+68+0]
 	st	%i1, [%fp+68+4]
@@ -234,10 +257,9 @@ C(ffi_closure_v8):
 	st	%i5, [%fp+68+20]
 
 	! Call ffi_closure_sparc_inner to do the bulk of the work.
-	mov	%g2, %o0
-	add	%fp, -8*4, %o1
+	add	%fp, -8*4, %o3
 	call	ffi_closure_sparc_inner_v8
-	 add	%fp,  64, %o2
+	 add	%fp,  64, %o4
 
 0:	call	1f
 	 and	%o0, SPARC_FLAG_RET_MASK, %o0

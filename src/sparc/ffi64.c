@@ -305,7 +305,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 }
 
 extern void ffi_call_v9(ffi_cif *cif, void (*fn)(void), void *rvalue,
-			void **avalue, size_t bytes) FFI_HIDDEN;
+			void **avalue, size_t bytes, void *closure) FFI_HIDDEN;
 
 /* ffi_prep_args is called by the assembly routine once stack space
    has been allocated for the function's arguments */
@@ -402,8 +402,9 @@ ffi_prep_args_v9(ffi_cif *cif, unsigned long *argp, void *rvalue, void **avalue)
   return flags;
 }
 
-void
-ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+static void
+ffi_call_int(ffi_cif *cif, void (*fn)(void), void *rvalue,
+	     void **avalue, void *closure)
 {
   size_t bytes = cif->bytes;
 
@@ -412,7 +413,20 @@ ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
   if (rvalue == NULL && (cif->flags & SPARC_FLAG_RET_IN_MEM))
     bytes += ALIGN (cif->rtype->size, 16);
 
-  ffi_call_v9(cif, fn, rvalue, avalue, -bytes);
+  ffi_call_v9(cif, fn, rvalue, avalue, -bytes, closure);
+}
+
+void
+ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+{
+  ffi_call_int(cif, fn, rvalue, avalue, NULL);
+}
+
+void
+ffi_call_go(ffi_cif *cif, void (*fn)(void), void *rvalue,
+	    void **avalue, void *closure)
+{
+  ffi_call_int(cif, fn, rvalue, avalue, closure);
 }
 
 #ifdef __GNUC__
@@ -426,6 +440,7 @@ extern void ffi_flush_icache (void *) FFI_HIDDEN;
 #endif
 
 extern void ffi_closure_v9(void) FFI_HIDDEN;
+extern void ffi_go_closure_v9(void) FFI_HIDDEN;
 
 ffi_status
 ffi_prep_closure_loc (ffi_closure* closure,
@@ -458,16 +473,30 @@ ffi_prep_closure_loc (ffi_closure* closure,
   return FFI_OK;
 }
 
+ffi_status
+ffi_prep_go_closure (ffi_go_closure* closure, ffi_cif* cif,
+		     void (*fun)(ffi_cif*, void*, void**, void*))
+{
+  if (cif->abi != FFI_V9)
+    return FFI_BAD_ABI;
+
+  closure->tramp = ffi_go_closure_v9;
+  closure->cif = cif;
+  closure->fun = fun;
+
+  return FFI_OK;
+}
+
 int FFI_HIDDEN
-ffi_closure_sparc_inner_v9(ffi_closure *closure, void *rvalue,
+ffi_closure_sparc_inner_v9(ffi_cif *cif,
+			   void (*fun)(ffi_cif*, void*, void**, void*),
+			   void *user_data, void *rvalue,
 			   unsigned long *gpr, unsigned long *fpr)
 {
-  ffi_cif *cif;
   ffi_type **arg_types;
   void **avalue;
   int i, argn, argx, nargs, flags;
 
-  cif = closure->cif;
   arg_types = cif->arg_types;
   nargs = cif->nargs;
   flags = cif->flags;
@@ -555,7 +584,7 @@ ffi_closure_sparc_inner_v9(ffi_closure *closure, void *rvalue,
     }
 
   /* Invoke the closure.  */
-  (closure->fun) (cif, rvalue, avalue, closure->user_data);
+  fun (cif, rvalue, avalue, user_data);
 
   /* Tell ffi_closure_sparc how to perform return type promotions.  */
   return flags;
