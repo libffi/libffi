@@ -66,7 +66,8 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       break;
     case FFI_TYPE_LONGDOUBLE:
     case FFI_TYPE_STRUCT:
-      flags = SPARC_RET_STRUCT;
+      flags = (rtype->size & 0xfff) << SPARC_SIZEMASK_SHIFT;
+      flags |= SPARC_RET_STRUCT;
       break;
     case FFI_TYPE_SINT8:
       flags = SPARC_RET_SINT8;
@@ -187,7 +188,7 @@ ffi_prep_args_v8(ffi_cif *cif, unsigned long *argp, void *rvalue, void **avalue)
 
   if (rvalue == NULL)
     {
-      if (flags == SPARC_RET_STRUCT)
+      if ((flags & SPARC_FLAG_RET_MASK) == SPARC_RET_STRUCT)
 	{
 	  /* Since we pass the pointer to the callee, we need a value.
 	     We allowed for this space in ffi_call, before ffi_call_v8
@@ -290,7 +291,8 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 
   /* If we've not got a return value, we need to create one if we've
      got to pass the return value to the callee.  Otherwise ignore it.  */
-  if (rvalue == NULL && cif->flags == SPARC_RET_STRUCT)
+  if (rvalue == NULL
+      && (cif->flags & SPARC_FLAG_RET_MASK) == SPARC_RET_STRUCT)
     bytes += ALIGN (cif->rtype->size, 8);
 
   ffi_call_v8(cif, fn, rvalue, avalue, -bytes, closure);
@@ -382,9 +384,14 @@ ffi_closure_sparc_inner_v8(ffi_cif *cif,
   avalue = alloca(nargs * sizeof(void *));
 
   /* Copy the caller's structure return address so that the closure
-     returns the data directly to the caller.  */
-  if (flags == SPARC_RET_STRUCT)
-    rvalue = (void *)*argp;
+     returns the data directly to the caller.  Also install it so we
+     can return the address in %o0.  */
+  if ((flags & SPARC_FLAG_RET_MASK) == SPARC_RET_STRUCT)
+    {
+      void *new_rvalue = (void *)*argp;
+      *(void **)rvalue = new_rvalue;
+      rvalue = new_rvalue;
+    }
 
   /* Always skip the structure return address.  */
   argp++;

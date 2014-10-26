@@ -91,6 +91,7 @@ C(ffi_call_v8):
 
 	add	%sp, 32, %sp		! deallocate prep frame
 	and	%o0, SPARC_FLAG_RET_MASK, %l0	! save return type
+	srl	%o0, SPARC_SIZEMASK_SHIFT, %l1	! save return size
 	ld	[%sp+64+4], %o0		! load all argument registers
 	ld	[%sp+64+8], %o1
 	ld	[%sp+64+12], %o2
@@ -182,14 +183,6 @@ E SPARC_RET_F_1
 	ret
 	 restore
 
-	! Struct returning functions expect and skip the unimp here.
-	.align	8
-8:	call	%i1
-	 mov	%i5, %g2		! load static chain
-	unimp	4
-	ret
-	 restore
-
 	.align	8
 9:	sth	%o0, [%i2]
 	ret
@@ -198,6 +191,27 @@ E SPARC_RET_F_1
 10:	stb	%o0, [%i2]
 	ret
 	 restore
+
+	! Struct returning functions expect and skip the unimp here.
+	! To make it worse, conforming callees examine the unimp and
+	! make sure the low 12 bits of the unimp match the size of
+	! the struct being returned.
+	.align	8
+8:	call	1f				! load pc in %o7
+	 sll	%l1, 2, %l0			! size * 4
+1:	sll	%l1, 4, %l1			! size * 16
+	add	%l0, %l1, %l0			! size * 20
+	add	%o7, %l0, %o7			! o7 = 0b + size*20
+	jmp	%o7+(2f-8b)
+	 mov	%i5, %g2			! load static chain
+2:
+.rept	0x1000
+	call	%i1
+	 nop
+	unimp	(. - 2b) / 20
+	ret
+	 restore
+.endr
 
 	cfi_endproc
 	.size	C(ffi_call_v8),. - C(ffi_call_v8)
@@ -275,6 +289,7 @@ E SPARC_RET_VOID
 	ret
 	 restore
 E SPARC_RET_STRUCT
+	ld	[%i2], %i0
 	jmp	%i7+12
 	 restore
 E SPARC_RET_UINT8
