@@ -188,7 +188,7 @@ E SPARC_RET_F_1
 	std	%f6, [%l2+56]
 
 	! Copy the structure into place.
-	srl	%l0, SPARC_FLTMASK_SHIFT, %o0	! load size_mask
+	srl	%l0, SPARC_SIZEMASK_SHIFT, %o0	! load size_mask
 	mov	%i2, %o1			! load dst
 	mov	%l2, %o2			! load src_gp
 	call	C(ffi_struct_float_copy)

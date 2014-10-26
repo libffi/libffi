@@ -197,7 +197,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 	  int all_mask = (1 << word_size) - 1;
 	  int fp_mask = size_mask >> 8;
 
-	  flags = (size_mask << SPARC_FLTMASK_SHIFT) | SPARC_RET_STRUCT;
+	  flags = (size_mask << SPARC_SIZEMASK_SHIFT) | SPARC_RET_STRUCT;
 
 	  /* For special cases of all-int or all-fp, we can return
 	     the value directly without popping through a struct copy.  */
