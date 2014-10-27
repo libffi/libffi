@@ -568,6 +568,7 @@ ffi_prep_closure_loc (ffi_closure* closure,
     0x0f, 0x1f, 0x00
   };
   void (*dest)(void);
+  char *tramp = closure->tramp;
 
   if (cif->abi != FFI_UNIX64)
     return FFI_BAD_ABI;
@@ -577,8 +578,8 @@ ffi_prep_closure_loc (ffi_closure* closure,
   else
     dest = ffi_closure_unix64;
 
-  memcpy (closure->tramp, trampoline, sizeof(trampoline));
-  *(UINT64 *)(closure->tramp + 16) = (uintptr_t)dest;
+  memcpy (tramp, trampoline, sizeof(trampoline));
+  *(UINT64 *)(tramp + 16) = (uintptr_t)dest;
 
   closure->cif = cif;
   closure->fun = fun;
