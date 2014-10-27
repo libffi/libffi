@@ -32,7 +32,7 @@
 #include <ffi.h>
 #include <ffi_cfi.h>
 
-.text
+	.text
 
 /* ffi_call_unix64 (void *args, unsigned long bytes, unsigned flags,
 	            void *raddr, void (*fnaddr)(void));
@@ -272,9 +272,15 @@ ffi_closure_unix64:
 	movq    %r8,  ffi_closure_OFS_G+0x20(%rsp)
 	movq    %r9,  ffi_closure_OFS_G+0x28(%rsp)
 
-	movq	24(%r10), %rdi				/* Load cif */
-	movq	32(%r10), %rsi				/* Load fun */
-	movq	40(%r10), %rdx				/* Load user_data */
+#ifdef __ILP32__
+	movl	FFI_TRAMPOLINE_SIZE(%r10), %edi		/* Load cif */
+	movl	FFI_TRAMPOLINE_SIZE+4(%r10), %esi	/* Load fun */
+	movl	FFI_TRAMPOLINE_SIZE+8(%r10), %edx	/* Load user_data */
+#else
+	movq	FFI_TRAMPOLINE_SIZE(%r10), %rdi		/* Load cif */
+	movq	FFI_TRAMPOLINE_SIZE+8(%r10), %rsi	/* Load fun */
+	movq	FFI_TRAMPOLINE_SIZE+16(%r10), %rdx	/* Load user_data */
+#endif
 .Ldo_closure:
 	leaq	ffi_closure_OFS_RVALUE(%rsp), %rcx	/* Load rvalue */
 	movq	%rsp, %r8				/* Load reg_args */
@@ -407,9 +413,15 @@ ffi_go_closure_unix64:
 	movq    %r8,  ffi_closure_OFS_G+0x20(%rsp)
 	movq    %r9,  ffi_closure_OFS_G+0x28(%rsp)
 
+#ifdef __ILP32__
+	movl	4(%r10), %edi		/* Load cif */
+	movl	8(%r10), %esi		/* Load fun */
+	movl	%r10d, %edx		/* Load closure (user_data) */
+#else
 	movq	8(%r10), %rdi		/* Load cif */
 	movq	16(%r10), %rsi		/* Load fun */
 	movq	%r10, %rdx		/* Load closure (user_data) */
+#endif
 	jmp	.Ldo_closure
 
 	cfi_endproc
