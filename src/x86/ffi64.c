@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include "internal64.h"
 
 #ifdef __x86_64__
 
@@ -191,7 +192,7 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 	  }
 	else if (size <= 16)
 	  {
-	    classes[0] = classes[1] = X86_64_INTEGERSI_CLASS;
+	    classes[0] = classes[1] = X86_64_INTEGER_CLASS;
 	    return 2;
 	  }
 	else
@@ -360,15 +361,55 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   int gprcount, ssecount, i, avn, ngpr, nsse, flags;
   enum x86_64_reg_class classes[MAX_CLASSES];
   size_t bytes, n;
+  ffi_type *rtype;
 
   if (cif->abi != FFI_UNIX64)
     return FFI_BAD_ABI;
 
   gprcount = ssecount = 0;
 
-  flags = cif->rtype->type;
-  if (flags != FFI_TYPE_VOID)
+  rtype = cif->rtype;
+  switch (rtype->type)
     {
+    case FFI_TYPE_VOID:
+      flags = UNIX64_RET_VOID;
+      break;
+    case FFI_TYPE_UINT8:
+      flags = UNIX64_RET_UINT8;
+      break;
+    case FFI_TYPE_SINT8:
+      flags = UNIX64_RET_SINT8;
+      break;
+    case FFI_TYPE_UINT16:
+      flags = UNIX64_RET_UINT16;
+      break;
+    case FFI_TYPE_SINT16:
+      flags = UNIX64_RET_SINT16;
+      break;
+    case FFI_TYPE_UINT32:
+      flags = UNIX64_RET_UINT32;
+      break;
+    case FFI_TYPE_INT:
+    case FFI_TYPE_SINT32:
+      flags = UNIX64_RET_SINT32;
+      break;
+    case FFI_TYPE_UINT64:
+    case FFI_TYPE_SINT64:
+      flags = UNIX64_RET_INT64;
+      break;
+    case FFI_TYPE_POINTER:
+      flags = (sizeof(void *) == 4 ? UNIX64_RET_UINT32 : UNIX64_RET_INT64);
+      break;
+    case FFI_TYPE_FLOAT:
+      flags = UNIX64_RET_XMM32;
+      break;
+    case FFI_TYPE_DOUBLE:
+      flags = UNIX64_RET_XMM64;
+      break;
+    case FFI_TYPE_LONGDOUBLE:
+      flags = UNIX64_RET_X87;
+      break;
+    case FFI_TYPE_STRUCT:
       n = examine_argument (cif->rtype, classes, 1, &ngpr, &nsse);
       if (n == 0)
 	{
@@ -376,22 +417,24 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	     memory is the first argument.  Allocate a register for it.  */
 	  gprcount++;
 	  /* We don't have to do anything in asm for the return.  */
-	  flags = FFI_TYPE_VOID;
+	  flags = UNIX64_RET_VOID | UNIX64_FLAG_RET_IN_MEM;
 	}
-      else if (flags == FFI_TYPE_STRUCT)
+      else
 	{
 	  /* Mark which registers the result appears in.  */
 	  _Bool sse0 = SSE_CLASS_P (classes[0]);
 	  _Bool sse1 = n == 2 && SSE_CLASS_P (classes[1]);
-	  if (sse0 && !sse1)
-	    flags |= 1 << 8;
-	  else if (!sse0 && sse1)
-	    flags |= 1 << 9;
-	  else if (sse0 && sse1)
-	    flags |= 1 << 10;
+	  if (sse0)
+	    flags = (sse1 ? UNIX64_RET_ST_XMM0_XMM1 : UNIX64_RET_ST_XMM0_RAX);
+	  else
+	    flags = (sse1 ? UNIX64_RET_ST_RAX_XMM0 : UNIX64_RET_ST_RAX_RDX);
+
 	  /* Mark the true size of the structure.  */
-	  flags |= cif->rtype->size << 12;
+	  flags |= rtype->size << UNIX64_SIZE_SHIFT;
 	}
+      break;
+    default:
+      return FFI_BAD_TYPEDEF;
     }
 
   /* Go over all arguments and determine the way they should be passed.
@@ -418,9 +461,10 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	}
     }
   if (ssecount)
-    flags |= 1 << 11;
+    flags |= UNIX64_FLAG_XMM_ARGS;
+
   cif->flags = flags;
-  cif->bytes = (unsigned)ALIGN (bytes, 8);
+  cif->bytes = ALIGN (bytes, 8);
 
   return FFI_OK;
 }
@@ -432,20 +476,22 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   enum x86_64_reg_class classes[MAX_CLASSES];
   char *stack, *argp;
   ffi_type **arg_types;
-  int gprcount, ssecount, ngpr, nsse, i, avn;
-  _Bool ret_in_memory;
+  int gprcount, ssecount, ngpr, nsse, i, avn, flags;
   struct register_args *reg_args;
 
   /* Can't call 32-bit mode from 64-bit mode.  */
   FFI_ASSERT (cif->abi == FFI_UNIX64);
 
   /* If the return value is a struct and we don't have a return value
-     address then we need to make one.  Note the setting of flags to
-     VOID above in ffi_prep_cif_machdep.  */
-  ret_in_memory = (cif->rtype->type == FFI_TYPE_STRUCT
-		   && (cif->flags & 0xff) == FFI_TYPE_VOID);
-  if (rvalue == NULL && ret_in_memory)
-    rvalue = alloca (cif->rtype->size);
+     address then we need to make one.  Otherwise we can ignore it.  */
+  flags = cif->flags;
+  if (rvalue == NULL)
+    {
+      if (flags & UNIX64_FLAG_RET_IN_MEM)
+	rvalue = alloca (cif->rtype->size);
+      else
+	flags = UNIX64_RET_VOID;
+    }
 
   /* Allocate the space for the arguments, plus 4 words of temp space.  */
   stack = alloca (sizeof (struct register_args) + cif->bytes + 4*8);
@@ -458,7 +504,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 
   /* If the return value is passed in memory, add the pointer as the
      first integer argument.  */
-  if (ret_in_memory)
+  if (flags & UNIX64_FLAG_RET_IN_MEM)
     reg_args->gpr[gprcount++] = (unsigned long) rvalue;
 
   avn = cif->nargs;
@@ -503,17 +549,17 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 		  switch (arg_types[i]->type)
 		    {
 		    case FFI_TYPE_SINT8:
-		      *(SINT64 *)&reg_args->gpr[gprcount] = (SINT64) *((SINT8 *) a);
+		      reg_args->gpr[gprcount] = (SINT64) *((SINT8 *) a);
 		      break;
 		    case FFI_TYPE_SINT16:
-		      *(SINT64 *)&reg_args->gpr[gprcount] = (SINT64) *((SINT16 *) a);
+		      reg_args->gpr[gprcount] = (SINT64) *((SINT16 *) a);
 		      break;
 		    case FFI_TYPE_SINT32:
-		      *(SINT64 *)&reg_args->gpr[gprcount] = (SINT64) *((SINT32 *) a);
+		      reg_args->gpr[gprcount] = (SINT64) *((SINT32 *) a);
 		      break;
 		    default:
 		      reg_args->gpr[gprcount] = 0;
-		      memcpy (&reg_args->gpr[gprcount], a, size < 8 ? size : 8);
+		      memcpy (&reg_args->gpr[gprcount], a, size);
 		    }
 		  gprcount++;
 		  break;
@@ -533,7 +579,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   reg_args->rax = ssecount;
 
   ffi_call_unix64 (stack, cif->bytes + sizeof (struct register_args),
-		   cif->flags, rvalue, fn);
+		   flags, rvalue, fn);
 }
 
 void
@@ -573,7 +619,7 @@ ffi_prep_closure_loc (ffi_closure* closure,
   if (cif->abi != FFI_UNIX64)
     return FFI_BAD_ABI;
 
-  if (cif->flags & (1 << 11))
+  if (cif->flags & UNIX64_FLAG_XMM_ARGS)
     dest = ffi_closure_unix64_sse;
   else
     dest = ffi_closure_unix64;
@@ -600,39 +646,17 @@ ffi_closure_unix64_inner(ffi_cif *cif,
   ffi_type **arg_types;
   long i, avn;
   int gprcount, ssecount, ngpr, nsse;
-  int ret;
-
-  avalue = alloca(cif->nargs * sizeof(void *));
-  gprcount = ssecount = 0;
-
-  ret = cif->rtype->type;
-  if (ret != FFI_TYPE_VOID)
-    {
-      enum x86_64_reg_class classes[MAX_CLASSES];
-      size_t n = examine_argument (cif->rtype, classes, 1, &ngpr, &nsse);
-      if (n == 0)
-	{
-	  /* The return value goes in memory.  Arrange for the closure
-	     return value to go directly back to the original caller.  */
-	  rvalue = (void *) (unsigned long) reg_args->gpr[gprcount++];
-	  /* We don't have to do anything in asm for the return.  */
-	  ret = FFI_TYPE_VOID;
-	}
-      else if (ret == FFI_TYPE_STRUCT && n == 2)
-	{
-	  /* Mark which register the second word of the structure goes in.  */
-	  _Bool sse0 = SSE_CLASS_P (classes[0]);
-	  _Bool sse1 = SSE_CLASS_P (classes[1]);
-	  if (!sse0 && sse1)
-	    ret |= 1 << 8;
-	  else if (sse0 && !sse1)
-	    ret |= 1 << 9;
-	}
-    }
+  int flags;
 
   avn = cif->nargs;
-  arg_types = cif->arg_types;
+  flags = cif->flags;
+  avalue = alloca(avn * sizeof(void *));
+  gprcount = ssecount = 0;
 
+  if (flags & UNIX64_FLAG_RET_IN_MEM)
+    rvalue = (void *)(uintptr_t)reg_args->gpr[gprcount++];
+
+  arg_types = cif->arg_types;
   for (i = 0; i < avn; ++i)
     {
       enum x86_64_reg_class classes[MAX_CLASSES];
@@ -693,7 +717,7 @@ ffi_closure_unix64_inner(ffi_cif *cif,
   fun (cif, rvalue, avalue, user_data);
 
   /* Tell assembly how to perform return type promotions.  */
-  return ret;
+  return flags;
 }
 
 extern void ffi_go_closure_unix64(void) FFI_HIDDEN;
@@ -706,7 +730,7 @@ ffi_prep_go_closure (ffi_go_closure* closure, ffi_cif* cif,
   if (cif->abi != FFI_UNIX64)
     return FFI_BAD_ABI;
 
-  closure->tramp = (cif->flags & (1 << 11)
+  closure->tramp = (cif->flags & UNIX64_FLAG_XMM_ARGS
 		    ? ffi_go_closure_unix64_sse
 		    : ffi_go_closure_unix64);
   closure->cif = cif;
