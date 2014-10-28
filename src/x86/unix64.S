@@ -31,8 +31,14 @@
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_cfi.h>
+#include "internal64.h"
 
 	.text
+
+.macro E index
+	.align	8
+	.org	0b + \index * 8, 0x90
+.endm
 
 /* ffi_call_unix64 (void *args, unsigned long bytes, unsigned flags,
 	            void *raddr, void (*fnaddr)(void));
@@ -41,7 +47,7 @@
    for this function.  This has been allocated by ffi_call.  We also
    deallocate some of the stack that has been alloca'd.  */
 
-	.align	2
+	.align	8
 	.globl	ffi_call_unix64
 	.type	ffi_call_unix64,@function
 	FFI_HIDDEN(ffi_call_unix64)
@@ -100,108 +106,80 @@ ffi_call_unix64:
 	cfi_restore(%rbp)
 
 	/* The first byte of the flags contains the FFI_TYPE.  */
+	cmpb	$UNIX64_RET_LAST, %cl
 	movzbl	%cl, %r10d
-	leaq	.Lstore_table(%rip), %r11
-	movslq	(%r11, %r10, 4), %r10
-	addq	%r11, %r10
+	leaq	0f(%rip), %r11
+	ja	9f
+	leaq	(%r11, %r10, 8), %r10
+
+	/* Prep for the structure cases: scratch area in redzone.  */
+	leaq	-20(%rsp), %rsi
 	jmp	*%r10
 
-	.section .rodata
-	.align	2
-.Lstore_table:
-	.long	.Lst_void-.Lstore_table		/* FFI_TYPE_VOID */
-	.long	.Lst_sint32-.Lstore_table	/* FFI_TYPE_INT */
-	.long	.Lst_float-.Lstore_table	/* FFI_TYPE_FLOAT */
-	.long	.Lst_double-.Lstore_table	/* FFI_TYPE_DOUBLE */
-	.long	.Lst_ldouble-.Lstore_table	/* FFI_TYPE_LONGDOUBLE */
-	.long	.Lst_uint8-.Lstore_table	/* FFI_TYPE_UINT8 */
-	.long	.Lst_sint8-.Lstore_table	/* FFI_TYPE_SINT8 */
-	.long	.Lst_uint16-.Lstore_table	/* FFI_TYPE_UINT16 */
-	.long	.Lst_sint16-.Lstore_table	/* FFI_TYPE_SINT16 */
-	.long	.Lst_uint32-.Lstore_table	/* FFI_TYPE_UINT32 */
-	.long	.Lst_sint32-.Lstore_table	/* FFI_TYPE_SINT32 */
-	.long	.Lst_int64-.Lstore_table	/* FFI_TYPE_UINT64 */
-	.long	.Lst_int64-.Lstore_table	/* FFI_TYPE_SINT64 */
-	.long	.Lst_struct-.Lstore_table	/* FFI_TYPE_STRUCT */
-	.long	.Lst_int64-.Lstore_table	/* FFI_TYPE_POINTER */
-	.previous
-
-	.align 2
-.Lst_void:
+	.align	8
+0:
+E UNIX64_RET_VOID
 	ret
-	.align 2
-
-.Lst_uint8:
-	movzbq	%al, %rax
+E UNIX64_RET_UINT8
+	movzbl	%al, %eax
 	movq	%rax, (%rdi)
 	ret
-	.align 2
-.Lst_sint8:
+E UNIX64_RET_UINT16
+	movzwl	%ax, %eax
+	movq	%rax, (%rdi)
+	ret
+E UNIX64_RET_UINT32
+	movl	%eax, %eax
+	movq	%rax, (%rdi)
+	ret
+E UNIX64_RET_SINT8
 	movsbq	%al, %rax
 	movq	%rax, (%rdi)
 	ret
-	.align 2
-.Lst_uint16:
-	movzwq	%ax, %rax
-	movq	%rax, (%rdi)
-	.align 2
-.Lst_sint16:
+E UNIX64_RET_SINT16
 	movswq	%ax, %rax
 	movq	%rax, (%rdi)
 	ret
-	.align 2
-.Lst_uint32:
-	movl	%eax, %eax
-	movq	%rax, (%rdi)
-	.align 2
-.Lst_sint32:
+E UNIX64_RET_SINT32
 	cltq
 	movq	%rax, (%rdi)
 	ret
-	.align 2
-.Lst_int64:
+E UNIX64_RET_INT64
 	movq	%rax, (%rdi)
 	ret
-
-	.align 2
-.Lst_float:
-	movss	%xmm0, (%rdi)
+E UNIX64_RET_XMM32
+	movd	%xmm0, (%rdi)
 	ret
-	.align 2
-.Lst_double:
-	movsd	%xmm0, (%rdi)
+E UNIX64_RET_XMM64
+	movq	%xmm0, (%rdi)
 	ret
-.Lst_ldouble:
+E UNIX64_RET_X87
 	fstpt	(%rdi)
 	ret
-
-	.align 2
-.Lst_struct:
-	leaq	-20(%rsp), %rsi		/* Scratch area in redzone.  */
-
-	/* We have to locate the values now, and since we don't want to
-	   write too much data into the user's return value, we spill the
-	   value to a 16 byte scratch area first.  Bits 8, 9, and 10
-	   control where the values are located.  Only one of the three
-	   bits will be set; see ffi_prep_cif_machdep for the pattern.  */
-	movd	%xmm0, %r10
-	movd	%xmm1, %r11
-	testl	$0x100, %ecx
-	cmovnz	%rax, %rdx
-	cmovnz	%r10, %rax
-	testl	$0x200, %ecx
-	cmovnz	%r10, %rdx
-	testl	$0x400, %ecx
-	cmovnz	%r10, %rax
-	cmovnz	%r11, %rdx
-	movq	%rax, (%rsi)
+E UNIX64_RET_ST_RAX_RDX
 	movq	%rdx, 8(%rsi)
+	jmp	2f
+E UNIX64_RET_ST_XMM0_RAX
+	movq	%rax, 8(%rsi)
+	jmp	3f
+E UNIX64_RET_ST_RAX_XMM0
+	movq	%xmm0, 8(%rsi)
+	jmp	2f
+E UNIX64_RET_ST_XMM0_XMM1
+	movq	%xmm1, 8(%rsi)
 
-	/* Bits 12-31 contain the true size of the structure.  Copy from
-	   the scratch area to the true destination.  */
-	shrl	$12, %ecx
+	.align 8
+3:	movq	%xmm0, (%rsi)
+	shrl	$UNIX64_SIZE_SHIFT, %ecx
 	rep movsb
 	ret
+	.align 8
+2:	movq	%rax, (%rsi)
+	shrl	$UNIX64_SIZE_SHIFT, %ecx
+	rep movsb
+	ret
+
+9:	call	abort@PLT
 
 	/* Many times we can avoid loading any SSE registers at all.
 	   It's not worth an indirect jump to load the exact set of
@@ -292,83 +270,67 @@ ffi_closure_unix64:
 	cfi_adjust_cfa_offset(-ffi_closure_FS)
 
 	/* The first byte of the return value contains the FFI_TYPE.  */
+	cmpb	$UNIX64_RET_LAST, %al
 	movzbl	%al, %r10d
-	leaq	.Lload_table(%rip), %r11
-	movslq	(%r11, %r10, 4), %r10
-	addq	%r11, %r10
+	leaq	0f(%rip), %r11
+	ja	9f
+	leaq	(%r11, %r10, 8), %r10
 	jmp	*%r10
 
-	.section .rodata
-	.align	2
-.Lload_table:
-	.long	.Lld_void-.Lload_table		/* FFI_TYPE_VOID */
-	.long	.Lld_int32-.Lload_table		/* FFI_TYPE_INT */
-	.long	.Lld_float-.Lload_table		/* FFI_TYPE_FLOAT */
-	.long	.Lld_double-.Lload_table	/* FFI_TYPE_DOUBLE */
-	.long	.Lld_ldouble-.Lload_table	/* FFI_TYPE_LONGDOUBLE */
-	.long	.Lld_int8-.Lload_table		/* FFI_TYPE_UINT8 */
-	.long	.Lld_int8-.Lload_table		/* FFI_TYPE_SINT8 */
-	.long	.Lld_int16-.Lload_table		/* FFI_TYPE_UINT16 */
-	.long	.Lld_int16-.Lload_table		/* FFI_TYPE_SINT16 */
-	.long	.Lld_int32-.Lload_table		/* FFI_TYPE_UINT32 */
-	.long	.Lld_int32-.Lload_table		/* FFI_TYPE_SINT32 */
-	.long	.Lld_int64-.Lload_table		/* FFI_TYPE_UINT64 */
-	.long	.Lld_int64-.Lload_table		/* FFI_TYPE_SINT64 */
-	.long	.Lld_struct-.Lload_table	/* FFI_TYPE_STRUCT */
-	.long	.Lld_int64-.Lload_table		/* FFI_TYPE_POINTER */
-	.previous
-
-	.align 2
-.Lld_void:
+	.align	8
+0:
+E UNIX64_RET_VOID
 	ret
-
-	.align 2
-.Lld_int8:
+E UNIX64_RET_UINT8
 	movzbl	ffi_closure_RED_RVALUE(%rsp), %eax
 	ret
-	.align 2
-.Lld_int16:
+E UNIX64_RET_UINT16
 	movzwl	ffi_closure_RED_RVALUE(%rsp), %eax
 	ret
-	.align 2
-.Lld_int32:
+E UNIX64_RET_UINT32
 	movl	ffi_closure_RED_RVALUE(%rsp), %eax
 	ret
-	.align 2
-.Lld_int64:
+E UNIX64_RET_SINT8
+	movsbl	ffi_closure_RED_RVALUE(%rsp), %eax
+	ret
+E UNIX64_RET_SINT16
+	movswl	ffi_closure_RED_RVALUE(%rsp), %eax
+	ret
+E UNIX64_RET_SINT32
+	movl	ffi_closure_RED_RVALUE(%rsp), %eax
+	ret
+E UNIX64_RET_INT64
 	movq	ffi_closure_RED_RVALUE(%rsp), %rax
 	ret
-
-	.align 2
-.Lld_float:
-	movss	ffi_closure_RED_RVALUE(%rsp), %xmm0
+E UNIX64_RET_XMM32
+	movd	ffi_closure_RED_RVALUE(%rsp), %xmm0
 	ret
-	.align 2
-.Lld_double:
-	movsd	ffi_closure_RED_RVALUE(%rsp), %xmm0
+E UNIX64_RET_XMM64
+	movq	ffi_closure_RED_RVALUE(%rsp), %xmm0
 	ret
-	.align 2
-.Lld_ldouble:
+E UNIX64_RET_X87
 	fldt	ffi_closure_RED_RVALUE(%rsp)
 	ret
-
-	.align 2
-.Lld_struct:
-	/* There are four possibilities here, %rax/%rdx, %xmm0/%rax,
-	   %rax/%xmm0, %xmm0/%xmm1.  We collapse two by always loading
-	   both rdx and xmm1 with the second word.  For the remaining,
-	   bit 8 set means xmm0 gets the second word, and bit 9 means
-	   that rax gets the second word.  */
-	movq	ffi_closure_RED_RVALUE(%rsp), %rcx
+E UNIX64_RET_ST_RAX_RDX
 	movq	ffi_closure_RED_RVALUE+8(%rsp), %rdx
+	jmp	2f
+E UNIX64_RET_ST_XMM0_RAX
+	movq	ffi_closure_RED_RVALUE+8(%rsp), %rax
+	jmp	3f
+E UNIX64_RET_ST_RAX_XMM0
+	movq	ffi_closure_RED_RVALUE+8(%rsp), %xmm0
+	jmp	2f
+E UNIX64_RET_ST_XMM0_XMM1
 	movq	ffi_closure_RED_RVALUE+8(%rsp), %xmm1
-	testl	$0x100, %eax
-	cmovnz	%rdx, %rcx
-	movd	%rcx, %xmm0
-	testl	$0x200, %eax
-	movq	ffi_closure_RED_RVALUE(%rsp), %rax
-	cmovnz	%rdx, %rax
+
+	.align	8
+3:	movq	ffi_closure_RED_RVALUE(%rsp), %xmm0
 	ret
+	.align	8
+2:	movq	ffi_closure_RED_RVALUE(%rsp), %rax
+	ret
+
+9:	call	abort@PLT
 
 	cfi_endproc
 	.size	ffi_closure_unix64,.-ffi_closure_unix64
