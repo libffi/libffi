@@ -171,6 +171,7 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
     case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
     case FFI_TYPE_POINTER:
+    do_integer:
       {
 	size_t size = byte_offset + type->size;
 
@@ -301,11 +302,42 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 	  }
 	return words;
       }
+    case FFI_TYPE_COMPLEX:
+      {
+	ffi_type *inner = type->elements[0];
+	switch (inner->type)
+	  {
+	  case FFI_TYPE_INT:
+	  case FFI_TYPE_UINT8:
+	  case FFI_TYPE_SINT8:
+	  case FFI_TYPE_UINT16:
+	  case FFI_TYPE_SINT16:
+	  case FFI_TYPE_UINT32:
+	  case FFI_TYPE_SINT32:
+	  case FFI_TYPE_UINT64:
+	  case FFI_TYPE_SINT64:
+	    goto do_integer;
 
-    default:
-      FFI_ASSERT(0);
+	  case FFI_TYPE_FLOAT:
+	    classes[0] = X86_64_SSE_CLASS;
+	    if (byte_offset % 8)
+	      {
+		classes[1] = X86_64_SSESF_CLASS;
+		return 2;
+	      }
+	    return 1;
+	  case FFI_TYPE_DOUBLE:
+	    classes[0] = classes[1] = X86_64_SSEDF_CLASS;
+	    return 2;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+	  case FFI_TYPE_LONGDOUBLE:
+	    classes[0] = X86_64_COMPLEX_X87_CLASS;
+	    return 1;
+#endif
+	  }
+      }
     }
-  return 0; /* Never reached.  */
+  abort();
 }
 
 /* Examine the argument and return set number of register required in each
@@ -360,7 +392,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 {
   int gprcount, ssecount, i, avn, ngpr, nsse, flags;
   enum x86_64_reg_class classes[MAX_CLASSES];
-  size_t bytes, n;
+  size_t bytes, n, rtype_size;
   ffi_type *rtype;
 
   if (cif->abi != FFI_UNIX64)
@@ -369,6 +401,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   gprcount = ssecount = 0;
 
   rtype = cif->rtype;
+  rtype_size = rtype->size;
   switch (rtype->type)
     {
     case FFI_TYPE_VOID:
@@ -421,16 +454,54 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	}
       else
 	{
-	  /* Mark which registers the result appears in.  */
 	  _Bool sse0 = SSE_CLASS_P (classes[0]);
-	  _Bool sse1 = n == 2 && SSE_CLASS_P (classes[1]);
-	  if (sse0)
-	    flags = (sse1 ? UNIX64_RET_ST_XMM0_XMM1 : UNIX64_RET_ST_XMM0_RAX);
-	  else
-	    flags = (sse1 ? UNIX64_RET_ST_RAX_XMM0 : UNIX64_RET_ST_RAX_RDX);
 
-	  /* Mark the true size of the structure.  */
-	  flags |= rtype->size << UNIX64_SIZE_SHIFT;
+	  if (rtype_size == 4 && sse0)
+	    flags = UNIX64_RET_XMM32;
+	  else if (rtype_size == 8)
+	    flags = sse0 ? UNIX64_RET_XMM64 : UNIX64_RET_INT64;
+	  else
+	    {
+	      _Bool sse1 = n == 2 && SSE_CLASS_P (classes[1]);
+	      if (sse0 && sse1)
+		flags = UNIX64_RET_ST_XMM0_XMM1;
+	      else if (sse0)
+		flags = UNIX64_RET_ST_XMM0_RAX;
+	      else if (sse1)
+		flags = UNIX64_RET_ST_RAX_XMM0;
+	      else
+		flags = UNIX64_RET_ST_RAX_RDX;
+	      flags |= rtype_size << UNIX64_SIZE_SHIFT;
+	    }
+	}
+      break;
+    case FFI_TYPE_COMPLEX:
+      switch (rtype->elements[0]->type)
+	{
+	case FFI_TYPE_UINT8:
+	case FFI_TYPE_SINT8:
+	case FFI_TYPE_UINT16:
+	case FFI_TYPE_SINT16:
+	case FFI_TYPE_INT:
+	case FFI_TYPE_UINT32:
+	case FFI_TYPE_SINT32:
+	case FFI_TYPE_UINT64:
+	case FFI_TYPE_SINT64:
+	  flags = UNIX64_RET_ST_RAX_RDX | (rtype_size << UNIX64_SIZE_SHIFT);
+	  break;
+	case FFI_TYPE_FLOAT:
+	  flags = UNIX64_RET_XMM64;
+	  break;
+	case FFI_TYPE_DOUBLE:
+	  flags = UNIX64_RET_ST_XMM0_XMM1 | (16 << UNIX64_SIZE_SHIFT);
+	  break;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+	case FFI_TYPE_LONGDOUBLE:
+	  flags = UNIX64_RET_X87_2;
+	  break;
+#endif
+	default:
+	  return FFI_BAD_TYPEDEF;
 	}
       break;
     default:

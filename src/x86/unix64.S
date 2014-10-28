@@ -156,9 +156,10 @@ E UNIX64_RET_XMM64
 E UNIX64_RET_X87
 	fstpt	(%rdi)
 	ret
-E UNIX64_RET_ST_RAX_RDX
-	movq	%rdx, 8(%rsi)
-	jmp	2f
+E UNIX64_RET_X87_2
+	fstpt	(%rdi)
+	fstpt	16(%rdi)
+	ret
 E UNIX64_RET_ST_XMM0_RAX
 	movq	%rax, 8(%rsi)
 	jmp	3f
@@ -167,14 +168,15 @@ E UNIX64_RET_ST_RAX_XMM0
 	jmp	2f
 E UNIX64_RET_ST_XMM0_XMM1
 	movq	%xmm1, 8(%rsi)
-
-	.align 8
-3:	movq	%xmm0, (%rsi)
+	jmp	3f
+E UNIX64_RET_ST_RAX_RDX
+	movq	%rdx, 8(%rsi)
+2:	movq	%rax, (%rsi)
 	shrl	$UNIX64_SIZE_SHIFT, %ecx
 	rep movsb
 	ret
 	.align 8
-2:	movq	%rax, (%rsi)
+3:	movq	%xmm0, (%rsi)
 	shrl	$UNIX64_SIZE_SHIFT, %ecx
 	rep movsb
 	ret
@@ -201,11 +203,11 @@ E UNIX64_RET_ST_XMM0_XMM1
 	.size    ffi_call_unix64,.-ffi_call_unix64
 
 /* 6 general registers, 8 vector registers,
-   16 bytes of rvalue, 8 bytes of alignment.  */
+   32 bytes of rvalue, 8 bytes of alignment.  */
 #define ffi_closure_OFS_G	0
 #define ffi_closure_OFS_V	(6*8)
 #define ffi_closure_OFS_RVALUE	(ffi_closure_OFS_V + 8*16)
-#define ffi_closure_FS		(ffi_closure_OFS_RVALUE + 16 + 8)
+#define ffi_closure_FS		(ffi_closure_OFS_RVALUE + 32 + 8)
 
 /* The location of rvalue within the red zone after deallocating the frame.  */
 #define ffi_closure_RED_RVALUE	(ffi_closure_OFS_RVALUE - ffi_closure_FS)
@@ -275,6 +277,7 @@ ffi_closure_unix64:
 	leaq	0f(%rip), %r11
 	ja	9f
 	leaq	(%r11, %r10, 8), %r10
+	leaq	ffi_closure_RED_RVALUE(%rsp), %rsi
 	jmp	*%r10
 
 	.align	8
@@ -282,52 +285,54 @@ ffi_closure_unix64:
 E UNIX64_RET_VOID
 	ret
 E UNIX64_RET_UINT8
-	movzbl	ffi_closure_RED_RVALUE(%rsp), %eax
+	movzbl	(%rsi), %eax
 	ret
 E UNIX64_RET_UINT16
-	movzwl	ffi_closure_RED_RVALUE(%rsp), %eax
+	movzwl	(%rsi), %eax
 	ret
 E UNIX64_RET_UINT32
-	movl	ffi_closure_RED_RVALUE(%rsp), %eax
+	movl	(%rsi), %eax
 	ret
 E UNIX64_RET_SINT8
-	movsbl	ffi_closure_RED_RVALUE(%rsp), %eax
+	movsbl	(%rsi), %eax
 	ret
 E UNIX64_RET_SINT16
-	movswl	ffi_closure_RED_RVALUE(%rsp), %eax
+	movswl	(%rsi), %eax
 	ret
 E UNIX64_RET_SINT32
-	movl	ffi_closure_RED_RVALUE(%rsp), %eax
+	movl	(%rsi), %eax
 	ret
 E UNIX64_RET_INT64
-	movq	ffi_closure_RED_RVALUE(%rsp), %rax
+	movq	(%rsi), %rax
 	ret
 E UNIX64_RET_XMM32
-	movd	ffi_closure_RED_RVALUE(%rsp), %xmm0
+	movd	(%rsi), %xmm0
 	ret
 E UNIX64_RET_XMM64
-	movq	ffi_closure_RED_RVALUE(%rsp), %xmm0
+	movq	(%rsi), %xmm0
 	ret
 E UNIX64_RET_X87
-	fldt	ffi_closure_RED_RVALUE(%rsp)
+	fldt	(%rsi)
 	ret
-E UNIX64_RET_ST_RAX_RDX
-	movq	ffi_closure_RED_RVALUE+8(%rsp), %rdx
-	jmp	2f
+E UNIX64_RET_X87_2
+	fldt	16(%rsi)
+	fldt	(%rsi)
+	ret
 E UNIX64_RET_ST_XMM0_RAX
-	movq	ffi_closure_RED_RVALUE+8(%rsp), %rax
+	movq	8(%rsi), %rax
 	jmp	3f
 E UNIX64_RET_ST_RAX_XMM0
-	movq	ffi_closure_RED_RVALUE+8(%rsp), %xmm0
+	movq	8(%rsi), %xmm0
 	jmp	2f
 E UNIX64_RET_ST_XMM0_XMM1
-	movq	ffi_closure_RED_RVALUE+8(%rsp), %xmm1
-
-	.align	8
-3:	movq	ffi_closure_RED_RVALUE(%rsp), %xmm0
+	movq	8(%rsi), %xmm1
+	jmp	3f
+E UNIX64_RET_ST_RAX_RDX
+	movq	8(%rsi), %rdx
+2:	movq	(%rsi), %rax
 	ret
 	.align	8
-2:	movq	ffi_closure_RED_RVALUE(%rsp), %rax
+3:	movq	(%rsi), %xmm0
 	ret
 
 9:	call	abort@PLT
