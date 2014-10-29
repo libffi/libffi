@@ -136,6 +136,7 @@ ARM_FUNC_START(ffi_call_SYSV, 1)
 
 	mov	sp, r0		@ install the stack pointer
 	mov	lr, r2		@ move the fn pointer out of the way
+	ldr	ip, [fp, #16]	@ install the static chain
 	ldmia	sp!, {r0-r3}	@ move first 4 parameters in registers.
 	blx	lr		@ call fn
 
@@ -180,22 +181,33 @@ ARM_FUNC_END(ffi_call_SYSV)
 
 
 /*
-	unsigned int FFI_HIDDEN
-	ffi_closure_inner (closure, respp, args)
-	     ffi_closure *closure;
-	     void **respp;
-  	     void *args;
+	int ffi_closure_inner_* (cif, fun, user_data, frame)
 */
+
+ARM_FUNC_START(ffi_go_closure_SYSV, 1)
+	cfi_startproc
+	stmdb	sp!, {r0-r3}			@ save argument regs
+	cfi_adjust_cfa_offset(16)
+	ldr	r0, [ip, #4]			@ load cif
+	ldr	r1, [ip, #8]			@ load fun
+	mov	r2, ip				@ load user_data
+	b	0f
+	cfi_endproc
+ARM_FUNC_END(ffi_go_closure_SYSV)
 
 ARM_FUNC_START(ffi_closure_SYSV, 1)
 	UNWIND	.fnstart
 	cfi_startproc
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
-	mov	r0, ip				@ load closure
+	ldr	r0, [ip, #FFI_TRAMPOLINE_SIZE]	  @ load cif
+	ldr	r1, [ip, #FFI_TRAMPOLINE_SIZE+4]  @ load fun
+	ldr	r2, [ip, #FFI_TRAMPOLINE_SIZE+8]  @ load user_data
+0:
 	add	ip, sp, #16			@ compute entry sp
-	sub	sp, sp, #32			@ allocate rvalue space
-	stmdb	sp!, {sp,lr}
+	sub	sp, sp, #64+32			@ allocate frame
+	cfi_adjust_cfa_offset(64+32)
+	stmdb	sp!, {ip,lr}
 
 	/* Remember that EABI unwind info only applies at call sites.
 	   We need do nothing except note the save of the stack pointer
@@ -204,46 +216,53 @@ ARM_FUNC_START(ffi_closure_SYSV, 1)
 	cfi_adjust_cfa_offset(8)
 	cfi_rel_offset(lr, 4)
 
-	add	r1, sp, #8			@ load respp
-	add	r2, sp, #8+32			@ load args
-	mov	r3, #0				@ load vfp_args
-
+	add	r3, sp, #8			@ load frame
 	bl	CNAME(ffi_closure_inner_SYSV)
 
 	@ Load values returned in registers.
-	add	r2, sp, #8			@ load respp
+	add	r2, sp, #8+64			@ load result
 	adr	r3, CNAME(ffi_closure_ret)
 	add	pc, r3, r0, lsl #3
 	cfi_endproc
 	UNWIND	.fnend
 ARM_FUNC_END(ffi_closure_SYSV)
 
+ARM_FUNC_START(ffi_go_closure_VFP, 1)
+	cfi_startproc
+	stmdb	sp!, {r0-r3}			@ save argument regs
+	cfi_adjust_cfa_offset(16)
+	ldr	r0, [ip, #4]			@ load cif
+	ldr	r1, [ip, #8]			@ load fun
+	mov	r2, ip				@ load user_data
+	b	0f
+	cfi_endproc
+ARM_FUNC_END(ffi_go_closure_VFP)
+
 ARM_FUNC_START(ffi_closure_VFP, 1)
 	UNWIND	.fnstart
 	cfi_startproc
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
-	sub	sp, sp, #64+32			@ allocate vfp+rvalue space
+	ldr	r0, [ip, #FFI_TRAMPOLINE_SIZE]	  @ load cif
+	ldr	r1, [ip, #FFI_TRAMPOLINE_SIZE+4]  @ load fun
+	ldr	r2, [ip, #FFI_TRAMPOLINE_SIZE+8]  @ load user_data
+0:
+	add	ip, sp, #16
+	sub	sp, sp, #64+32			@ allocate frame
 	cfi_adjust_cfa_offset(64+32)
 	stc	p11, cr0, [sp], {16}		@ vstm sp, {d0-d7}
-	mov	r0, ip				@ load closure
-	add	ip, sp, #16+64+32		@ compute entry sp
 	stmdb	sp!, {ip,lr}
 
 	/* See above.  */
 	UNWIND	.save {sp,lr}
 	cfi_adjust_cfa_offset(8)
-	cfi_rel_offset(sp, 0)
 	cfi_rel_offset(lr, 4)
 
-	add	r1, sp, #8+64			@ load respp
-	add	r2, sp, #8+64+32		@ load args
-	add	r3, sp, #8			@ load vfp_args
-
+	add	r3, sp, #8			@ load frame
 	bl	CNAME(ffi_closure_inner_VFP)
 
 	@ Load values returned in registers.
-	add	r2, sp, #8+64			@ load respp
+	add	r2, sp, #8+64			@ load result
 	adr	r3, CNAME(ffi_closure_ret)
 	add	pc, r3, r0, lsl #3
 	cfi_endproc
