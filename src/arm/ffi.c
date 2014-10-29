@@ -308,6 +308,7 @@ struct call_frame
   void *lr;
   void *rvalue;
   int flags;
+  void *closure;
 };
 
 extern void ffi_call_SYSV (void *stack, struct call_frame *,
@@ -315,8 +316,9 @@ extern void ffi_call_SYSV (void *stack, struct call_frame *,
 extern void ffi_call_VFP (void *vfp_space, struct call_frame *,
 			   void (*fn) (void), unsigned vfp_used) FFI_HIDDEN;
 
-void
-ffi_call (ffi_cif * cif, void (*fn) (void), void *rvalue, void **avalue)
+static void
+ffi_call_int (ffi_cif * cif, void (*fn) (void), void *rvalue,
+	      void **avalue, void *closure)
 {
   int flags = cif->flags;
   ffi_type *rtype = cif->rtype;
@@ -364,6 +366,7 @@ ffi_call (ffi_cif * cif, void (*fn) (void), void *rvalue, void **avalue)
 
   frame->rvalue = new_rvalue;
   frame->flags = flags;
+  frame->closure = closure;
 
   if (vfp_space)
     {
@@ -378,6 +381,19 @@ ffi_call (ffi_cif * cif, void (*fn) (void), void *rvalue, void **avalue)
 
   if (rvalue && rvalue != new_rvalue)
     memcpy (rvalue, new_rvalue, rtype->size);
+}
+
+void
+ffi_call (ffi_cif *cif, void (*fn) (void), void *rvalue, void **avalue)
+{
+  ffi_call_int (cif, fn, rvalue, avalue, NULL);
+}
+
+void
+ffi_call_go (ffi_cif *cif, void (*fn) (void), void *rvalue,
+	     void **avalue, void *closure)
+{
+  ffi_call_int (cif, fn, rvalue, avalue, closure);
 }
 
 static void *
@@ -476,31 +492,43 @@ ffi_prep_incoming_args_VFP (ffi_cif *cif, void *rvalue, char *stack,
   return rvalue;
 }
 
-int FFI_HIDDEN
-ffi_closure_inner_SYSV (ffi_closure *closure, void *rvalue, char *argp)
+struct closure_frame
 {
-  ffi_cif *cif = closure->cif;
-  void **avalue = (void **) alloca (cif->nargs * sizeof (void *));
+  char vfp_space[8*8] __attribute__((aligned(8)));
+  char result[8*4];
+  char argp[];
+};
 
-  rvalue = ffi_prep_incoming_args_SYSV (cif, rvalue, argp, avalue);
-  closure->fun (cif, rvalue, avalue, closure->user_data);
+int FFI_HIDDEN
+ffi_closure_inner_SYSV (ffi_cif *cif,
+		        void (*fun) (ffi_cif *, void *, void **, void *),
+		        void *user_data,
+		        struct closure_frame *frame)
+{
+  void **avalue = (void **) alloca (cif->nargs * sizeof (void *));
+  void *rvalue = ffi_prep_incoming_args_SYSV (cif, frame->result,
+					      frame->argp, avalue);
+  fun (cif, rvalue, avalue, user_data);
   return cif->flags;
 }
 
 int FFI_HIDDEN
-ffi_closure_inner_VFP (ffi_closure *closure, void *rvalue,
-		       char *argp, char *vfp_space)
+ffi_closure_inner_VFP (ffi_cif *cif,
+		       void (*fun) (ffi_cif *, void *, void **, void *),
+		       void *user_data,
+		       struct closure_frame *frame)
 {
-  ffi_cif *cif = closure->cif;
   void **avalue = (void **) alloca (cif->nargs * sizeof (void *));
-
-  rvalue = ffi_prep_incoming_args_VFP (cif, rvalue, argp, vfp_space, avalue);
-  closure->fun (cif, rvalue, avalue, closure->user_data);
+  void *rvalue = ffi_prep_incoming_args_VFP (cif, frame->result, frame->argp,
+					     frame->vfp_space, avalue);
+  fun (cif, rvalue, avalue, user_data);
   return cif->flags;
 }
 
 void ffi_closure_SYSV (void) FFI_HIDDEN;
 void ffi_closure_VFP (void) FFI_HIDDEN;
+void ffi_go_closure_SYSV (void) FFI_HIDDEN;
+void ffi_go_closure_VFP (void) FFI_HIDDEN;
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
@@ -781,6 +809,28 @@ ffi_prep_closure_loc (ffi_closure * closure,
   closure->cif = cif;
   closure->fun = fun;
   closure->user_data = user_data;
+
+  return FFI_OK;
+}
+
+ffi_status
+ffi_prep_go_closure (ffi_go_closure *closure, ffi_cif *cif,
+		     void (*fun) (ffi_cif *, void *, void **, void *))
+{
+  void (*closure_func) (void) = ffi_go_closure_SYSV;
+
+  if (cif->abi == FFI_VFP)
+    {
+      /* We only need take the vfp path if there are vfp arguments.  */
+      if (cif->vfp_used)
+	closure_func = ffi_go_closure_VFP;
+    }
+  else if (cif->abi != FFI_SYSV)
+    return FFI_BAD_ABI;
+
+  closure->tramp = closure_func;
+  closure->cif = cif;
+  closure->fun = fun;
 
   return FFI_OK;
 }
