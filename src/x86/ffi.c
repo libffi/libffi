@@ -34,6 +34,18 @@
 #include <ffi_common.h>
 #include <stdlib.h>
 
+/* Force FFI_TYPE_LONGDOUBLE to be different than FFI_TYPE_DOUBLE;
+   all further uses in this file will refer to the 80-bit type.  */
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+# if FFI_TYPE_LONGDOUBLE != 4
+#  error FFI_TYPE_LONGDOUBLE out of date
+# endif
+#else
+# undef FFI_TYPE_LONGDOUBLE
+# define FFI_TYPE_LONGDOUBLE 4
+#endif
+
+
 /* ffi_prep_args is called by the assembly routine once stack space
    has been allocated for the function's arguments */
 
@@ -205,9 +217,7 @@ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
     case FFI_TYPE_SINT64:
     case FFI_TYPE_FLOAT:
     case FFI_TYPE_DOUBLE:
-#if FFI_TYPE_DOUBLE != FFI_TYPE_LONGDOUBLE
     case FFI_TYPE_LONGDOUBLE:
-#endif
       cif->flags = (unsigned) cif->rtype->type;
       break;
 
