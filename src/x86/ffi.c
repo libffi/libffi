@@ -217,34 +217,25 @@ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
 
     case FFI_TYPE_STRUCT:
 #ifndef X86
+      /* ??? This should be a different ABI rather than an ifdef.  */
       if (cif->rtype->size == 1)
-        {
-          cif->flags = FFI_TYPE_SMALL_STRUCT_1B; /* same as char size */
-        }
+	cif->flags = FFI_TYPE_SMALL_STRUCT_1B;	/* same as char size */
       else if (cif->rtype->size == 2)
-        {
-          cif->flags = FFI_TYPE_SMALL_STRUCT_2B; /* same as short size */
-        }
+	cif->flags = FFI_TYPE_SMALL_STRUCT_2B;	/* same as short size */
       else if (cif->rtype->size == 4)
-        {
-          cif->flags = FFI_TYPE_INT; /* same as int type */
-        }
+	cif->flags = FFI_TYPE_INT;		/* same as int type */
       else if (cif->rtype->size == 8)
-        {
-          cif->flags = FFI_TYPE_SINT64; /* same as int64 type */
-        }
+	cif->flags = FFI_TYPE_SINT64;		/* same as int64 type */
       else
 #endif
-        {
-#ifdef X86_WIN32
-          if (cif->abi == FFI_MS_CDECL)
-            cif->flags = FFI_TYPE_MS_STRUCT;
-          else
-#endif
-            cif->flags = FFI_TYPE_STRUCT;
-          /* allocate space for return value pointer */
-          cif->bytes += ALIGN(sizeof(void*), FFI_SIZEOF_ARG);
-        }
+	{
+	  if (cif->abi == FFI_MS_CDECL)
+	    cif->flags = FFI_TYPE_MS_STRUCT;
+	  else
+	    cif->flags = FFI_TYPE_STRUCT;
+	  /* Allocate space for return value pointer.  */
+	  cif->bytes += ALIGN(sizeof(void*), FFI_SIZEOF_ARG);
+	}
       break;
 
     default:
@@ -259,10 +250,8 @@ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
       cif->bytes += (unsigned)ALIGN((*ptr)->size, FFI_SIZEOF_ARG);
     }
 
-#ifndef X86_WIN32
   if (cif->abi == FFI_SYSV)
-    cif->bytes = (cif->bytes + 15) & ~0xF;
-#endif
+    cif->bytes = ALIGN (cif->bytes, 15);
 
   return FFI_OK;
 }
@@ -577,14 +566,12 @@ ffi_prep_closure_loc (ffi_closure* closure,
                                    &ffi_closure_STDCALL,
                                    (void*)codeloc);
     }
-#ifdef X86_WIN32
   else if (cif->abi == FFI_MS_CDECL)
     {
       FFI_INIT_TRAMPOLINE (&closure->tramp[0],
                            &ffi_closure_SYSV,
                            (void*)codeloc);
     }
-#endif /* X86_WIN32 */
   else
     {
       return FFI_BAD_ABI;
@@ -610,40 +597,36 @@ ffi_prep_raw_closure_loc (ffi_raw_closure* closure,
 {
   int i;
 
-  if (cif->abi != FFI_SYSV
-#ifdef X86_WIN32
-      && cif->abi != FFI_THISCALL
-#endif
-     )
-    return FFI_BAD_ABI;
-
-  /* we currently don't support certain kinds of arguments for raw
+  /* We currently don't support certain kinds of arguments for raw
      closures.  This should be implemented by a separate assembly
      language routine, since it would require argument processing,
      something we don't do now for performance.  */
-
   for (i = cif->nargs-1; i >= 0; i--)
     {
       FFI_ASSERT (cif->arg_types[i]->type != FFI_TYPE_STRUCT);
       FFI_ASSERT (cif->arg_types[i]->type != FFI_TYPE_LONGDOUBLE);
     }
-  
-#ifdef X86_WIN32
-  if (cif->abi == FFI_SYSV)
+
+  switch (cif->abi)
     {
-#endif
-  FFI_INIT_TRAMPOLINE (&closure->tramp[0], &ffi_closure_raw_SYSV,
-                       codeloc);
 #ifdef X86_WIN32
-    }
-  else if (cif->abi == FFI_THISCALL)
-    {
-      FFI_INIT_TRAMPOLINE_RAW_THISCALL (&closure->tramp[0], &ffi_closure_raw_THISCALL, codeloc, cif->bytes);
-    }
+    case FFI_THISCALL:
+      FFI_INIT_TRAMPOLINE_RAW_THISCALL (&closure->tramp[0],
+					&ffi_closure_raw_THISCALL,
+					codeloc, cif->bytes);
+      break;
 #endif
-  closure->cif  = cif;
+    case FFI_SYSV:
+      FFI_INIT_TRAMPOLINE (&closure->tramp[0], &ffi_closure_raw_SYSV,
+			   codeloc);
+      break;
+    default:
+      return FFI_BAD_ABI;
+    }
+
+  closure->cif = cif;
+  closure->fun = fun;
   closure->user_data = user_data;
-  closure->fun  = fun;
 
   return FFI_OK;
 }
