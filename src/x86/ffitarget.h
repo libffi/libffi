@@ -76,44 +76,44 @@ typedef signed long            ffi_sarg;
 #endif
 
 typedef enum ffi_abi {
+#if defined(X86_WIN64)
   FFI_FIRST_ABI = 0,
-
-  /* ---- Intel x86 Win32 ---------- */
-#ifdef X86_WIN32
-  FFI_SYSV,
-  FFI_STDCALL,
-  FFI_THISCALL,
-  FFI_FASTCALL,
-  FFI_MS_CDECL,
-  FFI_PASCAL,
-  FFI_REGISTER,
-  FFI_LAST_ABI,
-#ifdef _MSC_VER
-  FFI_DEFAULT_ABI = FFI_MS_CDECL
-#else
-  FFI_DEFAULT_ABI = FFI_SYSV
-#endif
-
-#elif defined(X86_WIN64)
   FFI_WIN64,
   FFI_LAST_ABI,
   FFI_DEFAULT_ABI = FFI_WIN64
 
-#else
-  /* ---- Intel x86 and AMD x86-64 - */
-  FFI_SYSV,
-  FFI_UNIX64,   /* Unix variants all use the same ABI for x86-64  */
-  FFI_THISCALL,
-  FFI_FASTCALL,
-  FFI_STDCALL,
-  FFI_PASCAL,
-  FFI_REGISTER,
+#elif defined(X86_64) || (defined (__x86_64__) && defined (X86_DARWIN))
+  FFI_FIRST_ABI = 1,
+  FFI_UNIX64,
   FFI_LAST_ABI,
-#if defined(__i386__) || defined(__i386)
-  FFI_DEFAULT_ABI = FFI_SYSV
-#else
   FFI_DEFAULT_ABI = FFI_UNIX64
-#endif
+
+#elif defined(X86_WIN32)
+  FFI_FIRST_ABI = 0,
+  FFI_SYSV      = 1,
+  FFI_STDCALL   = 2,
+  FFI_THISCALL  = 3,
+  FFI_FASTCALL  = 4,
+  FFI_MS_CDECL  = 5,
+  FFI_PASCAL    = 6,
+  FFI_REGISTER  = 7,
+  FFI_LAST_ABI,
+# ifdef _MSC_VER
+  FFI_DEFAULT_ABI = FFI_MS_CDECL
+# else
+  FFI_DEFAULT_ABI = FFI_SYSV
+# endif
+#else
+  FFI_FIRST_ABI = 0,
+  FFI_SYSV      = 1,
+  FFI_THISCALL  = 3,
+  FFI_FASTCALL  = 4,
+  FFI_STDCALL   = 5,
+  FFI_PASCAL    = 6,
+  FFI_REGISTER  = 7,
+  FFI_MS_CDECL  = 8,
+  FFI_LAST_ABI,
+  FFI_DEFAULT_ABI = FFI_SYSV
 #endif
 } ffi_abi;
 #endif
