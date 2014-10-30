@@ -260,7 +260,7 @@ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
     }
 
 #ifndef X86_WIN32
-  if (cif->abi == FFI_SYSV || cif->abi == FFI_UNIX64)
+  if (cif->abi == FFI_SYSV)
     cif->bytes = (cif->bytes + 15) & ~0xF;
 #endif
 
