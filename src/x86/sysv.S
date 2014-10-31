@@ -30,6 +30,7 @@
 #define LIBFFI_ASM	
 #include <fficonfig.h>
 #include <ffi.h>
+#include <ffi_cfi.h>
 
 .text
 
@@ -40,11 +41,12 @@
         .type    ffi_call_SYSV,@function
 
 ffi_call_SYSV:
-.LFB1:
+	cfi_startproc
         pushl %ebp
-.LCFI0:
+	cfi_adjust_cfa_offset(4)
+	cfi_rel_offset(%ebp, 0)
         movl  %esp,%ebp
-.LCFI1:
+	cfi_def_cfa_register(%ebp)
 	/* Make room for all of the new args.  */
 	movl  16(%ebp),%ecx
 	subl  %ecx,%esp
@@ -163,7 +165,7 @@ epilogue:
         movl %ebp,%esp
         popl %ebp
         ret
-.LFE1:
+	cfi_endproc
 .ffi_call_SYSV_end:
         .size    ffi_call_SYSV,.ffi_call_SYSV_end-ffi_call_SYSV
 
@@ -173,11 +175,12 @@ FFI_HIDDEN (ffi_closure_SYSV)
 	.type	ffi_closure_SYSV, @function
 
 ffi_closure_SYSV:
-.LFB2:
+	cfi_startproc
 	pushl	%ebp
-.LCFI2:
+	cfi_adjust_cfa_offset(4)
+	cfi_rel_offset(%ebp, 0)
 	movl	%esp, %ebp
-.LCFI3:
+	cfi_def_cfa_register(%ebp)
 	subl	$40, %esp
 	leal	-24(%ebp), %edx
 	movl	%edx, -12(%ebp)	/* resp */
@@ -199,12 +202,13 @@ ffi_closure_SYSV:
 	call	ffi_closure_SYSV_inner
 #else
 	movl	%ebx, 8(%esp)
-.LCFI7:
+	cfi_offset(%ebx, -40)
 	call	1f
 1:	popl	%ebx
 	addl	$_GLOBAL_OFFSET_TABLE_+[.-1b], %ebx
 	call	ffi_closure_SYSV_inner@PLT
 	movl	8(%esp), %ebx
+	cfi_restore(%ebx)
 #endif
 	movl	-12(%ebp), %ecx
 	cmpl	$FFI_TYPE_INT, %eax
@@ -251,7 +255,7 @@ ffi_closure_SYSV:
 	movl	%ebp, %esp
 	popl	%ebp
 	ret	$4
-.LFE2:
+	cfi_endproc
 	.size	ffi_closure_SYSV, .-ffi_closure_SYSV
 
 #if !FFI_NO_RAW_API
@@ -278,13 +282,14 @@ FFI_HIDDEN (ffi_closure_raw_SYSV)
 	.type	ffi_closure_raw_SYSV, @function
 
 ffi_closure_raw_SYSV:
-.LFB3:
+	cfi_startproc
 	pushl	%ebp
-.LCFI4:
+	cfi_adjust_cfa_offset(4)
+	cfi_rel_offset(%ebp, 0)
 	movl	%esp, %ebp
-.LCFI5:
+	cfi_def_cfa_register(%ebp)
 	pushl	%esi
-.LCFI6:
+	cfi_offset(%esi, -12)
 	subl	$36, %esp
 	movl	RAW_CLOSURE_CIF_OFFSET(%eax), %esi	 /* closure->cif */
 	movl	RAW_CLOSURE_USER_DATA_OFFSET(%eax), %edx /* closure->user_data */
@@ -335,149 +340,11 @@ ffi_closure_raw_SYSV:
 	movl	-24(%ebp), %eax
 	movl	-20(%ebp), %edx
 	jmp	.Lrcls_epilogue
-.LFE3:
+	cfi_endproc
 	.size	ffi_closure_raw_SYSV, .-ffi_closure_raw_SYSV
-#endif
 
-#if defined __GNUC__
-/* Only emit dwarf unwind info when building with GNU toolchain.  */
-
-#if defined __PIC__
-# if defined __sun__ && defined __svr4__
-/* 32-bit Solaris 2/x86 uses datarel encoding for PIC.  GNU ld before 2.22
-   doesn't correctly sort .eh_frame_hdr with mixed encodings, so match this.  */
-#  define FDE_ENCODING		0x30	/* datarel */
-#  define FDE_ENCODE(X)		X@GOTOFF
-# else
-#  define FDE_ENCODING		0x1b	/* pcrel sdata4 */
-#  if defined HAVE_AS_X86_PCREL
-#   define FDE_ENCODE(X)	X-.
-#  else
-#   define FDE_ENCODE(X)	X@rel
-#  endif
-# endif
-#else
-# define FDE_ENCODING		0	/* absolute */
-# define FDE_ENCODE(X)		X
-#endif
-
-	.section	.eh_frame,EH_FRAME_FLAGS,@progbits
-.Lframe1:
-	.long	.LECIE1-.LSCIE1	/* Length of Common Information Entry */
-.LSCIE1:
-	.long	0x0	/* CIE Identifier Tag */
-	.byte	0x1	/* CIE Version */
-#ifdef HAVE_AS_ASCII_PSEUDO_OP
-#ifdef __PIC__
-	.ascii "zR\0"	/* CIE Augmentation */
-#else
-	.ascii "\0"	/* CIE Augmentation */
-#endif
-#elif defined HAVE_AS_STRING_PSEUDO_OP
-#ifdef __PIC__
-	.string "zR"	/* CIE Augmentation */
-#else
-	.string ""	/* CIE Augmentation */
-#endif
-#else
-#error missing .ascii/.string
-#endif
-	.byte	0x1	/* .uleb128 0x1; CIE Code Alignment Factor */
-	.byte	0x7c	/* .sleb128 -4; CIE Data Alignment Factor */
-	.byte	0x8	/* CIE RA Column */
-#ifdef __PIC__
-	.byte	0x1	/* .uleb128 0x1; Augmentation size */
-	.byte	FDE_ENCODING
-#endif
-	.byte	0xc	/* DW_CFA_def_cfa */
-	.byte	0x4	/* .uleb128 0x4 */
-	.byte	0x4	/* .uleb128 0x4 */
-	.byte	0x88	/* DW_CFA_offset, column 0x8 */
-	.byte	0x1	/* .uleb128 0x1 */
-	.align 4
-.LECIE1:
-.LSFDE1:
-	.long	.LEFDE1-.LASFDE1	/* FDE Length */
-.LASFDE1:
-	.long	.LASFDE1-.Lframe1	/* FDE CIE offset */
-	.long	FDE_ENCODE(.LFB1)	/* FDE initial location */
-	.long	.LFE1-.LFB1		/* FDE address range */
-#ifdef __PIC__
-	.byte	0x0	/* .uleb128 0x0; Augmentation size */
-#endif
-	.byte	0x4	/* DW_CFA_advance_loc4 */
-	.long	.LCFI0-.LFB1
-	.byte	0xe	/* DW_CFA_def_cfa_offset */
-	.byte	0x8	/* .uleb128 0x8 */
-	.byte	0x85	/* DW_CFA_offset, column 0x5 */
-	.byte	0x2	/* .uleb128 0x2 */
-	.byte	0x4	/* DW_CFA_advance_loc4 */
-	.long	.LCFI1-.LCFI0
-	.byte	0xd	/* DW_CFA_def_cfa_register */
-	.byte	0x5	/* .uleb128 0x5 */
-	.align 4
-.LEFDE1:
-.LSFDE2:
-	.long	.LEFDE2-.LASFDE2	/* FDE Length */
-.LASFDE2:
-	.long	.LASFDE2-.Lframe1	/* FDE CIE offset */
-	.long	FDE_ENCODE(.LFB2)	/* FDE initial location */
-	.long	.LFE2-.LFB2		/* FDE address range */
-#ifdef __PIC__
-	.byte	0x0	/* .uleb128 0x0; Augmentation size */
-#endif
-	.byte	0x4	/* DW_CFA_advance_loc4 */
-	.long	.LCFI2-.LFB2
-	.byte	0xe	/* DW_CFA_def_cfa_offset */
-	.byte	0x8	/* .uleb128 0x8 */
-	.byte	0x85	/* DW_CFA_offset, column 0x5 */
-	.byte	0x2	/* .uleb128 0x2 */
-	.byte	0x4	/* DW_CFA_advance_loc4 */
-	.long	.LCFI3-.LCFI2
-	.byte	0xd	/* DW_CFA_def_cfa_register */
-	.byte	0x5	/* .uleb128 0x5 */
-#if !defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE && defined __PIC__
-	.byte	0x4	/* DW_CFA_advance_loc4 */
-	.long	.LCFI7-.LCFI3
-	.byte	0x83	/* DW_CFA_offset, column 0x3 */
-	.byte	0xa	/* .uleb128 0xa */
-#endif
-	.align 4
-.LEFDE2:
-
-#if !FFI_NO_RAW_API
-
-.LSFDE3:
-	.long	.LEFDE3-.LASFDE3	/* FDE Length */
-.LASFDE3:
-	.long	.LASFDE3-.Lframe1	/* FDE CIE offset */
-	.long	FDE_ENCODE(.LFB3)	/* FDE initial location */
-	.long	.LFE3-.LFB3		/* FDE address range */
-#ifdef __PIC__
-	.byte	0x0	/* .uleb128 0x0; Augmentation size */
-#endif
-	.byte	0x4	/* DW_CFA_advance_loc4 */
-	.long	.LCFI4-.LFB3
-	.byte	0xe	/* DW_CFA_def_cfa_offset */
-	.byte	0x8	/* .uleb128 0x8 */
-	.byte	0x85	/* DW_CFA_offset, column 0x5 */
-	.byte	0x2	/* .uleb128 0x2 */
-	.byte	0x4	/* DW_CFA_advance_loc4 */
-	.long	.LCFI5-.LCFI4
-	.byte	0xd	/* DW_CFA_def_cfa_register */
-	.byte	0x5	/* .uleb128 0x5 */
-	.byte	0x4	/* DW_CFA_advance_loc4 */
-	.long	.LCFI6-.LCFI5
-	.byte	0x86	/* DW_CFA_offset, column 0x6 */
-	.byte	0x3	/* .uleb128 0x3 */
-	.align 4
-.LEFDE3:
-
-#endif
-#endif
-
+#endif /* !FFI_NO_RAW_API */
 #endif /* ifndef __x86_64__ */
-
 #if defined __ELF__ && defined __linux__
 	.section	.note.GNU-stack,"",@progbits
 #endif
