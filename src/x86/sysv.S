@@ -31,143 +31,144 @@
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_cfi.h>
+#include "internal.h"
 
-.text
+#define C2(X, Y)  X ## Y
+#define C1(X, Y)  C2(X, Y)
+#ifdef __USER_LABEL_PREFIX__
+# define C(X)     C1(__USER_LABEL_PREFIX__, X)
+#else
+# define C(X)     X
+#endif
 
-.globl ffi_prep_args
+#ifdef __ELF__
+# define ENDF(X)  .type	X,@function; .size X, . - X
+#else
+# define ENDF(X)
+#endif
 
-	.align 4
-.globl ffi_call_SYSV
-        .type    ffi_call_SYSV,@function
+/* This macro allows the safe creation of jump tables without an
+   actual table.  The entry points into the table are all 8 bytes.
+   The use of ORG asserts that we're at the correct location.  */
+#define E(X)      .align 8; .org 0b + X * 8
 
-ffi_call_SYSV:
+	.text
+	.align	16
+	.globl	C(ffi_call_i386)
+	FFI_HIDDEN(C(ffi_call_i386))
+
+/* This is declared as
+
+   void ffi_call_i386(struct ffi_call_frame *frame, char *argp)
+        __attribute__((fastcall));
+
+   This the arguments are present in
+
+        ecx: frame
+        edx: argp
+*/
+
+C(ffi_call_i386):
 	cfi_startproc
-        pushl %ebp
-	cfi_adjust_cfa_offset(4)
+	movl	(%esp), %eax		/* move the return address */
+	movl	%ebp, (%ecx)		/* store %ebp into local frame */
+	movl	%eax, 4(%ecx)		/* store retaddr into local frame */
+
+	/* New stack frame based off ebp.  This is a itty bit of unwind
+	   trickery in that the CFA *has* changed.  There is no easy way
+	   to describe it correctly on entry to the function.  Fortunately,
+	   it doesn't matter too much since at all points we can correctly
+	   unwind back to ffi_call.  Note that the location to which we
+	   moved the return address is (the new) CFA-4, so from the
+	   perspective of the unwind info, it hasn't moved.  */
+	movl	%ecx, %ebp
+	cfi_def_cfa(%ebp, 8)
 	cfi_rel_offset(%ebp, 0)
-        movl  %esp,%ebp
-	cfi_def_cfa_register(%ebp)
-	/* Make room for all of the new args.  */
-	movl  16(%ebp),%ecx
-	subl  %ecx,%esp
 
-        /* Align the stack pointer to 16-bytes */
-        andl  $0xfffffff0, %esp
+	movl	%edx, %esp		/* set outgoing argument stack */
+	movl	20+R_EAX*4(%ebp), %eax	/* set register arguments */
+	movl	20+R_EDX*4(%ebp), %edx
+	movl	20+R_ECX*4(%ebp), %ecx
 
-	movl  %esp,%eax
+	call	*8(%ebp)
 
-	/* Place all of the ffi_prep_args in position  */
-	pushl 12(%ebp)
-	pushl %eax
-	call  *8(%ebp)
+	movl	12(%ebp), %ecx		/* load return type code */
+	movl	%ebx, 8(%ebp)		/* preserve %ebx */
+	cfi_rel_offset(%ebp, 8)
 
-	/* Return stack to previous state and call the function  */
-	addl  $8,%esp	
+	andl	$X86_RET_TYPE_MASK, %ecx
+#ifdef __PIC__
+	call	__x86.get_pc_thunk.bx
+1:	leal	0f-1b(%ebx, %ecx, 8), %ebx
+#else
+	leal	0f(,%ecx, 8), %ebx
+#endif
+	movl	16(%ebp), %ecx		/* load result address */
+	jmp	*%ebx
 
-	call  *28(%ebp)
-
-	/* Load %ecx with the return type code  */
-	movl  20(%ebp),%ecx	
-
-	/* Protect %esi.  We're going to pop it in the epilogue.  */
-	pushl %esi
-
-	/* If the return value pointer is NULL, assume no return value.  */
-	cmpl  $0,24(%ebp)
-	jne  0f
-
-	/* Even if there is no space for the return value, we are 
-	   obliged to handle floating-point values.  */
-	cmpl  $FFI_TYPE_FLOAT,%ecx
-	jne   noretval
-	fstp  %st(0)
-
-        jmp   epilogue
-
+	.align	8
 0:
-	call  1f
+E(X86_RET_FLOAT)
+	fstps	(%ecx)
+	jmp	9f
+E(X86_RET_DOUBLE)
+	fstpl	(%ecx)
+	jmp	9f
+E(X86_RET_LDOUBLE)
+	fstpt	(%ecx)
+	jmp	9f
+E(X86_RET_SINT8)
+	movsbl	%al, %eax
+	mov	%eax, (%ecx)
+	jmp	9f
+E(X86_RET_SINT16)
+	movswl	%ax, %eax
+	mov	%eax, (%ecx)
+	jmp	9f
+E(X86_RET_UINT8)
+	movzbl	%al, %eax
+	mov	%eax, (%ecx)
+	jmp	9f
+E(X86_RET_UINT16)
+	movzwl	%ax, %eax
+	mov	%eax, (%ecx)
+	jmp	9f
+E(X86_RET_INT64)
+	movl	%edx, 4(%ecx)
+	/* fallthru */
+E(X86_RET_INT32)
+	movl	%eax, (%ecx)
+	/* fallthru */
+E(X86_RET_VOID)
+9:	movl	8(%ebp), %ebx
+	movl	%ebp, %esp
+	popl	%ebp
+	cfi_remember_state
+	cfi_def_cfa(%esp, 4)
+	cfi_restore(%ebx)
+	cfi_restore(%ebp)
+	ret
+	cfi_restore_state
 
-.Lstore_table:
-	.long	noretval-.Lstore_table	/* FFI_TYPE_VOID */
-	.long	retint-.Lstore_table	/* FFI_TYPE_INT */
-	.long	retfloat-.Lstore_table	/* FFI_TYPE_FLOAT */
-	.long	retdouble-.Lstore_table	/* FFI_TYPE_DOUBLE */
-	.long	retlongdouble-.Lstore_table	/* FFI_TYPE_LONGDOUBLE */
-	.long	retuint8-.Lstore_table	/* FFI_TYPE_UINT8 */
-	.long	retsint8-.Lstore_table	/* FFI_TYPE_SINT8 */
-	.long	retuint16-.Lstore_table	/* FFI_TYPE_UINT16 */
-	.long	retsint16-.Lstore_table	/* FFI_TYPE_SINT16 */
-	.long	retint-.Lstore_table	/* FFI_TYPE_UINT32 */
-	.long	retint-.Lstore_table	/* FFI_TYPE_SINT32 */
-	.long	retint64-.Lstore_table	/* FFI_TYPE_UINT64 */
-	.long	retint64-.Lstore_table	/* FFI_TYPE_SINT64 */
-	.long	retstruct-.Lstore_table	/* FFI_TYPE_STRUCT */
-	.long	retint-.Lstore_table	/* FFI_TYPE_POINTER */
+E(X86_RET_STRUCTPOP)
+	jmp	9b
+E(X86_RET_STRUCTARG)
+	jmp	9b
+E(X86_RET_STRUCT_1B)
+	movb	%al, (%ecx)
+	jmp	9b
+E(X86_RET_STRUCT_2B)
+	movw	%ax, (%ecx)
+	jmp	9b
 
-1:
-	pop  %esi
-	add  (%esi, %ecx, 4), %esi
-	jmp  *%esi
+	/* Fill out the table so that bad values are predictable.  */
+E(X86_RET_UNUSED14)
+	ud2
+E(X86_RET_UNUSED15)
+	ud2
 
-	/* Sign/zero extend as appropriate.  */
-retsint8:
-	movsbl  %al, %eax
-	jmp  retint
-
-retsint16:
-	movswl  %ax, %eax
-	jmp  retint
-
-retuint8:
-	movzbl  %al, %eax
-	jmp  retint
-
-retuint16:
-	movzwl  %ax, %eax
-	jmp  retint
-
-retfloat:
-	/* Load %ecx with the pointer to storage for the return value  */
-	movl  24(%ebp),%ecx	
-	fstps (%ecx)
-	jmp   epilogue
-
-retdouble:
-	/* Load %ecx with the pointer to storage for the return value  */
-	movl  24(%ebp),%ecx	
-	fstpl (%ecx)
-	jmp   epilogue
-
-retlongdouble:
-	/* Load %ecx with the pointer to storage for the return value  */
-	movl  24(%ebp),%ecx	
-	fstpt (%ecx)
-	jmp   epilogue
-	
-retint64:	
-	/* Load %ecx with the pointer to storage for the return value  */
-	movl  24(%ebp),%ecx	
-	movl  %eax,0(%ecx)
-	movl  %edx,4(%ecx)
-	jmp   epilogue
-	
-retint:
-	/* Load %ecx with the pointer to storage for the return value  */
-	movl  24(%ebp),%ecx	
-	movl  %eax,0(%ecx)
-
-retstruct:
-	/* Nothing to do!  */
-
-noretval:
-epilogue:
-        popl %esi
-        movl %ebp,%esp
-        popl %ebp
-        ret
 	cfi_endproc
-.ffi_call_SYSV_end:
-        .size    ffi_call_SYSV,.ffi_call_SYSV_end-ffi_call_SYSV
+ENDF(C(ffi_call_i386))
 
 	.align	4
 FFI_HIDDEN (ffi_closure_SYSV)
