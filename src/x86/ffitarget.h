@@ -98,11 +98,7 @@ typedef enum ffi_abi {
   FFI_PASCAL    = 6,
   FFI_REGISTER  = 7,
   FFI_LAST_ABI,
-# ifdef _MSC_VER
   FFI_DEFAULT_ABI = FFI_MS_CDECL
-# else
-  FFI_DEFAULT_ABI = FFI_SYSV
-# endif
 #else
   FFI_FIRST_ABI = 0,
   FFI_SYSV      = 1,
