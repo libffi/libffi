@@ -321,224 +321,105 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 
 /** private members **/
 
-/* The following __attribute__((regparm(1))) decorations will have no effect
-   on MSVC or SUNPRO_C -- standard conventions apply. */
-static unsigned int ffi_prep_incoming_args (char *stack, void **ret,
-                                            void** args, ffi_cif* cif);
-void FFI_HIDDEN ffi_closure_SYSV (ffi_closure *)
-     __attribute__ ((regparm(1)));
-unsigned int FFI_HIDDEN ffi_closure_SYSV_inner (ffi_closure *, void **, void *)
-     __attribute__ ((regparm(1)));
-unsigned int FFI_HIDDEN ffi_closure_WIN32_inner (ffi_closure *, void **, void *)
-     __attribute__ ((regparm(1)));
-void FFI_HIDDEN ffi_closure_raw_SYSV (ffi_raw_closure *)
-     __attribute__ ((regparm(1)));
-#ifdef X86_WIN32
-void FFI_HIDDEN ffi_closure_raw_THISCALL (ffi_raw_closure *)
-     __attribute__ ((regparm(1)));
-#endif
-void FFI_HIDDEN ffi_closure_STDCALL (ffi_closure *);
-void FFI_HIDDEN ffi_closure_THISCALL (ffi_closure *);
-void FFI_HIDDEN ffi_closure_FASTCALL (ffi_closure *);
-void FFI_HIDDEN ffi_closure_REGISTER (ffi_closure *);
+void FFI_HIDDEN ffi_closure_i386(void);
+void FFI_HIDDEN ffi_closure_STDCALL(void);
+void FFI_HIDDEN ffi_closure_REGISTER(void);
 
-/* This function is jumped to by the trampoline */
-
-unsigned int FFI_HIDDEN __attribute__ ((regparm(1)))
-ffi_closure_SYSV_inner (ffi_closure *closure, void **respp, void *args)
+struct closure_frame
 {
-  /* our various things...  */
-  ffi_cif       *cif;
-  void         **arg_area;
+  unsigned rettemp[4];				/* 0 */
+  unsigned regs[3];				/* 16-24 */
+  ffi_cif *cif;					/* 28 */
+  void (*fun)(ffi_cif*,void*,void**,void*);	/* 32 */
+  void *user_data;				/* 36 */
+};
 
-  cif         = closure->cif;
-  arg_area    = (void**) alloca (cif->nargs * sizeof (void*));  
-
-  /* this call will initialize ARG_AREA, such that each
-   * element in that array points to the corresponding 
-   * value on the stack; and if the function returns
-   * a structure, it will change RESP to point to the
-   * structure return address.  */
-
-  ffi_prep_incoming_args(args, respp, arg_area, cif);
-
-  (closure->fun) (cif, *respp, arg_area, closure->user_data);
-
-  return cif->flags;
-}
-
-unsigned int FFI_HIDDEN __attribute__ ((regparm(1)))
-ffi_closure_WIN32_inner (ffi_closure *closure, void **respp, void *args)
+int FFI_HIDDEN __declspec(fastcall)
+ffi_closure_inner (struct closure_frame *frame, char *stack)
 {
-  /* our various things...  */
-  ffi_cif       *cif;
-  void         **arg_area;
-  unsigned int   ret;
+  ffi_cif *cif = frame->cif;
+  int cabi, i, n, flags, dir, narg_reg;
+  const struct abi_params *pabi;
+  ffi_type **arg_types;
+  char *argp;
+  void *rvalue;
+  void **avalue;
 
-  cif         = closure->cif;
-  arg_area    = (void**) alloca (cif->nargs * sizeof (void*));  
+  cabi = cif->abi;
+  flags = cif->flags;
+  narg_reg = 0;
+  rvalue = frame->rettemp;
+  pabi = &abi_params[cabi];
+  dir = pabi->dir;
+  argp = (dir < 0 ? stack + cif->bytes : stack);
 
-  /* this call will initialize ARG_AREA, such that each
-   * element in that array points to the corresponding 
-   * value on the stack; and if the function returns
-   * a structure, it will change RESP to point to the
-   * structure return address.  */
-
-  ret = ffi_prep_incoming_args(args, respp, arg_area, cif);
-
-  (closure->fun) (cif, *respp, arg_area, closure->user_data);
-
-  return ret;
-}
-
-static unsigned int
-ffi_prep_incoming_args(char *stack, void **rvalue, void **avalue,
-                       ffi_cif *cif)
-{
-  register unsigned int i;
-  register void **p_argv;
-  register char *argp;
-  register ffi_type **p_arg;
-  const int cabi = cif->abi;
-  const int dir = (cabi == FFI_PASCAL || cabi == FFI_REGISTER) ? -1 : +1;
-  const unsigned int max_stack_count = (cabi == FFI_THISCALL) ? 1
-                                     : (cabi == FFI_FASTCALL) ? 2
-                                     : (cabi == FFI_REGISTER) ? 3
-                                     : 0;
-  unsigned int passed_regs = 0;
-  void *p_stack_data[3] = { stack - 1 };
-
-  argp = stack;
-  argp += max_stack_count * FFI_SIZEOF_ARG;
-
-  if ((cif->flags == FFI_TYPE_STRUCT
-       || cif->flags == FFI_TYPE_MS_STRUCT))
+  switch (flags)
     {
-      if (passed_regs < max_stack_count)
-        {
-          *rvalue = *(void**) (stack + (passed_regs*FFI_SIZEOF_ARG));
-          ++passed_regs;
-        }
+    case X86_RET_STRUCTARG:
+      if (pabi->nregs > 0)
+	{
+	  rvalue = (void *)frame->regs[pabi->regs[0]];
+	  narg_reg = 1;
+	  frame->rettemp[0] = (unsigned)rvalue;
+	  break;
+	}
+      /* fallthru */
+    case X86_RET_STRUCTPOP:
+      rvalue = *(void **)argp;
+      argp += sizeof(void *);
+      break;
+    }
+
+  n = cif->nargs;
+  avalue = alloca(sizeof(void *) * n);
+
+  arg_types = cif->arg_types;
+  for (i = 0; i < n; ++i)
+    {
+      size_t z = arg_types[i]->size;
+      int t = arg_types[i]->type;
+      void *valp;
+
+      if (z <= FFI_SIZEOF_ARG && t != FFI_TYPE_STRUCT)
+	{
+	  if (t != FFI_TYPE_FLOAT && narg_reg < pabi->nregs)
+	    valp = &frame->regs[pabi->regs[narg_reg++]];
+	  else if (dir < 0)
+	    {
+	      argp -= 4;
+	      valp = argp;
+	    }
+	  else
+	    {
+	      valp = argp;
+	      argp += 4;
+	    }
+	}
       else
-        {
-          *rvalue = *(void **) argp;
-          argp += sizeof(void *);
-        }
+	{
+	  size_t za = ALIGN (z, FFI_SIZEOF_ARG);
+	  if (dir < 0)
+	    {
+	      argp -= za;
+	      valp = argp;
+	    }
+	  else
+	    {
+	      valp = argp;
+	      argp += za;
+	    }
+	}
+
+      avalue[i] = valp;
     }
 
-  /* Do register arguments first  */
-  for (i = 0, p_arg = cif->arg_types; 
-       i < cif->nargs && passed_regs < max_stack_count;
-       i++, p_arg++)
-    {
-      if ((*p_arg)->type == FFI_TYPE_FLOAT
-         || (*p_arg)->type == FFI_TYPE_STRUCT)
-        continue;
+  frame->fun (cif, rvalue, avalue, frame->user_data);
 
-      size_t sz = (*p_arg)->size;
-      if(sz == 0 || sz > FFI_SIZEOF_ARG)
-        continue;
-
-      p_stack_data[passed_regs] = avalue + i;
-      avalue[i] = stack + (passed_regs*FFI_SIZEOF_ARG);
-      ++passed_regs;
-    }
-
-  p_arg = cif->arg_types;
-  p_argv = avalue;
-  if (dir < 0)
-    {
-      const int nargs = cif->nargs - 1;
-      if (nargs > 0)
-      {
-        p_arg  += nargs;
-        p_argv += nargs;
-      }
-    }
-
-  for (i = cif->nargs;
-       i != 0;
-       i--, p_arg += dir, p_argv += dir)
-    {
-      /* Align if necessary */
-      if ((sizeof(void*) - 1) & (size_t) argp)
-        argp = (char *) ALIGN(argp, sizeof(void*));
-
-      size_t z = (*p_arg)->size;
-
-      if (passed_regs > 0
-          && z <= FFI_SIZEOF_ARG
-          && (p_argv == p_stack_data[0]
-            || p_argv == p_stack_data[1]
-            || p_argv == p_stack_data[2]))
-        {
-          /* Already assigned a register value */
-          continue;
-        }
-      else
-        {
-          /* because we're little endian, this is what it turns into.   */
-          *p_argv = (void*) argp;
-        }
-
-      argp += z;
-    }
-
-  return (size_t)argp - (size_t)stack;
+  if (cabi == FFI_STDCALL)
+    return flags + (cif->bytes << X86_RET_POP_SHIFT);
+  else
+    return flags;
 }
-
-/* How to make a trampoline.  Derived from gcc/config/i386/i386.c. */
-
-#define FFI_INIT_TRAMPOLINE(TRAMP,FUN,CTX) \
-{ unsigned char *__tramp = (unsigned char*)(TRAMP); \
-   unsigned int  __fun = (unsigned int)(FUN); \
-   unsigned int  __ctx = (unsigned int)(CTX); \
-   unsigned int  __dis = __fun - (__ctx + 10);  \
-   *(unsigned char*) &__tramp[0] = 0xb8; \
-   *(unsigned int*)  &__tramp[1] = __ctx; /* movl __ctx, %eax */ \
-   *(unsigned char*) &__tramp[5] = 0xe9; \
-   *(unsigned int*)  &__tramp[6] = __dis; /* jmp __fun  */ \
- }
-
-#define FFI_INIT_TRAMPOLINE_RAW_THISCALL(TRAMP,FUN,CTX,SIZE) \
-{ unsigned char *__tramp = (unsigned char*)(TRAMP); \
-   unsigned int  __fun = (unsigned int)(FUN); \
-   unsigned int  __ctx = (unsigned int)(CTX); \
-   unsigned int  __dis = __fun - (__ctx + 49);  \
-   unsigned short __size = (unsigned short)(SIZE); \
-   *(unsigned int *) &__tramp[0] = 0x8324048b;      /* mov (%esp), %eax */ \
-   *(unsigned int *) &__tramp[4] = 0x4c890cec;      /* sub $12, %esp */ \
-   *(unsigned int *) &__tramp[8] = 0x04890424;      /* mov %ecx, 4(%esp) */ \
-   *(unsigned char*) &__tramp[12] = 0x24;           /* mov %eax, (%esp) */ \
-   *(unsigned char*) &__tramp[13] = 0xb8; \
-   *(unsigned int *) &__tramp[14] = __size;         /* mov __size, %eax */ \
-   *(unsigned int *) &__tramp[18] = 0x08244c8d;     /* lea 8(%esp), %ecx */ \
-   *(unsigned int *) &__tramp[22] = 0x4802e8c1;     /* shr $2, %eax ; dec %eax */ \
-   *(unsigned short*) &__tramp[26] = 0x0b74;        /* jz 1f */ \
-   *(unsigned int *) &__tramp[28] = 0x8908518b;     /* 2b: mov 8(%ecx), %edx */ \
-   *(unsigned int *) &__tramp[32] = 0x04c18311;     /* mov %edx, (%ecx) ; add $4, %ecx */ \
-   *(unsigned char*) &__tramp[36] = 0x48;           /* dec %eax */ \
-   *(unsigned short*) &__tramp[37] = 0xf575;        /* jnz 2b ; 1f: */ \
-   *(unsigned char*) &__tramp[39] = 0xb8; \
-   *(unsigned int*)  &__tramp[40] = __ctx;          /* movl __ctx, %eax */ \
-   *(unsigned char *)  &__tramp[44] = 0xe8; \
-   *(unsigned int*)  &__tramp[45] = __dis;          /* call __fun  */ \
-   *(unsigned char*)  &__tramp[49] = 0xc2;          /* ret  */ \
-   *(unsigned short*)  &__tramp[50] = (__size + 8); /* ret (__size + 8)  */ \
- }
-
-#define FFI_INIT_TRAMPOLINE_WIN32(TRAMP,FUN,CTX)  \
-{ unsigned char *__tramp = (unsigned char*)(TRAMP); \
-   unsigned int  __fun = (unsigned int)(FUN); \
-   unsigned int  __ctx = (unsigned int)(CTX); \
-   unsigned int  __dis = __fun - (__ctx + 10); \
-   *(unsigned char*) &__tramp[0] = 0x68; \
-   *(unsigned int*)  &__tramp[1] = __ctx; /* push __ctx */ \
-   *(unsigned char*) &__tramp[5] = 0xe9; \
-   *(unsigned int*)  &__tramp[6] = __dis; /* jmp __fun  */ \
- }
-
-/* the cif must already be prep'ed */
 
 ffi_status
 ffi_prep_closure_loc (ffi_closure* closure,
@@ -547,50 +428,40 @@ ffi_prep_closure_loc (ffi_closure* closure,
                       void *user_data,
                       void *codeloc)
 {
-  if (cif->abi == FFI_SYSV)
+  char *tramp = closure->tramp;
+  void (*dest)(void);
+  int op = 0xb8;  /* movl imm, %eax */
+
+  switch (cif->abi)
     {
-      FFI_INIT_TRAMPOLINE (&closure->tramp[0],
-                           &ffi_closure_SYSV,
-                           (void*)codeloc);
-    }
-  else if (cif->abi == FFI_REGISTER)
-    {
-      FFI_INIT_TRAMPOLINE_WIN32 (&closure->tramp[0],
-                                   &ffi_closure_REGISTER,
-                                   (void*)codeloc);
-    }
-  else if (cif->abi == FFI_FASTCALL)
-    {
-      FFI_INIT_TRAMPOLINE_WIN32 (&closure->tramp[0],
-                                   &ffi_closure_FASTCALL,
-                                   (void*)codeloc);
-    }
-  else if (cif->abi == FFI_THISCALL)
-    {
-      FFI_INIT_TRAMPOLINE_WIN32 (&closure->tramp[0],
-                                   &ffi_closure_THISCALL,
-                                   (void*)codeloc);
-    }
-  else if (cif->abi == FFI_STDCALL || cif->abi == FFI_PASCAL)
-    {
-      FFI_INIT_TRAMPOLINE_WIN32 (&closure->tramp[0],
-                                   &ffi_closure_STDCALL,
-                                   (void*)codeloc);
-    }
-  else if (cif->abi == FFI_MS_CDECL)
-    {
-      FFI_INIT_TRAMPOLINE (&closure->tramp[0],
-                           &ffi_closure_SYSV,
-                           (void*)codeloc);
-    }
-  else
-    {
+    case FFI_SYSV:
+    case FFI_THISCALL:
+    case FFI_FASTCALL:
+    case FFI_MS_CDECL:
+      dest = ffi_closure_i386;
+      break;
+    case FFI_STDCALL:
+    case FFI_PASCAL:
+      dest = ffi_closure_STDCALL;
+      break;
+    case FFI_REGISTER:
+      dest = ffi_closure_REGISTER;
+      op = 0x68;  /* pushl imm */
+    default:
       return FFI_BAD_ABI;
     }
-    
-  closure->cif  = cif;
+
+  /* movl or pushl immediate.  */
+  tramp[0] = op;
+  *(void **)(tramp + 1) = codeloc;
+
+  /* jmp dest */
+  tramp[5] = 0xe9;
+  *(unsigned *)(tramp + 6) = (unsigned)dest - ((unsigned)codeloc + 10);
+
+  closure->cif = cif;
+  closure->fun = fun;
   closure->user_data = user_data;
-  closure->fun  = fun;
 
   return FFI_OK;
 }
@@ -599,13 +470,18 @@ ffi_prep_closure_loc (ffi_closure* closure,
 
 #if !FFI_NO_RAW_API
 
+void FFI_HIDDEN ffi_closure_raw_SYSV(void);
+void FFI_HIDDEN ffi_closure_raw_THISCALL(void);
+
 ffi_status
-ffi_prep_raw_closure_loc (ffi_raw_closure* closure,
-                          ffi_cif* cif,
+ffi_prep_raw_closure_loc (ffi_raw_closure *closure,
+                          ffi_cif *cif,
                           void (*fun)(ffi_cif*,void*,ffi_raw*,void*),
                           void *user_data,
                           void *codeloc)
 {
+  char *tramp = closure->tramp;
+  void (*dest)(void);
   int i;
 
   /* We currently don't support certain kinds of arguments for raw
@@ -613,27 +489,32 @@ ffi_prep_raw_closure_loc (ffi_raw_closure* closure,
      language routine, since it would require argument processing,
      something we don't do now for performance.  */
   for (i = cif->nargs-1; i >= 0; i--)
-    {
-      FFI_ASSERT (cif->arg_types[i]->type != FFI_TYPE_STRUCT);
-      FFI_ASSERT (cif->arg_types[i]->type != FFI_TYPE_LONGDOUBLE);
-    }
+    switch (cif->arg_types[i]->type)
+      {
+      case FFI_TYPE_STRUCT:
+      case FFI_TYPE_LONGDOUBLE:
+	return FFI_BAD_TYPEDEF;
+      }
 
   switch (cif->abi)
     {
-#ifdef X86_WIN32
     case FFI_THISCALL:
-      FFI_INIT_TRAMPOLINE_RAW_THISCALL (&closure->tramp[0],
-					&ffi_closure_raw_THISCALL,
-					codeloc, cif->bytes);
+      dest = ffi_closure_raw_THISCALL;
       break;
-#endif
     case FFI_SYSV:
-      FFI_INIT_TRAMPOLINE (&closure->tramp[0], &ffi_closure_raw_SYSV,
-			   codeloc);
+      dest = ffi_closure_raw_SYSV;
       break;
     default:
       return FFI_BAD_ABI;
     }
+
+  /* movl imm, %eax.  */
+  tramp[0] = 0xb8;
+  *(void **)(tramp + 1) = codeloc;
+
+  /* jmp dest */
+  tramp[5] = 0xe9;
+  *(unsigned *)(tramp + 6) = (unsigned)dest - ((unsigned)codeloc + 10);
 
   closure->cif = cif;
   closure->fun = fun;

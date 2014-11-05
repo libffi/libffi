@@ -59,10 +59,10 @@
 
 /* This is declared as
 
-   void ffi_call_i386(struct ffi_call_frame *frame, char *argp)
+   void ffi_call_i386(struct call_frame *frame, char *argp)
         __attribute__((fastcall));
 
-   This the arguments are present in
+   Thus the arguments are present in
 
         ecx: frame
         edx: argp
@@ -170,181 +170,478 @@ E(X86_RET_UNUSED15)
 	cfi_endproc
 ENDF(C(ffi_call_i386))
 
-	.align	4
-FFI_HIDDEN (ffi_closure_SYSV)
-.globl ffi_closure_SYSV
-	.type	ffi_closure_SYSV, @function
+/* The inner helper is declared as
 
-ffi_closure_SYSV:
-	cfi_startproc
-	pushl	%ebp
-	cfi_adjust_cfa_offset(4)
-	cfi_rel_offset(%ebp, 0)
-	movl	%esp, %ebp
-	cfi_def_cfa_register(%ebp)
-	subl	$40, %esp
-	leal	-24(%ebp), %edx
-	movl	%edx, -12(%ebp)	/* resp */
-	leal	8(%ebp), %edx
-#ifdef __SUNPRO_C
-	/* The SUNPRO compiler doesn't support GCC's regparm function
-  	   attribute, so we have to pass all three arguments to
-	   ffi_closure_SYSV_inner on the stack.  */
-	movl	%edx, 8(%esp)	/* args = __builtin_dwarf_cfa () */
-	leal	-12(%ebp), %edx
-	movl	%edx, 4(%esp)	/* &resp */
-	movl    %eax, (%esp)    /* closure */
-#else
-	movl	%edx, 4(%esp)	/* args = __builtin_dwarf_cfa () */
-	leal	-12(%ebp), %edx
-	movl	%edx, (%esp)	/* &resp */
+   void ffi_closure_inner(struct closure_frame *frame, char *argp)
+	__attribute_((fastcall))
+
+   Thus the arguments are placed in
+
+	ecx:	frame
+	edx:	argp
+*/
+
+/* Macros to help setting up the closure_data structure.  */
+
+#define closure_FS	(16 + 3*4 + 3*4 + 4)
+
+.macro	FFI_CLOSURE_SAVE_REGS
+	movl	%eax, 16+R_EAX*4(%esp)
+	movl	%edx, 16+R_EDX*4(%esp)
+	movl	%ecx, 16+R_ECX*4(%esp)
+.endm
+
+.macro	FFI_CLOSURE_COPY_TRAMP_DATA chain
+	movl	FFI_TRAMPOLINE_SIZE(%eax), %edx		/* copy cif */
+	movl	FFI_TRAMPOLINE_SIZE+4(%eax), %ecx	/* copy fun */
+	movl	FFI_TRAMPOLINE_SIZE+8(%eax), %eax	/* copy user_data */
+	movl	%edx, 28(%esp)
+	movl	%ecx, 32(%esp)
+	movl	%eax, 36(%esp)
+.endm
+
+.macro	FFI_CLOSURE_CALL_INNER
+	movl	%esp, %ecx			/* load closure_data */
+	leal	closure_FS+4(%esp), %edx	/* load incoming stack */
+#ifdef __PIC__
+	movl	%ebx, 40(%esp)			/* save ebx */
+	cfi_rel_offset(%ebx, 40)
+	call	__x86.get_pc_thunk.bx		/* load got register */
+	addl	$C(_GLOBAL_OFFSET_TABLE_), %ebx
 #endif
 #if defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE || !defined __PIC__
-	call	ffi_closure_SYSV_inner
+	call	C(ffi_closure_inner)
 #else
-	movl	%ebx, 8(%esp)
-	cfi_offset(%ebx, -40)
-	call	1f
-1:	popl	%ebx
-	addl	$_GLOBAL_OFFSET_TABLE_+[.-1b], %ebx
-	call	ffi_closure_SYSV_inner@PLT
-	movl	8(%esp), %ebx
-	cfi_restore(%ebx)
+	call	C(ffi_closure_inner)@PLT
 #endif
-	movl	-12(%ebp), %ecx
-	cmpl	$FFI_TYPE_INT, %eax
-	je	.Lcls_retint
+.endm
 
-	/* Handle FFI_TYPE_UINT8, FFI_TYPE_SINT8, FFI_TYPE_UINT16,
-	   FFI_TYPE_SINT16, FFI_TYPE_UINT32, FFI_TYPE_SINT32.  */
-	cmpl	$FFI_TYPE_UINT64, %eax
-	jge	0f
-	cmpl	$FFI_TYPE_UINT8, %eax
-	jge	.Lcls_retint
-	
-0:	cmpl	$FFI_TYPE_FLOAT, %eax
-	je	.Lcls_retfloat
-	cmpl	$FFI_TYPE_DOUBLE, %eax
-	je	.Lcls_retdouble
-	cmpl	$FFI_TYPE_LONGDOUBLE, %eax
-	je	.Lcls_retldouble
-	cmpl	$FFI_TYPE_SINT64, %eax
-	je	.Lcls_retllong
-	cmpl	$FFI_TYPE_STRUCT, %eax
-	je	.Lcls_retstruct
-.Lcls_epilogue:
-	movl	%ebp, %esp
-	popl	%ebp
+.macro	FFI_CLOSURE_MASK_AND_JUMP
+	andl	$X86_RET_TYPE_MASK, %eax
+#ifdef __PIC__
+	leal	0f@GOTOFF(%ebx, %eax, 8), %eax
+	movl	40(%esp), %ebx			/* restore ebx */
+	cfi_restore(%ebx)
+#else
+	leal	0f(, %eax, 8), %eax
+#endif
+	jmp	*%eax
+.endm
+
+/* The closure entry points are reached from the ffi_closure trampoline.
+   On entry, %eax contains the address of the ffi_closure.  */
+
+	.align	16
+	.globl	C(ffi_closure_i386)
+	FFI_HIDDEN(C(ffi_closure_i386))
+
+C(ffi_closure_i386):
+	cfi_startproc
+	subl	$closure_FS, %esp
+	cfi_adjust_cfa_offset(closure_FS)
+
+	FFI_CLOSURE_SAVE_REGS
+	FFI_CLOSURE_COPY_TRAMP_DATA
+	FFI_CLOSURE_CALL_INNER
+	FFI_CLOSURE_MASK_AND_JUMP
+
+	.align	8
+0:
+E(X86_RET_FLOAT)
+	flds	(%esp)
+	jmp	9f
+E(X86_RET_DOUBLE)
+	fldl	(%esp)
+	jmp	9f
+E(X86_RET_LDOUBLE)
+	fldt	(%esp)
+	jmp	9f
+E(X86_RET_SINT8)
+	movsbl	(%esp), %eax
+	jmp	9f
+E(X86_RET_SINT16)
+	movswl	(%esp), %eax
+	jmp	9f
+E(X86_RET_UINT8)
+	movzbl	(%esp), %eax
+	jmp	9f
+E(X86_RET_UINT16)
+	movzwl	(%esp), %eax
+	jmp	9f
+E(X86_RET_INT64)
+	movl	4(%esp), %edx
+	/* fallthru */
+E(X86_RET_INT32)
+	movl	(%esp), %eax
+	/* fallthru */
+E(X86_RET_VOID)
+9:	addl	$closure_FS, %esp
+	cfi_adjust_cfa_offset(-closure_FS)
 	ret
-.Lcls_retint:
-	movl	(%ecx), %eax
-	jmp	.Lcls_epilogue
-.Lcls_retfloat:
-	flds	(%ecx)
-	jmp	.Lcls_epilogue
-.Lcls_retdouble:
-	fldl	(%ecx)
-	jmp	.Lcls_epilogue
-.Lcls_retldouble:
-	fldt	(%ecx)
-	jmp	.Lcls_epilogue
-.Lcls_retllong:
-	movl	(%ecx), %eax
-	movl	4(%ecx), %edx
-	jmp	.Lcls_epilogue
-.Lcls_retstruct:
-	movl	%ebp, %esp
-	popl	%ebp
+	cfi_adjust_cfa_offset(closure_FS)
+E(X86_RET_STRUCTPOP)
+	addl	$closure_FS, %esp
+	cfi_adjust_cfa_offset(-closure_FS)
 	ret	$4
+	cfi_adjust_cfa_offset(closure_FS)
+E(X86_RET_STRUCTARG)
+	movl	(%esp), %eax
+	jmp	9b
+E(X86_RET_STRUCT_1B)
+	movzbl	(%esp), %eax
+	jmp	9b
+E(X86_RET_STRUCT_2B)
+	movzwl	(%esp), %eax
+	jmp	9b
+
+	/* Fill out the table so that bad values are predictable.  */
+E(X86_RET_UNUSED14)
+	ud2
+E(X86_RET_UNUSED15)
+	ud2
+
 	cfi_endproc
-	.size	ffi_closure_SYSV, .-ffi_closure_SYSV
+ENDF(C(ffi_closure_i386))
+
+/* For REGISTER, we have no available parameter registers, and so we
+   enter here having pushed the closure onto the stack.  */
+
+	.align	16
+	.globl	C(ffi_closure_REGISTER)
+	FFI_HIDDEN(C(ffi_closure_REGISTER))
+C(ffi_closure_REGISTER):
+	cfi_startproc
+	cfi_def_cfa(%esp, 8)
+	cfi_offset(%eip, -8)
+	subl	$closure_FS-4, %esp
+	cfi_adjust_cfa_offset(closure_FS-4)
+
+	FFI_CLOSURE_SAVE_REGS
+
+	movl	closure_FS-4(%esp), %ecx	/* load retaddr */
+	movl	closure_FS(%esp), %eax		/* load closure */
+	movl	%ecx, closure_FS(%esp)		/* move retaddr */
+	jmp	0f
+
+	cfi_endproc
+ENDF(C(ffi_closure_REGISTER))
+
+/* For STDCALL (and others), we need to pop N bytes of arguments off
+   the stack following the closure.  The amount needing to be popped
+   is returned to us from ffi_closure_inner.  */
+
+	.align	16
+	.globl	C(ffi_closure_STDCALL)
+	FFI_HIDDEN(C(ffi_closure_STDCALL))
+C(ffi_closure_STDCALL):
+	cfi_startproc
+	subl	$closure_FS, %esp
+	cfi_adjust_cfa_offset(closure_FS)
+
+	FFI_CLOSURE_SAVE_REGS
+0:
+	FFI_CLOSURE_COPY_TRAMP_DATA
+	FFI_CLOSURE_CALL_INNER
+
+	movl	%eax, %ecx
+	shrl	$X86_RET_POP_SHIFT, %ecx	/* isolate pop count */
+	leal	closure_FS(%esp, %ecx), %ecx	/* compute popped esp */
+	movl	closure_FS(%esp), %edx		/* move return address */
+	movl	%edx, (%ecx)
+
+	/* New pseudo-stack frame based off ecx.  This is unwind trickery
+	   in that the CFA *has* changed, to the proper popped stack address.
+	   Note that the location to which we moved the return address
+	   is the new CFA-4, so that's unchanged.  */
+	cfi_def_cfa(%ecx, 4)
+	/* Normally esp is unwound to CFA + the caller's ARGS_SIZE.
+	   We've just set the CFA to that final value.  Tell the unwinder
+	   to restore esp from CFA without the ARGS_SIZE:
+	   DW_CFA_val_expression %esp, DW_OP_call_frame_cfa.  */
+	cfi_escape(0x16, 4, 1, 0x9c)
+
+	FFI_CLOSURE_MASK_AND_JUMP
+
+	.align	8
+0:
+E(X86_RET_FLOAT)
+	flds    (%esp)
+	movl    %ecx, %esp
+	ret
+E(X86_RET_DOUBLE)
+	fldl    (%esp)
+	movl    %ecx, %esp
+	ret
+E(X86_RET_LDOUBLE)
+	fldt    (%esp)
+	movl    %ecx, %esp
+	ret
+E(X86_RET_SINT8)
+	movsbl  (%esp), %eax
+	movl    %ecx, %esp
+	ret
+E(X86_RET_SINT16)
+	movswl  (%esp), %eax
+	movl    %ecx, %esp
+	ret
+E(X86_RET_UINT8)
+	movzbl  (%esp), %eax
+	movl    %ecx, %esp
+	ret
+E(X86_RET_UINT16)
+	movzwl  (%esp), %eax
+	movl    %ecx, %esp
+	ret
+E(X86_RET_INT64)
+	popl    %eax
+	popl    %edx
+	movl    %ecx, %esp
+	ret
+E(X86_RET_INT32)
+	movl    (%esp), %eax
+	movl    %ecx, %esp
+	ret
+E(X86_RET_VOID)
+	movl    %ecx, %esp
+	ret
+E(X86_RET_STRUCTPOP)
+	movl    %ecx, %esp
+	ret
+E(X86_RET_STRUCTARG)
+	movl	(%esp), %eax
+	movl	%ecx, %esp
+	ret
+E(X86_RET_STRUCT_1B)
+	movzbl	(%esp), %eax
+	movl	%ecx, %esp
+	ret
+E(X86_RET_STRUCT_2B)
+	movzwl	(%esp), %eax
+	movl	%ecx, %esp
+	ret
+
+	/* Fill out the table so that bad values are predictable.  */
+E(X86_RET_UNUSED14)
+	ud2
+E(X86_RET_UNUSED15)
+	ud2
+
+	cfi_endproc
+ENDF(C(ffi_closure_STDCALL))
 
 #if !FFI_NO_RAW_API
 
-/* Precalculate for e.g. the Solaris 10/x86 assembler.  */
-#if FFI_TRAMPOLINE_SIZE == 10
-#define RAW_CLOSURE_CIF_OFFSET 12
-#define RAW_CLOSURE_FUN_OFFSET 16
-#define RAW_CLOSURE_USER_DATA_OFFSET 20
-#elif FFI_TRAMPOLINE_SIZE == 24
-#define RAW_CLOSURE_CIF_OFFSET 24
-#define RAW_CLOSURE_FUN_OFFSET 28
-#define RAW_CLOSURE_USER_DATA_OFFSET 32
-#else
-#define RAW_CLOSURE_CIF_OFFSET ((FFI_TRAMPOLINE_SIZE + 3) & ~3)
-#define RAW_CLOSURE_FUN_OFFSET (RAW_CLOSURE_CIF_OFFSET + 4)
-#define RAW_CLOSURE_USER_DATA_OFFSET (RAW_CLOSURE_FUN_OFFSET + 4)
-#endif
-#define CIF_FLAGS_OFFSET 20
+#define raw_closure_S_FS	(16+16+12)
 
-	.align	4
-FFI_HIDDEN (ffi_closure_raw_SYSV)
-.globl ffi_closure_raw_SYSV
-	.type	ffi_closure_raw_SYSV, @function
-
-ffi_closure_raw_SYSV:
+	.align	16
+	.globl	C(ffi_closure_raw_SYSV)
+	FFI_HIDDEN(C(ffi_closure_raw_SYSV))
+C(ffi_closure_raw_SYSV):
 	cfi_startproc
-	pushl	%ebp
-	cfi_adjust_cfa_offset(4)
-	cfi_rel_offset(%ebp, 0)
-	movl	%esp, %ebp
-	cfi_def_cfa_register(%ebp)
-	pushl	%esi
-	cfi_offset(%esi, -12)
-	subl	$36, %esp
-	movl	RAW_CLOSURE_CIF_OFFSET(%eax), %esi	 /* closure->cif */
-	movl	RAW_CLOSURE_USER_DATA_OFFSET(%eax), %edx /* closure->user_data */
-	movl	%edx, 12(%esp)	/* user_data */
-	leal	8(%ebp), %edx	/* __builtin_dwarf_cfa () */
-	movl	%edx, 8(%esp)	/* raw_args */
-	leal	-24(%ebp), %edx
-	movl	%edx, 4(%esp)	/* &res */
-	movl	%esi, (%esp)	/* cif */
-	call	*RAW_CLOSURE_FUN_OFFSET(%eax)		 /* closure->fun */
-	movl	CIF_FLAGS_OFFSET(%esi), %eax		 /* rtype */
-	cmpl	$FFI_TYPE_INT, %eax
-	je	.Lrcls_retint
+	subl	$raw_closure_S_FS, %esp
+	cfi_adjust_cfa_offset(raw_closure_S_FS)
+	movl	%ebx, raw_closure_S_FS-4(%esp)
+	cfi_rel_offset(%ebx, raw_closure_S_FS-4)
 
-	/* Handle FFI_TYPE_UINT8, FFI_TYPE_SINT8, FFI_TYPE_UINT16,
-	   FFI_TYPE_SINT16, FFI_TYPE_UINT32, FFI_TYPE_SINT32.  */
-	cmpl	$FFI_TYPE_UINT64, %eax
-	jge	0f
-	cmpl	$FFI_TYPE_UINT8, %eax
-	jge	.Lrcls_retint
+	movl	FFI_TRAMPOLINE_SIZE+8(%eax), %edx	/* load cl->user_data */
+	movl	%edx, 12(%esp)
+	leal	raw_closure_S_FS+4(%esp), %edx		/* load raw_args */
+	movl	%edx, 8(%esp)
+	leal	16(%esp), %edx				/* load &res */
+	movl	%edx, 4(%esp)
+	movl	FFI_TRAMPOLINE_SIZE(%eax), %ebx		/* load cl->cif */
+	movl	%ebx, (%esp)
+	call	*FFI_TRAMPOLINE_SIZE+4(%eax)		/* call cl->fun */
+
+	movl	20(%ebx), %eax				/* load cif->flags */
+	andl	$X86_RET_TYPE_MASK, %eax
+#ifdef __PIC__
+	call	__x86.get_pc_thunk.bx
+1:	leal	0f-1b(%ebx, %eax, 8), %eax
+#else
+	leal	0f(,%eax, 8), %eax
+#endif
+	movl	raw_closure_S_FS-4(%esp), %ebx
+	cfi_restore(%ebx)
+	jmp	*%eax
+
+	.align	8
 0:
-	cmpl	$FFI_TYPE_FLOAT, %eax
-	je	.Lrcls_retfloat
-	cmpl	$FFI_TYPE_DOUBLE, %eax
-	je	.Lrcls_retdouble
-	cmpl	$FFI_TYPE_LONGDOUBLE, %eax
-	je	.Lrcls_retldouble
-	cmpl	$FFI_TYPE_SINT64, %eax
-	je	.Lrcls_retllong
-.Lrcls_epilogue:
-	addl	$36, %esp
-	popl	%esi
-	popl	%ebp
+E(X86_RET_FLOAT)
+	flds	16(%esp)
+	jmp	9f
+E(X86_RET_DOUBLE)
+	fldl	16(%esp)
+	jmp	9f
+E(X86_RET_LDOUBLE)
+	fldt	16(%esp)
+	jmp	9f
+E(X86_RET_SINT8)
+	movsbl	16(%esp), %eax
+	jmp	9f
+E(X86_RET_SINT16)
+	movswl	16(%esp), %eax
+	jmp	9f
+E(X86_RET_UINT8)
+	movzbl	16(%esp), %eax
+	jmp	9f
+E(X86_RET_UINT16)
+	movzwl	16(%esp), %eax
+	jmp	9f
+E(X86_RET_INT64)
+	movl	16+4(%esp), %edx
+	/* fallthru */
+E(X86_RET_INT32)
+	movl	16(%esp), %eax
+	/* fallthru */
+E(X86_RET_VOID)
+9:	addl	$raw_closure_S_FS, %esp
+	cfi_adjust_cfa_offset(-raw_closure_S_FS)
 	ret
-.Lrcls_retint:
-	movl	-24(%ebp), %eax
-	jmp	.Lrcls_epilogue
-.Lrcls_retfloat:
-	flds	-24(%ebp)
-	jmp	.Lrcls_epilogue
-.Lrcls_retdouble:
-	fldl	-24(%ebp)
-	jmp	.Lrcls_epilogue
-.Lrcls_retldouble:
-	fldt	-24(%ebp)
-	jmp	.Lrcls_epilogue
-.Lrcls_retllong:
-	movl	-24(%ebp), %eax
-	movl	-20(%ebp), %edx
-	jmp	.Lrcls_epilogue
+	cfi_adjust_cfa_offset(raw_closure_S_FS)
+E(X86_RET_STRUCTPOP)
+	addl	$raw_closure_S_FS, %esp
+	cfi_adjust_cfa_offset(-raw_closure_S_FS)
+	ret	$4
+	cfi_adjust_cfa_offset(raw_closure_S_FS)
+E(X86_RET_STRUCTARG)
+	movl	16(%esp), %eax
+	jmp	9b
+E(X86_RET_STRUCT_1B)
+	movzbl	16(%esp), %eax
+	jmp	9b
+E(X86_RET_STRUCT_2B)
+	movzwl	16(%esp), %eax
+	jmp	9b
+
+	/* Fill out the table so that bad values are predictable.  */
+E(X86_RET_UNUSED14)
+	ud2
+E(X86_RET_UNUSED15)
+	ud2
+
 	cfi_endproc
-	.size	ffi_closure_raw_SYSV, .-ffi_closure_raw_SYSV
+ENDF(C(ffi_closure_raw_SYSV))
+
+#undef	raw_closure_S_FS
+#define raw_closure_T_FS	(16+16+8)
+
+	.align	16
+	.globl	C(ffi_closure_raw_THISCALL)
+	FFI_HIDDEN(C(ffi_closure_raw_THISCALL))
+C(ffi_closure_raw_THISCALL):
+	cfi_startproc
+	/* Rearrange the stack such that %ecx is the first argument.
+	   This means moving the return address.  */
+	popl	%edx
+	cfi_adjust_cfa_offset(-4)
+	cfi_register(%eip, %edx)
+	pushl	%ecx
+	cfi_adjust_cfa_offset(4)
+	pushl	%edx
+	cfi_adjust_cfa_offset(4)
+	cfi_rel_offset(%eip, 0)
+	subl	$raw_closure_T_FS, %esp
+	cfi_adjust_cfa_offset(raw_closure_T_FS)
+	movl	%ebx, raw_closure_T_FS-4(%esp)
+	cfi_offset(%ebx, raw_closure_T_FS-4)
+
+	movl	FFI_TRAMPOLINE_SIZE+8(%eax), %edx	/* load cl->user_data */
+	movl	%edx, 12(%esp)
+	leal	raw_closure_T_FS+4(%esp), %edx		/* load raw_args */
+	movl	%edx, 8(%esp)
+	leal	16(%esp), %edx				/* load &res */
+	movl	%edx, 4(%esp)
+	movl	FFI_TRAMPOLINE_SIZE(%eax), %ebx		/* load cl->cif */
+	movl	%ebx, (%esp)
+	call	*FFI_TRAMPOLINE_SIZE+4(%eax)		/* call cl->fun */
+
+	movl	20(%ebx), %eax				/* load cif->flags */
+	andl	$X86_RET_TYPE_MASK, %eax
+#ifdef __PIC__
+	call	__x86.get_pc_thunk.bx
+1:	leal	0f-1b(%ebx, %eax, 8), %eax
+#else
+	leal	0f(,%eax, 8), %eax
+#endif
+	movl	raw_closure_T_FS-4(%esp), %ebx
+	cfi_restore(%ebx)
+	jmp	*%eax
+
+	.align	8
+0:
+E(X86_RET_FLOAT)
+	flds	16(%esp)
+	jmp	9f
+E(X86_RET_DOUBLE)
+	fldl	16(%esp)
+	jmp	9f
+E(X86_RET_LDOUBLE)
+	fldt	16(%esp)
+	jmp	9f
+E(X86_RET_SINT8)
+	movsbl	16(%esp), %eax
+	jmp	9f
+E(X86_RET_SINT16)
+	movswl	16(%esp), %eax
+	jmp	9f
+E(X86_RET_UINT8)
+	movzbl	16(%esp), %eax
+	jmp	9f
+E(X86_RET_UINT16)
+	movzwl	16(%esp), %eax
+	jmp	9f
+E(X86_RET_INT64)
+	movl	16+4(%esp), %edx
+	/* fallthru */
+E(X86_RET_INT32)
+	movl	16(%esp), %eax
+	/* fallthru */
+E(X86_RET_VOID)
+9:	addl	$raw_closure_T_FS, %esp
+	cfi_adjust_cfa_offset(-raw_closure_T_FS)
+	/* Remove the extra %ecx argument we pushed.  */
+	ret	$4
+	cfi_adjust_cfa_offset(raw_closure_T_FS)
+E(X86_RET_STRUCTPOP)
+	addl	$raw_closure_T_FS, %esp
+	cfi_adjust_cfa_offset(-raw_closure_T_FS)
+	ret	$8
+	cfi_adjust_cfa_offset(raw_closure_T_FS)
+E(X86_RET_STRUCTARG)
+	movl	16(%esp), %eax
+	jmp	9b
+E(X86_RET_STRUCT_1B)
+	movzbl	16(%esp), %eax
+	jmp	9b
+E(X86_RET_STRUCT_2B)
+	movzwl	16(%esp), %eax
+	jmp	9b
+
+	/* Fill out the table so that bad values are predictable.  */
+E(X86_RET_UNUSED14)
+	ud2
+E(X86_RET_UNUSED15)
+	ud2
+
+	cfi_endproc
+ENDF(C(ffi_closure_raw_THISCALL))
 
 #endif /* !FFI_NO_RAW_API */
+
+#if defined(__PIC__)
+	.section .text.__x86.get_pc_thunk.bx,"axG",@progbits,__x86.get_pc_thunk.bx,comdat
+	.globl	__x86.get_pc_thunk.bx
+	.hidden	__x86.get_pc_thunk.bx
+	.type	__x86.get_pc_thunk.bx,@function
+__x86.get_pc_thunk.bx:
+	cfi_startproc
+	movl	(%esp), %ebx
+	ret
+	cfi_endproc
+	.size	__x86.get_pc_thunk.bx, . - __x86.get_pc_thunk.bx
+#endif /* __PIC__ */
+
 #endif /* ifndef __x86_64__ */
 #if defined __ELF__ && defined __linux__
 	.section	.note.GNU-stack,"",@progbits
