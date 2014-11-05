@@ -120,6 +120,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       else
 #endif
 	{
+	do_struct:
 	  switch (cabi)
 	    {
 	    case FFI_THISCALL:
@@ -134,6 +135,32 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 	    }
 	  /* Allocate space for return value pointer.  */
 	  bytes += ALIGN (sizeof(void*), FFI_SIZEOF_ARG);
+	}
+      break;
+    case FFI_TYPE_COMPLEX:
+      switch (cif->rtype->elements[0]->type)
+	{
+	case FFI_TYPE_DOUBLE:
+	case FFI_TYPE_LONGDOUBLE:
+	case FFI_TYPE_SINT64:
+	case FFI_TYPE_UINT64:
+	  goto do_struct;
+	case FFI_TYPE_FLOAT:
+	case FFI_TYPE_INT:
+	case FFI_TYPE_SINT32:
+	case FFI_TYPE_UINT32:
+	  flags = X86_RET_INT64;
+	  break;
+	case FFI_TYPE_SINT16:
+	case FFI_TYPE_UINT16:
+	  flags = X86_RET_INT32;
+	  break;
+	case FFI_TYPE_SINT8:
+	case FFI_TYPE_UINT8:
+	  flags = X86_RET_STRUCT_2B;
+	  break;
+	default:
+	  return FFI_BAD_TYPEDEF;
 	}
       break;
     default:
