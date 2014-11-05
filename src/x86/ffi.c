@@ -218,25 +218,28 @@ struct call_frame
 struct abi_params
 {
   int dir;		/* parameter growth direction */
+  int static_chain;	/* the static chain register used by gcc */
   int nregs;		/* number of register parameters */
   int regs[3];
 };
 
 static const struct abi_params abi_params[FFI_LAST_ABI] = {
-  [FFI_SYSV] = { 1, 0 },
-  [FFI_THISCALL] = { 1, 1, { R_ECX } },
-  [FFI_FASTCALL] = { 1, 2, { R_ECX, R_EDX } },
-  [FFI_STDCALL] = { 1, 0 },
-  [FFI_PASCAL] = { -1, 0 },
-  [FFI_REGISTER] = { -1, 3, { R_EAX, R_EDX, R_ECX } },
-  [FFI_MS_CDECL] = { 1, 0 }
+  [FFI_SYSV] = { 1, R_ECX, 0 },
+  [FFI_THISCALL] = { 1, R_EAX, 1, { R_ECX } },
+  [FFI_FASTCALL] = { 1, R_EAX, 2, { R_ECX, R_EDX } },
+  [FFI_STDCALL] = { 1, R_ECX, 0 },
+  [FFI_PASCAL] = { -1, R_ECX, 0 },
+  /* ??? No defined static chain; gcc does not support REGISTER.  */
+  [FFI_REGISTER] = { -1, R_ECX, 3, { R_EAX, R_EDX, R_ECX } },
+  [FFI_MS_CDECL] = { 1, R_ECX, 0 }
 };
 
 extern void ffi_call_i386(struct call_frame *, char *)
 	FFI_HIDDEN __declspec(fastcall);
 
-void
-ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+static void
+ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
+	      void **avalue, void *closure)
 {
   size_t rsize, bytes;
   struct call_frame *frame;
@@ -281,6 +284,7 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
   frame->fn = fn;
   frame->flags = flags;
   frame->rvalue = rvalue;
+  frame->regs[pabi->static_chain] = (unsigned)closure;
 
   narg_reg = 0;
   switch (flags)
@@ -345,6 +349,18 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
   ffi_call_i386 (frame, stack);
 }
 
+void
+ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+{
+  ffi_call_int (cif, fn, rvalue, avalue, NULL);
+}
+
+void
+ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
+	     void **avalue, void *closure)
+{
+  ffi_call_int (cif, fn, rvalue, avalue, closure);
+}
 
 /** private members **/
 
@@ -489,6 +505,42 @@ ffi_prep_closure_loc (ffi_closure* closure,
   closure->cif = cif;
   closure->fun = fun;
   closure->user_data = user_data;
+
+  return FFI_OK;
+}
+
+void FFI_HIDDEN ffi_go_closure_EAX(void);
+void FFI_HIDDEN ffi_go_closure_ECX(void);
+void FFI_HIDDEN ffi_go_closure_STDCALL(void);
+
+ffi_status
+ffi_prep_go_closure (ffi_go_closure* closure, ffi_cif* cif,
+		     void (*fun)(ffi_cif*,void*,void**,void*))
+{
+  void (*dest)(void);
+
+  switch (cif->abi)
+    {
+    case FFI_SYSV:
+    case FFI_MS_CDECL:
+      dest = ffi_go_closure_ECX;
+      break;
+    case FFI_THISCALL:
+    case FFI_FASTCALL:
+      dest = ffi_go_closure_ECX;
+      break;
+    case FFI_STDCALL:
+    case FFI_PASCAL:
+      dest = ffi_go_closure_STDCALL;
+      break;
+    case FFI_REGISTER:
+    default:
+      return FFI_BAD_ABI;
+    }
+
+  closure->tramp = dest;
+  closure->cif = cif;
+  closure->fun = fun;
 
   return FFI_OK;
 }

@@ -228,6 +228,28 @@ ENDF(C(ffi_call_i386))
 	jmp	*%eax
 .endm
 
+.macro	FFI_GO_CLOSURE suffix, chain, t1, t2
+	.align	16
+	.globl	C(ffi_go_closure_\suffix)
+	FFI_HIDDEN(C(ffi_go_closure_\suffix))
+C(ffi_go_closure_\suffix):
+	cfi_startproc
+	subl	$closure_FS, %esp
+	cfi_adjust_cfa_offset(closure_FS)
+	FFI_CLOSURE_SAVE_REGS
+	movl	4(\chain), \t1		/* copy cif */
+	movl	8(\chain), \t2		/* copy fun */
+	movl	\t1, 28(%esp)
+	movl	\t2, 32(%esp)
+	movl	\chain, 36(%esp)	/* closure is user_data */
+	jmp	88f
+	cfi_endproc
+ENDF(C(ffi_go_closure_\suffix))
+.endm
+
+FFI_GO_CLOSURE EAX, %eax, %edx, %ecx
+FFI_GO_CLOSURE ECX, %ecx, %edx, %eax
+
 /* The closure entry points are reached from the ffi_closure trampoline.
    On entry, %eax contains the address of the ffi_closure.  */
 
@@ -242,6 +264,9 @@ C(ffi_closure_i386):
 
 	FFI_CLOSURE_SAVE_REGS
 	FFI_CLOSURE_COPY_TRAMP_DATA
+
+88:	/* Entry point from preceeding Go closures.  */
+
 	FFI_CLOSURE_CALL_INNER
 	FFI_CLOSURE_MASK_AND_JUMP
 
@@ -303,6 +328,8 @@ E(X86_RET_UNUSED15)
 	cfi_endproc
 ENDF(C(ffi_closure_i386))
 
+FFI_GO_CLOSURE STDCALL, %ecx, %edx, %eax
+
 /* For REGISTER, we have no available parameter registers, and so we
    enter here having pushed the closure onto the stack.  */
 
@@ -339,8 +366,13 @@ C(ffi_closure_STDCALL):
 	cfi_adjust_cfa_offset(closure_FS)
 
 	FFI_CLOSURE_SAVE_REGS
-0:
+
+0:	/* Entry point from ffi_closure_REGISTER.  */
+
 	FFI_CLOSURE_COPY_TRAMP_DATA
+
+88:	/* Entry point from preceeding Go closure.  */
+
 	FFI_CLOSURE_CALL_INNER
 
 	movl	%eax, %ecx
