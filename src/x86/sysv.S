@@ -47,6 +47,15 @@
 # define ENDF(X)
 #endif
 
+/* Handle win32 fastcall name mangling.  */
+#ifdef X86_WIN32
+# define ffi_call_i386		@ffi_call_i386@8
+# define ffi_closure_inner	@ffi_closure_inner@8
+#else
+# define ffi_call_i386		C(ffi_call_i386)
+# define ffi_closure_inner	C(ffi_closure_inner)
+#endif
+
 /* This macro allows the safe creation of jump tables without an
    actual table.  The entry points into the table are all 8 bytes.
    The use of ORG asserts that we're at the correct location.  */
@@ -54,8 +63,8 @@
 
 	.text
 	.align	16
-	.globl	C(ffi_call_i386)
-	FFI_HIDDEN(C(ffi_call_i386))
+	.globl	ffi_call_i386
+	FFI_HIDDEN(ffi_call_i386)
 
 /* This is declared as
 
@@ -68,7 +77,7 @@
         edx: argp
 */
 
-C(ffi_call_i386):
+ffi_call_i386:
 	cfi_startproc
 	movl	(%esp), %eax		/* move the return address */
 	movl	%ebp, (%ecx)		/* store %ebp into local frame */
@@ -168,7 +177,7 @@ E(X86_RET_UNUSED15)
 	ud2
 
 	cfi_endproc
-ENDF(C(ffi_call_i386))
+ENDF(ffi_call_i386)
 
 /* The inner helper is declared as
 
@@ -210,9 +219,9 @@ ENDF(C(ffi_call_i386))
 	addl	$C(_GLOBAL_OFFSET_TABLE_), %ebx
 #endif
 #if defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE || !defined __PIC__
-	call	C(ffi_closure_inner)
+	call	ffi_closure_inner
 #else
-	call	C(ffi_closure_inner)@PLT
+	call	ffi_closure_inner@PLT
 #endif
 .endm
 
