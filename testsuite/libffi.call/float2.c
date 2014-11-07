@@ -3,6 +3,7 @@
    Limitations:	none.
    PR:		none.
    Originator:	From the original ffitest.c  */
+/* { dg-do run } */
 
 #include "ffitest.h"
 #include "float.h"

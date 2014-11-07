@@ -3,6 +3,7 @@
    Limitations:	none.
    PR:		none.
    Originator:	<andreast@gcc.gnu.org> 20071113  */
+/* { dg-do run } */
 
 #include "ffitest.h"
 
