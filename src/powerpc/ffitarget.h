@@ -138,6 +138,7 @@ typedef enum ffi_abi {
 #define FFI_CLOSURES 1
 #define FFI_NATIVE_RAW_API 0
 #if defined (POWERPC) || defined (POWERPC_FREEBSD)
+# define FFI_GO_CLOSURES 1
 # define FFI_TARGET_SPECIFIC_VARIADIC 1
 # define FFI_EXTRA_CIF_FIELDS unsigned nfixedargs
 #endif
