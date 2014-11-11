@@ -428,6 +428,22 @@ ffi_prep_java_raw_closure_loc (ffi_java_raw_closure*,
 
 #endif /* FFI_CLOSURES */
 
+#if FFI_GO_CLOSURES
+
+typedef struct {
+  void      *tramp;
+  ffi_cif   *cif;
+  void     (*fun)(ffi_cif*,void*,void**,void*);
+} ffi_go_closure;
+
+ffi_status ffi_prep_go_closure (ffi_go_closure*, ffi_cif *,
+				void (*fun)(ffi_cif*,void*,void**,void*));
+
+void ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
+		  void **avalue, void *closure);
+
+#endif /* FFI_GO_CLOSURES */
+
 /* ---- Public interface definition -------------------------------------- */
 
 ffi_status ffi_prep_cif(ffi_cif *cif,

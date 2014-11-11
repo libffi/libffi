@@ -5,11 +5,9 @@
 	Originator:		Blake Chaffin	6/18/2007
 */
 
-/* { dg-excess-errors "" { target x86_64-*-mingw* x86_64-*-cygwin* } } */
 /* { dg-do run { xfail strongarm*-*-* xscale*-*-* } } */
 /* { dg-options -mlong-double-128 { target powerpc64*-*-linux* } } */
 /* { dg-options -Wformat=0 { target moxie*-*-elf } } */
-/* { dg-output "" { xfail x86_64-*-mingw* x86_64-*-cygwin* } } */
 
 #include "ffitest.h"
 
