@@ -46,21 +46,24 @@ typedef signed long            ffi_sarg;
 
 typedef enum ffi_abi {
   FFI_FIRST_ABI = 0,
-  FFI_V8,
-  FFI_V8PLUS,
-  FFI_V9,
-  FFI_LAST_ABI,
 #ifdef SPARC64
-  FFI_DEFAULT_ABI = FFI_V9
+  FFI_V9,
+  FFI_DEFAULT_ABI = FFI_V9,
 #else
-  FFI_DEFAULT_ABI = FFI_V8
+  FFI_V8,
+  FFI_DEFAULT_ABI = FFI_V8,
 #endif
+  FFI_LAST_ABI
 } ffi_abi;
 #endif
+
+#define FFI_TARGET_SPECIFIC_STACK_SPACE_ALLOCATION
+#define FFI_TARGET_HAS_COMPLEX_TYPE
 
 /* ---- Definitions for closures ----------------------------------------- */
 
 #define FFI_CLOSURES 1
+#define FFI_GO_CLOSURES 1
 #define FFI_NATIVE_RAW_API 0
 
 #ifdef SPARC64

@@ -2,10 +2,14 @@
 #include "ffitest.h"
 #include <complex.h>
 
-static _Complex T_C_TYPE return_c(_Complex T_C_TYPE c1, _Complex T_C_TYPE c2, unsigned int in3, _Complex T_C_TYPE c4)
+_Complex T_C_TYPE
+return_c(_Complex T_C_TYPE c1, _Complex T_C_TYPE c2,
+	 unsigned int in3, _Complex T_C_TYPE c4)
 {
-  return c1 + c2 + in3 + c4;
+  volatile _Complex T_C_TYPE r = c1 + c2 + in3 + c4;
+  return r;
 }
+
 int main (void)
 {
   ffi_cif cif;
@@ -35,6 +39,6 @@ int main (void)
   printf ("%f,%fi vs %f,%fi\n",
 	  T_CONV creal (rc), T_CONV cimag (rc),
 	  T_CONV creal (rc2), T_CONV cimag (rc2));
-  CHECK(rc ==  c1 + c2 + in3 + c4);
+  CHECK(rc == rc2);
   exit(0);
 }

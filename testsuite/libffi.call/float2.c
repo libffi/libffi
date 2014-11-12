@@ -3,9 +3,7 @@
    Limitations:	none.
    PR:		none.
    Originator:	From the original ffitest.c  */
-
-/* { dg-excess-errors "fails" { target x86_64-*-mingw* x86_64-*-cygwin* } } */
-/* { dg-do run { xfail x86_64-*-mingw* x86_64-*-cygwin* } } */
+/* { dg-do run } */
 
 #include "ffitest.h"
 #include "float.h"
