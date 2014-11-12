@@ -24,16 +24,20 @@ set ctlist [lsearch -inline -all -glob [lsort [glob -nocomplain -- $srcdir/$subd
 
 run-many-tests $tlist ""
 
-if { ![istarget s390*] } {
-
+# ??? We really should preprocess ffi.h and grep
+# for FFI_TARGET_HAS_COMPLEX_TYPE.
+if { [istarget aarch64*]
+     || [istarget alpha*]
+     || [istarget arm*]
+     || [istarget i?86*]
+     || [istarget s390*]
+     || [istarget sparc*]
+     || [istarget x86_64*] } {
+    run-many-tests $ctlist ""
+} else {
     foreach test $ctlist {
 	unsupported "$test"
     }
-
-} else {
-
-  run-many-tests $ctlist ""
-
 }
 
 dg-finish

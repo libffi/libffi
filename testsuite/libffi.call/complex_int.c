@@ -12,9 +12,9 @@
 
 _Complex int f_complex(_Complex int c, int x, int *py)
 {
-  c = -(2 * creal (c)) + (cimag (c) + 1)* I;
+  __real__ c = -2 * __real__ c;
+  __imag__ c = __imag__ c + 1;
   *py += x;
-
   return c;
 }
 

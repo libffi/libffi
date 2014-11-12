@@ -36,9 +36,9 @@ EXTRA_DIST = LICENSE ChangeLog.v1 ChangeLog.libgcj			\
 	 src/sh/ffi.c src/sh/sysv.S src/sh/ffitarget.h src/sh64/ffi.c	\
 	 src/sh64/sysv.S src/sh64/ffitarget.h src/sparc/v8.S		\
 	 src/sparc/v9.S src/sparc/ffitarget.h src/sparc/ffi.c		\
-	 src/x86/darwin64.S src/x86/ffi.c src/x86/sysv.S		\
-	 src/x86/win32.S src/x86/darwin.S src/x86/win64.S		\
-	 src/x86/freebsd.S src/x86/ffi64.c src/x86/unix64.S		\
+	 src/sparc/ffi64.c src/x86/darwin64.S src/x86/ffi.c src/x86/sysv.S \
+	 src/x86/darwin.S src/x86/ffiw64.c src/x86/win64.S 		\
+	 src/x86/ffi64.c src/x86/unix64.S				\
 	 src/x86/ffitarget.h src/pa/ffitarget.h src/pa/ffi.c		\
 	 src/pa/linux.S src/pa/hpux32.S src/frv/ffi.c src/bfin/ffi.c	\
 	 src/bfin/ffitarget.h src/bfin/sysv.S src/frv/eabi.S		\
@@ -48,9 +48,9 @@ EXTRA_DIST = LICENSE ChangeLog.v1 ChangeLog.libgcj			\
 	 src/xtensa/ffitarget.h src/xtensa/ffi.c src/xtensa/sysv.S	\
 	 ChangeLog.libffi m4/libtool.m4 m4/lt~obsolete.m4		\
 	 m4/ltoptions.m4 m4/ltsugar.m4 m4/ltversion.m4			\
-	 m4/ltversion.m4 src/arm/gentramp.sh src/debug.c msvcc.sh	\
+	 m4/ltversion.m4 src/debug.c msvcc.sh				\
 	 generate-darwin-source-and-headers.py				\
-	 libffi.xcodeproj/project.pbxproj src/arm/trampoline.S		\
+	 libffi.xcodeproj/project.pbxproj				\
 	 libtool-ldflags ChangeLog.libffi-3.1
 
 info_TEXINFOS = doc/libffi.texi
@@ -126,25 +126,22 @@ if BFIN
 nodist_libffi_la_SOURCES += src/bfin/ffi.c src/bfin/sysv.S
 endif
 if X86
-nodist_libffi_la_SOURCES += src/x86/ffi.c src/x86/sysv.S src/x86/win32.S
+nodist_libffi_la_SOURCES += src/x86/ffi.c src/x86/sysv.S
 endif
 if X86_FREEBSD
-nodist_libffi_la_SOURCES += src/x86/ffi.c src/x86/freebsd.S src/x86/win32.S
+nodist_libffi_la_SOURCES += src/x86/ffi.c src/x86/sysv.S
 endif
 if X86_WIN32
-nodist_libffi_la_SOURCES += src/x86/ffi.c src/x86/win32.S
+nodist_libffi_la_SOURCES += src/x86/ffi.c src/x86/sysv.S
 endif
 if X86_WIN64
-nodist_libffi_la_SOURCES += src/x86/ffi.c src/x86/win64.S
+nodist_libffi_la_SOURCES += src/x86/ffiw64.c src/x86/win64.S
 endif
 if X86_DARWIN
 nodist_libffi_la_SOURCES += src/x86/ffi.c src/x86/darwin.S src/x86/ffi64.c src/x86/darwin64.S
-if X86_DARWIN32
-nodist_libffi_la_SOURCES += src/x86/win32.S
-endif
 endif
 if SPARC
-nodist_libffi_la_SOURCES += src/sparc/ffi.c src/sparc/v8.S src/sparc/v9.S
+nodist_libffi_la_SOURCES += src/sparc/ffi.c src/sparc/ffi64.c src/sparc/v8.S src/sparc/v9.S
 endif
 if ALPHA
 nodist_libffi_la_SOURCES += src/alpha/ffi.c src/alpha/osf.S
@@ -193,9 +190,6 @@ nodist_libffi_la_SOURCES += src/arc/arcompact.S src/arc/ffi.c
 endif
 if ARM
 nodist_libffi_la_SOURCES += src/arm/sysv.S src/arm/ffi.c
-if FFI_EXEC_TRAMPOLINE_TABLE
-nodist_libffi_la_SOURCES += src/arm/trampoline.S
-endif
 endif
 if AVR32
 nodist_libffi_la_SOURCES += src/avr32/sysv.S src/avr32/ffi.c
