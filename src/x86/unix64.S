@@ -35,9 +35,15 @@
 
 	.text
 
+/* This macro allows the safe creation of jump tables without an
+   actual table.  The entry points into the table are all 8 bytes.
+   The use of ORG asserts that we're at the correct location.  */
+/* ??? The clang assembler doesn't handle .org with symbolic expressions.  */
 .macro E index
 	.align	8
+#ifndef __clang__
 	.org	0b + \index * 8, 0x90
+#endif
 .endm
 
 /* ffi_call_unix64 (void *args, unsigned long bytes, unsigned flags,
@@ -220,7 +226,8 @@ E UNIX64_RET_ST_RAX_RDX
 ffi_closure_unix64_sse:
 	cfi_startproc
 	subq	$ffi_closure_FS, %rsp
-	cfi_adjust_cfa_offset(ffi_closure_FS)
+	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
+	cfi_def_cfa_offset(ffi_closure_FS + 8)
 
 	movdqa	%xmm0, ffi_closure_OFS_V+0x00(%rsp)
 	movdqa	%xmm1, ffi_closure_OFS_V+0x10(%rsp)
@@ -243,7 +250,8 @@ ffi_closure_unix64_sse:
 ffi_closure_unix64:
 	cfi_startproc
 	subq	$ffi_closure_FS, %rsp
-	cfi_adjust_cfa_offset(ffi_closure_FS)
+	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
+	cfi_def_cfa_offset(ffi_closure_FS + 8)
 0:
 	movq	%rdi, ffi_closure_OFS_G+0x00(%rsp)
 	movq    %rsi, ffi_closure_OFS_G+0x08(%rsp)
@@ -348,7 +356,8 @@ E UNIX64_RET_ST_RAX_RDX
 ffi_go_closure_unix64_sse:
 	cfi_startproc
 	subq	$ffi_closure_FS, %rsp
-	cfi_adjust_cfa_offset(ffi_closure_FS)
+	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
+	cfi_def_cfa_offset(ffi_closure_FS + 8)
 
 	movdqa	%xmm0, ffi_closure_OFS_V+0x00(%rsp)
 	movdqa	%xmm1, ffi_closure_OFS_V+0x10(%rsp)
@@ -371,7 +380,8 @@ ffi_go_closure_unix64_sse:
 ffi_go_closure_unix64:
 	cfi_startproc
 	subq	$ffi_closure_FS, %rsp
-	cfi_adjust_cfa_offset(ffi_closure_FS)
+	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
+	cfi_def_cfa_offset(ffi_closure_FS + 8)
 0:
 	movq	%rdi, ffi_closure_OFS_G+0x00(%rsp)
 	movq    %rsi, ffi_closure_OFS_G+0x08(%rsp)

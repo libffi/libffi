@@ -59,7 +59,12 @@
 /* This macro allows the safe creation of jump tables without an
    actual table.  The entry points into the table are all 8 bytes.
    The use of ORG asserts that we're at the correct location.  */
-#define E(X)      .align 8; .org 0b + X * 8
+/* ??? The clang assembler doesn't handle .org with symbolic expressions.  */
+#ifdef __clang__
+# define E(X)	.align 8
+#else
+# define E(X)	.align 8; .org 0b + X * 8
+#endif
 
 	.text
 	.align	16
@@ -194,70 +199,75 @@ ENDF(ffi_call_i386)
 
 #define closure_FS	(16 + 3*4 + 3*4 + 4)
 
-.macro	FFI_CLOSURE_SAVE_REGS
-	movl	%eax, 16+R_EAX*4(%esp)
-	movl	%edx, 16+R_EDX*4(%esp)
+#define FFI_CLOSURE_SAVE_REGS		\
+	movl	%eax, 16+R_EAX*4(%esp);	\
+	movl	%edx, 16+R_EDX*4(%esp);	\
 	movl	%ecx, 16+R_ECX*4(%esp)
-.endm
 
-.macro	FFI_CLOSURE_COPY_TRAMP_DATA chain
-	movl	FFI_TRAMPOLINE_SIZE(%eax), %edx		/* copy cif */
-	movl	FFI_TRAMPOLINE_SIZE+4(%eax), %ecx	/* copy fun */
-	movl	FFI_TRAMPOLINE_SIZE+8(%eax), %eax	/* copy user_data */
-	movl	%edx, 28(%esp)
-	movl	%ecx, 32(%esp)
+#define FFI_CLOSURE_COPY_TRAMP_DATA					\
+	movl	FFI_TRAMPOLINE_SIZE(%eax), %edx;	/* copy cif */	\
+	movl	FFI_TRAMPOLINE_SIZE+4(%eax), %ecx;	/* copy fun */	\
+	movl	FFI_TRAMPOLINE_SIZE+8(%eax), %eax;	/* copy user_data */ \
+	movl	%edx, 28(%esp);						\
+	movl	%ecx, 32(%esp);						\
 	movl	%eax, 36(%esp)
-.endm
 
-.macro	FFI_CLOSURE_CALL_INNER
-	movl	%esp, %ecx			/* load closure_data */
-	leal	closure_FS+4(%esp), %edx	/* load incoming stack */
-#ifdef __PIC__
-	movl	%ebx, 40(%esp)			/* save ebx */
-	cfi_rel_offset(%ebx, 40)
-	call	__x86.get_pc_thunk.bx		/* load got register */
-	addl	$C(_GLOBAL_OFFSET_TABLE_), %ebx
-#endif
-#if defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE || !defined __PIC__
-	call	ffi_closure_inner
-#else
-	call	ffi_closure_inner@PLT
-#endif
-.endm
 
-.macro	FFI_CLOSURE_MASK_AND_JUMP
-	andl	$X86_RET_TYPE_MASK, %eax
 #ifdef __PIC__
-	leal	0f@GOTOFF(%ebx, %eax, 8), %eax
-	movl	40(%esp), %ebx			/* restore ebx */
-	cfi_restore(%ebx)
-#else
-	leal	0f(, %eax, 8), %eax
-#endif
+/* We're going to always load the got register here, even if .hidden says
+   we're going to avoid the PLT call.  We'll use the got register in
+   FFI_CLOSURE_MASK_AND_JUMP.  */
+# if defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE
+#  define PLT(X) X
+# else
+#  define PLT(X) X@PLT
+# endif
+# define FFI_CLOSURE_CALL_INNER						\
+	movl	%esp, %ecx;			/* load closure_data */	\
+	leal	closure_FS+4(%esp), %edx;	/* load incoming stack */ \
+	movl	%ebx, 40(%esp);			/* save ebx */		\
+	cfi_rel_offset(%ebx, 40);					\
+	call	__x86.get_pc_thunk.bx;		/* load got register */	\
+	addl	$C(_GLOBAL_OFFSET_TABLE_), %ebx;			\
+	call	PLT(ffi_closure_inner)
+#define FFI_CLOSURE_MASK_AND_JUMP					\
+	andl	$X86_RET_TYPE_MASK, %eax;				\
+	leal	0f@GOTOFF(%ebx, %eax, 8), %eax;				\
+	movl	40(%esp), %ebx;			/* restore ebx */	\
+	cfi_restore(%ebx);						\
 	jmp	*%eax
-.endm
+#else
+# define FFI_CLOSURE_CALL_INNER						\
+	movl	%esp, %ecx;			/* load closure_data */	\
+	leal	closure_FS+4(%esp), %edx;	/* load incoming stack */ \
+	call	ffi_closure_inner
+#define FFI_CLOSURE_MASK_AND_JUMP					\
+	andl	$X86_RET_TYPE_MASK, %eax;				\
+	leal	0f(, %eax, 8), %eax;					\
+	jmp	*%eax
+#endif /* __PIC__ */
 
-.macro	FFI_GO_CLOSURE suffix, chain, t1, t2
-	.align	16
-	.globl	C(ffi_go_closure_\suffix)
-	FFI_HIDDEN(C(ffi_go_closure_\suffix))
-C(ffi_go_closure_\suffix):
-	cfi_startproc
-	subl	$closure_FS, %esp
-	cfi_adjust_cfa_offset(closure_FS)
-	FFI_CLOSURE_SAVE_REGS
-	movl	4(\chain), \t1		/* copy cif */
-	movl	8(\chain), \t2		/* copy fun */
-	movl	\t1, 28(%esp)
-	movl	\t2, 32(%esp)
-	movl	\chain, 36(%esp)	/* closure is user_data */
-	jmp	88f
-	cfi_endproc
-ENDF(C(ffi_go_closure_\suffix))
-.endm
+#define FFI_GO_CLOSURE(suffix, chain, t1, t2)				\
+	.align	16;							\
+	.globl	C(C1(ffi_go_closure_,suffix));				\
+	FFI_HIDDEN(C(C1(ffi_go_closure_,suffix)));			\
+C(C1(ffi_go_closure_,suffix)):						\
+	cfi_startproc;							\
+	subl	$closure_FS, %esp;					\
+	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */ \
+	cfi_def_cfa_offset(closure_FS + 4);				\
+	FFI_CLOSURE_SAVE_REGS;						\
+	movl	4(chain), t1;		/* copy cif */			\
+	movl	8(chain), t2;		/* copy fun */			\
+	movl	t1, 28(%esp);						\
+	movl	t2, 32(%esp);						\
+	movl	chain, 36(%esp);	/* closure is user_data */	\
+	jmp	88f;							\
+	cfi_endproc;							\
+ENDF(C(C1(ffi_go_closure_,suffix)))
 
-FFI_GO_CLOSURE EAX, %eax, %edx, %ecx
-FFI_GO_CLOSURE ECX, %ecx, %edx, %eax
+FFI_GO_CLOSURE(EAX, %eax, %edx, %ecx)
+FFI_GO_CLOSURE(ECX, %ecx, %edx, %eax)
 
 /* The closure entry points are reached from the ffi_closure trampoline.
    On entry, %eax contains the address of the ffi_closure.  */
@@ -269,7 +279,8 @@ FFI_GO_CLOSURE ECX, %ecx, %edx, %eax
 C(ffi_closure_i386):
 	cfi_startproc
 	subl	$closure_FS, %esp
-	cfi_adjust_cfa_offset(closure_FS)
+	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
+	cfi_def_cfa_offset(closure_FS + 4)
 
 	FFI_CLOSURE_SAVE_REGS
 	FFI_CLOSURE_COPY_TRAMP_DATA
@@ -337,7 +348,7 @@ E(X86_RET_UNUSED15)
 	cfi_endproc
 ENDF(C(ffi_closure_i386))
 
-FFI_GO_CLOSURE STDCALL, %ecx, %edx, %eax
+FFI_GO_CLOSURE(STDCALL, %ecx, %edx, %eax)
 
 /* For REGISTER, we have no available parameter registers, and so we
    enter here having pushed the closure onto the stack.  */
@@ -350,7 +361,8 @@ C(ffi_closure_REGISTER):
 	cfi_def_cfa(%esp, 8)
 	cfi_offset(%eip, -8)
 	subl	$closure_FS-4, %esp
-	cfi_adjust_cfa_offset(closure_FS-4)
+	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
+	cfi_def_cfa_offset(closure_FS + 4)
 
 	FFI_CLOSURE_SAVE_REGS
 
@@ -372,7 +384,8 @@ ENDF(C(ffi_closure_REGISTER))
 C(ffi_closure_STDCALL):
 	cfi_startproc
 	subl	$closure_FS, %esp
-	cfi_adjust_cfa_offset(closure_FS)
+	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
+	cfi_def_cfa_offset(closure_FS + 4)
 
 	FFI_CLOSURE_SAVE_REGS
 
@@ -480,7 +493,8 @@ ENDF(C(ffi_closure_STDCALL))
 C(ffi_closure_raw_SYSV):
 	cfi_startproc
 	subl	$raw_closure_S_FS, %esp
-	cfi_adjust_cfa_offset(raw_closure_S_FS)
+	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
+	cfi_def_cfa_offset(raw_closure_S_FS + 4)
 	movl	%ebx, raw_closure_S_FS-4(%esp)
 	cfi_rel_offset(%ebx, raw_closure_S_FS-4)
 
@@ -575,7 +589,8 @@ C(ffi_closure_raw_THISCALL):
 	/* Rearrange the stack such that %ecx is the first argument.
 	   This means moving the return address.  */
 	popl	%edx
-	cfi_adjust_cfa_offset(-4)
+	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
+	cfi_def_cfa_offset(0)
 	cfi_register(%eip, %edx)
 	pushl	%ecx
 	cfi_adjust_cfa_offset(4)
