@@ -14,7 +14,7 @@ class simulator_platform(Platform):
     sdk = 'iphonesimulator'
     arch = 'i386'
     triple = 'i386-apple-darwin11'
-    version_min = '-miphoneos-version-min=5.1.1'
+    version_min = '-miphoneos-version-min=7.0'
 
     prefix = "#ifdef __i386__\n\n"
     suffix = "\n\n#endif"
@@ -40,7 +40,7 @@ class device_platform(Platform):
     sdk = 'iphoneos'
     arch = 'armv7'
     triple = 'arm-apple-darwin11'
-    version_min = '-miphoneos-version-min=5.1.1'
+    version_min = '-miphoneos-version-min=7.0'
 
     prefix = "#ifdef __arm__\n\n"
     suffix = "\n\n#endif"
