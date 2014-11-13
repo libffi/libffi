@@ -100,46 +100,39 @@ proc libffi-init { args } {
     global libffi_link_flags
     global tool_root_dir
     global ld_library_path
-
-    global using_gcc
+    global compiler_vendor
 
     set blddirffi [pwd]/.. 
     verbose "libffi $blddirffi"
 
-    # Are we building with GCC?
-    set tmp [grep ../config.status "GCC='yes'"]
-    if { [string match $tmp "GCC='yes'"] } {
+    # Which compiler are we building with?
+    set tmp [grep ../config.log "^ax_cv_c_compiler_vendor.*$"]
+    regexp -- {^[^=]*=(.*)$} $tmp nil compiler_vendor
 
-      set using_gcc "yes"
+    if { [string match $compiler_vendor "gnu"] } {
+        set gccdir [lookfor_file $tool_root_dir gcc/libgcc.a]
+        if {$gccdir != ""} {
+	    set gccdir [file dirname $gccdir]
+        }
+        verbose "gccdir $gccdir"
 
-    set gccdir [lookfor_file $tool_root_dir gcc/libgcc.a]
-    if {$gccdir != ""} {
-	set gccdir [file dirname $gccdir]
-    }
-    verbose "gccdir $gccdir"
+        set ld_library_path "."
+        append ld_library_path ":${gccdir}"
 
-    set ld_library_path "."
-    append ld_library_path ":${gccdir}"
-
-    set compiler "${gccdir}/xgcc"
-    if { [is_remote host] == 0 && [which $compiler] != 0 } {
-	foreach i "[exec $compiler --print-multi-lib]" {
-	    set mldir ""
-	    regexp -- "\[a-z0-9=_/\.-\]*;" $i mldir
-	    set mldir [string trimright $mldir "\;@"]
-	    if { "$mldir" == "." } {
-		continue
+        set compiler "${gccdir}/xgcc"
+        if { [is_remote host] == 0 && [which $compiler] != 0 } {
+	    foreach i "[exec $compiler --print-multi-lib]" {
+	        set mldir ""
+	        regexp -- "\[a-z0-9=_/\.-\]*;" $i mldir
+	        set mldir [string trimright $mldir "\;@"]
+	        if { "$mldir" == "." } {
+		    continue
+	        }
+	        if { [llength [glob -nocomplain ${gccdir}/${mldir}/libgcc_s*.so.*]] >= 1 } {
+		    append ld_library_path ":${gccdir}/${mldir}"
+	        }
 	    }
-	    if { [llength [glob -nocomplain ${gccdir}/${mldir}/libgcc_s*.so.*]] >= 1 } {
-		append ld_library_path ":${gccdir}/${mldir}"
-	    }
-	}
-    }
- 
-    } else {
-
-      set using_gcc "no"
-
+        }
     }
 
     # add the library path for libffi.
@@ -278,18 +271,25 @@ proc libffi-dg-runtest { testcases default-extra-flags } {
 }
 
 proc run-many-tests { testcases extra_flags } {
-    global using_gcc
-    if { [string match $using_gcc "yes"] } {
+    global compiler_vendor
+    switch $compiler_vendor {
+      "clang" {
+	set common "-W -Wall"
+	set optimizations { "-O0" "-O1" "-O2" "-O3" "-Os" }
+      }
+      "gnu" {
         set common "-W -Wall -Wno-psabi"
         set optimizations { "-O0" "-O2" "-O3" "-Os" "-O2 -fomit-frame-pointer" }
-    } else {
+      }
+      default {
         # Assume we are using the vendor compiler.
         set common ""
         set optimizations { "" }
+      }
     }
 
     set targetabis { "" }
-    if [string match $using_gcc "yes"] {
+    if [string match $compiler_vendor "gnu"] {
         if [istarget "i?86-*-*"] {
             set targetabis {
                 ""
