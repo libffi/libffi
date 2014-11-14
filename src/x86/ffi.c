@@ -527,7 +527,7 @@ ffi_prep_go_closure (ffi_go_closure* closure, ffi_cif* cif,
       break;
     case FFI_THISCALL:
     case FFI_FASTCALL:
-      dest = ffi_go_closure_ECX;
+      dest = ffi_go_closure_EAX;
       break;
     case FFI_STDCALL:
     case FFI_PASCAL:
