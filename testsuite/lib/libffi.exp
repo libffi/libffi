@@ -223,6 +223,24 @@ proc libffi_target_compile { source dest type options } {
     return [target_compile $source $dest $type $options]
 }
 
+# TEST should be a preprocessor condition.  Returns true if it holds.
+proc libffi_feature_test { test } {
+    set src "ffitest.c"
+
+    set f [open $src "w"]
+    puts $f "#include <ffi.h>"
+    puts $f $test
+    puts $f "xyzzy"
+    puts $f "#endif"
+    close $f
+
+    set lines [libffi_target_compile $src "" "preprocess" ""]
+    file delete $src
+
+    set last [lindex $lines end]
+    return [regexp -- "xyzzy" $last]
+}
+
 # Utility routines.
 
 #
