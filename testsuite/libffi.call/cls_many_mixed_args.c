@@ -63,7 +63,7 @@ int main (void)
 
   res = (((cls_ret_double)code))(0.1, 0.2, 0.3, 0.4, 5, 0.6, 0.7, 0.8, 0.9, 10,
                                  1.1, 12, 1.3, 14, 1.5, 16);
-  if (abs(res - expected) < FLT_EPSILON)
+  if (fabs(res - expected) < FLT_EPSILON)
     exit(0);
   else
     abort();
