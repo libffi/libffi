@@ -8,6 +8,8 @@
 #include "ffitest.h"
 #include "float.h"
 
+#include <math.h>
+
 static long double ldblit(float f)
 {
   return (long double) (((long double) f)/ (long double) 3.0);
@@ -47,7 +49,7 @@ int main (void)
 #endif
 
   /* These are not always the same!! Check for a reasonable delta */
-  if (ld - ldblit(f) < LDBL_EPSILON)
+  if (fabsl(ld - ldblit(f)) < LDBL_EPSILON)
     puts("long double return value tests ok!");
   else
     CHECK(0);
