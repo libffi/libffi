@@ -24,15 +24,7 @@ set ctlist [lsearch -inline -all -glob [lsort [glob -nocomplain -- $srcdir/$subd
 
 run-many-tests $tlist ""
 
-# ??? We really should preprocess ffi.h and grep
-# for FFI_TARGET_HAS_COMPLEX_TYPE.
-if { [istarget aarch64*]
-     || [istarget alpha*]
-     || [istarget arm*]
-     || [istarget i?86*]
-     || [istarget s390*]
-     || [istarget sparc*]
-     || [istarget x86_64*] } {
+if { [libffi_feature_test "#ifdef FFI_TARGET_HAS_COMPLEX_TYPE"] } {
     run-many-tests $ctlist ""
 } else {
     foreach test $ctlist {
