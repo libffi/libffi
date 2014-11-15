@@ -19,9 +19,15 @@ libffi-init
 
 global srcdir subdir
 
-set tlist [lsearch -inline -all -not -glob [lsort [glob -nocomplain -- $srcdir/$subdir/*.{c,cc}]] *complex*]
+set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/*.{c,cc}]]
 
-run-many-tests $tlist ""
+if { [libffi_feature_test "#ifdef FFI_GO_CLOSURES"] } {
+    run-many-tests $tlist ""
+} else {
+    foreach test $tlist {
+	unsupported "$test"
+    }
+}
 
 dg-finish
 
