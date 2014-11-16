@@ -1,7 +1,7 @@
 #ifdef __aarch64__
 # define STATIC_CHAIN_REG  "x18"
 #elif defined(__alpha__)
-# define STATIC_CHAIN_REG  "r1"
+# define STATIC_CHAIN_REG  "$1"
 #elif defined(__arm__)
 # define STATIC_CHAIN_REG  "ip"
 #elif defined(__sparc__)
