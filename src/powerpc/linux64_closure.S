@@ -101,7 +101,7 @@ ffi_closure_LINUX64:
 # else
 	# copy r2 to r11 and load TOC into r2
 	mr	%r11, %r2
-	ld	%r2, 16(%r11)
+	ld	%r2, 16(%r2)
 
 	mflr	%r0
 	# Save general regs into parm save area
@@ -444,10 +444,6 @@ ffi_go_closure_linux64:
 	# load up the pointer to the parm save area
 	mr	%r7, %r12
 # else
-	# copy r2 to r11 and load TOC into r2
-	mr	%r11, %r2
-	ld	%r2, 16(%r11)
-
 	mflr	%r0
 	# Save general regs into parm save area
 	# This is the parameter save area set up by our caller.
