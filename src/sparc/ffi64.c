@@ -159,8 +159,8 @@ ffi_struct_float_copy (int size_mask, void *vd, void *vi, void *vf)
 
 /* Perform machine dependent cif processing */
 
-ffi_status FFI_HIDDEN
-ffi_prep_cif_machdep(ffi_cif *cif)
+static ffi_status
+ffi_prep_cif_machdep_core(ffi_cif *cif)
 {
   ffi_type *rtype = cif->rtype;
   int rtt = rtype->type;
@@ -302,6 +302,20 @@ ffi_prep_cif_machdep(ffi_cif *cif)
   cif->bytes = bytes;
   cif->flags = flags;
   return FFI_OK;
+}
+
+ffi_status FFI_HIDDEN
+ffi_prep_cif_machdep(ffi_cif *cif)
+{
+  cif->nfixedargs = cif->nargs;
+  return ffi_prep_cif_machdep_core(cif);
+}
+
+ffi_status FFI_HIDDEN
+ffi_prep_cif_machdep_var(ffi_cif *cif, unsigned nfixedargs, unsigned ntotalargs)
+{
+  cif->nfixedargs = nfixedargs;
+  return ffi_prep_cif_machdep_core(cif);
 }
 
 extern void ffi_call_v9(ffi_cif *cif, void (*fn)(void), void *rvalue,
@@ -495,11 +509,12 @@ ffi_closure_sparc_inner_v9(ffi_cif *cif,
 {
   ffi_type **arg_types;
   void **avalue;
-  int i, argn, argx, nargs, flags;
+  int i, argn, argx, nargs, flags, nfixedargs;
 
   arg_types = cif->arg_types;
   nargs = cif->nargs;
   flags = cif->flags;
+  nfixedargs = cif->nfixedargs;
 
   avalue = alloca(nargs * sizeof(void *));
 
@@ -517,6 +532,7 @@ ffi_closure_sparc_inner_v9(ffi_cif *cif,
   /* Grab the addresses of the arguments from the stack frame.  */
   for (i = 0; i < nargs; i++, argn = argx)
     {
+      int named = i < nfixedargs;
       ffi_type *ty = arg_types[i];
       void *a = &gpr[argn];
       size_t z;
@@ -532,7 +548,7 @@ ffi_closure_sparc_inner_v9(ffi_cif *cif,
 	  else
 	    {
 	      argx = argn + ALIGN (z, 8) / 8;
-	      if (argn < 16)
+	      if (named && argn < 16)
 		{
 		  int size_mask = ffi_struct_float_mask (ty, 0);
 		  int argn_mask = (0xffff00 >> argn) & 0xff00;
@@ -546,15 +562,15 @@ ffi_closure_sparc_inner_v9(ffi_cif *cif,
 
 	case FFI_TYPE_LONGDOUBLE:
 	  argn = ALIGN (argn, 2);
-	  a = (argn < 16 ? fpr : gpr) + argn;
+	  a = (named && argn < 16 ? fpr : gpr) + argn;
 	  argx = argn + 2;
 	  break;
 	case FFI_TYPE_DOUBLE:
-	  if (argn <= 16)
+	  if (named && argn < 16)
 	    a = fpr + argn;
 	  break;
 	case FFI_TYPE_FLOAT:
-	  if (argn <= 16)
+	  if (named && argn < 16)
 	    a = fpr + argn;
 	  a += 4;
 	  break;
