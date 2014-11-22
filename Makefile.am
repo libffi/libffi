@@ -144,7 +144,6 @@ EXTRA_libffi_la_SOURCES = \
 	src/x86/ffi.c src/x86/sysv.S					\
 	 src/x86/ffiw64.c src/x86/win64.S 				\
 	 src/x86/ffi64.c src/x86/unix64.S				\
-	 src/x86/darwin64.S src/x86/darwin.S				\
 	src/xtensa/ffi.c src/xtensa/sysv.S
 
 TARGET_OBJ = @TARGET_OBJ@

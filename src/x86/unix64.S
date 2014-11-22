@@ -35,6 +35,22 @@
 
 	.text
 
+#define C2(X, Y)  X ## Y
+#define C1(X, Y)  C2(X, Y)
+#ifdef __USER_LABEL_PREFIX__
+# define C(X)     C1(__USER_LABEL_PREFIX__, X)
+#else
+# define C(X)     X
+#endif
+
+#ifdef __ELF__
+# define PLT(X)	  X@PLT
+# define ENDF(X)  .type	X,@function; .size X, . - X
+#else
+# define PLT(X)	  X
+# define ENDF(X)
+#endif
+
 /* This macro allows the safe creation of jump tables without an
    actual table.  The entry points into the table are all 8 bytes.
    The use of ORG asserts that we're at the correct location.  */
@@ -54,11 +70,10 @@
    deallocate some of the stack that has been alloca'd.  */
 
 	.align	8
-	.globl	ffi_call_unix64
-	.type	ffi_call_unix64,@function
-	FFI_HIDDEN(ffi_call_unix64)
+	.globl	C(ffi_call_unix64)
+	FFI_HIDDEN(C(ffi_call_unix64))
 
-ffi_call_unix64:
+C(ffi_call_unix64):
 	cfi_startproc
 	movq	(%rsp), %r10		/* Load return address.  */
 	leaq	(%rdi, %rsi), %rax	/* Find local stack base.  */
@@ -187,7 +202,7 @@ E UNIX64_RET_ST_RAX_RDX
 	rep movsb
 	ret
 
-9:	call	abort@PLT
+9:	call	PLT(C(abort))
 
 	/* Many times we can avoid loading any SSE registers at all.
 	   It's not worth an indirect jump to load the exact set of
@@ -206,7 +221,7 @@ E UNIX64_RET_ST_RAX_RDX
 	jmp	.Lret_from_load_sse
 
 	cfi_endproc
-	.size    ffi_call_unix64,.-ffi_call_unix64
+ENDF(C(ffi_call_unix64))
 
 /* 6 general registers, 8 vector registers,
    32 bytes of rvalue, 8 bytes of alignment.  */
@@ -219,11 +234,10 @@ E UNIX64_RET_ST_RAX_RDX
 #define ffi_closure_RED_RVALUE	(ffi_closure_OFS_RVALUE - ffi_closure_FS)
 
 	.align	2
-	.globl	ffi_closure_unix64_sse
-	.type	ffi_closure_unix64_sse,@function
-	FFI_HIDDEN(ffi_closure_unix64_sse)
+	.globl	C(ffi_closure_unix64_sse)
+	FFI_HIDDEN(C(ffi_closure_unix64_sse))
 
-ffi_closure_unix64_sse:
+C(ffi_closure_unix64_sse):
 	cfi_startproc
 	subq	$ffi_closure_FS, %rsp
 	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
@@ -240,14 +254,13 @@ ffi_closure_unix64_sse:
 	jmp	0f
 
 	cfi_endproc
-	.size	ffi_closure_unix64_sse,.-ffi_closure_unix64_sse
+ENDF(C(ffi_closure_unix64_sse))
 
 	.align	2
-	.globl	ffi_closure_unix64
-	.type	ffi_closure_unix64,@function
-	FFI_HIDDEN(ffi_closure_unix64)
+	.globl	C(ffi_closure_unix64)
+	FFI_HIDDEN(C(ffi_closure_unix64))
 
-ffi_closure_unix64:
+C(ffi_closure_unix64):
 	cfi_startproc
 	subq	$ffi_closure_FS, %rsp
 	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
@@ -273,7 +286,7 @@ ffi_closure_unix64:
 	leaq	ffi_closure_OFS_RVALUE(%rsp), %rcx	/* Load rvalue */
 	movq	%rsp, %r8				/* Load reg_args */
 	leaq	ffi_closure_FS+8(%rsp), %r9		/* Load argp */
-	call	ffi_closure_unix64_inner
+	call	C(ffi_closure_unix64_inner)
 
 	/* Deallocate stack frame early; return value is now in redzone.  */
 	addq	$ffi_closure_FS, %rsp
@@ -343,17 +356,16 @@ E UNIX64_RET_ST_RAX_RDX
 3:	movq	(%rsi), %xmm0
 	ret
 
-9:	call	abort@PLT
+9:	call	PLT(C(abort))
 
 	cfi_endproc
-	.size	ffi_closure_unix64,.-ffi_closure_unix64
+ENDF(C(ffi_closure_unix64))
 
 	.align	2
-	.globl	ffi_go_closure_unix64_sse
-	.type	ffi_go_closure_unix64_sse,@function
-	FFI_HIDDEN(ffi_go_closure_unix64_sse)
+	.globl	C(ffi_go_closure_unix64_sse)
+	FFI_HIDDEN(C(ffi_go_closure_unix64_sse))
 
-ffi_go_closure_unix64_sse:
+C(ffi_go_closure_unix64_sse):
 	cfi_startproc
 	subq	$ffi_closure_FS, %rsp
 	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
@@ -370,14 +382,13 @@ ffi_go_closure_unix64_sse:
 	jmp	0f
 
 	cfi_endproc
-	.size	ffi_go_closure_unix64_sse,.-ffi_go_closure_unix64_sse
+ENDF(C(ffi_go_closure_unix64_sse))
 
 	.align	2
-	.globl	ffi_go_closure_unix64
-	.type	ffi_go_closure_unix64,@function
-	FFI_HIDDEN(ffi_go_closure_unix64)
+	.globl	C(ffi_go_closure_unix64)
+	FFI_HIDDEN(C(ffi_go_closure_unix64))
 
-ffi_go_closure_unix64:
+C(ffi_go_closure_unix64):
 	cfi_startproc
 	subq	$ffi_closure_FS, %rsp
 	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
@@ -402,7 +413,7 @@ ffi_go_closure_unix64:
 	jmp	.Ldo_closure
 
 	cfi_endproc
-	.size	ffi_go_closure_unix64,.-ffi_go_closure_unix64
+ENDF(C(ffi_go_closure_unix64))
 
 #endif /* __x86_64__ */
 #if defined __ELF__ && defined __linux__

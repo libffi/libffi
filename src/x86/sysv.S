@@ -112,7 +112,7 @@ ffi_call_i386:
 
 	andl	$X86_RET_TYPE_MASK, %ecx
 #ifdef __PIC__
-	call	__x86.get_pc_thunk.bx
+	call	C(__x86.get_pc_thunk.bx)
 1:	leal	0f-1b(%ebx, %ecx, 8), %ebx
 #else
 	leal	0f(,%ecx, 8), %ebx
@@ -212,31 +212,6 @@ ENDF(ffi_call_i386)
 	movl	%ecx, 32(%esp);						\
 	movl	%eax, 36(%esp)
 
-
-#ifdef __PIC__
-/* We're going to always load the got register here, even if .hidden says
-   we're going to avoid the PLT call.  We'll use the got register in
-   FFI_CLOSURE_MASK_AND_JUMP.  */
-# if defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE
-#  define PLT(X) X
-# else
-#  define PLT(X) X@PLT
-# endif
-# define FFI_CLOSURE_CALL_INNER						\
-	movl	%esp, %ecx;			/* load closure_data */	\
-	leal	closure_FS+4(%esp), %edx;	/* load incoming stack */ \
-	movl	%ebx, 40(%esp);			/* save ebx */		\
-	cfi_rel_offset(%ebx, 40);					\
-	call	__x86.get_pc_thunk.bx;		/* load got register */	\
-	addl	$C(_GLOBAL_OFFSET_TABLE_), %ebx;			\
-	call	PLT(ffi_closure_inner)
-#define FFI_CLOSURE_MASK_AND_JUMP					\
-	andl	$X86_RET_TYPE_MASK, %eax;				\
-	leal	0f@GOTOFF(%ebx, %eax, 8), %eax;				\
-	movl	40(%esp), %ebx;			/* restore ebx */	\
-	cfi_restore(%ebx);						\
-	jmp	*%eax
-#else
 # define FFI_CLOSURE_CALL_INNER						\
 	movl	%esp, %ecx;			/* load closure_data */	\
 	leal	closure_FS+4(%esp), %edx;	/* load incoming stack */ \
@@ -245,6 +220,33 @@ ENDF(ffi_call_i386)
 	andl	$X86_RET_TYPE_MASK, %eax;				\
 	leal	0f(, %eax, 8), %eax;					\
 	jmp	*%eax
+
+#ifdef __PIC__
+# if defined X86_DARWIN || defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE
+#  undef FFI_CLOSURE_MASK_AND_JUMP
+#  define FFI_CLOSURE_MASK_AND_JUMP					\
+	andl	$X86_RET_TYPE_MASK, %eax;				\
+	call	C(__x86.get_pc_thunk.dx);				\
+1:	leal	0f-1b(%edx, %eax, 8), %eax;				\
+	jmp	*%eax
+# else
+#  undef FFI_CLOSURE_CALL_INNER
+#  define FFI_CLOSURE_CALL_INNER					\
+	movl	%esp, %ecx;			/* load closure_data */	\
+	leal	closure_FS+4(%esp), %edx;	/* load incoming stack */ \
+	movl	%ebx, 40(%esp);			/* save ebx */		\
+	cfi_rel_offset(%ebx, 40);					\
+	call	C(__x86.get_pc_thunk.bx);	/* load got register */	\
+1:	addl	$C(_GLOBAL_OFFSET_TABLE_), %ebx;			\
+	call	ffi_closure_inner@PLT
+#  undef FFI_CLOSURE_MASK_AND_JUMP
+#  define FFI_CLOSURE_MASK_AND_JUMP					\
+	andl	$X86_RET_TYPE_MASK, %eax;				\
+	leal	0f@GOTOFF(%ebx, %eax, 8), %eax;				\
+	movl	40(%esp), %ebx;			/* restore ebx */	\
+	cfi_restore(%ebx);						\
+	jmp	*%eax
+# endif /* DARWIN || HIDDEN */
 #endif /* __PIC__ */
 
 #define FFI_GO_CLOSURE(suffix, chain, t1, t2)				\
@@ -511,7 +513,7 @@ C(ffi_closure_raw_SYSV):
 	movl	20(%ebx), %eax				/* load cif->flags */
 	andl	$X86_RET_TYPE_MASK, %eax
 #ifdef __PIC__
-	call	__x86.get_pc_thunk.bx
+	call	C(__x86.get_pc_thunk.bx)
 1:	leal	0f-1b(%ebx, %eax, 8), %eax
 #else
 	leal	0f(,%eax, 8), %eax
@@ -615,7 +617,7 @@ C(ffi_closure_raw_THISCALL):
 	movl	20(%ebx), %eax				/* load cif->flags */
 	andl	$X86_RET_TYPE_MASK, %eax
 #ifdef __PIC__
-	call	__x86.get_pc_thunk.bx
+	call	C(__x86.get_pc_thunk.bx)
 1:	leal	0f-1b(%ebx, %eax, 8), %eax
 #else
 	leal	0f(,%eax, 8), %eax
@@ -685,20 +687,41 @@ ENDF(C(ffi_closure_raw_THISCALL))
 
 #endif /* !FFI_NO_RAW_API */
 
+#ifdef X86_DARWIN
+# define COMDAT(X)							\
+        .section __TEXT,__textcoal_nt,coalesced,pure_instructions;	\
+        .weak_definition X;						\
+        .private_extern X
+#elif defined __ELF__
+# define COMDAT(X)							\
+	.section .text.X,"axG",@progbits,X,comdat;			\
+	.globl	X;							\
+	FFI_HIDDEN(X)
+#else
+# define COMDAT(X)
+#endif
+
 #if defined(__PIC__)
-	.section .text.__x86.get_pc_thunk.bx,"axG",@progbits,__x86.get_pc_thunk.bx,comdat
-	.globl	__x86.get_pc_thunk.bx
-	.hidden	__x86.get_pc_thunk.bx
-	.type	__x86.get_pc_thunk.bx,@function
-__x86.get_pc_thunk.bx:
+	COMDAT(C(__x86.get_pc_thunk.bx))
+C(__x86.get_pc_thunk.bx):
 	cfi_startproc
 	movl	(%esp), %ebx
 	ret
 	cfi_endproc
-	.size	__x86.get_pc_thunk.bx, . - __x86.get_pc_thunk.bx
+ENDF(C(__x86.get_pc_thunk.bx))
+# if defined X86_DARWIN || defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE
+	COMDAT(C(__x86.get_pc_thunk.dx))
+C(__x86.get_pc_thunk.dx):
+	cfi_startproc
+	movl	(%esp), %edx
+	ret
+	cfi_endproc
+ENDF(C(__x86.get_pc_thunk.dx))
+#endif /* DARWIN || HIDDEN */
 #endif /* __PIC__ */
 
 #endif /* ifndef __x86_64__ */
+
 #if defined __ELF__ && defined __linux__
 	.section	.note.GNU-stack,"",@progbits
 #endif
