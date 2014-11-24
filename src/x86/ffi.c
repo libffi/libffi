@@ -332,13 +332,28 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
       else
 	{
 	  size_t za = ALIGN (z, FFI_SIZEOF_ARG);
+	  size_t align = FFI_SIZEOF_ARG;
+
+	  /* Alignment rules for arguments are quite complex.  Vectors and
+	     structures with 16 byte alignment get it.  Note that long double
+	     on Darwin does have 16 byte alignment, and does not get this
+	     alignment if passed directly; a structure with a long double
+	     inside, however, would get 16 byte alignment.  Since libffi does
+	     not support vectors, we need non concern ourselves with other
+	     cases.  */
+	  if (t == FFI_TYPE_STRUCT && ty->alignment >= 16)
+	    align = 16;
+	    
 	  if (dir < 0)
 	    {
+	      /* ??? These reverse argument ABIs are probably too old
+		 to have cared about alignment.  Someone should check.  */
 	      argp -= za;
 	      memcpy (argp, valp, z);
 	    }
 	  else
 	    {
+	      argp = (char *)ALIGN (argp, align);
 	      memcpy (argp, valp, z);
 	      argp += za;
 	    }
@@ -419,8 +434,9 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
   arg_types = cif->arg_types;
   for (i = 0; i < n; ++i)
     {
-      size_t z = arg_types[i]->size;
-      int t = arg_types[i]->type;
+      ffi_type *ty = arg_types[i];
+      size_t z = ty->size;
+      int t = ty->type;
       void *valp;
 
       if (z <= FFI_SIZEOF_ARG && t != FFI_TYPE_STRUCT)
@@ -441,13 +457,22 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
       else
 	{
 	  size_t za = ALIGN (z, FFI_SIZEOF_ARG);
+	  size_t align = FFI_SIZEOF_ARG;
+
+	  /* See the comment in ffi_call_int.  */
+	  if (t == FFI_TYPE_STRUCT && ty->alignment >= 16)
+	    align = 16;
+
 	  if (dir < 0)
 	    {
+	      /* ??? These reverse argument ABIs are probably too old
+		 to have cared about alignment.  Someone should check.  */
 	      argp -= za;
 	      valp = argp;
 	    }
 	  else
 	    {
+	      argp = (char *)ALIGN (argp, align);
 	      valp = argp;
 	      argp += za;
 	    }
