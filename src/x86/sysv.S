@@ -60,7 +60,7 @@
    actual table.  The entry points into the table are all 8 bytes.
    The use of ORG asserts that we're at the correct location.  */
 /* ??? The clang assembler doesn't handle .org with symbolic expressions.  */
-#ifdef __clang__
+#if defined(__clang__) || defined(__APPLE__)
 # define E(X)	.align 8
 #else
 # define E(X)	.align 8; .org 0b + X * 8

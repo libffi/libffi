@@ -57,7 +57,7 @@
 /* ??? The clang assembler doesn't handle .org with symbolic expressions.  */
 .macro E index
 	.align	8
-#ifndef __clang__
+#if !defined(__clang__) && !defined(__APPLE__)
 	.org	0b + \index * 8, 0x90
 #endif
 .endm
