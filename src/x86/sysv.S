@@ -405,16 +405,11 @@ C(ffi_closure_STDCALL):
 	movl	closure_FS(%esp), %edx		/* move return address */
 	movl	%edx, (%ecx)
 
-	/* New pseudo-stack frame based off ecx.  This is unwind trickery
-	   in that the CFA *has* changed, to the proper popped stack address.
-	   Note that the location to which we moved the return address
-	   is the new CFA-4, so that's unchanged.  */
-	cfi_def_cfa(%ecx, 4)
-	/* Normally esp is unwound to CFA + the caller's ARGS_SIZE.
-	   We've just set the CFA to that final value.  Tell the unwinder
-	   to restore esp from CFA without the ARGS_SIZE:
-	   DW_CFA_val_expression %esp, DW_OP_call_frame_cfa.  */
-	cfi_escape(0x16, 4, 1, 0x9c)
+	/* From this point on, the value of %esp upon return is %ecx+4,
+	   and we've copied the return address to %ecx to make return easy.
+	   There's no point in representing this in the unwind info, as
+	   there is always a window between the mov and the ret which
+	   will be wrong from one point of view or another.  */
 
 	FFI_CLOSURE_MASK_AND_JUMP
 
