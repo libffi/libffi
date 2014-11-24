@@ -61,13 +61,13 @@
    The use of ORG asserts that we're at the correct location.  */
 /* ??? The clang assembler doesn't handle .org with symbolic expressions.  */
 #if defined(__clang__) || defined(__APPLE__)
-# define E(X)	.align 8
+# define E(X)	.balign 8
 #else
-# define E(X)	.align 8; .org 0b + X * 8
+# define E(X)	.balign 8; .org 0b + X * 8
 #endif
 
 	.text
-	.align	16
+	.balign	16
 	.globl	ffi_call_i386
 	FFI_HIDDEN(ffi_call_i386)
 
@@ -120,7 +120,7 @@ ffi_call_i386:
 	movl	16(%ebp), %ecx		/* load result address */
 	jmp	*%ebx
 
-	.align	8
+	.balign	8
 0:
 E(X86_RET_FLOAT)
 	fstps	(%ecx)
@@ -250,7 +250,7 @@ ENDF(ffi_call_i386)
 #endif /* __PIC__ */
 
 #define FFI_GO_CLOSURE(suffix, chain, t1, t2)				\
-	.align	16;							\
+	.balign	16;							\
 	.globl	C(C1(ffi_go_closure_,suffix));				\
 	FFI_HIDDEN(C(C1(ffi_go_closure_,suffix)));			\
 C(C1(ffi_go_closure_,suffix)):						\
@@ -274,7 +274,7 @@ FFI_GO_CLOSURE(ECX, %ecx, %edx, %eax)
 /* The closure entry points are reached from the ffi_closure trampoline.
    On entry, %eax contains the address of the ffi_closure.  */
 
-	.align	16
+	.balign	16
 	.globl	C(ffi_closure_i386)
 	FFI_HIDDEN(C(ffi_closure_i386))
 
@@ -292,7 +292,7 @@ C(ffi_closure_i386):
 	FFI_CLOSURE_CALL_INNER
 	FFI_CLOSURE_MASK_AND_JUMP
 
-	.align	8
+	.balign	8
 0:
 E(X86_RET_FLOAT)
 	flds	(%esp)
@@ -355,7 +355,7 @@ FFI_GO_CLOSURE(STDCALL, %ecx, %edx, %eax)
 /* For REGISTER, we have no available parameter registers, and so we
    enter here having pushed the closure onto the stack.  */
 
-	.align	16
+	.balign	16
 	.globl	C(ffi_closure_REGISTER)
 	FFI_HIDDEN(C(ffi_closure_REGISTER))
 C(ffi_closure_REGISTER):
@@ -380,7 +380,7 @@ ENDF(C(ffi_closure_REGISTER))
    the stack following the closure.  The amount needing to be popped
    is returned to us from ffi_closure_inner.  */
 
-	.align	16
+	.balign	16
 	.globl	C(ffi_closure_STDCALL)
 	FFI_HIDDEN(C(ffi_closure_STDCALL))
 C(ffi_closure_STDCALL):
@@ -418,7 +418,7 @@ C(ffi_closure_STDCALL):
 
 	FFI_CLOSURE_MASK_AND_JUMP
 
-	.align	8
+	.balign	8
 0:
 E(X86_RET_FLOAT)
 	flds    (%esp)
@@ -489,7 +489,7 @@ ENDF(C(ffi_closure_STDCALL))
 
 #define raw_closure_S_FS	(16+16+12)
 
-	.align	16
+	.balign	16
 	.globl	C(ffi_closure_raw_SYSV)
 	FFI_HIDDEN(C(ffi_closure_raw_SYSV))
 C(ffi_closure_raw_SYSV):
@@ -522,7 +522,7 @@ C(ffi_closure_raw_SYSV):
 	cfi_restore(%ebx)
 	jmp	*%eax
 
-	.align	8
+	.balign	8
 0:
 E(X86_RET_FLOAT)
 	flds	16(%esp)
@@ -583,7 +583,7 @@ ENDF(C(ffi_closure_raw_SYSV))
 #undef	raw_closure_S_FS
 #define raw_closure_T_FS	(16+16+8)
 
-	.align	16
+	.balign	16
 	.globl	C(ffi_closure_raw_THISCALL)
 	FFI_HIDDEN(C(ffi_closure_raw_THISCALL))
 C(ffi_closure_raw_THISCALL):
@@ -626,7 +626,7 @@ C(ffi_closure_raw_THISCALL):
 	cfi_restore(%ebx)
 	jmp	*%eax
 
-	.align	8
+	.balign	8
 0:
 E(X86_RET_FLOAT)
 	flds	16(%esp)

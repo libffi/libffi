@@ -56,7 +56,7 @@
    The use of ORG asserts that we're at the correct location.  */
 /* ??? The clang assembler doesn't handle .org with symbolic expressions.  */
 .macro E index
-	.align	8
+	.balign	8
 #if !defined(__clang__) && !defined(__APPLE__)
 	.org	0b + \index * 8, 0x90
 #endif
@@ -69,7 +69,7 @@
    for this function.  This has been allocated by ffi_call.  We also
    deallocate some of the stack that has been alloca'd.  */
 
-	.align	8
+	.balign	8
 	.globl	C(ffi_call_unix64)
 	FFI_HIDDEN(C(ffi_call_unix64))
 
@@ -137,7 +137,7 @@ C(ffi_call_unix64):
 	leaq	-20(%rsp), %rsi
 	jmp	*%r10
 
-	.align	8
+	.balign	8
 0:
 E UNIX64_RET_VOID
 	ret
@@ -196,7 +196,7 @@ E UNIX64_RET_ST_RAX_RDX
 	shrl	$UNIX64_SIZE_SHIFT, %ecx
 	rep movsb
 	ret
-	.align 8
+	.balign 8
 3:	movq	%xmm0, (%rsi)
 	shrl	$UNIX64_SIZE_SHIFT, %ecx
 	rep movsb
@@ -207,7 +207,7 @@ E UNIX64_RET_ST_RAX_RDX
 	/* Many times we can avoid loading any SSE registers at all.
 	   It's not worth an indirect jump to load the exact set of
 	   SSE registers needed; zero or all is a good compromise.  */
-	.align 2
+	.balign 2
 	cfi_restore_state
 .Lload_sse:
 	movdqa	0x30(%r10), %xmm0
@@ -233,7 +233,7 @@ ENDF(C(ffi_call_unix64))
 /* The location of rvalue within the red zone after deallocating the frame.  */
 #define ffi_closure_RED_RVALUE	(ffi_closure_OFS_RVALUE - ffi_closure_FS)
 
-	.align	2
+	.balign	2
 	.globl	C(ffi_closure_unix64_sse)
 	FFI_HIDDEN(C(ffi_closure_unix64_sse))
 
@@ -256,7 +256,7 @@ C(ffi_closure_unix64_sse):
 	cfi_endproc
 ENDF(C(ffi_closure_unix64_sse))
 
-	.align	2
+	.balign	2
 	.globl	C(ffi_closure_unix64)
 	FFI_HIDDEN(C(ffi_closure_unix64))
 
@@ -301,7 +301,7 @@ C(ffi_closure_unix64):
 	leaq	ffi_closure_RED_RVALUE(%rsp), %rsi
 	jmp	*%r10
 
-	.align	8
+	.balign	8
 0:
 E UNIX64_RET_VOID
 	ret
@@ -352,7 +352,7 @@ E UNIX64_RET_ST_RAX_RDX
 	movq	8(%rsi), %rdx
 2:	movq	(%rsi), %rax
 	ret
-	.align	8
+	.balign	8
 3:	movq	(%rsi), %xmm0
 	ret
 
@@ -361,7 +361,7 @@ E UNIX64_RET_ST_RAX_RDX
 	cfi_endproc
 ENDF(C(ffi_closure_unix64))
 
-	.align	2
+	.balign	2
 	.globl	C(ffi_go_closure_unix64_sse)
 	FFI_HIDDEN(C(ffi_go_closure_unix64_sse))
 
@@ -384,7 +384,7 @@ C(ffi_go_closure_unix64_sse):
 	cfi_endproc
 ENDF(C(ffi_go_closure_unix64_sse))
 
-	.align	2
+	.balign	2
 	.globl	C(ffi_go_closure_unix64)
 	FFI_HIDDEN(C(ffi_go_closure_unix64))
 
