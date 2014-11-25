@@ -431,17 +431,13 @@ ENDF(C(ffi_go_closure_unix64))
 
 #ifdef __APPLE__
 .section __TEXT,__eh_frame,coalesced,no_toc+strip_static_syms+live_support
+EHFrame0:
 #elif defined(HAVE_AS_X86_64_UNWIND_SECTION_TYPE)
 .section .eh_frame,"a",@unwind
 #else
 .section .eh_frame,"a",@progbits
 #endif
 
-#ifdef __APPLE__
-# define FDE_NAME(X)	.globl X; X:
-#else
-# define FDE_NAME(X)
-#endif
 #ifdef HAVE_AS_X86_PCREL
 # define PCREL(X)	X - .
 #else
@@ -469,7 +465,6 @@ L(SCIE):
 	.balign 8
 L(ECIE):
 
-FDE_NAME(_ffi_call_unix64.eh)
 	.set	L(set1),L(EFDE1)-L(SFDE1)
 	.long	L(set1)			/* FDE Length */
 L(SFDE1):
@@ -489,7 +484,6 @@ L(SFDE1):
 	.balign	8
 L(EFDE1):
 
-FDE_NAME(_ffi_closure_unix64_sse.eh)
 	.set	L(set2),L(EFDE2)-L(SFDE2)
 	.long	L(set2)			/* FDE Length */
 L(SFDE2):
@@ -503,7 +497,6 @@ L(SFDE2):
 	.balign	8
 L(EFDE2):
 
-FDE_NAME(_ffi_closure_unix64.eh)
 	.set	L(set3),L(EFDE3)-L(SFDE3)
 	.long	L(set3)			/* FDE Length */
 L(SFDE3):
@@ -518,7 +511,6 @@ L(SFDE3):
 	.byte	0xe, 8			/* DW_CFA_def_cfa_offset 8 */
 L(EFDE3):
 
-FDE_NAME(_ffi_go_closure_unix64_sse.eh)
 	.set	L(set4),L(EFDE4)-L(SFDE4)
 	.long	L(set4)			/* FDE Length */
 L(SFDE4):
@@ -532,7 +524,6 @@ L(SFDE4):
 	.balign	8
 L(EFDE4):
 
-FDE_NAME(_ffi_go_closure_unix64.eh)
 	.set	L(set5),L(EFDE5)-L(SFDE5)
 	.long	L(set5)			/* FDE Length */
 L(SFDE5):
