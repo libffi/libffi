@@ -30,7 +30,6 @@
 #define LIBFFI_ASM	
 #include <fficonfig.h>
 #include <ffi.h>
-#include <ffi_cfi.h>
 #include "internal64.h"
 
 	.text
@@ -79,7 +78,7 @@
 	FFI_HIDDEN(C(ffi_call_unix64))
 
 C(ffi_call_unix64):
-	cfi_startproc
+L(UW0):
 	movq	(%rsp), %r10		/* Load return address.  */
 	leaq	(%rdi, %rsi), %rax	/* Find local stack base.  */
 	movq	%rdx, (%rax)		/* Save flags.  */
@@ -95,8 +94,9 @@ C(ffi_call_unix64):
 	   unwind back to ffi_call.  Note that the location to which we
 	   moved the return address is (the new) CFA-8, so from the
 	   perspective of the unwind info, it hasn't moved.  */
-	cfi_def_cfa(%rbp, 32)
-	cfi_rel_offset(%rbp, 16)
+L(UW1):
+	/* cfi_def_cfa(%rbp, 32) */
+	/* cfi_rel_offset(%rbp, 16) */
 
 	movq	%rdi, %r10		/* Save a copy of the register area. */
 	movq	%r8, %r11		/* Save a copy of the target fn.  */
@@ -127,9 +127,10 @@ L(ret_from_load_sse):
 	movq	0(%rbp), %rcx		/* Reload flags.  */
 	movq	8(%rbp), %rdi		/* Reload raddr.  */
 	movq	16(%rbp), %rbp		/* Reload old frame pointer.  */
-	cfi_remember_state
-	cfi_def_cfa(%rsp, 8)
-	cfi_restore(%rbp)
+L(UW2):
+	/* cfi_remember_state */
+	/* cfi_def_cfa(%rsp, 8) */
+	/* cfi_restore(%rbp) */
 
 	/* The first byte of the flags contains the FFI_TYPE.  */
 	cmpb	$UNIX64_RET_LAST, %cl
@@ -215,7 +216,8 @@ L(sa):	call	PLT(C(abort))
 	   It's not worth an indirect jump to load the exact set of
 	   SSE registers needed; zero or all is a good compromise.  */
 	.balign 2
-	cfi_restore_state
+L(UW3):
+	/* cfi_restore_state */
 L(load_sse):
 	movdqa	0x30(%r10), %xmm0
 	movdqa	0x40(%r10), %xmm1
@@ -227,7 +229,7 @@ L(load_sse):
 	movdqa	0xa0(%r10), %xmm7
 	jmp	L(ret_from_load_sse)
 
-	cfi_endproc
+L(UW4):
 ENDF(C(ffi_call_unix64))
 
 /* 6 general registers, 8 vector registers,
@@ -245,10 +247,10 @@ ENDF(C(ffi_call_unix64))
 	FFI_HIDDEN(C(ffi_closure_unix64_sse))
 
 C(ffi_closure_unix64_sse):
-	cfi_startproc
+L(UW5):
 	subq	$ffi_closure_FS, %rsp
-	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
-	cfi_def_cfa_offset(ffi_closure_FS + 8)
+L(UW6):
+	/* cfi_adjust_cfa_offset(ffi_closure_FS) */
 
 	movdqa	%xmm0, ffi_closure_OFS_V+0x00(%rsp)
 	movdqa	%xmm1, ffi_closure_OFS_V+0x10(%rsp)
@@ -260,7 +262,7 @@ C(ffi_closure_unix64_sse):
 	movdqa	%xmm7, ffi_closure_OFS_V+0x70(%rsp)
 	jmp	L(sse_entry1)
 
-	cfi_endproc
+L(UW7):
 ENDF(C(ffi_closure_unix64_sse))
 
 	.balign	2
@@ -268,10 +270,10 @@ ENDF(C(ffi_closure_unix64_sse))
 	FFI_HIDDEN(C(ffi_closure_unix64))
 
 C(ffi_closure_unix64):
-	cfi_startproc
+L(UW8):
 	subq	$ffi_closure_FS, %rsp
-	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
-	cfi_def_cfa_offset(ffi_closure_FS + 8)
+L(UW9):
+	/* cfi_adjust_cfa_offset(ffi_closure_FS) */
 L(sse_entry1):
 	movq	%rdi, ffi_closure_OFS_G+0x00(%rsp)
 	movq    %rsi, ffi_closure_OFS_G+0x08(%rsp)
@@ -297,7 +299,8 @@ L(do_closure):
 
 	/* Deallocate stack frame early; return value is now in redzone.  */
 	addq	$ffi_closure_FS, %rsp
-	cfi_adjust_cfa_offset(-ffi_closure_FS)
+L(UW10):
+	/* cfi_adjust_cfa_offset(-ffi_closure_FS) */
 
 	/* The first byte of the return value contains the FFI_TYPE.  */
 	cmpb	$UNIX64_RET_LAST, %al
@@ -367,7 +370,7 @@ L(l3):
 
 L(la):	call	PLT(C(abort))
 
-	cfi_endproc
+L(UW11):
 ENDF(C(ffi_closure_unix64))
 
 	.balign	2
@@ -375,10 +378,10 @@ ENDF(C(ffi_closure_unix64))
 	FFI_HIDDEN(C(ffi_go_closure_unix64_sse))
 
 C(ffi_go_closure_unix64_sse):
-	cfi_startproc
+L(UW12):
 	subq	$ffi_closure_FS, %rsp
-	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
-	cfi_def_cfa_offset(ffi_closure_FS + 8)
+L(UW13):
+	/* cfi_adjust_cfa_offset(ffi_closure_FS) */
 
 	movdqa	%xmm0, ffi_closure_OFS_V+0x00(%rsp)
 	movdqa	%xmm1, ffi_closure_OFS_V+0x10(%rsp)
@@ -390,7 +393,7 @@ C(ffi_go_closure_unix64_sse):
 	movdqa	%xmm7, ffi_closure_OFS_V+0x70(%rsp)
 	jmp	L(sse_entry2)
 
-	cfi_endproc
+L(UW14):
 ENDF(C(ffi_go_closure_unix64_sse))
 
 	.balign	2
@@ -398,10 +401,10 @@ ENDF(C(ffi_go_closure_unix64_sse))
 	FFI_HIDDEN(C(ffi_go_closure_unix64))
 
 C(ffi_go_closure_unix64):
-	cfi_startproc
+L(UW15):
 	subq	$ffi_closure_FS, %rsp
-	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */
-	cfi_def_cfa_offset(ffi_closure_FS + 8)
+L(UW16):
+	/* cfi_adjust_cfa_offset(ffi_closure_FS) */
 L(sse_entry2):
 	movq	%rdi, ffi_closure_OFS_G+0x00(%rsp)
 	movq    %rsi, ffi_closure_OFS_G+0x08(%rsp)
@@ -421,8 +424,130 @@ L(sse_entry2):
 #endif
 	jmp	L(do_closure)
 
-	cfi_endproc
+L(UW17):
 ENDF(C(ffi_go_closure_unix64))
+
+/* Sadly, OSX cctools-as doesn't understand .cfi directives at all.  */
+
+#ifdef __APPLE__
+.section __TEXT,__eh_frame,coalesced,no_toc+strip_static_syms+live_support
+#elif defined(HAVE_AS_X86_64_UNWIND_SECTION_TYPE)
+.section .eh_frame,"a",@unwind
+#else
+.section .eh_frame,"a",@progbits
+#endif
+
+#ifdef __APPLE__
+# define FDE_NAME(X)	.globl X; X:
+#else
+# define FDE_NAME(X)
+#endif
+#ifdef HAVE_AS_X86_PCREL
+# define PCREL(X)	X - .
+#else
+# define PCREL(X)	X@rel
+#endif
+
+/* Simplify advancing between labels.  Assume DW_CFA_advance_loc1 fits.  */
+#define ADV(N, P)	.byte 2, L(N)-L(P)
+
+	.balign 8
+L(CIE):
+	.set	L(set0),L(ECIE)-L(SCIE)
+	.long	L(set0)			/* CIE Length */
+L(SCIE):
+	.long	0			/* CIE Identifier Tag */
+	.byte	1			/* CIE Version */
+	.ascii	"zR\0"			/* CIE Augmentation */
+	.byte	1			/* CIE Code Alignment Factor */
+	.byte	0x78			/* CIE Data Alignment Factor */
+	.byte	0x10			/* CIE RA Column */
+	.byte	1			/* Augmentation size */
+	.byte	0x1b			/* FDE Encoding (pcrel sdata4) */
+	.byte	0xc, 7, 8		/* DW_CFA_def_cfa, %rsp offset 8 */
+	.byte	0x80+16, 1		/* DW_CFA_offset, %rip offset 1*-8 */
+	.balign 8
+L(ECIE):
+
+FDE_NAME(_ffi_call_unix64.eh)
+	.set	L(set1),L(EFDE1)-L(SFDE1)
+	.long	L(set1)			/* FDE Length */
+L(SFDE1):
+	.long	L(SFDE1)-L(CIE)		/* FDE CIE offset */
+	.long	PCREL(L(UW0))		/* Initial location */
+	.long	L(UW4)-L(UW0)		/* Address range */
+	.byte	0			/* Augmentation size */
+	ADV(UW1, UW0)
+	.byte	0xc, 6, 32		/* DW_CFA_def_cfa, %rbp 32 */
+	.byte	0x80+6, 2		/* DW_CFA_offset, %rbp 2*-8 */
+	ADV(UW2, UW1)
+	.byte	0xa			/* DW_CFA_remember_state */
+	.byte	0xc, 7, 8		/* DW_CFA_def_cfa, %rsp 8 */
+	.byte	0xc0+6			/* DW_CFA_restore, %rbp */
+	ADV(UW3, UW2)
+	.byte	0xb			/* DW_CFA_restore_state */
+	.balign	8
+L(EFDE1):
+
+FDE_NAME(_ffi_closure_unix64_sse.eh)
+	.set	L(set2),L(EFDE2)-L(SFDE2)
+	.long	L(set2)			/* FDE Length */
+L(SFDE2):
+	.long	L(SFDE2)-L(CIE)		/* FDE CIE offset */
+	.long	PCREL(L(UW5))		/* Initial location */
+	.long	L(UW7)-L(UW5)		/* Address range */
+	.byte	0			/* Augmentation size */
+	ADV(UW6, UW5)
+	.byte	0xe			/* DW_CFA_def_cfa_offset */
+	.byte	ffi_closure_FS + 8, 1	/* uleb128, assuming 128 <= FS < 255 */
+	.balign	8
+L(EFDE2):
+
+FDE_NAME(_ffi_closure_unix64.eh)
+	.set	L(set3),L(EFDE3)-L(SFDE3)
+	.long	L(set3)			/* FDE Length */
+L(SFDE3):
+	.long	L(SFDE3)-L(CIE)		/* FDE CIE offset */
+	.long	PCREL(L(UW8))		/* Initial location */
+	.long	L(UW11)-L(UW8)		/* Address range */
+	.byte	0			/* Augmentation size */
+	ADV(UW9, UW8)
+	.byte	0xe			/* DW_CFA_def_cfa_offset */
+	.byte	ffi_closure_FS + 8, 1	/* uleb128, assuming 128 <= FS < 255 */
+	ADV(UW10, UW9)
+	.byte	0xe, 8			/* DW_CFA_def_cfa_offset 8 */
+L(EFDE3):
+
+FDE_NAME(_ffi_go_closure_unix64_sse.eh)
+	.set	L(set4),L(EFDE4)-L(SFDE4)
+	.long	L(set4)			/* FDE Length */
+L(SFDE4):
+	.long	L(SFDE4)-L(CIE)		/* FDE CIE offset */
+	.long	PCREL(L(UW12))		/* Initial location */
+	.long	L(UW14)-L(UW12)		/* Address range */
+	.byte	0			/* Augmentation size */
+	ADV(UW13, UW12)
+	.byte	0xe			/* DW_CFA_def_cfa_offset */
+	.byte	ffi_closure_FS + 8, 1	/* uleb128, assuming 128 <= FS < 255 */
+	.balign	8
+L(EFDE4):
+
+FDE_NAME(_ffi_go_closure_unix64.eh)
+	.set	L(set5),L(EFDE5)-L(SFDE5)
+	.long	L(set5)			/* FDE Length */
+L(SFDE5):
+	.long	L(SFDE5)-L(CIE)		/* FDE CIE offset */
+	.long	PCREL(L(UW15))		/* Initial location */
+	.long	L(UW17)-L(UW15)		/* Address range */
+	.byte	0			/* Augmentation size */
+	ADV(UW16, UW15)
+	.byte	0xe			/* DW_CFA_def_cfa_offset */
+	.byte	ffi_closure_FS + 8, 1	/* uleb128, assuming 128 <= FS < 255 */
+	.balign	8
+L(EFDE5):
+#ifdef __APPLE__
+	.subsections_via_symbols
+#endif
 
 #endif /* __x86_64__ */
 #if defined __ELF__ && defined __linux__
