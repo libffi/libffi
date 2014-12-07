@@ -396,3 +396,8 @@ CNAME(ffi_go_closure_SYSV):
 	.size	CNAME(ffi_go_closure_SYSV), . - CNAME(ffi_go_closure_SYSV)
 #endif
 #endif /* FFI_GO_CLOSURES */
+
+#if defined __ELF__ && defined __linux__
+	.section .note.GNU-stack,"",%progbits
+#endif
+
