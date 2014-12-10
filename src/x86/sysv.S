@@ -258,27 +258,39 @@ L(C1(pc,N)):								\
 # endif /* DARWIN || HIDDEN */
 #endif /* __PIC__ */
 
-#define FFI_GO_CLOSURE(suffix, chain, t1, t2, entry)			\
-	.balign	16;							\
-	.globl	C(C1(ffi_go_closure_,suffix));				\
-	FFI_HIDDEN(C(C1(ffi_go_closure_,suffix)));			\
-C(C1(ffi_go_closure_,suffix)):						\
-	cfi_startproc;							\
-	subl	$closure_FS, %esp;					\
-	/* Note clang bug 21515: adjust_cfa_offset error across endproc.  */ \
-	cfi_def_cfa_offset(closure_FS + 4);				\
-	FFI_CLOSURE_SAVE_REGS;						\
-	movl	4(chain), t1;		/* copy cif */			\
-	movl	8(chain), t2;		/* copy fun */			\
-	movl	t1, 28(%esp);						\
-	movl	t2, 32(%esp);						\
-	movl	chain, 36(%esp);	/* closure is user_data */	\
-	jmp	entry;							\
-	cfi_endproc;							\
-ENDF(C(C1(ffi_go_closure_,suffix)))
+	.balign	16
+	.globl	C(ffi_go_closure_EAX)
+	FFI_HIDDEN(C(ffi_go_closure_EAX))
+C(ffi_go_closure_EAX):
+	cfi_startproc
+	subl	$closure_FS, %esp
+	cfi_def_cfa_offset(closure_FS + 4)
+	FFI_CLOSURE_SAVE_REGS
+	movl	4(%eax), %edx		/* copy cif */
+	movl	8(%eax), %ecx		/* copy fun */
+	movl	%edx, 28(%esp)
+	movl	%ecx, 32(%esp)
+	movl	%eax, 36(%esp)		/* closure is user_data */
+	jmp	L(do_closure_i386)
+	cfi_endproc
+ENDF(C(ffi_go_closure_EAX))
 
-FFI_GO_CLOSURE(EAX, %eax, %edx, %ecx, L(do_closure_i386))
-FFI_GO_CLOSURE(ECX, %ecx, %edx, %eax, L(do_closure_i386))
+	.balign	16
+	.globl	C(ffi_go_closure_ECX)
+	FFI_HIDDEN(C(ffi_go_closure_ECX))
+C(ffi_go_closure_ECX):
+	cfi_startproc
+	subl	$closure_FS, %esp
+	cfi_def_cfa_offset(closure_FS + 4)
+	FFI_CLOSURE_SAVE_REGS
+	movl	4(%ecx), %edx		/* copy cif */
+	movl	8(%ecx), %eax		/* copy fun */
+	movl	%edx, 28(%esp)
+	movl	%eax, 32(%esp)
+	movl	%ecx, 36(%esp)		/* closure is user_data */
+	jmp	L(do_closure_i386)
+	cfi_endproc
+ENDF(C(ffi_go_closure_ECX))
 
 /* The closure entry points are reached from the ffi_closure trampoline.
    On entry, %eax contains the address of the ffi_closure.  */
@@ -361,7 +373,22 @@ E(L(load_table2), X86_RET_UNUSED15)
 	cfi_endproc
 ENDF(C(ffi_closure_i386))
 
-FFI_GO_CLOSURE(STDCALL, %ecx, %edx, %eax, L(do_closure_STDCALL))
+	.balign	16
+	.globl	C(ffi_go_closure_STDCALL)
+	FFI_HIDDEN(C(ffi_go_closure_STDCALL))
+C(ffi_go_closure_STDCALL):
+	cfi_startproc
+	subl	$closure_FS, %esp
+	cfi_def_cfa_offset(closure_FS + 4)
+	FFI_CLOSURE_SAVE_REGS
+	movl	4(%ecx), %edx		/* copy cif */
+	movl	8(%ecx), %eax		/* copy fun */
+	movl	%edx, 28(%esp)
+	movl	%eax, 32(%esp)
+	movl	%ecx, 36(%esp)		/* closure is user_data */
+	jmp	L(do_closure_STDCALL)
+	cfi_endproc
+ENDF(C(ffi_go_closure_STDCALL))
 
 /* For REGISTER, we have no available parameter registers, and so we
    enter here having pushed the closure onto the stack.  */
