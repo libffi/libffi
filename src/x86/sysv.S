@@ -108,7 +108,7 @@ ffi_call_i386:
 
 	movl	12(%ebp), %ecx		/* load return type code */
 	movl	%ebx, 8(%ebp)		/* preserve %ebx */
-	cfi_rel_offset(%ebp, 8)
+	cfi_rel_offset(%ebx, 8)
 
 	andl	$X86_RET_TYPE_MASK, %ecx
 #ifdef __PIC__
@@ -600,7 +600,7 @@ C(ffi_closure_raw_THISCALL):
 	subl	$raw_closure_T_FS, %esp
 	cfi_adjust_cfa_offset(raw_closure_T_FS)
 	movl	%ebx, raw_closure_T_FS-4(%esp)
-	cfi_offset(%ebx, raw_closure_T_FS-4)
+	cfi_rel_offset(%ebx, raw_closure_T_FS-4)
 
 	movl	FFI_TRAMPOLINE_SIZE+8(%eax), %edx	/* load cl->user_data */
 	movl	%edx, 12(%esp)
