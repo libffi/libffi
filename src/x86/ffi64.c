@@ -233,6 +233,7 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 	   signalize memory class, so handle it as special case.  */
 	if (!words)
 	  {
+    case FFI_TYPE_VOID:
 	    classes[0] = X86_64_NO_CLASS;
 	    return 1;
 	  }
@@ -611,6 +612,9 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	    {
 	      switch (classes[j])
 		{
+		case X86_64_NO_CLASS:
+		case X86_64_SSEUP_CLASS:
+		  break;
 		case X86_64_INTEGER_CLASS:
 		case X86_64_INTEGERSI_CLASS:
 		  /* Sign-extend integer arguments passed in general
