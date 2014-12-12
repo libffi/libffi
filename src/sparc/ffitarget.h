@@ -57,8 +57,13 @@ typedef enum ffi_abi {
 } ffi_abi;
 #endif
 
-#define FFI_TARGET_SPECIFIC_STACK_SPACE_ALLOCATION
-#define FFI_TARGET_HAS_COMPLEX_TYPE
+#define FFI_TARGET_SPECIFIC_STACK_SPACE_ALLOCATION 1
+#define FFI_TARGET_HAS_COMPLEX_TYPE 1
+
+#ifdef SPARC64
+# define FFI_TARGET_SPECIFIC_VARIADIC 1
+# define FFI_EXTRA_CIF_FIELDS  unsigned int nfixedargs
+#endif
 
 /* ---- Definitions for closures ----------------------------------------- */
 
