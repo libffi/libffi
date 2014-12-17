@@ -1,9 +1,9 @@
 /* -----------------------------------------------------------------------
    sysv.S - Copyright (c) 2000 Software AG
             Copyright (c) 2008 Red Hat, Inc.
- 
+
    S390 Foreign Function Interface
- 
+
    Permission is hereby granted, free of charge, to any person obtaining
    a copy of this software and associated documentation files (the
    ``Software''), to deal in the Software without restriction, including
@@ -11,10 +11,10 @@
    distribute, sublicense, and/or sell copies of the Software, and to
    permit persons to whom the Software is furnished to do so, subject to
    the following conditions:
- 
+
    The above copyright notice and this permission notice shall be included
    in all copies or substantial portions of the Software.
- 
+
    THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY KIND,
    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -30,7 +30,7 @@
 #include <ffi.h>
 
 #ifndef __s390x__
- 
+
 .text
 
 	# r2:	cif->bytes
@@ -38,7 +38,7 @@
 	# r4:	ffi_prep_args
 	# r5:	ret_type
 	# r6:	ecif.rvalue
-	# ov:	fn 
+	# ov:	fn
 	# ov+8:	closure
 
 	# This assumes we are using gas.
@@ -125,7 +125,7 @@ ffi_call_SYSV:
 	.cfi_restore_state
 	# See comment on the nopr above.
 	nopr
- 
+
 .LretDouble:
 	l	%r4,48+56(%r11)
 	std	%f0,0(%r8)			# Return double
@@ -167,7 +167,7 @@ ffi_call_SYSV:
 	.cfi_restore_state
 	# See comment on the nopr above.
 	nopr
- 
+
 .LretInt64:
 	l	%r4,48+56(%r11)
 	stm	%r2,%r3,0(%r8)			# Return long long
@@ -186,7 +186,7 @@ ffi_call_SYSV:
 	.cfi_def_cfa r15, 96
 	br	%r4
 	.cfi_endproc
- 
+
 .Ltable:
 	.byte	.LretNone-.Lbase		# FFI390_RET_VOID
 	.byte	.LretNone-.Lbase		# FFI390_RET_STRUCT
@@ -269,15 +269,15 @@ ffi_go_closure_SYSV:
 	.cfi_endproc
 
 #else
- 
+
 .text
- 
+
 	# r2:	cif->bytes
 	# r3:	&ecif
 	# r4:	ffi_prep_args
 	# r5:	ret_type
 	# r6:	ecif.rvalue
-	# ov:	fn 
+	# ov:	fn
 	# ov+8:	closure
 
 	# This assumes we are using gas.
@@ -365,7 +365,7 @@ ffi_call_SYSV:
 	.cfi_restore_state
 	# See comment on the nopr above.
 	nopr
- 
+
 .LretDouble:
 	lg	%r4,80+112(%r11)
 	std	%f0,0(%r8)			# Return double
@@ -404,7 +404,7 @@ ffi_call_SYSV:
 	.cfi_def_cfa r15, 160
 	br	%r4
 	.cfi_endproc
- 
+
 .Ltable:
 	.byte	.LretNone-.Lbase		# FFI390_RET_VOID
 	.byte	.LretNone-.Lbase		# FFI390_RET_STRUCT
@@ -461,7 +461,7 @@ ffi_closure_SYSV:
 .ffi_closure_SYSV_end:
 	.size	 ffi_closure_SYSV,.ffi_closure_SYSV_end-ffi_closure_SYSV
 
-	
+
 	.globl	ffi_go_closure_SYSV
 	FFI_HIDDEN(ffi_go_closure_SYSV)
 	.type	ffi_go_closure_SYSV,%function
