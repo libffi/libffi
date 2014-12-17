@@ -65,21 +65,6 @@
 /*===================== End of Defines ===============================*/
  
 /*====================================================================*/
-/*                          Prototypes                                */
-/*                          ----------                                */
-/*====================================================================*/
- 
-static void ffi_prep_args (unsigned char *, extended_cif *);
-void
-#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 2)
-__attribute__ ((visibility ("hidden")))
-#endif
-ffi_closure_helper_SYSV (ffi_closure *, unsigned long *, 
-			 unsigned long long *, unsigned long *);
-
-/*====================== End of Prototypes ===========================*/
- 
-/*====================================================================*/
 /*                          Externals                                 */
 /*                          ---------                                 */
 /*====================================================================*/
@@ -89,9 +74,10 @@ extern void ffi_call_SYSV(unsigned,
 			  void (*)(unsigned char *, extended_cif *),
 			  unsigned,
 			  void *,
-			  void (*fn)(void));
+			  void (*fn)(void), void *);
 
 extern void ffi_closure_SYSV(void);
+extern void ffi_go_closure_SYSV(void);
  
 /*====================== End of Externals ============================*/
  
@@ -504,11 +490,12 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 /*                                                                    */
 /*====================================================================*/
  
-void
-ffi_call(ffi_cif *cif,
-	 void (*fn)(void),
-	 void *rvalue,
-	 void **avalue)
+static void
+ffi_call_int(ffi_cif *cif,
+	     void (*fn)(void),
+	     void *rvalue,
+	     void **avalue,
+	     void *closure)
 {
   int ret_type = cif->flags;
   extended_cif ecif;
@@ -530,13 +517,26 @@ ffi_call(ffi_cif *cif,
     {
       case FFI_SYSV:
         ffi_call_SYSV (cif->bytes, &ecif, ffi_prep_args,
-		       ret_type, ecif.rvalue, fn);
+		       ret_type, ecif.rvalue, fn, closure);
         break;
  
       default:
         FFI_ASSERT (0);
         break;
     }
+}
+
+void
+ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+{
+  ffi_call_int(cif, fn, rvalue, avalue, NULL);
+}
+
+void
+ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
+	     void **avalue, void *closure)
+{
+  ffi_call_int(cif, fn, rvalue, avalue, closure);
 }
  
 /*======================== End of Routine ============================*/
@@ -548,9 +548,12 @@ ffi_call(ffi_cif *cif,
 /* Function - Call a FFI closure target function.                     */
 /*                                                                    */
 /*====================================================================*/
- 
+
+FFI_HIDDEN
 void
-ffi_closure_helper_SYSV (ffi_closure *closure,
+ffi_closure_helper_SYSV (ffi_cif *cif,
+			 void (*fun)(ffi_cif*,void*,void**,void*),
+			 void *user_data,
 			 unsigned long *p_gpr,
 			 unsigned long long *p_fpr,
 			 unsigned long *p_ov)
@@ -570,20 +573,18 @@ ffi_closure_helper_SYSV (ffi_closure *closure,
 
   /* Allocate buffer for argument list pointers.  */
 
-  p_arg = avalue = alloca (closure->cif->nargs * sizeof (void *));
+  p_arg = avalue = alloca (cif->nargs * sizeof (void *));
 
   /* If we returning a structure, pass the structure address 
      directly to the target function.  Otherwise, have the target 
      function store the return value to the GPR save area.  */
 
-  if (closure->cif->flags == FFI390_RET_STRUCT)
+  if (cif->flags == FFI390_RET_STRUCT)
     rvalue = (void *) p_gpr[n_gpr++];
 
   /* Now for the arguments.  */
 
-  for (ptr = closure->cif->arg_types, i = closure->cif->nargs;
-       i > 0;
-       i--, p_arg++, ptr++)
+  for (ptr = cif->arg_types, i = cif->nargs; i > 0; i--, p_arg++, ptr++)
     {
       int deref_struct_pointer = 0;
       int type = (*ptr)->type;
@@ -689,10 +690,10 @@ ffi_closure_helper_SYSV (ffi_closure *closure,
 
 
   /* Call the target function.  */
-  (closure->fun) (closure->cif, rvalue, avalue, closure->user_data);
+  (fun) (cif, rvalue, avalue, user_data);
 
   /* Convert the return value.  */
-  switch (closure->cif->rtype->type)
+  switch (cif->rtype->type)
     {
       /* Void is easy, and so is struct.  */
       case FFI_TYPE_VOID:
@@ -790,3 +791,18 @@ ffi_prep_closure_loc (ffi_closure *closure,
 
 /*======================== End of Routine ============================*/
  
+/* Build a Go language closure.  */
+
+ffi_status
+ffi_prep_go_closure (ffi_go_closure *closure, ffi_cif *cif,
+		     void (*fun)(ffi_cif*,void*,void**,void*))
+{
+  if (cif->abi != FFI_SYSV)
+    return FFI_BAD_ABI;
+
+  closure->tramp = ffi_go_closure_SYSV;
+  closure->cif = cif;
+  closure->fun = fun;
+
+  return FFI_OK;
+}
