@@ -55,13 +55,21 @@ ffi_call_SYSV:
 	.cfi_rel_offset r14, 56
 	.cfi_def_cfa_register r13
 	l	%r15,60(%r2)			# Set up outgoing stack
+#ifdef HAVE_AS_S390_ZARCH
+	larl	%r14,.Ltable
+#else
 	basr	%r14,0				# Set up base register
 .Lbase:
+#endif
 	sla	%r3,3				# ret_type *= 8
 	lr	%r12,%r4			# Save ret_addr
 	lr	%r1,%r5				# Save fun
 	lr	%r0,%r6				# Install static chain
+#ifdef HAVE_AS_S390_ZARCH
+	la	%r14,0(%r14,%r3)		# Set return address
+#else
 	la	%r14,.Ltable-.Lbase(%r14,%r3)	# Set return address
+#endif
 	lm	%r2,%r6,8(%r13)			# Load arguments
 	ld	%f0,64(%r13)
 	ld	%f2,72(%r13)
@@ -141,10 +149,12 @@ ffi_closure_SYSV:
 	.cfi_rel_offset r13, 52
 	.cfi_rel_offset r14, 56
 	.cfi_rel_offset r15, 60
+#ifndef HAVE_AS_S390_ZARCH
 	basr	%r13,0				# Set up base register
 .Lcbase:
-	ahi	%r15,-96-8			# Set up stack frame
 	l	%r1,.Lchelper-.Lcbase(%r13)	# Get helper function
+#endif
+	ahi	%r15,-96-8			# Set up stack frame
 	st	%r12,0(%r15)			# Set up back chain
 
 	std	%f0,64(%r12)			# Save fp arguments
@@ -154,7 +164,11 @@ ffi_closure_SYSV:
 	st	%r5,96(%r15)
 	la	%r6,64(%r12)			# FPRs
 	la	%r5,8(%r12)			# GPRs
+#ifdef HAVE_AS_S390_ZARCH
+	brasl	%r14,ffi_closure_helper_SYSV
+#else
 	bas	%r14,0(%r1,%r13)		# Call helper
+#endif
 
 	lr	%r15,%r12
 	.cfi_def_cfa_register r15
@@ -165,10 +179,11 @@ ffi_closure_SYSV:
 	br	%r14
 	.cfi_endproc
 
+#ifndef HAVE_AS_S390_ZARCH
 	.align 4
 .Lchelper:
 	.long	ffi_closure_helper_SYSV-.Lcbase
-
+#endif
 
 	.size	 ffi_closure_SYSV,.-ffi_closure_SYSV
 

@@ -183,6 +183,23 @@ if test x$TARGET = xX86 || test x$TARGET = xX86_WIN32 || test x$TARGET = xX86_64
     fi
 fi
 
+if test x$TARGET = xS390; then
+    AC_CACHE_CHECK([compiler uses zarch features],
+	libffi_cv_as_s390_zarch, [
+	libffi_cv_as_s390_zarch=no
+	echo 'void foo(void) { bar(); bar(); }' > conftest.c
+	if $CC $CFLAGS -S conftest.c > /dev/null 2>&1; then
+	    if grep -q brasl conftest.s; then
+	        libffi_cv_as_s390_zarch=yes
+	    fi
+	fi
+	])
+    if test "x$libffi_cv_as_s390_zarch" = xyes; then
+	AC_DEFINE(HAVE_AS_S390_ZARCH, 1,
+		  [Define if the compiler uses zarch features.])
+    fi
+fi
+
 # On PaX enable kernels that have MPROTECT enable we can't use PROT_EXEC.
 AC_ARG_ENABLE(pax_emutramp,
   [  --enable-pax_emutramp       enable pax emulated trampolines, for we can't use PROT_EXEC],
