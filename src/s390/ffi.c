@@ -762,29 +762,28 @@ ffi_prep_closure_loc (ffi_closure *closure,
 		      void *user_data,
 		      void *codeloc)
 {
+  static unsigned short const template[] = {
+    0x0d10,			/* basr %r1,0 */
+#ifndef __s390x__
+    0x9801, 0x1006,		/* lm %r0,%r1,6(%r1) */
+#else
+    0xeb01, 0x100e, 0x0004,	/* lmg %r0,%r1,14(%r1) */
+#endif
+    0x07f1			/* br %r1 */
+  };
+
+  unsigned long *tramp = (unsigned long *)&closure->tramp;
+
   if (cif->abi != FFI_SYSV)
     return FFI_BAD_ABI;
 
-#ifndef __s390x__
-  *(short *)&closure->tramp [0] = 0x0d10;   /* basr %r1,0 */
-  *(short *)&closure->tramp [2] = 0x9801;   /* lm %r0,%r1,6(%r1) */
-  *(short *)&closure->tramp [4] = 0x1006;
-  *(short *)&closure->tramp [6] = 0x07f1;   /* br %r1 */
-  *(long  *)&closure->tramp [8] = (long)codeloc;
-  *(long  *)&closure->tramp[12] = (long)&ffi_closure_SYSV;
-#else
-  *(short *)&closure->tramp [0] = 0x0d10;   /* basr %r1,0 */
-  *(short *)&closure->tramp [2] = 0xeb01;   /* lmg %r0,%r1,14(%r1) */
-  *(short *)&closure->tramp [4] = 0x100e;
-  *(short *)&closure->tramp [6] = 0x0004;
-  *(short *)&closure->tramp [8] = 0x07f1;   /* br %r1 */
-  *(long  *)&closure->tramp[16] = (long)codeloc;
-  *(long  *)&closure->tramp[24] = (long)&ffi_closure_SYSV;
-#endif
+  memcpy (tramp, template, sizeof(template));
+  tramp[2] = (unsigned long)codeloc;
+  tramp[3] = (unsigned long)&ffi_closure_SYSV;
 
   closure->cif = cif;
-  closure->user_data = user_data;
   closure->fun = fun;
+  closure->user_data = user_data;
 
   return FFI_OK;
 }
