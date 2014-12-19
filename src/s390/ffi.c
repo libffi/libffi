@@ -30,6 +30,7 @@
 
 #include <ffi.h>
 #include <ffi_common.h>
+#include <stdint.h>
 #include "internal.h"
 
 /*====================== End of Includes =============================*/
@@ -124,165 +125,6 @@ ffi_check_struct_type (ffi_type *arg)
 
   /* Other structs are passed via a pointer to the data.  */
   return FFI_TYPE_POINTER;
-}
-
-/*======================== End of Routine ============================*/
-
-/*====================================================================*/
-/*                                                                    */
-/* Name     - ffi_prep_args.                                          */
-/*                                                                    */
-/* Function - Prepare parameters for call to function.                */
-/*                                                                    */
-/* ffi_prep_args is called by the assembly routine once stack space   */
-/* has been allocated for the function's arguments.                   */
-/*                                                                    */
-/*====================================================================*/
-
-static void
-ffi_prep_args (ffi_cif *cif, void *rvalue, void **p_argv,
-	       unsigned long *p_ov, struct call_frame *p_frame)
-{
-  unsigned char *p_struct = (unsigned char *)p_frame;
-  unsigned long *p_gpr = p_frame->gpr_args;
-  unsigned long long *p_fpr = p_frame->fpr_args;
-  int n_fpr = 0;
-  int n_gpr = 0;
-  int n_ov = 0;
-  ffi_type **ptr;
-  int i;
-
-  /* If we returning a structure then we set the first parameter register
-     to the address of where we are returning this structure.  */
-  if (cif->flags & FFI390_RET_IN_MEM)
-    p_gpr[n_gpr++] = (unsigned long) rvalue;
-
-  /* Now for the arguments.  */
-  for (ptr = cif->arg_types, i = cif->nargs; i > 0; i--, ptr++, p_argv++)
-    {
-      ffi_type *ty = *ptr;
-      void *arg = *p_argv;
-      int type = ty->type;
-
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
-      /* 16-byte long double is passed like a struct.  */
-      if (type == FFI_TYPE_LONGDOUBLE)
-	type = FFI_TYPE_STRUCT;
-#endif
-
-      /* Check how a structure type is passed.  */
-      if (type == FFI_TYPE_STRUCT || type == FFI_TYPE_COMPLEX)
-	{
-	  if (type == FFI_TYPE_COMPLEX)
-	    type = FFI_TYPE_POINTER;
-	  else
-	    type = ffi_check_struct_type (ty);
-
-	  /* If we pass the struct via pointer, copy the data.  */
-	  if (type == FFI_TYPE_POINTER)
-	    {
-	      p_struct -= ROUND_SIZE (ty->size);
-	      memcpy (p_struct, (char *)arg, ty->size);
-	      arg = &p_struct;
-	    }
-	}
-
-      /* Now handle all primitive int/pointer/float data types.  */
-      switch (type)
-	{
-	  case FFI_TYPE_DOUBLE:
-	    if (n_fpr < MAX_FPRARGS)
-	      p_fpr[n_fpr++] = *(unsigned long long *) arg;
-	    else
-#ifdef __s390x__
-	      p_ov[n_ov++] = *(unsigned long *) arg;
-#else
-	      p_ov[n_ov++] = ((unsigned long *) arg)[0],
-	      p_ov[n_ov++] = ((unsigned long *) arg)[1];
-#endif
-	    break;
-
-	  case FFI_TYPE_FLOAT:
-	    if (n_fpr < MAX_FPRARGS)
-	      p_fpr[n_fpr++] = (unsigned long long)*(unsigned int *) arg << 32;
-	    else
-	      p_ov[n_ov++] = *(unsigned int *) arg;
-	    break;
-
-	  case FFI_TYPE_POINTER:
-	    if (n_gpr < MAX_GPRARGS)
-	      p_gpr[n_gpr++] = (unsigned long)*(unsigned char **) arg;
-	    else
-	      p_ov[n_ov++] = (unsigned long)*(unsigned char **) arg;
-	    break;
-
-	  case FFI_TYPE_UINT64:
-	  case FFI_TYPE_SINT64:
-#ifdef __s390x__
-	    if (n_gpr < MAX_GPRARGS)
-	      p_gpr[n_gpr++] = *(unsigned long *) arg;
-	    else
-	      p_ov[n_ov++] = *(unsigned long *) arg;
-#else
-	    if (n_gpr == MAX_GPRARGS-1)
-	      n_gpr = MAX_GPRARGS;
-	    if (n_gpr < MAX_GPRARGS)
-	      p_gpr[n_gpr++] = ((unsigned long *) arg)[0],
-	      p_gpr[n_gpr++] = ((unsigned long *) arg)[1];
-	    else
-	      p_ov[n_ov++] = ((unsigned long *) arg)[0],
-	      p_ov[n_ov++] = ((unsigned long *) arg)[1];
-#endif
-	    break;
-
-	  case FFI_TYPE_UINT32:
-	    if (n_gpr < MAX_GPRARGS)
-	      p_gpr[n_gpr++] = *(unsigned int *) arg;
-	    else
-	      p_ov[n_ov++] = *(unsigned int *) arg;
-	    break;
-
-	  case FFI_TYPE_INT:
-	  case FFI_TYPE_SINT32:
-	    if (n_gpr < MAX_GPRARGS)
-	      p_gpr[n_gpr++] = *(signed int *) arg;
-	    else
-	      p_ov[n_ov++] = *(signed int *) arg;
-	    break;
-
-	  case FFI_TYPE_UINT16:
-	    if (n_gpr < MAX_GPRARGS)
-	      p_gpr[n_gpr++] = *(unsigned short *) arg;
-	    else
-	      p_ov[n_ov++] = *(unsigned short *) arg;
-	    break;
-
-	  case FFI_TYPE_SINT16:
-	    if (n_gpr < MAX_GPRARGS)
-	      p_gpr[n_gpr++] = *(signed short *) arg;
-	    else
-	      p_ov[n_ov++] = *(signed short *) arg;
-	    break;
-
-	  case FFI_TYPE_UINT8:
-	    if (n_gpr < MAX_GPRARGS)
-	      p_gpr[n_gpr++] = *(unsigned char *) arg;
-	    else
-	      p_ov[n_ov++] = *(unsigned char *) arg;
-	    break;
-
-	  case FFI_TYPE_SINT8:
-	    if (n_gpr < MAX_GPRARGS)
-	      p_gpr[n_gpr++] = *(signed char *) arg;
-	    else
-	      p_ov[n_ov++] = *(signed char *) arg;
-	    break;
-
-	  default:
-	    FFI_ASSERT (0);
-	    break;
-        }
-    }
 }
 
 /*======================== End of Routine ============================*/
@@ -469,8 +311,12 @@ ffi_call_int(ffi_cif *cif,
 {
   int ret_type = cif->flags;
   size_t rsize = 0, bytes = cif->bytes;
-  unsigned char *stack;
+  unsigned char *stack, *p_struct;
   struct call_frame *frame;
+  unsigned long *p_ov, *p_gpr;
+  unsigned long long *p_fpr;
+  int n_fpr, n_gpr, n_ov, i, n;
+  ffi_type **arg_types;
 
   FFI_ASSERT (cif->abi == FFI_SYSV);
 
@@ -499,22 +345,134 @@ ffi_call_int(ffi_cif *cif,
 	p_ov: bottom of the overflow area (growing upwards)
 	p_struct: top of the struct copy area (growing downwards)
 
-     All areas are kept aligned to twice the word size.  */
+     All areas are kept aligned to twice the word size.
+
+     Note that we're going to create the stack frame for both
+     ffi_call_SYSV _and_ the target function right here.  This
+     works because we don't make any function calls with more
+     than 5 arguments (indeed only memcpy and ffi_call_SYSV),
+     and thus we don't have any stacked outgoing parameters.  */
 
   stack = alloca (bytes + sizeof(struct call_frame) + rsize);
   frame = (struct call_frame *)(stack + bytes);
   if (rsize)
     rvalue = frame + 1;
 
-  /* Assuming that the current function has the standard call frame,
-     we can maintain the linked list like so.  */
-  frame->back_chain = __builtin_dwarf_cfa() - sizeof(struct call_frame);
-
-  /* Pass the outgoing stack frame in the r15 save slot.  */
-  frame->gpr_save[8] = (unsigned long)(stack - sizeof(struct call_frame));
+  /* Link the new frame back to the one from this function.  */
+  frame->back_chain = __builtin_frame_address (0);
 
   /* Fill in all of the argument stuff.  */
-  ffi_prep_args (cif, rvalue, avalue, (unsigned long *)stack, frame);
+  p_ov = (unsigned long *)stack;
+  p_struct = (unsigned char *)frame;
+  p_gpr = frame->gpr_args;
+  p_fpr = frame->fpr_args;
+  n_fpr = n_gpr = n_ov = 0;
+
+  /* If we returning a structure then we set the first parameter register
+     to the address of where we are returning this structure.  */
+  if (cif->flags & FFI390_RET_IN_MEM)
+    p_gpr[n_gpr++] = (uintptr_t) rvalue;
+
+  /* Now for the arguments.  */
+  arg_types = cif->arg_types;
+  for (i = 0, n = cif->nargs; i < n; ++i)
+    {
+      ffi_type *ty = arg_types[i];
+      void *arg = avalue[i];
+      int type = ty->type;
+      ffi_arg val;
+
+    restart:
+      switch (type)
+	{
+	case FFI_TYPE_SINT8:
+	  val = *(SINT8 *)arg;
+	  goto do_int;
+	case FFI_TYPE_UINT8:
+	  val = *(UINT8 *)arg;
+	  goto do_int;
+	case FFI_TYPE_SINT16:
+	  val = *(SINT16 *)arg;
+	  goto do_int;
+	case FFI_TYPE_UINT16:
+	  val = *(UINT16 *)arg;
+	  goto do_int;
+	case FFI_TYPE_INT:
+	case FFI_TYPE_SINT32:
+	  val = *(SINT32 *)arg;
+	  goto do_int;
+	case FFI_TYPE_UINT32:
+	  val = *(UINT32 *)arg;
+	  goto do_int;
+	case FFI_TYPE_POINTER:
+	  val = *(uintptr_t *)arg;
+	do_int:
+	  *(n_gpr < MAX_GPRARGS ? p_gpr + n_gpr++ : p_ov + n_ov++) = val;
+	  break;
+
+	case FFI_TYPE_UINT64:
+	case FFI_TYPE_SINT64:
+#ifdef __s390x__
+	  val = *(UINT64 *)arg;
+	  goto do_int;
+#else
+	  if (n_gpr == MAX_GPRARGS-1)
+	    n_gpr = MAX_GPRARGS;
+	  if (n_gpr < MAX_GPRARGS)
+	    p_gpr[n_gpr++] = ((UINT32 *) arg)[0],
+	    p_gpr[n_gpr++] = ((UINT32 *) arg)[1];
+	  else
+	    p_ov[n_ov++] = ((UINT32 *) arg)[0],
+	    p_ov[n_ov++] = ((UINT32 *) arg)[1];
+#endif
+	  break;
+
+	case FFI_TYPE_DOUBLE:
+	  if (n_fpr < MAX_FPRARGS)
+	    p_fpr[n_fpr++] = *(UINT64 *) arg;
+	  else
+	    {
+#ifdef __s390x__
+	      p_ov[n_ov++] = *(UINT64 *) arg;
+#else
+	      p_ov[n_ov++] = ((UINT32 *) arg)[0],
+	      p_ov[n_ov++] = ((UINT32 *) arg)[1];
+#endif
+	    }
+	  break;
+
+	case FFI_TYPE_FLOAT:
+	  val = *(UINT32 *)arg;
+	  if (n_fpr < MAX_FPRARGS)
+	    p_fpr[n_fpr++] = (UINT64)val << 32;
+	  else
+	    p_ov[n_ov++] = val;
+	  break;
+
+	case FFI_TYPE_STRUCT:
+          /* Check how a structure type is passed.  */
+	  type = ffi_check_struct_type (ty);
+	  /* Some structures are passed via a type they contain.  */
+	  if (type != FFI_TYPE_POINTER)
+	    goto restart;
+	  /* ... otherwise, passed by reference.  fallthru.  */
+
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+	case FFI_TYPE_LONGDOUBLE:
+	  /* 16-byte long double is passed via reference.  */
+#endif
+	case FFI_TYPE_COMPLEX:
+	  /* Complex types are passed via reference.  */
+	  p_struct -= ROUND_SIZE (ty->size);
+	  memcpy (p_struct, arg, ty->size);
+	  val = (uintptr_t)p_struct;
+	  goto do_int;
+
+	default:
+	  FFI_ASSERT (0);
+	  break;
+        }
+    }
 
   ffi_call_SYSV (frame, ret_type & FFI360_RET_MASK, rvalue, fn, closure);
 }

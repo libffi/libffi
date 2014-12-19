@@ -54,26 +54,24 @@ ffi_call_SYSV:
 	.cfi_rel_offset r13, 52
 	.cfi_rel_offset r14, 56
 	.cfi_def_cfa_register r13
-	l	%r15,60(%r2)			# Set up outgoing stack
-#ifdef HAVE_AS_S390_ZARCH
-	larl	%r14,.Ltable
-#else
-	basr	%r14,0				# Set up base register
-.Lbase:
-#endif
+	st	%r2,0(%r15)			# Set up back chain
 	sla	%r3,3				# ret_type *= 8
 	lr	%r12,%r4			# Save ret_addr
 	lr	%r1,%r5				# Save fun
 	lr	%r0,%r6				# Install static chain
+
+	# Set return address, so that there is only one indirect jump.
 #ifdef HAVE_AS_S390_ZARCH
-	la	%r14,0(%r14,%r3)		# Set return address
+	larl	%r14,.Ltable
+	ar	%r14,%r3
 #else
-	la	%r14,.Ltable-.Lbase(%r14,%r3)	# Set return address
+	basr	%r14,0
+0:	la	%r14,.Ltable-0b(%r14,%r3)
 #endif
+
 	lm	%r2,%r6,8(%r13)			# Load arguments
 	ld	%f0,64(%r13)
 	ld	%f2,72(%r13)
-	st	%r13,0(%r15)			# Set up back chain
 	br	%r1				# ... and call function
 
 	.balign	8
@@ -210,7 +208,7 @@ ffi_call_SYSV:
 	.cfi_rel_offset r13, 104
 	.cfi_rel_offset r14, 112
 	.cfi_def_cfa_register r13
-	lg	%r15,120(%r2)			# Set up outgoing stack
+	stg	%r2,0(%r15)			# Set up back chain
 	larl	%r14,.Ltable			# Set up return address
 	slag	%r3,%r3,3			# ret_type *= 8
 	lgr	%r12,%r4			# Save ret_addr
@@ -222,7 +220,6 @@ ffi_call_SYSV:
 	ld	%f2,136(%r13)
 	ld	%f4,144(%r13)
 	ld	%f6,152(%r13)
-	stg	%r13,0(%r15)			# Set up back chain
 	br	%r1				# ... and call function
 
 	.balign	8
