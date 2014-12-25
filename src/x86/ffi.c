@@ -425,6 +425,7 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
     case X86_RET_STRUCTPOP:
       rvalue = *(void **)argp;
       argp += sizeof(void *);
+      frame->rettemp[0] = (unsigned)rvalue;
       break;
     }
 

@@ -231,8 +231,9 @@ ENDF(ffi_call_i386)
 	call	ffi_closure_inner
 #define FFI_CLOSURE_MASK_AND_JUMP(N, UW)				\
 	andl	$X86_RET_TYPE_MASK, %eax;				\
-	leal	L(C1(load_table,N))(, %eax, 8), %eax;			\
-	jmp	*%eax
+	leal	L(C1(load_table,N))(, %eax, 8), %edx;			\
+	movl	(%esp), %eax;			/* optimiztic load */	\
+	jmp	*%edx
 
 #ifdef __PIC__
 # if defined X86_DARWIN || defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE
@@ -241,8 +242,9 @@ ENDF(ffi_call_i386)
 	andl	$X86_RET_TYPE_MASK, %eax;				\
 	call	C(__x86.get_pc_thunk.dx);				\
 L(C1(pc,N)):								\
-	leal	L(C1(load_table,N))-L(C1(pc,N))(%edx, %eax, 8), %eax;	\
-	jmp	*%eax
+	leal	L(C1(load_table,N))-L(C1(pc,N))(%edx, %eax, 8), %edx;	\
+	movl	(%esp), %eax;			/* optimiztic load */	\
+	jmp	*%edx
 # else
 #  define FFI_CLOSURE_CALL_INNER_SAVE_EBX
 #  undef FFI_CLOSURE_CALL_INNER
@@ -258,11 +260,12 @@ L(C1(UW,UWN)):								\
 #  undef FFI_CLOSURE_MASK_AND_JUMP
 #  define FFI_CLOSURE_MASK_AND_JUMP(N, UWN)				\
 	andl	$X86_RET_TYPE_MASK, %eax;				\
-	leal	L(C1(load_table,N))@GOTOFF(%ebx, %eax, 8), %eax;	\
+	leal	L(C1(load_table,N))@GOTOFF(%ebx, %eax, 8), %edx;	\
 	movl	40(%esp), %ebx;			/* restore ebx */	\
 L(C1(UW,UWN)):								\
 	# cfi_restore(%ebx);						\
-	jmp	*%eax
+	movl	(%esp), %eax;			/* optimiztic load */	\
+	jmp	*%edx
 # endif /* DARWIN || HIDDEN */
 #endif /* __PIC__ */
 
@@ -341,22 +344,22 @@ E(L(load_table2), X86_RET_LDOUBLE)
 	fldt	(%esp)
 	jmp	L(e2)
 E(L(load_table2), X86_RET_SINT8)
-	movsbl	(%esp), %eax
+	movsbl	%al, %eax
 	jmp	L(e2)
 E(L(load_table2), X86_RET_SINT16)
-	movswl	(%esp), %eax
+	movswl	%ax, %eax
 	jmp	L(e2)
 E(L(load_table2), X86_RET_UINT8)
-	movzbl	(%esp), %eax
+	movzbl	%al, %eax
 	jmp	L(e2)
 E(L(load_table2), X86_RET_UINT16)
-	movzwl	(%esp), %eax
+	movzwl	%ax, %eax
 	jmp	L(e2)
 E(L(load_table2), X86_RET_INT64)
 	movl	4(%esp), %edx
-	/* fallthru */
+	jmp	L(e2)
 E(L(load_table2), X86_RET_INT32)
-	movl	(%esp), %eax
+	nop
 	/* fallthru */
 E(L(load_table2), X86_RET_VOID)
 L(e2):
@@ -374,13 +377,12 @@ L(UW18):
 L(UW19):
 	# cfi_adjust_cfa_offset(closure_FS)
 E(L(load_table2), X86_RET_STRUCTARG)
-	movl	(%esp), %eax
 	jmp	L(e2)
 E(L(load_table2), X86_RET_STRUCT_1B)
-	movzbl	(%esp), %eax
+	movzbl	%al, %eax
 	jmp	L(e2)
 E(L(load_table2), X86_RET_STRUCT_2B)
-	movzwl	(%esp), %eax
+	movzwl	%ax, %eax
 	jmp	L(e2)
 
 	/* Fill out the table so that bad values are predictable.  */
@@ -491,19 +493,19 @@ E(L(load_table3), X86_RET_LDOUBLE)
 	movl    %ecx, %esp
 	ret
 E(L(load_table3), X86_RET_SINT8)
-	movsbl  (%esp), %eax
+	movsbl  %al, %eax
 	movl    %ecx, %esp
 	ret
 E(L(load_table3), X86_RET_SINT16)
-	movswl  (%esp), %eax
+	movswl  %ax, %eax
 	movl    %ecx, %esp
 	ret
 E(L(load_table3), X86_RET_UINT8)
-	movzbl  (%esp), %eax
+	movzbl  %al, %eax
 	movl    %ecx, %esp
 	ret
 E(L(load_table3), X86_RET_UINT16)
-	movzwl  (%esp), %eax
+	movzwl  %ax, %eax
 	movl    %ecx, %esp
 	ret
 E(L(load_table3), X86_RET_INT64)
@@ -512,7 +514,6 @@ E(L(load_table3), X86_RET_INT64)
 	movl    %ecx, %esp
 	ret
 E(L(load_table3), X86_RET_INT32)
-	movl    (%esp), %eax
 	movl    %ecx, %esp
 	ret
 E(L(load_table3), X86_RET_VOID)
@@ -522,15 +523,14 @@ E(L(load_table3), X86_RET_STRUCTPOP)
 	movl    %ecx, %esp
 	ret
 E(L(load_table3), X86_RET_STRUCTARG)
-	movl	(%esp), %eax
 	movl	%ecx, %esp
 	ret
 E(L(load_table3), X86_RET_STRUCT_1B)
-	movzbl	(%esp), %eax
+	movzbl	%al, %eax
 	movl	%ecx, %esp
 	ret
 E(L(load_table3), X86_RET_STRUCT_2B)
-	movzwl	(%esp), %eax
+	movzwl	%ax, %eax
 	movl	%ecx, %esp
 	ret
 
@@ -576,14 +576,15 @@ L(UW34):
 #ifdef __PIC__
 	call	C(__x86.get_pc_thunk.bx)
 L(pc4):
-	leal	L(load_table4)-L(pc4)(%ebx, %eax, 8), %eax
+	leal	L(load_table4)-L(pc4)(%ebx, %eax, 8), %ecx
 #else
-	leal	L(load_table4)(,%eax, 8), %eax
+	leal	L(load_table4)(,%eax, 8), %ecx
 #endif
 	movl	raw_closure_S_FS-4(%esp), %ebx
 L(UW35):
 	# cfi_restore(%ebx)
-	jmp	*%eax
+	movl	16(%esp), %eax				/* Optimistic load */
+	jmp	*%ecx
 
 	.balign	8
 L(load_table4):
@@ -597,22 +598,22 @@ E(L(load_table4), X86_RET_LDOUBLE)
 	fldt	16(%esp)
 	jmp	L(e4)
 E(L(load_table4), X86_RET_SINT8)
-	movsbl	16(%esp), %eax
+	movsbl	%al, %eax
 	jmp	L(e4)
 E(L(load_table4), X86_RET_SINT16)
-	movswl	16(%esp), %eax
+	movswl	%ax, %eax
 	jmp	L(e4)
 E(L(load_table4), X86_RET_UINT8)
-	movzbl	16(%esp), %eax
+	movzbl	%al, %eax
 	jmp	L(e4)
 E(L(load_table4), X86_RET_UINT16)
-	movzwl	16(%esp), %eax
+	movzwl	%ax, %eax
 	jmp	L(e4)
 E(L(load_table4), X86_RET_INT64)
 	movl	16+4(%esp), %edx
-	/* fallthru */
+	jmp	L(e4)
 E(L(load_table4), X86_RET_INT32)
-	movl	16(%esp), %eax
+	nop
 	/* fallthru */
 E(L(load_table4), X86_RET_VOID)
 L(e4):
@@ -630,13 +631,12 @@ L(UW38):
 L(UW39):
 	# cfi_adjust_cfa_offset(raw_closure_S_FS)
 E(L(load_table4), X86_RET_STRUCTARG)
-	movl	16(%esp), %eax
 	jmp	L(e4)
 E(L(load_table4), X86_RET_STRUCT_1B)
-	movzbl	16(%esp), %eax
+	movzbl	%al, %eax
 	jmp	L(e4)
 E(L(load_table4), X86_RET_STRUCT_2B)
-	movzwl	16(%esp), %eax
+	movzwl	%ax, %eax
 	jmp	L(e4)
 
 	/* Fill out the table so that bad values are predictable.  */
@@ -692,14 +692,15 @@ L(UW46):
 #ifdef __PIC__
 	call	C(__x86.get_pc_thunk.bx)
 L(pc5):
-	leal	L(load_table5)-L(pc5)(%ebx, %eax, 8), %eax
+	leal	L(load_table5)-L(pc5)(%ebx, %eax, 8), %ecx
 #else
-	leal	L(load_table5)(,%eax, 8), %eax
+	leal	L(load_table5)(,%eax, 8), %ecx
 #endif
 	movl	raw_closure_T_FS-4(%esp), %ebx
 L(UW47):
 	# cfi_restore(%ebx)
-	jmp	*%eax
+	movl	16(%esp), %eax				/* Optimistic load */
+	jmp	*%ecx
 
 	.balign	8
 L(load_table5):
@@ -713,22 +714,22 @@ E(L(load_table5), X86_RET_LDOUBLE)
 	fldt	16(%esp)
 	jmp	L(e5)
 E(L(load_table5), X86_RET_SINT8)
-	movsbl	16(%esp), %eax
+	movsbl	%al, %eax
 	jmp	L(e5)
 E(L(load_table5), X86_RET_SINT16)
-	movswl	16(%esp), %eax
+	movswl	%ax, %eax
 	jmp	L(e5)
 E(L(load_table5), X86_RET_UINT8)
-	movzbl	16(%esp), %eax
+	movzbl	%al, %eax
 	jmp	L(e5)
 E(L(load_table5), X86_RET_UINT16)
-	movzwl	16(%esp), %eax
+	movzwl	%ax, %eax
 	jmp	L(e5)
 E(L(load_table5), X86_RET_INT64)
 	movl	16+4(%esp), %edx
-	/* fallthru */
+	jmp	L(e5)
 E(L(load_table5), X86_RET_INT32)
-	movl	16(%esp), %eax
+	nop
 	/* fallthru */
 E(L(load_table5), X86_RET_VOID)
 L(e5):
@@ -747,13 +748,12 @@ L(UW50):
 L(UW51):
 	# cfi_adjust_cfa_offset(raw_closure_T_FS)
 E(L(load_table5), X86_RET_STRUCTARG)
-	movl	16(%esp), %eax
 	jmp	L(e5)
 E(L(load_table5), X86_RET_STRUCT_1B)
-	movzbl	16(%esp), %eax
+	movzbl	%al, %eax
 	jmp	L(e5)
 E(L(load_table5), X86_RET_STRUCT_2B)
-	movzwl	16(%esp), %eax
+	movzwl	%ax, %eax
 	jmp	L(e5)
 
 	/* Fill out the table so that bad values are predictable.  */
