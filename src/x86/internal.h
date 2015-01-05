@@ -21,3 +21,9 @@
 #define R_EAX	0
 #define R_EDX	1
 #define R_ECX	2
+
+#ifdef __PCC__
+# define HAVE_FASTCALL 0
+#else
+# define HAVE_FASTCALL 1
+#endif

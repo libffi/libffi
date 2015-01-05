@@ -235,7 +235,10 @@ static const struct abi_params abi_params[FFI_LAST_ABI] = {
 };
 
 extern void ffi_call_i386(struct call_frame *, char *)
-	FFI_HIDDEN __declspec(fastcall);
+#if HAVE_FASTCALL
+	__declspec(fastcall)
+#endif
+	FFI_HIDDEN;
 
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
@@ -392,7 +395,10 @@ struct closure_frame
   void *user_data;				/* 36 */
 };
 
-int FFI_HIDDEN __declspec(fastcall)
+int FFI_HIDDEN
+#if HAVE_FASTCALL
+__declspec(fastcall)
+#endif
 ffi_closure_inner (struct closure_frame *frame, char *stack)
 {
   ffi_cif *cif = frame->cif;
