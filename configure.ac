@@ -269,11 +269,13 @@ if test "x$GCC" = "xyes"; then
   	if $CC $CFLAGS -c -fpic -fexceptions -o conftest.o conftest.c > /dev/null 2>&1; then
 	    objdump -h conftest.o > conftest.dump 2>&1
 	    libffi_eh_frame_line=`grep -n eh_frame conftest.dump | cut -d: -f 1`
-	    libffi_test_line=`expr $libffi_eh_frame_line + 1`p
-	    sed -n $libffi_test_line conftest.dump > conftest.line
-  	    if grep READONLY conftest.line > /dev/null; then
-  		libffi_cv_ro_eh_frame=yes
-  	    fi
+	    if test "x$libffi_eh_frame_line" != "x"; then
+	        libffi_test_line=`expr $libffi_eh_frame_line + 1`p
+	        sed -n $libffi_test_line conftest.dump > conftest.line
+	        if grep READONLY conftest.line > /dev/null; then
+	            libffi_cv_ro_eh_frame=yes
+	        fi
+	    fi
   	fi
   	rm -f conftest.*
       ])
