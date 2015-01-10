@@ -729,7 +729,14 @@ ffi_closure_unix64_inner(ffi_cif *cif,
   gprcount = ssecount = 0;
 
   if (flags & UNIX64_FLAG_RET_IN_MEM)
-    rvalue = (void *)(uintptr_t)reg_args->gpr[gprcount++];
+    {
+      /* On return, %rax will contain the address that was passed
+	 by the caller in %rdi.  */
+      void *r = (void *)(uintptr_t)reg_args->gpr[gprcount++];
+      *(void **)rvalue = r;
+      rvalue = r;
+      flags = (sizeof(void *) == 4 ? UNIX64_RET_UINT32 : UNIX64_RET_INT64);
+    }
 
   arg_types = cif->arg_types;
   for (i = 0; i < avn; ++i)
