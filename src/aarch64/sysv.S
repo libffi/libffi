@@ -134,17 +134,17 @@ CNAME(ffi_call_SYSV):
 	ret
 7:	brk	#1000			/* UNUSED */
 	ret
-8:	st4	{ v0.s-v3.s }[0], [x3]	/* S4 */
+8:	st4	{ v0.s, v1.s, v2.s, v3.s }[0], [x3]	/* S4 */
 	ret
-9:	st3	{ v0.s-v2.s }[0], [x3]	/* S3 */
+9:	st3	{ v0.s, v1.s, v2.s }[0], [x3]	/* S3 */
 	ret
 10:	stp	s0, s1, [x3]		/* S2 */
 	ret
 11:	str	s0, [x3]		/* S1 */
 	ret
-12:	st4	{ v0.d-v3.d }[0], [x3]	/* D4 */
+12:	st4	{ v0.d, v1.d, v2.d, v3.d }[0], [x3]	/* D4 */
 	ret
-13:	st3	{ v0.d-v2.d }[0], [x3]	/* D3 */
+13:	st3	{ v0.d, v1.d, v2.d }[0], [x3]	/* D3 */
 	ret
 14:	stp	d0, d1, [x3]		/* D2 */
 	ret
