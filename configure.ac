@@ -215,7 +215,7 @@ fi
 
 FFI_EXEC_TRAMPOLINE_TABLE=0
 case "$target" in
-     *arm*-apple-darwin*)
+     *arm*-apple-darwin* | aarch64-apple-darwin*)
        FFI_EXEC_TRAMPOLINE_TABLE=1
        AC_DEFINE(FFI_EXEC_TRAMPOLINE_TABLE, 1,
                  [Cannot use PROT_EXEC on this target, so, we revert to
