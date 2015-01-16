@@ -83,6 +83,7 @@ C(ffi_call_v8):
 	save	%sp, %o4, %sp
 	cfi_def_cfa_register(%fp)
 	cfi_window_save
+	cfi_register(%o7, %i7)
 
 	mov	%i0, %o0		! copy cif
 	add	%sp, 64+32, %o1		! load args area
@@ -258,6 +259,7 @@ C(ffi_go_closure_v8):
 	save	%sp, -STACKFRAME, %sp
 	cfi_def_cfa_register(%fp)
 	cfi_window_save
+	cfi_register(%o7, %i7)
 
 	ld	[%g2+4], %o0			! load cif
 	ld	[%g2+8], %o1			! load fun
@@ -276,6 +278,7 @@ C(ffi_closure_v8):
 	save	%sp, -STACKFRAME, %sp
 	cfi_def_cfa_register(%fp)
 	cfi_window_save
+	cfi_register(%o7, %i7)
 
 	ld	[%g2+FFI_TRAMPOLINE_SIZE], %o0		! load cif
 	ld	[%g2+FFI_TRAMPOLINE_SIZE+4], %o1	! load fun

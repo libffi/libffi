@@ -61,6 +61,7 @@ C(ffi_call_v9):
 	save	%sp, %o4, %sp
 	cfi_def_cfa_register(%fp)
 	cfi_window_save
+	cfi_register(%o7, %i7)
 	
 	mov	%i0, %o0			! copy cif
 	add	%sp, STACK_BIAS+128+48, %o1	! load args area
@@ -222,6 +223,7 @@ C(ffi_go_closure_v9):
 	save	%sp, -STACKFRAME, %sp
 	cfi_def_cfa_register(%fp)
 	cfi_window_save
+	cfi_register(%o7, %i7)
 
 	ldx	[%g5+8], %o0
 	ldx	[%g5+16], %o1
@@ -241,6 +243,7 @@ C(ffi_closure_v9):
 	save	%sp, -STACKFRAME, %sp
 	cfi_def_cfa_register(%fp)
 	cfi_window_save
+	cfi_register(%o7, %i7)
 
 	ldx	[%g1+FFI_TRAMPOLINE_SIZE], %o0
 	ldx	[%g1+FFI_TRAMPOLINE_SIZE+8], %o1
