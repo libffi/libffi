@@ -177,7 +177,7 @@ E(SPARC_RET_F_2)
 	 restore
 E(SP_V8_RET_CPLX8)
 	stb	%o0, [%i2+1]
-	b	10f
+	b	0f
 	 srl	%o0, 8, %o0
 E(SPARC_RET_F_1)
 	st	%f0, [%i2]
@@ -189,7 +189,7 @@ E(SPARC_RET_F_1)
 	ret
 	 restore
 	.align	8
-10:	stb	%o0, [%i2]
+0:	stb	%o0, [%i2]
 	ret
 	 restore
 
@@ -202,17 +202,35 @@ E(SPARC_RET_F_1)
 	 sll	%l1, 2, %l0			! size * 4
 1:	sll	%l1, 4, %l1			! size * 16
 	add	%l0, %l1, %l0			! size * 20
-	add	%o7, %l0, %o7			! o7 = 0b + size*20
+	add	%o7, %l0, %o7			! o7 = 8b + size*20
 	jmp	%o7+(2f-8b)
 	 mov	%i5, %g2			! load static chain
 2:
-.rept	0x1000
-	call	%i1
-	 nop
-	unimp	(. - 2b) / 20
-	ret
+
+/* The Sun assembler doesn't understand .rept 0x1000.  */
+#define rept1			\
+	call	%i1;		\
+	 nop;			\
+	unimp	(. - 2b) / 20;	\
+	ret;			\
 	 restore
-.endr
+
+#define rept16				\
+	rept1; rept1; rept1; rept1;	\
+	rept1; rept1; rept1; rept1;	\
+	rept1; rept1; rept1; rept1;	\
+	rept1; rept1; rept1; rept1
+
+#define rept256				\
+	rept16; rept16; rept16; rept16;	\
+	rept16; rept16; rept16; rept16;	\
+	rept16; rept16; rept16; rept16;	\
+	rept16; rept16; rept16; rept16
+
+	rept256; rept256; rept256; rept256
+	rept256; rept256; rept256; rept256
+	rept256; rept256; rept256; rept256
+	rept256; rept256; rept256; rept256
 
 	cfi_endproc
 	.size	C(ffi_call_v8),. - C(ffi_call_v8)
