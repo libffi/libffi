@@ -822,6 +822,8 @@ ENDF(C(__x86.get_pc_thunk.dx))
 #ifdef __APPLE__
 .section __TEXT,__eh_frame,coalesced,no_toc+strip_static_syms+live_support
 EHFrame0:
+#elif defined(X86_WIN32)
+.section .eh_frame,"r"
 #elif defined(HAVE_AS_X86_64_UNWIND_SECTION_TYPE)
 .section .eh_frame,EH_FRAME_FLAGS,@unwind
 #else
