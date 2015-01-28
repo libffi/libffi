@@ -111,7 +111,8 @@ AC_C_BIGENDIAN
 
 GCC_AS_CFI_PSEUDO_OP
 
-if test x$TARGET = xSPARC; then
+case "$TARGET" in
+  SPARC)
     AC_CACHE_CHECK([assembler and linker support unaligned pc related relocs],
 	libffi_cv_as_sparc_ua_pcrel, [
 	save_CFLAGS="$CFLAGS"
@@ -140,9 +141,9 @@ if test x$TARGET = xSPARC; then
        AC_DEFINE(HAVE_AS_REGISTER_PSEUDO_OP, 1,
 	       [Define if your assembler supports .register.])
     fi
-fi
+    ;;
 
-if test x$TARGET = xX86 || test x$TARGET = xX86_WIN32 || test x$TARGET = xX86_64; then
+  X86*)
     AC_CACHE_CHECK([assembler supports pc related relocs],
 	libffi_cv_as_x86_pcrel, [
 	libffi_cv_as_x86_pcrel=no
@@ -155,35 +156,9 @@ if test x$TARGET = xX86 || test x$TARGET = xX86_WIN32 || test x$TARGET = xX86_64
 	AC_DEFINE(HAVE_AS_X86_PCREL, 1,
 		  [Define if your assembler supports PC relative relocs.])
     fi
+    ;;
 
-    AC_CACHE_CHECK([assembler .ascii pseudo-op support],
-       libffi_cv_as_ascii_pseudo_op, [
-       libffi_cv_as_ascii_pseudo_op=unknown
-       # Check if we have .ascii
-       AC_TRY_COMPILE(,[asm (".ascii \\"string\\"");],
-		       [libffi_cv_as_ascii_pseudo_op=yes],
-		       [libffi_cv_as_ascii_pseudo_op=no])
-    ])
-    if test "x$libffi_cv_as_ascii_pseudo_op" = xyes; then
-       AC_DEFINE(HAVE_AS_ASCII_PSEUDO_OP, 1,
-	       [Define if your assembler supports .ascii.])
-    fi
-
-    AC_CACHE_CHECK([assembler .string pseudo-op support],
-       libffi_cv_as_string_pseudo_op, [
-       libffi_cv_as_string_pseudo_op=unknown
-       # Check if we have .string
-       AC_TRY_COMPILE(,[asm (".string \\"string\\"");],
-		       [libffi_cv_as_string_pseudo_op=yes],
-		       [libffi_cv_as_string_pseudo_op=no])
-    ])
-    if test "x$libffi_cv_as_string_pseudo_op" = xyes; then
-       AC_DEFINE(HAVE_AS_STRING_PSEUDO_OP, 1,
-	       [Define if your assembler supports .string.])
-    fi
-fi
-
-if test x$TARGET = xS390; then
+  S390)
     AC_CACHE_CHECK([compiler uses zarch features],
 	libffi_cv_as_s390_zarch, [
 	libffi_cv_as_s390_zarch=no
@@ -198,7 +173,8 @@ if test x$TARGET = xS390; then
 	AC_DEFINE(HAVE_AS_S390_ZARCH, 1,
 		  [Define if the compiler uses zarch features.])
     fi
-fi
+    ;;
+esac
 
 # On PaX enable kernels that have MPROTECT enable we can't use PROT_EXEC.
 AC_ARG_ENABLE(pax_emutramp,
