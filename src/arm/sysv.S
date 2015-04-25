@@ -25,7 +25,7 @@
    DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
-#define LIBFFI_ASM	
+#define LIBFFI_ASM
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_cfi.h>
@@ -52,11 +52,12 @@
 #endif
 
 /* Conditionally compile unwinder directives.  */
-.macro UNWIND text:vararg
 #ifdef __ARM_EABI__
-	\text
-#endif	
-.endm
+# define UNWIND(...)	__VA_ARGS__
+#else
+# define UNWIND(...)
+#endif
+
 #if defined(HAVE_AS_CFI_PSEUDO_OP) && defined(__ARM_EABI__)
 	.cfi_sections	.debug_frame
 #endif
@@ -77,29 +78,39 @@
 # define TYPE(X, Y)
 #endif
 
-#define ARM_FUNC_START(name, gl) \
-	.align	3; \
-	.ifne gl; .globl CNAME(name); FFI_HIDDEN(CNAME(name)); .endif; \
-	TYPE(name, %function); \
+#define ARM_FUNC_START_LOCAL(name)	\
+	.align	3;			\
+	TYPE(CNAME(name), %function);	\
 	CNAME(name):
+
+#define ARM_FUNC_START(name)		\
+	.globl CNAME(name);		\
+	FFI_HIDDEN(CNAME(name));	\
+	ARM_FUNC_START_LOCAL(name)
 
 #define ARM_FUNC_END(name) \
 	SIZE(name)
 
 /* Aid in defining a jump table with 8 bytes between entries.  */
-.macro E index
-	.if . - 0b - 8*\index
-	.error "type table out of sync"
+/* ??? The clang assembler doesn't handle .if with symbolic expressions.  */
+#ifdef __clang__
+# define E(index)
+#else
+# define E(index)				\
+	.if . - 0b - 8*index;			\
+	.error "type table out of sync";	\
 	.endif
-.endm
+#endif
 
 	.text
 	.syntax unified
 	.arm
 
+#ifndef __clang__
 	/* We require interworking on LDM, which implies ARMv5T,
 	   which implies the existance of BLX.  */
-	.arch	armv5t
+ 	.arch	armv5t
+#endif
 
 	/* Note that we use STC and LDC to encode VFP instructions,
 	   so that we do not need ".fpu vfp", nor get that added to
@@ -111,25 +122,30 @@
 	@ r2:   fn
 	@ r3:	vfp_used
 
-ARM_FUNC_START(ffi_call_VFP, 1)
-	UNWIND	.fnstart
+ARM_FUNC_START(ffi_call_VFP)
+	UNWIND(.fnstart)
 	cfi_startproc
 
 	cmp	r3, #3			@ load only d0 if possible
+#ifdef __clang__
+	vldrle d0, [sp]
+	vldmgt sp, {d0-d7}
+#else
 	ldcle	p11, cr0, [r0]		@ vldrle d0, [sp]
 	ldcgt	p11, cr0, [r0], {16}	@ vldmgt sp, {d0-d7}
+#endif
 	add	r0, r0, #64		@ discard the vfp register args
 	/* FALLTHRU */
 ARM_FUNC_END(ffi_call_VFP)
 
-ARM_FUNC_START(ffi_call_SYSV, 1)
+ARM_FUNC_START(ffi_call_SYSV)
 	stm	r1, {fp, lr}
 	mov	fp, r1
 
 	@ This is a bit of a lie wrt the origin of the unwind info, but
 	@ now we've got the usual frame pointer and two saved registers.
-	UNWIND	.save {fp,lr}
-	UNWIND	.setfp fp, sp
+	UNWIND(.save {fp,lr})
+	UNWIND(.setfp fp, sp)
 	cfi_def_cfa(fp, 8)
 	cfi_rel_offset(fp, 0)
 	cfi_rel_offset(lr, 4)
@@ -154,29 +170,41 @@ ARM_FUNC_START(ffi_call_SYSV, 1)
 	add	pc, pc, r3, lsl #3
 	nop
 0:
-E ARM_TYPE_VFP_S
+E(ARM_TYPE_VFP_S)
+#ifdef __clang__
+	vstr s0, [r2]
+#else
 	stc	p10, cr0, [r2]		@ vstr s0, [r2]
+#endif
 	pop	{fp,pc}
-E ARM_TYPE_VFP_D
+E(ARM_TYPE_VFP_D)
+#ifdef __clang__
+	vstr d0, [r2]
+#else
 	stc	p11, cr0, [r2]		@ vstr d0, [r2]
+#endif
 	pop	{fp,pc}
-E ARM_TYPE_VFP_N
+E(ARM_TYPE_VFP_N)
+#ifdef __clang__
+	vstm r2, {d0-d3}
+#else
 	stc	p11, cr0, [r2], {8}	@ vstm r2, {d0-d3}
+#endif
 	pop	{fp,pc}
-E ARM_TYPE_INT64
+E(ARM_TYPE_INT64)
 	str	r1, [r2, #4]
 	nop
-E ARM_TYPE_INT
+E(ARM_TYPE_INT)
 	str	r0, [r2]
 	pop	{fp,pc}
-E ARM_TYPE_VOID
+E(ARM_TYPE_VOID)
 	pop	{fp,pc}
 	nop
-E ARM_TYPE_STRUCT
+E(ARM_TYPE_STRUCT)
 	pop	{fp,pc}
 
 	cfi_endproc
-	UNWIND	.fnend
+	UNWIND(.fnend)
 ARM_FUNC_END(ffi_call_SYSV)
 
 
@@ -184,7 +212,7 @@ ARM_FUNC_END(ffi_call_SYSV)
 	int ffi_closure_inner_* (cif, fun, user_data, frame)
 */
 
-ARM_FUNC_START(ffi_go_closure_SYSV, 1)
+ARM_FUNC_START(ffi_go_closure_SYSV)
 	cfi_startproc
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
@@ -195,8 +223,8 @@ ARM_FUNC_START(ffi_go_closure_SYSV, 1)
 	cfi_endproc
 ARM_FUNC_END(ffi_go_closure_SYSV)
 
-ARM_FUNC_START(ffi_closure_SYSV, 1)
-	UNWIND	.fnstart
+ARM_FUNC_START(ffi_closure_SYSV)
+	UNWIND(.fnstart)
 	cfi_startproc
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
@@ -212,7 +240,7 @@ ARM_FUNC_START(ffi_closure_SYSV, 1)
 	/* Remember that EABI unwind info only applies at call sites.
 	   We need do nothing except note the save of the stack pointer
 	   and the link registers.  */
-	UNWIND	.save {sp,lr}
+	UNWIND(.save {sp,lr})
 	cfi_adjust_cfa_offset(8)
 	cfi_rel_offset(lr, 4)
 
@@ -224,10 +252,10 @@ ARM_FUNC_START(ffi_closure_SYSV, 1)
 	adr	r3, CNAME(ffi_closure_ret)
 	add	pc, r3, r0, lsl #3
 	cfi_endproc
-	UNWIND	.fnend
+	UNWIND(.fnend)
 ARM_FUNC_END(ffi_closure_SYSV)
 
-ARM_FUNC_START(ffi_go_closure_VFP, 1)
+ARM_FUNC_START(ffi_go_closure_VFP)
 	cfi_startproc
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
@@ -238,8 +266,8 @@ ARM_FUNC_START(ffi_go_closure_VFP, 1)
 	cfi_endproc
 ARM_FUNC_END(ffi_go_closure_VFP)
 
-ARM_FUNC_START(ffi_closure_VFP, 1)
-	UNWIND	.fnstart
+ARM_FUNC_START(ffi_closure_VFP)
+	UNWIND(.fnstart)
 	cfi_startproc
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
@@ -250,11 +278,15 @@ ARM_FUNC_START(ffi_closure_VFP, 1)
 	add	ip, sp, #16
 	sub	sp, sp, #64+32			@ allocate frame
 	cfi_adjust_cfa_offset(64+32)
+#ifdef __clang__
+	vstm sp, {d0-d7}
+#else
 	stc	p11, cr0, [sp], {16}		@ vstm sp, {d0-d7}
+#endif
 	stmdb	sp!, {ip,lr}
 
 	/* See above.  */
-	UNWIND	.save {sp,lr}
+	UNWIND(.save {sp,lr})
 	cfi_adjust_cfa_offset(8)
 	cfi_rel_offset(lr, 4)
 
@@ -266,37 +298,49 @@ ARM_FUNC_START(ffi_closure_VFP, 1)
 	adr	r3, CNAME(ffi_closure_ret)
 	add	pc, r3, r0, lsl #3
 	cfi_endproc
-	UNWIND	.fnend
+	UNWIND(.fnend)
 ARM_FUNC_END(ffi_closure_VFP)
 
 /* Load values returned in registers for both closure entry points.
    Note that we use LDM with SP in the register set.  This is deprecated
    by ARM, but not yet unpredictable.  */
 
-ARM_FUNC_START(ffi_closure_ret, 0)
+ARM_FUNC_START_LOCAL(ffi_closure_ret)
 	cfi_startproc
 	cfi_rel_offset(sp, 0)
 	cfi_rel_offset(lr, 4)
 0:
-E ARM_TYPE_VFP_S
+E(ARM_TYPE_VFP_S)
+#ifdef __clang__
+	vldr s0, [r2]
+#else
 	ldc	p10, cr0, [r2]			@ vldr s0, [r2]
+#endif
 	ldm	sp, {sp,pc}
-E ARM_TYPE_VFP_D
+E(ARM_TYPE_VFP_D)
+#ifdef __clang__
+	vldr d0, [r2]
+#else
 	ldc	p11, cr0, [r2]			@ vldr d0, [r2]
+#endif
 	ldm	sp, {sp,pc}
-E ARM_TYPE_VFP_N
+E(ARM_TYPE_VFP_N)
+#ifdef __clang__
+	vldm r2, {d0-d3}
+#else
 	ldc	p11, cr0, [r2], {8}		@ vldm r2, {d0-d3}
+#endif
 	ldm	sp, {sp,pc}
-E ARM_TYPE_INT64
+E(ARM_TYPE_INT64)
 	ldr	r1, [r2, #4]
 	nop
-E ARM_TYPE_INT
+E(ARM_TYPE_INT)
 	ldr	r0, [r2]
 	ldm	sp, {sp,pc}
-E ARM_TYPE_VOID
+E(ARM_TYPE_VOID)
 	ldm	sp, {sp,pc}
 	nop
-E ARM_TYPE_STRUCT
+E(ARM_TYPE_STRUCT)
 	ldm	sp, {sp,pc}
 	cfi_endproc
 ARM_FUNC_END(ffi_closure_ret)
@@ -319,10 +363,11 @@ ARM_FUNC_START(ffi_closure_trampoline_table_page)
 	ldr	ip, [pc, #-4092]
 	ldr	pc, [pc, #-4092]
 .endr
+ARM_FUNC_END(ffi_closure_trampoline_table_page)
 
 #else
 
-ARM_FUNC_START(ffi_arm_trampoline, 1)
+ARM_FUNC_START(ffi_arm_trampoline)
 0:	adr	ip, 0b
 	ldr	pc, 1f
 1:	.long	0
