@@ -356,7 +356,7 @@ CNAME(ffi_closure_SYSV):
 #endif
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
-    .align 12
+    .align 14
 CNAME(ffi_closure_trampoline_table_page):
     .rept 16384 / FFI_TRAMPOLINE_SIZE
     adr	x17, -16384
