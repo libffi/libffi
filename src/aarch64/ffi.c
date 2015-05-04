@@ -758,11 +758,18 @@ struct ffi_trampoline_table_entry
   ffi_trampoline_table_entry *next;
 };
 
-/* The trampoline configuration is placed a page prior to the trampoline's entry point */
-#define FFI_TRAMPOLINE_CODELOC_CONFIG(codeloc) ((void **) (((uint8_t *) codeloc) - PAGE_SIZE));
+/* AArch64 supports multiple page sizes, from PAGE_MIN_SIZE to PAGE_MAX_SIZE.
+   The actual page size isn’t known until runtime. But by designing
+   the trampoline table for the maximum supported page size, it will always
+   be aligned on the actual pages. We wouldn’t really need to allocate more
+   than one actual page (and remap another), but always use the entire table
+   for simplicity. */
+
+/* The trampoline configuration is a maximum page size before the trampoline's entry point */
+#define FFI_TRAMPOLINE_CODELOC_CONFIG(codeloc) ((void **) (((uint8_t *) codeloc) - PAGE_MAX_SIZE));
 
 /* Total number of trampolines that fit in one trampoline table */
-#define FFI_TRAMPOLINE_COUNT (PAGE_SIZE / FFI_TRAMPOLINE_SIZE)
+#define FFI_TRAMPOLINE_COUNT (PAGE_MAX_SIZE / FFI_TRAMPOLINE_SIZE)
 
 static pthread_mutex_t ffi_trampoline_lock = PTHREAD_MUTEX_INITIALIZER;
 static ffi_trampoline_table *ffi_trampoline_tables = NULL;
@@ -772,15 +779,15 @@ ffi_trampoline_table_alloc ()
 {
   ffi_trampoline_table *table = NULL;
 
-  /* Loop until we can allocate two contiguous pages */
+  /* Loop until we can allocate contiguous pages equalling two maximum sized pages */
   while (table == NULL)
     {
       vm_address_t config_page = 0x0;
       kern_return_t kt;
 
-      /* Try to allocate two pages */
+      /* Try to allocate the equivalent of two maximum sized pages */
       kt =
-	vm_allocate (mach_task_self (), &config_page, PAGE_SIZE * 2,
+	vm_allocate (mach_task_self (), &config_page, PAGE_MAX_SIZE * 2,
 		     VM_FLAGS_ANYWHERE);
       if (kt != KERN_SUCCESS)
 	{
@@ -790,8 +797,8 @@ ffi_trampoline_table_alloc ()
 	}
 
       /* Now drop the second half of the allocation to make room for the trampoline table */
-      vm_address_t trampoline_page = config_page + PAGE_SIZE;
-      kt = vm_deallocate (mach_task_self (), trampoline_page, PAGE_SIZE);
+      vm_address_t trampoline_page = config_page + PAGE_MAX_SIZE;
+      kt = vm_deallocate (mach_task_self (), trampoline_page, PAGE_MAX_SIZE);
       if (kt != KERN_SUCCESS)
 	{
 	  fprintf (stderr, "vm_deallocate() failure: %d at %s:%d\n", kt,
@@ -799,12 +806,12 @@ ffi_trampoline_table_alloc ()
 	  break;
 	}
 
-      /* Remap the trampoline table to directly follow the config page */
+      /* Remap the trampoline table to directly follow the config page(s) */
       vm_prot_t cur_prot;
       vm_prot_t max_prot;
 
       kt =
-	vm_remap (mach_task_self (), &trampoline_page, PAGE_SIZE, 0x0, FALSE,
+	vm_remap (mach_task_self (), &trampoline_page, PAGE_MAX_SIZE, 0x0, FALSE,
 		  mach_task_self (),
 		  (vm_address_t) & ffi_closure_trampoline_table_page, FALSE,
 		  &cur_prot, &max_prot, VM_INHERIT_SHARE);
@@ -819,7 +826,7 @@ ffi_trampoline_table_alloc ()
 		       __FILE__, __LINE__);
 	    }
 
-	  vm_deallocate (mach_task_self (), config_page, PAGE_SIZE);
+	  vm_deallocate (mach_task_self (), config_page, PAGE_MAX_SIZE);
 	  continue;
 	}
 
@@ -925,13 +932,13 @@ ffi_closure_free (void *ptr)
 
       /* Deallocate pages */
       kern_return_t kt;
-      kt = vm_deallocate (mach_task_self (), table->config_page, PAGE_SIZE);
+      kt = vm_deallocate (mach_task_self (), table->config_page, PAGE_MAX_SIZE);
       if (kt != KERN_SUCCESS)
 	fprintf (stderr, "vm_deallocate() failure: %d at %s:%d\n", kt,
 		 __FILE__, __LINE__);
 
       kt =
-	vm_deallocate (mach_task_self (), table->trampoline_page, PAGE_SIZE);
+	vm_deallocate (mach_task_self (), table->trampoline_page, PAGE_MAX_SIZE);
       if (kt != KERN_SUCCESS)
 	fprintf (stderr, "vm_deallocate() failure: %d at %s:%d\n", kt,
 		 __FILE__, __LINE__);

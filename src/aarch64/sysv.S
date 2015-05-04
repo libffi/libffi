@@ -356,22 +356,25 @@ CNAME(ffi_closure_SYSV):
 #endif
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
-    .align 14
+#include <mach/arm/vm_param.h>
+
+	/* Must align on maximum architecture supported page size to always be able to remap. */
+	.align PAGE_MAX_SHIFT
 CNAME(ffi_closure_trampoline_table_page):
-    .rept 16384 / FFI_TRAMPOLINE_SIZE
-    adr	x17, -16384
-    adr	x16, -16380
-    ldr x16, [x16]
-    ldr x17, [x17]
-    br	x16
-    .endr
+	.rept PAGE_MAX_SIZE / FFI_TRAMPOLINE_SIZE
+	adr	x17, -PAGE_MAX_SIZE
+	adr	x16, 4-PAGE_MAX_SIZE
+	ldr x16, [x16]
+	ldr x17, [x17]
+	br	x16
+	.endr
     
-    .globl CNAME(ffi_closure_trampoline_table_page)
-    #ifdef __ELF__
-    	.type	CNAME(ffi_closure_trampoline_table_page), #function
-    	.hidden	CNAME(ffi_closure_trampoline_table_page)
-    	.size	CNAME(ffi_closure_trampoline_table_page), . - CNAME(ffi_closure_trampoline_table_page)
-    #endif
+	.globl CNAME(ffi_closure_trampoline_table_page)
+	#ifdef __ELF__
+		.type	CNAME(ffi_closure_trampoline_table_page), #function
+		.hidden	CNAME(ffi_closure_trampoline_table_page)
+		.size	CNAME(ffi_closure_trampoline_table_page), . - CNAME(ffi_closure_trampoline_table_page)
+	#endif
 #endif
 
 #ifdef FFI_GO_CLOSURES
