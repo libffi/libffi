@@ -282,6 +282,13 @@ if test "x$GCC" = "xyes"; then
   fi
 fi
 
+AC_ARG_ENABLE(docs,
+              AC_HELP_STRING([--disable-docs],
+                             [Disable building of docs (default: no)]),
+              [enable_docs=no],
+              [enable_docs=yes])
+AM_CONDITIONAL(BUILD_DOCS, [test x$enable_docs = xyes])
+
 AH_BOTTOM([
 #ifdef HAVE_HIDDEN_VISIBILITY_ATTRIBUTE
 #ifdef LIBFFI_ASM

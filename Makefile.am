@@ -15,7 +15,11 @@ EXTRA_DIST = LICENSE ChangeLog.v1 ChangeLog.libgcj			\
 	libffi.xcodeproj/project.pbxproj				\
 	libtool-ldflags
 
-info_TEXINFOS = doc/libffi.texi
+
+info_TEXINFOS =
+if BUILD_DOCS
+#info_TEXINFOS += doc/libffi.texi
+endif
 
 ## ################################################################
 
