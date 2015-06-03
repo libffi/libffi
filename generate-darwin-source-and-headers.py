@@ -45,7 +45,7 @@ class device_platform(Platform):
     prefix = "#ifdef __arm__\n\n"
     suffix = "\n\n#endif"
     src_dir = 'arm'
-    src_files = ['sysv.S', 'trampoline.S', 'ffi.c']
+    src_files = ['sysv.S', 'ffi.c']
 
 
 class device64_platform(Platform):
@@ -162,18 +162,11 @@ def build_target(platform, platform_headers):
             platform_headers[filename].add((platform.prefix, platform.arch, platform.suffix))
 
 
-def make_tramp():
-    with open('src/arm/trampoline.S', 'w') as tramp_out:
-        p = subprocess.Popen(['bash', 'src/arm/gentramp.sh'], stdout=tramp_out)
-        p.wait()
-
-
 def generate_source_and_headers(generate_osx=True, generate_ios=True):
     copy_files('src', 'darwin_common/src', pattern='*.c')
     copy_files('include', 'darwin_common/include', pattern='*.h')
 
     if generate_ios:
-        make_tramp()
         copy_src_platform_files(simulator_platform)
         copy_src_platform_files(simulator64_platform)
         copy_src_platform_files(device_platform)

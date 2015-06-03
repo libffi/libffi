@@ -23,9 +23,6 @@
 		DBFA7178187F1D9B00A76262 /* sysv_arm64.S in Sources */ = {isa = PBXBuildFile; fileRef = DBFA716D187F1D9B00A76262 /* sysv_arm64.S */; };
 		DBFA7179187F1D9B00A76262 /* ffi_armv7.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFA716F187F1D9B00A76262 /* ffi_armv7.c */; };
 		DBFA717A187F1D9B00A76262 /* sysv_armv7.S in Sources */ = {isa = PBXBuildFile; fileRef = DBFA7170187F1D9B00A76262 /* sysv_armv7.S */; };
-		DBFA717B187F1D9B00A76262 /* trampoline_armv7.S in Sources */ = {isa = PBXBuildFile; fileRef = DBFA7171187F1D9B00A76262 /* trampoline_armv7.S */; };
-		DBFA717C187F1D9B00A76262 /* darwin64_x86_64.S in Sources */ = {isa = PBXBuildFile; fileRef = DBFA7173187F1D9B00A76262 /* darwin64_x86_64.S */; };
-		DBFA717D187F1D9B00A76262 /* darwin_i386.S in Sources */ = {isa = PBXBuildFile; fileRef = DBFA7174187F1D9B00A76262 /* darwin_i386.S */; };
 		DBFA717E187F1D9B00A76262 /* ffi64_x86_64.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFA7175187F1D9B00A76262 /* ffi64_x86_64.c */; };
 		DBFA717F187F1D9B00A76262 /* ffi_i386.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFA7176187F1D9B00A76262 /* ffi_i386.c */; };
 		DBFA718E187F1DA100A76262 /* ffi_i386.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7182187F1DA100A76262 /* ffi_i386.h */; };
@@ -80,9 +77,6 @@
 		DBFA716D187F1D9B00A76262 /* sysv_arm64.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = sysv_arm64.S; sourceTree = "<group>"; };
 		DBFA716F187F1D9B00A76262 /* ffi_armv7.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ffi_armv7.c; sourceTree = "<group>"; };
 		DBFA7170187F1D9B00A76262 /* sysv_armv7.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = sysv_armv7.S; sourceTree = "<group>"; };
-		DBFA7171187F1D9B00A76262 /* trampoline_armv7.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = trampoline_armv7.S; sourceTree = "<group>"; };
-		DBFA7173187F1D9B00A76262 /* darwin64_x86_64.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = darwin64_x86_64.S; sourceTree = "<group>"; };
-		DBFA7174187F1D9B00A76262 /* darwin_i386.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = darwin_i386.S; sourceTree = "<group>"; };
 		DBFA7175187F1D9B00A76262 /* ffi64_x86_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ffi64_x86_64.c; sourceTree = "<group>"; };
 		DBFA7176187F1D9B00A76262 /* ffi_i386.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ffi_i386.c; sourceTree = "<group>"; };
 		DBFA7182187F1DA100A76262 /* ffi_i386.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ffi_i386.h; sourceTree = "<group>"; };
@@ -201,7 +195,6 @@
 			children = (
 				DBFA716F187F1D9B00A76262 /* ffi_armv7.c */,
 				DBFA7170187F1D9B00A76262 /* sysv_armv7.S */,
-				DBFA7171187F1D9B00A76262 /* trampoline_armv7.S */,
 			);
 			path = arm;
 			sourceTree = "<group>";
@@ -209,8 +202,6 @@
 		DBFA7172187F1D9B00A76262 /* x86 */ = {
 			isa = PBXGroup;
 			children = (
-				DBFA7173187F1D9B00A76262 /* darwin64_x86_64.S */,
-				DBFA7174187F1D9B00A76262 /* darwin_i386.S */,
 				DBFA7175187F1D9B00A76262 /* ffi64_x86_64.c */,
 				DBFA7176187F1D9B00A76262 /* ffi_i386.c */,
 			);
@@ -377,15 +368,12 @@
 			files = (
 				DBFA717E187F1D9B00A76262 /* ffi64_x86_64.c in Sources */,
 				DBFA7179187F1D9B00A76262 /* ffi_armv7.c in Sources */,
-				DBFA717B187F1D9B00A76262 /* trampoline_armv7.S in Sources */,
 				DBFA714E187F1D8600A76262 /* closures.c in Sources */,
 				DBFA717A187F1D9B00A76262 /* sysv_armv7.S in Sources */,
-				DBFA717D187F1D9B00A76262 /* darwin_i386.S in Sources */,
 				DBFA7156187F1D8600A76262 /* prep_cif.c in Sources */,
 				DBFA717F187F1D9B00A76262 /* ffi_i386.c in Sources */,
 				DBFA7158187F1D8600A76262 /* raw_api.c in Sources */,
 				DBFA7178187F1D9B00A76262 /* sysv_arm64.S in Sources */,
-				DBFA717C187F1D9B00A76262 /* darwin64_x86_64.S in Sources */,
 				DBFA715A187F1D8600A76262 /* types.c in Sources */,
 				DBFA7177187F1D9B00A76262 /* ffi_arm64.c in Sources */,
 			);
