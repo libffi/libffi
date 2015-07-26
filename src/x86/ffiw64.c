@@ -190,7 +190,7 @@ ffi_prep_closure_loc (ffi_closure* closure,
     /* nopl  (%rax) */
     0x0f, 0x1f, 0x00
   };
-  unsigned char *tramp = closure->tramp;
+  char *tramp = closure->tramp;
 
   if (cif->abi != FFI_WIN64)
     return FFI_BAD_ABI;
