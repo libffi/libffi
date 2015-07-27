@@ -31,30 +31,9 @@
 #include <fficonfig.h>
 #include <ffi.h>
 #include "internal64.h"
+#include "asmnames.h"
 
 	.text
-
-#define C2(X, Y)  X ## Y
-#define C1(X, Y)  C2(X, Y)
-#ifdef __USER_LABEL_PREFIX__
-# define C(X)     C1(__USER_LABEL_PREFIX__, X)
-#else
-# define C(X)     X
-#endif
-
-#ifdef __APPLE__
-# define L(X)     C1(L, X)
-#else
-# define L(X)     C1(.L, X)
-#endif
-
-#ifdef __ELF__
-# define PLT(X)	  X@PLT
-# define ENDF(X)  .type	X,@function; .size X, . - X
-#else
-# define PLT(X)	  X
-# define ENDF(X)
-#endif
 
 /* This macro allows the safe creation of jump tables without an
    actual table.  The entry points into the table are all 8 bytes.

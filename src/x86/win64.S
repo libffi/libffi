@@ -2,6 +2,7 @@
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_cfi.h>
+#include "asmnames.h"
 
 #if defined(HAVE_AS_CFI_PSEUDO_OP)
         .cfi_sections   .debug_frame
@@ -19,12 +20,6 @@
 #define arg1	%rsi
 #define arg2	%rdx
 #define arg3	%rcx
-#endif
-
-#ifdef SYMBOL_UNDERSCORE
-#define SYMBOL_NAME(name) _##name
-#else
-#define SYMBOL_NAME(name) name
 #endif
 
 .macro E which
@@ -106,7 +101,7 @@ E FFI_TYPE_DOUBLE
 	movsd	%xmm0, (%r8)
 	epilogue
 E FFI_TYPE_LONGDOUBLE
-	call	abort
+	call	PLT(C(abort))
 E FFI_TYPE_UINT8
 	movzbl	%al, %eax
 	movq	%rax, (%r8)
@@ -141,7 +136,7 @@ E FFI_TYPE_POINTER
 	movq	%rax, (%r8)
 	epilogue
 E FFI_TYPE_COMPLEX
-	call	abort
+	call	PLT(C(abort))
 E FFI_TYPE_SMALL_STRUCT_1B
 	movb	%al, (%r8)
 	epilogue
@@ -153,7 +148,7 @@ E FFI_TYPE_SMALL_STRUCT_4B
 	epilogue
 
 	.align	8
-99:	call	abort
+99:	call	PLT(C(abort))
 
 .purgem epilogue
 
