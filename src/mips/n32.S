@@ -39,7 +39,10 @@
 #define fn       a5
 #define closure  a6
 
-#define SIZEOF_FRAME	( 8 * FFI_SIZEOF_ARG )
+/* Note: to keep stack 16 byte aligned we need even number slots 
+   used 9 slots here
+*/
+#define SIZEOF_FRAME	( 10 * FFI_SIZEOF_ARG )
 
 #ifdef __GNUC__
 	.abicalls
@@ -419,7 +422,7 @@ ffi_go_closure_N32:
 	.fmask	0x00000000,0
 	SUBU	$sp, SIZEOF_FRAME2
 
-	.cpsetup t9, GP_OFF2, ffi_closure_N32
+	.cpsetup t9, GP_OFF2, ffi_go_closure_N32
 	REG_S	ra, RA_OFF2($sp)	# Save return address
 
 	REG_S	a0, A0_OFF2($sp)
@@ -431,9 +434,9 @@ ffi_go_closure_N32:
 
 	# Call ffi_closure_mips_inner_N32 to do the real work.
 	LA	t9, ffi_closure_mips_inner_N32
-	REG_L	a0, FFI_SIZE_OF_ARG($15)   # cif
-	REG_L	a1, 2*FFI_SIZE_OF_ARG($15) # fun
-	mov	a2, t7                     # userdata=closure
+	REG_L	a0, 8($15)   # cif
+	REG_L	a1, 16($15) # fun
+	move	a2, t7                     # userdata=closure
 	ADDU	a3, $sp, V0_OFF2           # rvalue
 	ADDU	a4, $sp, A0_OFF2           # ar
 	ADDU	a5, $sp, F12_OFF2          # fpr
@@ -464,9 +467,9 @@ ffi_closure_N32:
 
 	# Call ffi_closure_mips_inner_N32 to do the real work.
 	LA	t9, ffi_closure_mips_inner_N32
-	REG_L	a0, FFI_TRAMPOLINE_SIZE($12)   # cif
-	REG_L	a1, FFI_TRAMPOLINE_SIZE + FFI_SIZE_OF_ARG($12)   # fun
-	REG_L	a2, FFI_TRAMPOLINE_SIZE + 2*FFI_SIZE_OF_ARG($12) # user_data
+	REG_L	a0, 56($12)   # cif
+	REG_L	a1, 64($12)   # fun
+	REG_L	a2, 72($12) # user_data
 	ADDU	a3, $sp, V0_OFF2
 	ADDU	a4, $sp, A0_OFF2
 	ADDU	a5, $sp, F12_OFF2

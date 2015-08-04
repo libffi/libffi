@@ -272,7 +272,7 @@ ffi_go_closure_O32:
 	# prepare arguments for ffi_closure_mips_inner_O32
 	REG_L	a0, 4($15)	 # cif 
 	REG_L	a1, 8($15)	 # fun
-	mov	a2, $15		 # user_data = go closure
+	move	a2, $15		 # user_data = go closure
 	addu	a3, $fp, V0_OFF2 # rvalue
 
 	addu	t9, $fp, A0_OFF2 # ar

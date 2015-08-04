@@ -673,8 +673,10 @@ ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
 #if FFI_CLOSURES
 #if defined(FFI_MIPS_O32)
 extern void ffi_closure_O32(void);
+extern void ffi_go_closure_O32(void);
 #else
 extern void ffi_closure_N32(void);
+extern void ffi_go_closure_N32(void);
 #endif /* FFI_MIPS_O32 */
 
 ffi_status
@@ -779,7 +781,7 @@ ffi_prep_closure_loc (ffi_closure *closure,
 int
 ffi_closure_mips_inner_O32 (ffi_cif *cif,
                             void (*fun)(ffi_cif*, void*, void**, void*),
-			    void *user_data;
+			    void *user_data,
 			    void *rvalue, ffi_arg *ar,
 			    double *fpr)
 {
@@ -1064,11 +1066,12 @@ ffi_closure_mips_inner_N32 (ffi_cif *cif,
 
 #if defined(FFI_MIPS_O32)
 extern void ffi_closure_O32(void);
+extern void ffi_go_closure_O32(void);
 #else
 extern void ffi_closure_N32(void);
+extern void ffi_go_closure_N32(void);
 #endif /* FFI_MIPS_O32 */
 
-void
 ffi_status
 ffi_prep_go_closure (ffi_go_closure* closure, ffi_cif* cif,
 		     void (*fun)(ffi_cif*,void*,void**,void*))
