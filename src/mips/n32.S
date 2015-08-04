@@ -37,6 +37,7 @@
 #define flags	 a3
 #define raddr    a4
 #define fn       a5
+#define closure  a6
 
 #define SIZEOF_FRAME	( 8 * FFI_SIZEOF_ARG )
 
@@ -67,6 +68,7 @@ ffi_call_N32:
 	REG_S	flags, 3*FFI_SIZEOF_ARG($fp) # flags
 	REG_S	raddr, 4*FFI_SIZEOF_ARG($fp) # raddr
 	REG_S	fn,    5*FFI_SIZEOF_ARG($fp) # fn
+	REG_S	closure, 6*FFI_SIZEOF_ARG($fp) # closure
 
 	# Allocate at least 4 words in the argstack
 	move	v0, bytes
@@ -197,6 +199,9 @@ arg8_next:
 callit:		
 	# Load the function pointer
 	REG_L	t9, 5*FFI_SIZEOF_ARG($fp)
+
+	# install the static chain(t7=$15)
+	REG_L	t7, 6*FFI_SIZEOF_ARG($fp)
 
 	# If the return value pointer is NULL, assume no return value.
 	REG_L	t5, 4*FFI_SIZEOF_ARG($fp)
@@ -406,6 +411,38 @@ epilogue:
 #define GP_OFF2		(0  * FFI_SIZEOF_ARG)
 
 	.align	2
+	.globl	ffi_go_closure_N32
+	.ent	ffi_go_closure_N32
+ffi_go_closure_N32:
+	.frame	$sp, SIZEOF_FRAME2, ra
+	.mask	0x90000000,-(SIZEOF_FRAME2 - RA_OFF2)
+	.fmask	0x00000000,0
+	SUBU	$sp, SIZEOF_FRAME2
+
+	.cpsetup t9, GP_OFF2, ffi_closure_N32
+	REG_S	ra, RA_OFF2($sp)	# Save return address
+
+	REG_S	a0, A0_OFF2($sp)
+	REG_S	a1, A1_OFF2($sp)
+	REG_S	a2, A2_OFF2($sp)
+	REG_S	a3, A3_OFF2($sp)
+	REG_S	a4, A4_OFF2($sp)
+	REG_S	a5, A5_OFF2($sp)
+
+	# Call ffi_closure_mips_inner_N32 to do the real work.
+	LA	t9, ffi_closure_mips_inner_N32
+	REG_L	a0, FFI_SIZE_OF_ARG($15)   # cif
+	REG_L	a1, 2*FFI_SIZE_OF_ARG($15) # fun
+	mov	a2, t7                     # userdata=closure
+	ADDU	a3, $sp, V0_OFF2           # rvalue
+	ADDU	a4, $sp, A0_OFF2           # ar
+	ADDU	a5, $sp, F12_OFF2          # fpr
+
+	b	$do_closure
+
+	.end	ffi_go_closure_N32
+
+	.align	2
 	.globl	ffi_closure_N32
 	.ent	ffi_closure_N32
 ffi_closure_N32:
@@ -418,14 +455,25 @@ ffi_closure_N32:
 	.cpsetup t9, GP_OFF2, ffi_closure_N32
 	REG_S	ra, RA_OFF2($sp)	# Save return address
 .LCFI6:
-	# Store all possible argument registers. If there are more than
-	# fit in registers, then they were stored on the stack.
 	REG_S	a0, A0_OFF2($sp)
 	REG_S	a1, A1_OFF2($sp)
 	REG_S	a2, A2_OFF2($sp)
 	REG_S	a3, A3_OFF2($sp)
 	REG_S	a4, A4_OFF2($sp)
 	REG_S	a5, A5_OFF2($sp)
+
+	# Call ffi_closure_mips_inner_N32 to do the real work.
+	LA	t9, ffi_closure_mips_inner_N32
+	REG_L	a0, FFI_TRAMPOLINE_SIZE($12)   # cif
+	REG_L	a1, FFI_TRAMPOLINE_SIZE + FFI_SIZE_OF_ARG($12)   # fun
+	REG_L	a2, FFI_TRAMPOLINE_SIZE + 2*FFI_SIZE_OF_ARG($12) # user_data
+	ADDU	a3, $sp, V0_OFF2
+	ADDU	a4, $sp, A0_OFF2
+	ADDU	a5, $sp, F12_OFF2
+
+$do_closure:
+	# Store all possible argument registers. If there are more than
+	# fit in registers, then they were stored on the stack.
 	REG_S	a6, A6_OFF2($sp)
 	REG_S	a7, A7_OFF2($sp)
 
@@ -439,12 +487,6 @@ ffi_closure_N32:
 	s.d	$f18, F18_OFF2($sp)
 	s.d	$f19, F19_OFF2($sp)
 
-	# Call ffi_closure_mips_inner_N32 to do the real work.
-	LA	t9, ffi_closure_mips_inner_N32
-	move	a0, $12	 # Pointer to the ffi_closure
-	ADDU	a1, $sp, V0_OFF2
-	ADDU	a2, $sp, A0_OFF2
-	ADDU	a3, $sp, F12_OFF2
 	jalr	t9
 
 	# Return flags are in v0

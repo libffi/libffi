@@ -132,6 +132,9 @@ pass_f_d:
 	l.d	$f14, 2*FFI_SIZEOF_ARG($sp)	# passing double and float
 
 call_it:	
+	# Load the static chain pointer
+	REG_L	t7, SIZEOF_FRAME + 6*FFI_SIZEOF_ARG($fp)
+
 	# Load the function pointer
 	REG_L	t9, SIZEOF_FRAME + 5*FFI_SIZEOF_ARG($fp)
 
@@ -204,13 +207,15 @@ $LFE0:
 	-8 - f14 (le low, be high)
 	-9 - f12 (le high, be low)
        -10 - f12 (le low, be high)
-       -11 - Called function a3 save
-       -12 - Called function a2 save
-       -13 - Called function a1 save
-       -14 - Called function a0 save, our sp and fp point here
+       -11 - Called function a5 save
+       -12 - Called function a4 save
+       -13 - Called function a3 save
+       -14 - Called function a2 save
+       -15 - Called function a1 save
+       -16 - Called function a0 save, our sp and fp point here
 	 */
 	
-#define SIZEOF_FRAME2	(14 * FFI_SIZEOF_ARG)
+#define SIZEOF_FRAME2	(16 * FFI_SIZEOF_ARG)
 #define A3_OFF2		(SIZEOF_FRAME2 + 3 * FFI_SIZEOF_ARG)
 #define A2_OFF2		(SIZEOF_FRAME2 + 2 * FFI_SIZEOF_ARG)
 #define A1_OFF2		(SIZEOF_FRAME2 + 1 * FFI_SIZEOF_ARG)
@@ -225,8 +230,61 @@ $LFE0:
 #define FA_1_0_OFF2	(SIZEOF_FRAME2 - 8 * FFI_SIZEOF_ARG)
 #define FA_0_1_OFF2	(SIZEOF_FRAME2 - 9 * FFI_SIZEOF_ARG)
 #define FA_0_0_OFF2	(SIZEOF_FRAME2 - 10 * FFI_SIZEOF_ARG)
+#define CALLED_A5_OFF2  (SIZEOF_FRAME2 - 11 * FFI_SIZEOF_ARG)
+#define CALLED_A4_OFF2  (SIZEOF_FRAME2 - 12 * FFI_SIZEOF_ARG)
 
 	.text
+
+	.align	2
+	.globl	ffi_go_closure_O32
+	.ent	ffi_go_closure_O32
+ffi_go_closure_O32:
+	# Prologue
+	.frame	$fp, SIZEOF_FRAME2, ra
+	.set	noreorder
+	.cpload	t9
+	.set	reorder
+	SUBU	$sp, SIZEOF_FRAME2
+	.cprestore GP_OFF2
+
+	REG_S	$16, S0_OFF2($sp)	 # Save s0
+	REG_S	$fp, FP_OFF2($sp)	 # Save frame pointer
+	REG_S	ra, RA_OFF2($sp)	 # Save return address
+
+	move	$fp, $sp
+
+	REG_S	a0, A0_OFF2($fp)
+	REG_S	a1, A1_OFF2($fp)
+	REG_S	a2, A2_OFF2($fp)
+	REG_S	a3, A3_OFF2($fp)
+
+	# Load ABI enum to s0
+	REG_L	$16, 4($15)	# cif 
+	REG_L	$16, 0($16)	# abi is first member.
+
+	li	$13, 1		# FFI_O32
+	bne	$16, $13, 1f	# Skip fp save if FFI_O32_SOFT_FLOAT
+	
+	# Store all possible float/double registers.
+	s.d	$f12, FA_0_0_OFF2($fp)
+	s.d	$f14, FA_1_0_OFF2($fp)
+
+	# prepare arguments for ffi_closure_mips_inner_O32
+	REG_L	a0, 4($15)	 # cif 
+	REG_L	a1, 8($15)	 # fun
+	mov	a2, $15		 # user_data = go closure
+	addu	a3, $fp, V0_OFF2 # rvalue
+
+	addu	t9, $fp, A0_OFF2 # ar
+	REG_S   t9, CALLED_A4_OFF2($fp)
+
+	addu	t9, $fp, FA_0_0_OFF2 #fpr
+	REG_S   t9, CALLED_A5_OFF2($fp)
+
+	b $do_closure
+
+	.end ffi_go_closure_O32
+
 	.align	2
 	.globl	ffi_closure_O32
 	.ent	ffi_closure_O32
@@ -265,12 +323,21 @@ $LCFI7:
 	s.d	$f12, FA_0_0_OFF2($fp)
 	s.d	$f14, FA_1_0_OFF2($fp)
 1:	
-	# Call ffi_closure_mips_inner_O32 to do the work.
+	# prepare arguments for ffi_closure_mips_inner_O32
+	REG_L	a0, 20($12)	 # cif pointer follows tramp.
+	REG_L	a1, 24($12)	 # fun
+	REG_L	a2, 28($12)	 # user_data
+	addu	a3, $fp, V0_OFF2 # rvalue
+
+	addu	t9, $fp, A0_OFF2 # ar
+	REG_S   t9, CALLED_A4_OFF2($fp)
+
+	addu	t9, $fp, FA_0_0_OFF2 #fpr
+	REG_S   t9, CALLED_A5_OFF2($fp)
+
+$do_closure:
 	la	t9, ffi_closure_mips_inner_O32
-	move	a0, $12	 # Pointer to the ffi_closure
-	addu	a1, $fp, V0_OFF2
-	addu	a2, $fp, A0_OFF2
-	addu	a3, $fp, FA_0_0_OFF2
+	# Call ffi_closure_mips_inner_O32 to do the work.
 	jalr	t9
 
 	# Load the return value into the appropriate register.
