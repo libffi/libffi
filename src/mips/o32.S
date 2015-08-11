@@ -268,7 +268,7 @@ ffi_go_closure_O32:
 	# Store all possible float/double registers.
 	s.d	$f12, FA_0_0_OFF2($fp)
 	s.d	$f14, FA_1_0_OFF2($fp)
-
+1:
 	# prepare arguments for ffi_closure_mips_inner_O32
 	REG_L	a0, 4($15)	 # cif 
 	REG_L	a1, 8($15)	 # fun
@@ -425,7 +425,7 @@ $LASFDE1:
 	.byte	0x4	 # DW_CFA_advance_loc4
 	.4byte	$LCFI4-$LFB1
 	.byte	0xe	 # DW_CFA_def_cfa_offset
-	.uleb128 0x38
+	.uleb128 SIZEOF_FRAME2
 	.byte	0x4	 # DW_CFA_advance_loc4
 	.4byte	$LCFI6-$LCFI4
 	.byte	0x11	 # DW_CFA_offset_extended_sf
@@ -441,7 +441,7 @@ $LASFDE1:
 	.4byte	$LCFI7-$LCFI6
 	.byte	0xc	 # DW_CFA_def_cfa
 	.uleb128 0x1e
-	.uleb128 0x38
+	.uleb128 SIZEOF_FRAME2
 	.align	2
 $LEFDE1:
 
