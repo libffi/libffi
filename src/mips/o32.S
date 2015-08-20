@@ -50,14 +50,14 @@ ffi_call_O32:
 $LFB0:
 	# Prologue
 	SUBU	$sp, SIZEOF_FRAME	# Frame size
-$LCFI0:
+$LCFI00:
 	REG_S	$fp, FP_OFF($sp)	# Save frame pointer
-$LCFI1:
+$LCFI01:
 	REG_S	ra, RA_OFF($sp)		# Save return address
-$LCFI2:
+$LCFI02:
 	move	$fp, $sp
 
-$LCFI3:
+$LCFI03:
 	move	t9, callback		# callback function pointer
 	REG_S	flags, A3_OFF($fp)	# flags
 
@@ -239,6 +239,7 @@ $LFE0:
 	.globl	ffi_go_closure_O32
 	.ent	ffi_go_closure_O32
 ffi_go_closure_O32:
+$LFB1:
 	# Prologue
 	.frame	$fp, SIZEOF_FRAME2, ra
 	.set	noreorder
@@ -246,12 +247,15 @@ ffi_go_closure_O32:
 	.set	reorder
 	SUBU	$sp, SIZEOF_FRAME2
 	.cprestore GP_OFF2
+$LCFI10:
 
 	REG_S	$16, S0_OFF2($sp)	 # Save s0
 	REG_S	$fp, FP_OFF2($sp)	 # Save frame pointer
 	REG_S	ra, RA_OFF2($sp)	 # Save return address
+$LCFI11:
 
 	move	$fp, $sp
+$LCFI12:
 
 	REG_S	a0, A0_OFF2($fp)
 	REG_S	a1, A1_OFF2($fp)
@@ -283,13 +287,14 @@ ffi_go_closure_O32:
 
 	b $do_closure
 
+$LFE1:
 	.end ffi_go_closure_O32
 
 	.align	2
 	.globl	ffi_closure_O32
 	.ent	ffi_closure_O32
 ffi_closure_O32:
-$LFB1:
+$LFB2:
 	# Prologue
 	.frame	$fp, SIZEOF_FRAME2, ra
 	.set	noreorder
@@ -297,14 +302,14 @@ $LFB1:
 	.set	reorder
 	SUBU	$sp, SIZEOF_FRAME2
 	.cprestore GP_OFF2
-$LCFI4:
+$LCFI20:
 	REG_S	$16, S0_OFF2($sp)	 # Save s0
 	REG_S	$fp, FP_OFF2($sp)	 # Save frame pointer
 	REG_S	ra, RA_OFF2($sp)	 # Save return address
-$LCFI6:
+$LCFI21:
 	move	$fp, $sp
 
-$LCFI7:
+$LCFI22:
 	# Store all possible argument registers. If there are more than
 	# four arguments, then they are stored above where we put a3.
 	REG_S	a0, A0_OFF2($fp)
@@ -367,7 +372,7 @@ closure_done:
 	REG_L	ra,  RA_OFF2($sp)	 # Restore return address
 	ADDU	$sp, SIZEOF_FRAME2
 	j	ra
-$LFE1:
+$LFE2:
 	.end	ffi_closure_O32
 
 /* DWARF-2 unwind info. */
@@ -389,6 +394,7 @@ $LSCIE0:
 	.uleb128 0x0
 	.align	2
 $LECIE0:
+
 $LSFDE0:
 	.4byte	$LEFDE0-$LASFDE0	 # FDE Length
 $LASFDE0:
@@ -397,11 +403,11 @@ $LASFDE0:
 	.4byte	$LFE0-$LFB0	 # FDE address range
 	.uleb128 0x0	 # Augmentation size
 	.byte	0x4	 # DW_CFA_advance_loc4
-	.4byte	$LCFI0-$LFB0
+	.4byte	$LCFI00-$LFB0
 	.byte	0xe	 # DW_CFA_def_cfa_offset
 	.uleb128 0x18
 	.byte	0x4	 # DW_CFA_advance_loc4
-	.4byte	$LCFI2-$LCFI0
+	.4byte	$LCFI01-$LCFI00
 	.byte	0x11	 # DW_CFA_offset_extended_sf
 	.uleb128 0x1e	 # $fp
 	.sleb128 -2	 # SIZEOF_FRAME2 - 2*FFI_SIZEOF_ARG($sp)
@@ -409,12 +415,13 @@ $LASFDE0:
 	.uleb128 0x1f	 # $ra
 	.sleb128 -1	 # SIZEOF_FRAME2 - 1*FFI_SIZEOF_ARG($sp)
 	.byte	0x4	 # DW_CFA_advance_loc4
-	.4byte	$LCFI3-$LCFI2
+	.4byte	$LCFI02-$LCFI01
 	.byte	0xc	 # DW_CFA_def_cfa
 	.uleb128 0x1e
 	.uleb128 0x18
 	.align	2
 $LEFDE0:
+
 $LSFDE1:
 	.4byte	$LEFDE1-$LASFDE1	 # FDE Length
 $LASFDE1:
@@ -423,11 +430,11 @@ $LASFDE1:
 	.4byte	$LFE1-$LFB1	 # FDE address range
 	.uleb128 0x0	 # Augmentation size
 	.byte	0x4	 # DW_CFA_advance_loc4
-	.4byte	$LCFI4-$LFB1
+	.4byte	$LCFI10-$LFB1
 	.byte	0xe	 # DW_CFA_def_cfa_offset
 	.uleb128 SIZEOF_FRAME2
 	.byte	0x4	 # DW_CFA_advance_loc4
-	.4byte	$LCFI6-$LCFI4
+	.4byte	$LCFI11-$LCFI10
 	.byte	0x11	 # DW_CFA_offset_extended_sf
 	.uleb128 0x10	 # $16
 	.sleb128 -3	 # SIZEOF_FRAME2 - 3*FFI_SIZEOF_ARG($sp)
@@ -438,11 +445,41 @@ $LASFDE1:
 	.uleb128 0x1f	 # $ra
 	.sleb128 -1	 # SIZEOF_FRAME2 - 1*FFI_SIZEOF_ARG($sp)
 	.byte	0x4	 # DW_CFA_advance_loc4
-	.4byte	$LCFI7-$LCFI6
+	.4byte	$LCFI12-$LCFI11
 	.byte	0xc	 # DW_CFA_def_cfa
 	.uleb128 0x1e
 	.uleb128 SIZEOF_FRAME2
 	.align	2
 $LEFDE1:
+
+$LSFDE2:
+	.4byte	$LEFDE2-$LASFDE2	 # FDE Length
+$LASFDE2:
+	.4byte	$LASFDE2-$Lframe0	 # FDE CIE offset
+	.4byte	$LFB2	 # FDE initial location
+	.4byte	$LFE2-$LFB2	 # FDE address range
+	.uleb128 0x0	 # Augmentation size
+	.byte	0x4	 # DW_CFA_advance_loc4
+	.4byte	$LCFI20-$LFB2
+	.byte	0xe	 # DW_CFA_def_cfa_offset
+	.uleb128 SIZEOF_FRAME2
+	.byte	0x4	 # DW_CFA_advance_loc4
+	.4byte	$LCFI21-$LCFI20
+	.byte	0x11	 # DW_CFA_offset_extended_sf
+	.uleb128 0x10	 # $16
+	.sleb128 -3	 # SIZEOF_FRAME2 - 3*FFI_SIZEOF_ARG($sp)
+	.byte	0x11	 # DW_CFA_offset_extended_sf
+	.uleb128 0x1e	 # $fp
+	.sleb128 -2	 # SIZEOF_FRAME2 - 2*FFI_SIZEOF_ARG($sp)
+	.byte	0x11	 # DW_CFA_offset_extended_sf
+	.uleb128 0x1f	 # $ra
+	.sleb128 -1	 # SIZEOF_FRAME2 - 1*FFI_SIZEOF_ARG($sp)
+	.byte	0x4	 # DW_CFA_advance_loc4
+	.4byte	$LCFI22-$LCFI21
+	.byte	0xc	 # DW_CFA_def_cfa
+	.uleb128 0x1e
+	.uleb128 SIZEOF_FRAME2
+	.align	2
+$LEFDE2:
 
 #endif

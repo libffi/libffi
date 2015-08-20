@@ -53,19 +53,19 @@
 	.globl	ffi_call_N32
 	.ent	ffi_call_N32
 ffi_call_N32:	
-.LFB3:
+.LFB0:
 	.frame	$fp, SIZEOF_FRAME, ra
 	.mask	0xc0000000,-FFI_SIZEOF_ARG
 	.fmask	0x00000000,0
 
 	# Prologue
 	SUBU	$sp, SIZEOF_FRAME			# Frame size
-.LCFI0:
+.LCFI00:
 	REG_S	$fp, SIZEOF_FRAME - 2*FFI_SIZEOF_ARG($sp)	# Save frame pointer
 	REG_S	ra, SIZEOF_FRAME - 1*FFI_SIZEOF_ARG($sp)	# Save return address
-.LCFI1:
+.LCFI01:
 	move	$fp, $sp
-.LCFI3:
+.LCFI02:
 	move	t9, callback	# callback function pointer
 	REG_S	bytes, 2*FFI_SIZEOF_ARG($fp) # bytes
 	REG_S	flags, 3*FFI_SIZEOF_ARG($fp) # flags
@@ -354,7 +354,7 @@ epilogue:
 	ADDU	$sp, SIZEOF_FRAME		      # Fix stack pointer
 	j	ra
 
-.LFE3:
+.LFE0:
 	.end	ffi_call_N32
 
 /* ffi_closure_N32. Expects address of the passed-in ffi_closure in t0
@@ -417,13 +417,15 @@ epilogue:
 	.globl	ffi_go_closure_N32
 	.ent	ffi_go_closure_N32
 ffi_go_closure_N32:
+.LFB1:
 	.frame	$sp, SIZEOF_FRAME2, ra
 	.mask	0x90000000,-(SIZEOF_FRAME2 - RA_OFF2)
 	.fmask	0x00000000,0
 	SUBU	$sp, SIZEOF_FRAME2
-
+.LCFI10:
 	.cpsetup t9, GP_OFF2, ffi_go_closure_N32
 	REG_S	ra, RA_OFF2($sp)	# Save return address
+.LCFI11:
 
 	REG_S	a0, A0_OFF2($sp)
 	REG_S	a1, A1_OFF2($sp)
@@ -443,6 +445,7 @@ ffi_go_closure_N32:
 
 	b	$do_closure
 
+.LFE1:	
 	.end	ffi_go_closure_N32
 
 	.align	2
@@ -454,10 +457,10 @@ ffi_closure_N32:
 	.mask	0x90000000,-(SIZEOF_FRAME2 - RA_OFF2)
 	.fmask	0x00000000,0
 	SUBU	$sp, SIZEOF_FRAME2
-.LCFI5:
+.LCFI20:
 	.cpsetup t9, GP_OFF2, ffi_closure_N32
 	REG_S	ra, RA_OFF2($sp)	# Save return address
-.LCFI6:
+.LCFI21:
 	REG_S	a0, A0_OFF2($sp)
 	REG_S	a1, A1_OFF2($sp)
 	REG_S	a2, A2_OFF2($sp)
@@ -576,46 +579,66 @@ cls_epilogue:
         .align  EH_FRAME_ALIGN
 .LECIE1:
 
-.LSFDE1:
-        .4byte  .LEFDE1-.LASFDE1	# length.
-.LASFDE1:
-        .4byte  .LASFDE1-.Lframe1	# CIE_pointer.
-        FDE_ADDR_BYTES  .LFB3		# initial_location.
-        FDE_ADDR_BYTES  .LFE3-.LFB3	# address_range.
+.LSFDE0:
+        .4byte  .LEFDE0-.LASFDE0	# length.
+.LASFDE0:
+        .4byte  .LASFDE0-.Lframe1	# CIE_pointer.
+        FDE_ADDR_BYTES  .LFB0		# initial_location.
+        FDE_ADDR_BYTES  .LFE0-.LFB0	# address_range.
         .byte   0x4			# DW_CFA_advance_loc4
-        .4byte  .LCFI0-.LFB3		# to .LCFI0
+        .4byte  .LCFI00-.LFB0		# to .LCFI00
         .byte   0xe			# DW_CFA_def_cfa_offset
         .uleb128 SIZEOF_FRAME		# adjust stack.by SIZEOF_FRAME
         .byte   0x4			# DW_CFA_advance_loc4
-        .4byte  .LCFI1-.LCFI0		# to .LCFI1
+        .4byte  .LCFI01-.LCFI00		# to .LCFI01
         .byte   0x9e			# DW_CFA_offset of $fp
         .uleb128 2*FFI_SIZEOF_ARG/4	# 
         .byte   0x9f			# DW_CFA_offset of ra
         .uleb128 1*FFI_SIZEOF_ARG/4	# 
         .byte   0x4			# DW_CFA_advance_loc4
-        .4byte  .LCFI3-.LCFI1		# to .LCFI3
+        .4byte  .LCFI02-.LCFI01		# to .LCFI02
         .byte   0xd			# DW_CFA_def_cfa_register
         .uleb128 0x1e			# in $fp
         .align  EH_FRAME_ALIGN
-.LEFDE1:
-.LSFDE3:
-	.4byte	.LEFDE3-.LASFDE3	# length
-.LASFDE3:
-	.4byte	.LASFDE3-.Lframe1	# CIE_pointer.
-	FDE_ADDR_BYTES	.LFB2		# initial_location.
-	FDE_ADDR_BYTES	.LFE2-.LFB2	# address_range.
+.LEFDE0:
+
+.LSFDE1:
+	.4byte	.LEFDE1-.LASFDE1	# length
+.LASFDE1:
+	.4byte	.LASFDE1-.Lframe1	# CIE_pointer.
+	FDE_ADDR_BYTES	.LFB1		# initial_location.
+	FDE_ADDR_BYTES	.LFE1-.LFB1	# address_range.
 	.byte	0x4			# DW_CFA_advance_loc4
-	.4byte	.LCFI5-.LFB2		# to .LCFI5
+	.4byte	.LCFI10-.LFB2		# to .LCFI10
 	.byte	0xe			# DW_CFA_def_cfa_offset
 	.uleb128 SIZEOF_FRAME2		# adjust stack.by SIZEOF_FRAME
 	.byte	0x4			# DW_CFA_advance_loc4
-	.4byte	.LCFI6-.LCFI5		# to .LCFI6
+	.4byte	.LCFI11-.LCFI10		# to .LCFI11
 	.byte	0x9c			# DW_CFA_offset of $gp ($28)
 	.uleb128 (SIZEOF_FRAME2 - GP_OFF2)/4
 	.byte	0x9f			# DW_CFA_offset of ra ($31)
 	.uleb128 (SIZEOF_FRAME2 - RA_OFF2)/4
 	.align	EH_FRAME_ALIGN
-.LEFDE3:
+.LEFDE1:
+
+.LSFDE2:
+	.4byte	.LEFDE2-.LASFDE2	# length
+.LASFDE2:
+	.4byte	.LASFDE2-.Lframe1	# CIE_pointer.
+	FDE_ADDR_BYTES	.LFB2		# initial_location.
+	FDE_ADDR_BYTES	.LFE2-.LFB2	# address_range.
+	.byte	0x4			# DW_CFA_advance_loc4
+	.4byte	.LCFI20-.LFB2		# to .LCFI20
+	.byte	0xe			# DW_CFA_def_cfa_offset
+	.uleb128 SIZEOF_FRAME2		# adjust stack.by SIZEOF_FRAME
+	.byte	0x4			# DW_CFA_advance_loc4
+	.4byte	.LCFI21-.LCFI20		# to .LCFI21
+	.byte	0x9c			# DW_CFA_offset of $gp ($28)
+	.uleb128 (SIZEOF_FRAME2 - GP_OFF2)/4
+	.byte	0x9f			# DW_CFA_offset of ra ($31)
+	.uleb128 (SIZEOF_FRAME2 - RA_OFF2)/4
+	.align	EH_FRAME_ALIGN
+.LEFDE2:
 #endif /* __GNUC__ */	
 	
 #endif
