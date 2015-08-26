@@ -609,7 +609,7 @@ cls_epilogue:
 	FDE_ADDR_BYTES	.LFB1		# initial_location.
 	FDE_ADDR_BYTES	.LFE1-.LFB1	# address_range.
 	.byte	0x4			# DW_CFA_advance_loc4
-	.4byte	.LCFI10-.LFB2		# to .LCFI10
+	.4byte	.LCFI10-.LFB1		# to .LCFI10
 	.byte	0xe			# DW_CFA_def_cfa_offset
 	.uleb128 SIZEOF_FRAME2		# adjust stack.by SIZEOF_FRAME
 	.byte	0x4			# DW_CFA_advance_loc4
