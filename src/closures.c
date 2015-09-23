@@ -508,6 +508,12 @@ dlmmap_locked (void *start, size_t length, int prot, int flags, off_t offset)
   return start;
 }
 
+static void *
+dlmmap_anon (void *start, size_t length, int prot, int flags, off_t offset)
+{
+  return mmap (NULL, length, prot|PROT_EXEC, MAP_SHARED|MAP_ANONYMOUS, -1, offset);
+}
+
 /* Map in a writable and executable chunk of memory if possible.
    Failing that, fall back to dlmmap_locked.  */
 static void *
@@ -542,6 +548,14 @@ dlmmap (void *start, size_t length, int prot,
       /* If MREMAP_DUP is ever introduced and implemented, try mmap
 	 with ((prot & ~PROT_WRITE) | PROT_EXEC) and mremap with
 	 MREMAP_DUP and prot at this point.  */
+    }
+
+  /* Try anonymous */
+  if (execfd == -1)
+    {
+      ptr = dlmmap_anon(start, length, prot, flags, offset);
+      if (ptr != MFAIL)
+        return ptr;
     }
 
   if (execsize == 0 || execfd == -1)
