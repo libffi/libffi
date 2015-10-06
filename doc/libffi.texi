@@ -161,7 +161,7 @@ same as for @code{ffi_prep_cif} except that:
 variadic arguments.  It must be greater than zero.
 
 @var{ntotalargs} the total number of arguments, including variadic
-and fixed arguments.
+and fixed arguments.  @var{argtypes} must have this many elements.
 
 Note that, different cif's must be prepped for calls to the same
 function when different numbers of arguments are passed.
