@@ -337,6 +337,10 @@ AC_ARG_ENABLE(purify-safety,
     AC_DEFINE(USING_PURIFY, 1, [Define this if you are using Purify and want to suppress spurious messages.])
   fi)
 
+AC_ARG_ENABLE(multi-os-directory,
+[  --disable-multi-os-directory
+                          disable use of gcc --print-multi-os-directory to change the library installation directory])
+                          
 # These variables are only ever used when we cross-build to X86_WIN32.
 # And we only support this with GCC, so...
 if test "x$GCC" = "xyes"; then
@@ -348,11 +352,13 @@ if test "x$GCC" = "xyes"; then
     toolexecdir="${libdir}"/gcc-lib/'$(target_alias)'
     toolexeclibdir="${libdir}"
   fi
-  multi_os_directory=`$CC $CFLAGS -print-multi-os-directory`
-  case $multi_os_directory in
-    .) ;; # Avoid trailing /.
-    ../*) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
-  esac
+  if test x"$enable_multi_os_directory" != x"no"; then
+    multi_os_directory=`$CC $CFLAGS -print-multi-os-directory`
+    case $multi_os_directory in
+      .) ;; # Avoid trailing /.
+      ../*) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
+    esac
+  fi
   AC_SUBST(toolexecdir)
 else
   toolexeclibdir="${libdir}"
