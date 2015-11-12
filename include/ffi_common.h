@@ -82,6 +82,11 @@ ffi_status ffi_prep_cif_machdep(ffi_cif *cif);
 ffi_status ffi_prep_cif_machdep_var(ffi_cif *cif,
 	 unsigned int nfixedargs, unsigned int ntotalargs);
 
+#if HAVE_LONG_DOUBLE_VARIANT
+/* Used to adjust size/alignment of ffi types.  */
+void ffi_prep_types (ffi_abi abi);
+#endif
+
 /* Extended cif, used in callback from assembly routine */
 typedef struct
 {
