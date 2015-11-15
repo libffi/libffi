@@ -174,9 +174,9 @@ Also note that a call to @code{ffi_prep_cif_var} with
 @end defun
 
 Note that the resulting @code{ffi_cif} holds pointers to all the
-@code{ffi_type} objects that were used durin initialization.  You must
-ensure that these type objects have a lifetime at least as long as
-that of the @code{ffi_cif}.
+@code{ffi_type} objects that were used during initialization.  You
+must ensure that these type objects have a lifetime at least as long
+as that of the @code{ffi_cif}.
 
 To call a function using an initialized @code{ffi_cif}, use the
 @code{ffi_call} function:
