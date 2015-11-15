@@ -337,7 +337,8 @@ ffi_status
 ffi_prep_closure (ffi_closure*,
 		  ffi_cif *,
 		  void (*fun)(ffi_cif*,void*,void**,void*),
-		  void *user_data);
+		  void *user_data)
+  __attribute__((deprecated ("use ffi_prep_closure_loc instead")));
 
 ffi_status
 ffi_prep_closure_loc (ffi_closure*,
