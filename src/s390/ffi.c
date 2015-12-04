@@ -508,7 +508,7 @@ ffi_closure_helper_SYSV (ffi_cif *cif,
 			 unsigned long long *p_fpr,
 			 unsigned long *p_ov)
 {
-  unsigned long long ret_buffer;
+  unsigned long long ret_buffer = 0;
 
   void *rvalue = &ret_buffer;
   void **avalue;
