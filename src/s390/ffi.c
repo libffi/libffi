@@ -32,6 +32,7 @@
 #include <ffi_common.h>
 #include <stdint.h>
 #include "internal.h"
+#include <inttypes.h>
 
 /*====================== End of Includes =============================*/
 
