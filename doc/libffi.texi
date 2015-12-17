@@ -806,13 +806,17 @@ The @code{ffi_cif} passed to @code{ffi_prep_closure_loc}.
 
 @item ret
 A pointer to the memory used for the function's return value.
-@var{fun} must fill this, unless the function is declared as returning
-@code{void}.  Note that this points to memory that is exactly the size
-of the type given as the return type when initializing the CIF.  In
-particular, closures do not have the special promotion behavior of
-@code{ffi_call}.
-@c FIXME: is this NULL for void-returning functions?
-@c (experimentally it is not, but it seems like a good idea)
+
+If the function is declared as returning @code{void}, then this value
+is garbage and should not be used.
+
+Otherwise, @var{fun} must fill the object to which this points,
+following the same special promotion behavior as @code{ffi_call}.
+That is, in most cases, @var{ret} points to an object of exactly the
+size of the type specified when @var{cif} was constructed.  However,
+integral types narrower than the system register size are widened.  In
+these cases your program may assume that @var{ret} points to an
+@code{ffi_arg} object.
 
 @item args
 A vector of pointers to memory holding the arguments to the function.
