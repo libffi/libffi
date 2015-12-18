@@ -776,36 +776,47 @@ the closure function:
 
 @findex ffi_prep_closure_loc
 @defun ffi_status ffi_prep_closure_loc (ffi_closure *@var{closure}, ffi_cif *@var{cif}, void (*@var{fun}) (ffi_cif *@var{cif}, void *@var{ret}, void **@var{args}, void *@var{user_data}), void *@var{user_data}, void *@var{codeloc})
-Prepare a closure function.
+Prepare a closure function.  The arguments to
+@code{ffi_prep_closure_loc} are:
 
-@var{closure} is the address of a @code{ffi_closure} object; this is
-the writable address returned by @code{ffi_closure_alloc}.
+@table @var
+@item closure
+The address of a @code{ffi_closure} object; this is the writable
+address returned by @code{ffi_closure_alloc}.
 
-@var{cif} is the @code{ffi_cif} describing the function parameters.
-Note that this object, and the types to which it refers, must be kept
-alive until the closure itself is freed.
+@item cif
+The @code{ffi_cif} describing the function parameters.  Note that this
+object, and the types to which it refers, must be kept alive until the
+closure itself is freed.
 
-@var{user_data} is an arbitrary datum that is passed, uninterpreted,
-to your closure function.
+@item user_data
+An arbitrary datum that is passed, uninterpreted, to your closure
+function.
 
-@var{codeloc} is the executable address returned by
-@code{ffi_closure_alloc}.
+@item codeloc
+The executable address returned by @code{ffi_closure_alloc}.
 
-@var{fun} is the function which will be called when the closure is
-invoked.  It is called with the arguments:
+@item fun
+The function which will be called when the closure is invoked.  It is
+called with the arguments:
+
 @table @var
 @item cif
 The @code{ffi_cif} passed to @code{ffi_prep_closure_loc}.
 
 @item ret
 A pointer to the memory used for the function's return value.
-@var{fun} must fill this, unless the function is declared as returning
-@code{void}.  Note that this points to memory that is exactly the size
-of the type given as the return type when initializing the CIF.  In
-particular, closures do not have the special promotion behavior of
-@code{ffi_call}.
-@c FIXME: is this NULL for void-returning functions?
-@c (experimentally it is not, but it seems like a good idea)
+
+If the function is declared as returning @code{void}, then this value
+is garbage and should not be used.
+
+Otherwise, @var{fun} must fill the object to which this points,
+following the same special promotion behavior as @code{ffi_call}.
+That is, in most cases, @var{ret} points to an object of exactly the
+size of the type specified when @var{cif} was constructed.  However,
+integral types narrower than the system register size are widened.  In
+these cases your program may assume that @var{ret} points to an
+@code{ffi_arg} object.
 
 @item args
 A vector of pointers to memory holding the arguments to the function.
@@ -813,6 +824,7 @@ A vector of pointers to memory holding the arguments to the function.
 @item user_data
 The same @var{user_data} that was passed to
 @code{ffi_prep_closure_loc}.
+@end table
 @end table
 
 @code{ffi_prep_closure_loc} will return @code{FFI_OK} if everything
