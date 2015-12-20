@@ -228,9 +228,13 @@ ARM_FUNC_START(ffi_closure_SYSV)
 	cfi_startproc
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
-	ldr	r0, [ip, #FFI_TRAMPOLINE_SIZE]	  @ load cif
-	ldr	r1, [ip, #FFI_TRAMPOLINE_SIZE+4]  @ load fun
-	ldr	r2, [ip, #FFI_TRAMPOLINE_SIZE+8]  @ load user_data
+
+#if FFI_EXEC_TRAMPOLINE_TABLE
+	ldr ip, [ip]				@ ip points to the config page, dereference to get the ffi_closure*
+#endif
+	ldr	r0, [ip, #FFI_TRAMPOLINE_CLOSURE_OFFSET]	@ load cif
+	ldr	r1, [ip, #FFI_TRAMPOLINE_CLOSURE_OFFSET+4]  @ load fun
+	ldr	r2, [ip, #FFI_TRAMPOLINE_CLOSURE_OFFSET+8]  @ load user_data
 0:
 	add	ip, sp, #16			@ compute entry sp
 	sub	sp, sp, #64+32			@ allocate frame
@@ -271,9 +275,13 @@ ARM_FUNC_START(ffi_closure_VFP)
 	cfi_startproc
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
-	ldr	r0, [ip, #FFI_TRAMPOLINE_SIZE]	  @ load cif
-	ldr	r1, [ip, #FFI_TRAMPOLINE_SIZE+4]  @ load fun
-	ldr	r2, [ip, #FFI_TRAMPOLINE_SIZE+8]  @ load user_data
+
+#if FFI_EXEC_TRAMPOLINE_TABLE
+	ldr ip, [ip]				@ ip points to the config page, dereference to get the ffi_closure*
+#endif
+	ldr	r0, [ip, #FFI_TRAMPOLINE_CLOSURE_OFFSET]	@ load cif
+	ldr	r1, [ip, #FFI_TRAMPOLINE_CLOSURE_OFFSET+4]  @ load fun
+	ldr	r2, [ip, #FFI_TRAMPOLINE_CLOSURE_OFFSET+8]  @ load user_data
 0:
 	add	ip, sp, #16
 	sub	sp, sp, #64+32			@ allocate frame
@@ -347,23 +355,18 @@ ARM_FUNC_END(ffi_closure_ret)
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
-/* ??? The iOS support should be updated.  The first insn used to
-   be STMFD, but that's been moved into ffi_closure_SYSV.  If the
-   writable page is put after this one we can make use of the
-   pc+8 feature of the architecture.  We can also reduce the size
-   of the thunk to 8 and pack more of these into the page.
+#ifdef __MACH__
+#include <mach/vm_param.h>
 
-   In the meantime, simply replace the STMFD with a NOP so as to
-   keep all the magic numbers the same within ffi.c.  */
-
-	.align	12
+.align	PAGE_MAX_SHIFT
 ARM_FUNC_START(ffi_closure_trampoline_table_page)
-.rept	4096 / 12
-	nop
-	ldr	ip, [pc, #-4092]
-	ldr	pc, [pc, #-4092]
+.rept	PAGE_MAX_SIZE / FFI_TRAMPOLINE_SIZE
+	adr ip, #-PAGE_MAX_SIZE   @ the config page is PAGE_MAX_SIZE behind the trampoline page
+	sub ip, #8				  @ account for pc bias
+	ldr	pc, [ip, #4]		  @ jump to ffi_closure_SYSV or ffi_closure_VFP
 .endr
 ARM_FUNC_END(ffi_closure_trampoline_table_page)
+#endif
 
 #else
 
