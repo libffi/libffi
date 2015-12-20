@@ -107,6 +107,7 @@ values passed between the two languages.
 * Multiple ABIs::               Different passing styles on one platform.
 * The Closure API::             Writing a generic function.
 * Closure Example::             A closure example.
+* Thread Safety::               Thread safety.
 @end menu
 
 
@@ -172,6 +173,10 @@ Also note that a call to @code{ffi_prep_cif_var} with
 
 @end defun
 
+Note that the resulting @code{ffi_cif} holds pointers to all the
+@code{ffi_type} objects that were used during initialization.  You
+must ensure that these type objects have a lifetime at least as long
+as that of the @code{ffi_cif}.
 
 To call a function using an initialized @code{ffi_cif}, use the
 @code{ffi_call} function:
@@ -190,12 +195,29 @@ to ensure this.  If @var{cif} declares that the function returns
 @code{void} (using @code{ffi_type_void}), then @var{rvalue} is
 ignored.
 
+In most situations, @samp{libffi} will handle promotion according to
+the ABI.  However, for historical reasons, there is a special case
+with return values that must be handled by your code.  In particular,
+for integral (not @code{struct}) types that are narrower than the
+system register size, the return value will be widened by
+@samp{libffi}.  @samp{libffi} provides a type, @code{ffi_arg}, that
+can be used as the return type.  For example, if the CIF was defined
+with a return type of @code{char}, @samp{libffi} will try to store a
+full @code{ffi_arg} into the return value.
+
 @var{avalues} is a vector of @code{void *} pointers that point to the
 memory locations holding the argument values for a call.  If @var{cif}
 declares that the function has no arguments (i.e., @var{nargs} was 0),
 then @var{avalues} is ignored.  Note that argument values may be
 modified by the callee (for instance, structs passed by value); the
 burden of copying pass-by-value arguments is placed on the caller.
+
+Note that while the return value must be register-sized, arguments
+should exactly match their declared type.  For example, if an argument
+is a @code{short}, then the entry is @var{avalues} should point to an
+object declared as @code{short}; but if the return type is
+@code{short}, then @var{rvalue} should point to an object declared as
+a larger type -- usually @code{ffi_arg}.
 @end defun
 
 
@@ -246,6 +268,8 @@ int main()
 @menu
 * Primitive Types::             Built-in types.
 * Structures::                  Structure types.
+* Size and Alignment::          Size and alignment of types.
+* Arrays and Unions::           Arrays and unions.
 * Type Example::                Structure type example.
 * Complex::                     Complex types.
 * Complex Type Example::        Complex type example.
@@ -370,8 +394,7 @@ when passing to @code{ffi_prep_cif}.
 @node Structures
 @subsection Structures
 
-Although @samp{libffi} has no special support for unions or
-bit-fields, it is perfectly happy passing structures back and forth.
+@samp{libffi} is perfectly happy passing structures back and forth.
 You must first describe the structure to @samp{libffi} by creating a
 new @code{ffi_type} object for it.
 
@@ -391,9 +414,132 @@ For a structure, this should be set to @code{FFI_TYPE_STRUCT}.
 @item ffi_type **elements
 This is a @samp{NULL}-terminated array of pointers to @code{ffi_type}
 objects.  There is one element per field of the struct.
+
+Note that @samp{libffi} has no special support for bit-fields.  You
+must manage these manually.
 @end table
 @end deftp
 
+The @code{size} and @code{alignment} fields will be filled in by
+@code{ffi_prep_cif} or @code{ffi_prep_cif_var}, as needed.
+
+@node Size and Alignment
+@subsection Size and Alignment
+
+@code{libffi} will set the @code{size} and @code{alignment} fields of
+an @code{ffi_type} object for you.  It does so using its knowledge of
+the ABI.
+
+You might expect that you can simply read these fields for a type that
+has been laid out by @code{libffi}.  However, there are some caveats.
+
+@itemize @bullet
+@item
+The size or alignment of some of the built-in types may vary depending
+on the chosen ABI.
+
+@item
+The size and alignment of a new structure type will not be set by
+@code{libffi} until it has been passed to @code{ffi_prep_cif}.
+
+@item
+A structure type cannot be shared across ABIs.  Instead each ABI needs
+its own copy of the structure type.
+@end itemize
+
+So, before examining these fields, it is safest to pass the
+@code{ffi_type} object to @code{ffi_prep_cif} first.  This function
+will do all the needed setup.
+
+@example
+ffi_type *desired_type;
+ffi_abi desired_abi;
+@dots{}
+ffi_cif cif;
+if (ffi_prep_cif (&cif, desired_abi, 0, desired_type, NULL) == FFI_OK)
+  @{
+    size_t size = desired_type->size;
+    unsigned short alignment = desired_type->alignment;
+  @}
+@end example
+
+@node Arrays and Unions
+@subsection Arrays and Unions
+
+@subsubsection Arrays
+
+@samp{libffi} does not have direct support for arrays or unions.
+However, they can be emulated using structures.
+
+To emulate an array, simply create an @code{ffi_type} using
+@code{FFI_TYPE_STRUCT} with as many members as there are elements in
+the array.
+
+@example
+ffi_type array_type;
+ffi_type **elements
+int i;
+
+elements = malloc ((n + 1) * sizeof (ffi_type *));
+for (i = 0; i < n; ++i)
+  elements[i] = array_element_type;
+elements[n] = NULL;
+
+array_type.size = array_type.alignment = 0;
+array_type.type = FFI_TYPE_STRUCT;
+array_type.elements = elements;
+@end example
+
+Note that arrays cannot be passed or returned by value in C --
+structure types created like this should only be used to refer to
+members of real @code{FFI_TYPE_STRUCT} objects.
+
+However, a phony array type like this will not cause any errors from
+@samp{libffi} if you use it as an argument or return type.  This may
+be confusing.
+
+@subsubsection Unions
+
+A union can also be emulated using @code{FFI_TYPE_STRUCT}.  In this
+case, however, you must make sure that the size and alignment match
+the real requirements of the union.
+
+One simple way to do this is to ensue that each element type is laid
+out.  Then, give the new structure type a single element; the size of
+the largest element; and the largest alignment seen as well.
+
+This example uses the @code{ffi_prep_cif} trick to ensure that each
+element type is laid out.
+
+@example
+ffi_abi desired_abi;
+ffi_type union_type;
+ffi_type **union_elements;
+
+int i;
+ffi_type element_types[2];
+
+element_types[1] = NULL;
+
+union_type.size = union_type.alignment = 0;
+union_type.type = FFI_TYPE_STRUCT;
+union_type.elements = element_types;
+
+for (i = 0; union_elements[i]; ++i)
+  @{
+    ffi_cif cif;
+    if (ffi_prep_cif (&cif, desired_abi, 0, union_elements[i], NULL) == FFI_OK)
+      @{
+        if (union_elements[i]->size > union_type.size)
+          @{
+            union_type.size = union_elements[i];
+            size = union_elements[i]->size;
+          @}
+        if (union_elements[i]->alignment > union_type.alignment)
+          union_type.alignment = union_elements[i]->alignment;
+      @}
+  @}
+@end example
 
 @node Type Example
 @subsection Type Example
@@ -630,30 +776,47 @@ the closure function:
 
 @findex ffi_prep_closure_loc
 @defun ffi_status ffi_prep_closure_loc (ffi_closure *@var{closure}, ffi_cif *@var{cif}, void (*@var{fun}) (ffi_cif *@var{cif}, void *@var{ret}, void **@var{args}, void *@var{user_data}), void *@var{user_data}, void *@var{codeloc})
-Prepare a closure function.
+Prepare a closure function.  The arguments to
+@code{ffi_prep_closure_loc} are:
 
-@var{closure} is the address of a @code{ffi_closure} object; this is
-the writable address returned by @code{ffi_closure_alloc}.
+@table @var
+@item closure
+The address of a @code{ffi_closure} object; this is the writable
+address returned by @code{ffi_closure_alloc}.
 
-@var{cif} is the @code{ffi_cif} describing the function parameters.
+@item cif
+The @code{ffi_cif} describing the function parameters.  Note that this
+object, and the types to which it refers, must be kept alive until the
+closure itself is freed.
 
-@var{user_data} is an arbitrary datum that is passed, uninterpreted,
-to your closure function.
+@item user_data
+An arbitrary datum that is passed, uninterpreted, to your closure
+function.
 
-@var{codeloc} is the executable address returned by
-@code{ffi_closure_alloc}.
+@item codeloc
+The executable address returned by @code{ffi_closure_alloc}.
 
-@var{fun} is the function which will be called when the closure is
-invoked.  It is called with the arguments:
+@item fun
+The function which will be called when the closure is invoked.  It is
+called with the arguments:
+
 @table @var
 @item cif
 The @code{ffi_cif} passed to @code{ffi_prep_closure_loc}.
 
 @item ret
 A pointer to the memory used for the function's return value.
-@var{fun} must fill this, unless the function is declared as returning
-@code{void}.
-@c FIXME: is this NULL for void-returning functions?
+
+If the function is declared as returning @code{void}, then this value
+is garbage and should not be used.
+
+Otherwise, @var{fun} must fill the object to which this points,
+following the same special promotion behavior as @code{ffi_call}.
+That is, in most cases, @var{ret} points to an object of exactly the
+size of the type specified when @var{cif} was constructed.  However,
+integral types narrower than the system register size are widened.  In
+these cases your program may assume that @var{ret} points to an
+@code{ffi_arg} object.
 
 @item args
 A vector of pointers to memory holding the arguments to the function.
@@ -662,10 +825,10 @@ A vector of pointers to memory holding the arguments to the function.
 The same @var{user_data} that was passed to
 @code{ffi_prep_closure_loc}.
 @end table
+@end table
 
 @code{ffi_prep_closure_loc} will return @code{FFI_OK} if everything
-went ok, and something else on error.
-@c FIXME: what?
+went ok, and one of the other @code{ffi_status} values on error.
 
 After calling @code{ffi_prep_closure_loc}, you can cast @var{codeloc}
 to the appropriate pointer-to-function type.
@@ -733,6 +896,28 @@ int main()
 
 @end example
 
+@node Thread Safety
+@section Thread Safety
+
+@code{libffi} is not completely thread-safe.  However, many parts are,
+and if you follow some simple rules, you can use it safely in a
+multi-threaded program.
+
+@itemize @bullet
+@item
+@code{ffi_prep_cif} may modify the @code{ffi_type} objects passed to
+it.  It is best to ensure that only a single thread prepares a given
+@code{ffi_cif} at a time.
+
+@item
+On some platforms, @code{ffi_prep_cif} may modify the size and
+alignment of some types, depending on the chosen ABI.  On these
+platforms, if you switch between ABIs, you must ensure that there is
+only one call to @code{ffi_prep_cif} at a time.
+
+Currently the only affected platform is PowerPC and the only affected
+type is @code{long double}.
+@end itemize
 
 @node Missing Features
 @chapter Missing Features
@@ -749,9 +934,10 @@ There is no support for bit fields in structures.
 
 @item
 The ``raw'' API is undocumented.
-@c argument promotion?
-@c unions?
 @c anything else?
+
+@item
+The Go API is undocumented.
 @end itemize
 
 Note that variadic support is very new and tested on a relatively
