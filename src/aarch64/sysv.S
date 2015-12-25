@@ -359,11 +359,9 @@ CNAME(ffi_closure_SYSV):
     .align 12
 CNAME(ffi_closure_trampoline_table_page):
     .rept 16384 / FFI_TRAMPOLINE_SIZE
-    adr	x17, -16384
-    adr	x16, -16380
-    ldr x16, [x16]
-    ldr x17, [x17]
-    br	x16
+    adr x16, -16384
+    ldp x17, x16, [x16]
+    br x16
     .endr
     
     .globl CNAME(ffi_closure_trampoline_table_page)

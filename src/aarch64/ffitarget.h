@@ -49,7 +49,7 @@ typedef enum ffi_abi
 
 #define FFI_CLOSURES 1
 #if defined (__APPLE__)
-#define FFI_TRAMPOLINE_SIZE 20
+#define FFI_TRAMPOLINE_SIZE 12
 #define FFI_TRAMPOLINE_CLOSURE_OFFSET 16
 #else
 #define FFI_TRAMPOLINE_SIZE 24
