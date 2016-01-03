@@ -63,7 +63,20 @@ typedef enum ffi_abi {
 
 #define FFI_CLOSURES 1
 #define FFI_GO_CLOSURES 1
-#define FFI_TRAMPOLINE_SIZE 12
 #define FFI_NATIVE_RAW_API 0
+
+#if defined (FFI_EXEC_TRAMPOLINE_TABLE) && FFI_EXEC_TRAMPOLINE_TABLE
+
+#ifdef __MACH__
+#define FFI_TRAMPOLINE_SIZE 12
+#define FFI_TRAMPOLINE_CLOSURE_OFFSET 8
+#else
+#error "No trampoline table implementation"
+#endif
+
+#else
+#define FFI_TRAMPOLINE_SIZE 12
+#define FFI_TRAMPOLINE_CLOSURE_OFFSET FFI_TRAMPOLINE_SIZE
+#endif
 
 #endif

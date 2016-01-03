@@ -356,16 +356,18 @@ CNAME(ffi_closure_SYSV):
 #endif
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
-    .align 12
+
+#ifdef __MACH__
+#include <mach/vm_param.h>
+    .align PAGE_MAX_SHIFT
 CNAME(ffi_closure_trampoline_table_page):
-    .rept 16384 / FFI_TRAMPOLINE_SIZE
-    adr	x17, -16384
-    adr	x16, -16380
-    ldr x16, [x16]
-    ldr x17, [x17]
-    br	x16
+    .rept PAGE_MAX_SIZE / FFI_TRAMPOLINE_SIZE
+    adr x16, -PAGE_MAX_SIZE
+    ldp x17, x16, [x16]
+    br x16
+	nop		/* each entry in the trampoline config page is 2*sizeof(void*) so the trampoline itself cannot be smaller that 16 bytes */
     .endr
-    
+
     .globl CNAME(ffi_closure_trampoline_table_page)
     #ifdef __ELF__
     	.type	CNAME(ffi_closure_trampoline_table_page), #function
@@ -373,6 +375,8 @@ CNAME(ffi_closure_trampoline_table_page):
     	.size	CNAME(ffi_closure_trampoline_table_page), . - CNAME(ffi_closure_trampoline_table_page)
     #endif
 #endif
+
+#endif /* FFI_EXEC_TRAMPOLINE_TABLE */
 
 #ifdef FFI_GO_CLOSURES
 	.align 4

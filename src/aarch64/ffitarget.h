@@ -48,14 +48,21 @@ typedef enum ffi_abi
 /* ---- Definitions for closures ----------------------------------------- */
 
 #define FFI_CLOSURES 1
-#if defined (__APPLE__)
-#define FFI_TRAMPOLINE_SIZE 20
+#define FFI_NATIVE_RAW_API 0
+
+#if defined (FFI_EXEC_TRAMPOLINE_TABLE) && FFI_EXEC_TRAMPOLINE_TABLE
+
+#ifdef __MACH__
+#define FFI_TRAMPOLINE_SIZE 16
 #define FFI_TRAMPOLINE_CLOSURE_OFFSET 16
+#else
+#error "No trampoline table implementation"
+#endif
+
 #else
 #define FFI_TRAMPOLINE_SIZE 24
 #define FFI_TRAMPOLINE_CLOSURE_OFFSET FFI_TRAMPOLINE_SIZE
 #endif
-#define FFI_NATIVE_RAW_API 0
 
 /* ---- Internal ---- */
 
