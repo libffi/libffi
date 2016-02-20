@@ -37,8 +37,12 @@
 #define flags	 a3
 #define raddr    a4
 #define fn       a5
+#define closure  a6
 
-#define SIZEOF_FRAME	( 8 * FFI_SIZEOF_ARG )
+/* Note: to keep stack 16 byte aligned we need even number slots 
+   used 9 slots here
+*/
+#define SIZEOF_FRAME	( 10 * FFI_SIZEOF_ARG )
 
 #ifdef __GNUC__
 	.abicalls
@@ -49,24 +53,25 @@
 	.globl	ffi_call_N32
 	.ent	ffi_call_N32
 ffi_call_N32:	
-.LFB3:
+.LFB0:
 	.frame	$fp, SIZEOF_FRAME, ra
 	.mask	0xc0000000,-FFI_SIZEOF_ARG
 	.fmask	0x00000000,0
 
 	# Prologue
 	SUBU	$sp, SIZEOF_FRAME			# Frame size
-.LCFI0:
+.LCFI00:
 	REG_S	$fp, SIZEOF_FRAME - 2*FFI_SIZEOF_ARG($sp)	# Save frame pointer
 	REG_S	ra, SIZEOF_FRAME - 1*FFI_SIZEOF_ARG($sp)	# Save return address
-.LCFI1:
+.LCFI01:
 	move	$fp, $sp
-.LCFI3:
+.LCFI02:
 	move	t9, callback	# callback function pointer
 	REG_S	bytes, 2*FFI_SIZEOF_ARG($fp) # bytes
 	REG_S	flags, 3*FFI_SIZEOF_ARG($fp) # flags
 	REG_S	raddr, 4*FFI_SIZEOF_ARG($fp) # raddr
 	REG_S	fn,    5*FFI_SIZEOF_ARG($fp) # fn
+	REG_S	closure, 6*FFI_SIZEOF_ARG($fp) # closure
 
 	# Allocate at least 4 words in the argstack
 	move	v0, bytes
@@ -197,6 +202,9 @@ arg8_next:
 callit:		
 	# Load the function pointer
 	REG_L	t9, 5*FFI_SIZEOF_ARG($fp)
+
+	# install the static chain(t7=$15)
+	REG_L	t7, 6*FFI_SIZEOF_ARG($fp)
 
 	# If the return value pointer is NULL, assume no return value.
 	REG_L	t5, 4*FFI_SIZEOF_ARG($fp)
@@ -346,7 +354,7 @@ epilogue:
 	ADDU	$sp, SIZEOF_FRAME		      # Fix stack pointer
 	j	ra
 
-.LFE3:
+.LFE0:
 	.end	ffi_call_N32
 
 /* ffi_closure_N32. Expects address of the passed-in ffi_closure in t0
@@ -406,6 +414,41 @@ epilogue:
 #define GP_OFF2		(0  * FFI_SIZEOF_ARG)
 
 	.align	2
+	.globl	ffi_go_closure_N32
+	.ent	ffi_go_closure_N32
+ffi_go_closure_N32:
+.LFB1:
+	.frame	$sp, SIZEOF_FRAME2, ra
+	.mask	0x90000000,-(SIZEOF_FRAME2 - RA_OFF2)
+	.fmask	0x00000000,0
+	SUBU	$sp, SIZEOF_FRAME2
+.LCFI10:
+	.cpsetup t9, GP_OFF2, ffi_go_closure_N32
+	REG_S	ra, RA_OFF2($sp)	# Save return address
+.LCFI11:
+
+	REG_S	a0, A0_OFF2($sp)
+	REG_S	a1, A1_OFF2($sp)
+	REG_S	a2, A2_OFF2($sp)
+	REG_S	a3, A3_OFF2($sp)
+	REG_S	a4, A4_OFF2($sp)
+	REG_S	a5, A5_OFF2($sp)
+
+	# Call ffi_closure_mips_inner_N32 to do the real work.
+	LA	t9, ffi_closure_mips_inner_N32
+	REG_L	a0, 8($15)   # cif
+	REG_L	a1, 16($15) # fun
+	move	a2, t7                     # userdata=closure
+	ADDU	a3, $sp, V0_OFF2           # rvalue
+	ADDU	a4, $sp, A0_OFF2           # ar
+	ADDU	a5, $sp, F12_OFF2          # fpr
+
+	b	$do_closure
+
+.LFE1:	
+	.end	ffi_go_closure_N32
+
+	.align	2
 	.globl	ffi_closure_N32
 	.ent	ffi_closure_N32
 ffi_closure_N32:
@@ -414,18 +457,29 @@ ffi_closure_N32:
 	.mask	0x90000000,-(SIZEOF_FRAME2 - RA_OFF2)
 	.fmask	0x00000000,0
 	SUBU	$sp, SIZEOF_FRAME2
-.LCFI5:
+.LCFI20:
 	.cpsetup t9, GP_OFF2, ffi_closure_N32
 	REG_S	ra, RA_OFF2($sp)	# Save return address
-.LCFI6:
-	# Store all possible argument registers. If there are more than
-	# fit in registers, then they were stored on the stack.
+.LCFI21:
 	REG_S	a0, A0_OFF2($sp)
 	REG_S	a1, A1_OFF2($sp)
 	REG_S	a2, A2_OFF2($sp)
 	REG_S	a3, A3_OFF2($sp)
 	REG_S	a4, A4_OFF2($sp)
 	REG_S	a5, A5_OFF2($sp)
+
+	# Call ffi_closure_mips_inner_N32 to do the real work.
+	LA	t9, ffi_closure_mips_inner_N32
+	REG_L	a0, 56($12)   # cif
+	REG_L	a1, 64($12)   # fun
+	REG_L	a2, 72($12) # user_data
+	ADDU	a3, $sp, V0_OFF2
+	ADDU	a4, $sp, A0_OFF2
+	ADDU	a5, $sp, F12_OFF2
+
+$do_closure:
+	# Store all possible argument registers. If there are more than
+	# fit in registers, then they were stored on the stack.
 	REG_S	a6, A6_OFF2($sp)
 	REG_S	a7, A7_OFF2($sp)
 
@@ -439,12 +493,6 @@ ffi_closure_N32:
 	s.d	$f18, F18_OFF2($sp)
 	s.d	$f19, F19_OFF2($sp)
 
-	# Call ffi_closure_mips_inner_N32 to do the real work.
-	LA	t9, ffi_closure_mips_inner_N32
-	move	a0, $12	 # Pointer to the ffi_closure
-	ADDU	a1, $sp, V0_OFF2
-	ADDU	a2, $sp, A0_OFF2
-	ADDU	a3, $sp, F12_OFF2
 	jalr	t9
 
 	# Return flags are in v0
@@ -531,46 +579,66 @@ cls_epilogue:
         .align  EH_FRAME_ALIGN
 .LECIE1:
 
-.LSFDE1:
-        .4byte  .LEFDE1-.LASFDE1	# length.
-.LASFDE1:
-        .4byte  .LASFDE1-.Lframe1	# CIE_pointer.
-        FDE_ADDR_BYTES  .LFB3		# initial_location.
-        FDE_ADDR_BYTES  .LFE3-.LFB3	# address_range.
+.LSFDE0:
+        .4byte  .LEFDE0-.LASFDE0	# length.
+.LASFDE0:
+        .4byte  .LASFDE0-.Lframe1	# CIE_pointer.
+        FDE_ADDR_BYTES  .LFB0		# initial_location.
+        FDE_ADDR_BYTES  .LFE0-.LFB0	# address_range.
         .byte   0x4			# DW_CFA_advance_loc4
-        .4byte  .LCFI0-.LFB3		# to .LCFI0
+        .4byte  .LCFI00-.LFB0		# to .LCFI00
         .byte   0xe			# DW_CFA_def_cfa_offset
         .uleb128 SIZEOF_FRAME		# adjust stack.by SIZEOF_FRAME
         .byte   0x4			# DW_CFA_advance_loc4
-        .4byte  .LCFI1-.LCFI0		# to .LCFI1
+        .4byte  .LCFI01-.LCFI00		# to .LCFI01
         .byte   0x9e			# DW_CFA_offset of $fp
         .uleb128 2*FFI_SIZEOF_ARG/4	# 
         .byte   0x9f			# DW_CFA_offset of ra
         .uleb128 1*FFI_SIZEOF_ARG/4	# 
         .byte   0x4			# DW_CFA_advance_loc4
-        .4byte  .LCFI3-.LCFI1		# to .LCFI3
+        .4byte  .LCFI02-.LCFI01		# to .LCFI02
         .byte   0xd			# DW_CFA_def_cfa_register
         .uleb128 0x1e			# in $fp
         .align  EH_FRAME_ALIGN
-.LEFDE1:
-.LSFDE3:
-	.4byte	.LEFDE3-.LASFDE3	# length
-.LASFDE3:
-	.4byte	.LASFDE3-.Lframe1	# CIE_pointer.
-	FDE_ADDR_BYTES	.LFB2		# initial_location.
-	FDE_ADDR_BYTES	.LFE2-.LFB2	# address_range.
+.LEFDE0:
+
+.LSFDE1:
+	.4byte	.LEFDE1-.LASFDE1	# length
+.LASFDE1:
+	.4byte	.LASFDE1-.Lframe1	# CIE_pointer.
+	FDE_ADDR_BYTES	.LFB1		# initial_location.
+	FDE_ADDR_BYTES	.LFE1-.LFB1	# address_range.
 	.byte	0x4			# DW_CFA_advance_loc4
-	.4byte	.LCFI5-.LFB2		# to .LCFI5
+	.4byte	.LCFI10-.LFB1		# to .LCFI10
 	.byte	0xe			# DW_CFA_def_cfa_offset
 	.uleb128 SIZEOF_FRAME2		# adjust stack.by SIZEOF_FRAME
 	.byte	0x4			# DW_CFA_advance_loc4
-	.4byte	.LCFI6-.LCFI5		# to .LCFI6
+	.4byte	.LCFI11-.LCFI10		# to .LCFI11
 	.byte	0x9c			# DW_CFA_offset of $gp ($28)
 	.uleb128 (SIZEOF_FRAME2 - GP_OFF2)/4
 	.byte	0x9f			# DW_CFA_offset of ra ($31)
 	.uleb128 (SIZEOF_FRAME2 - RA_OFF2)/4
 	.align	EH_FRAME_ALIGN
-.LEFDE3:
+.LEFDE1:
+
+.LSFDE2:
+	.4byte	.LEFDE2-.LASFDE2	# length
+.LASFDE2:
+	.4byte	.LASFDE2-.Lframe1	# CIE_pointer.
+	FDE_ADDR_BYTES	.LFB2		# initial_location.
+	FDE_ADDR_BYTES	.LFE2-.LFB2	# address_range.
+	.byte	0x4			# DW_CFA_advance_loc4
+	.4byte	.LCFI20-.LFB2		# to .LCFI20
+	.byte	0xe			# DW_CFA_def_cfa_offset
+	.uleb128 SIZEOF_FRAME2		# adjust stack.by SIZEOF_FRAME
+	.byte	0x4			# DW_CFA_advance_loc4
+	.4byte	.LCFI21-.LCFI20		# to .LCFI21
+	.byte	0x9c			# DW_CFA_offset of $gp ($28)
+	.uleb128 (SIZEOF_FRAME2 - GP_OFF2)/4
+	.byte	0x9f			# DW_CFA_offset of ra ($31)
+	.uleb128 (SIZEOF_FRAME2 - RA_OFF2)/4
+	.align	EH_FRAME_ALIGN
+.LEFDE2:
 #endif /* __GNUC__ */	
 	
 #endif
