@@ -269,7 +269,7 @@ int main()
 * Primitive Types::             Built-in types.
 * Structures::                  Structure types.
 * Size and Alignment::          Size and alignment of types.
-* Arrays and Unions::           Arrays and unions.
+* Arrays Unions Enums::         Arrays, unions, and enumerations.
 * Type Example::                Structure type example.
 * Complex::                     Complex types.
 * Complex Type Example::        Complex type example.
@@ -463,8 +463,8 @@ if (ffi_prep_cif (&cif, desired_abi, 0, desired_type, NULL) == FFI_OK)
   @}
 @end example
 
-@node Arrays and Unions
-@subsection Arrays and Unions
+@node Arrays Unions Enums
+@subsection Arrays, Unions, and Enumerations
 
 @subsubsection Arrays
 
@@ -540,6 +540,16 @@ for (i = 0; union_elements[i]; ++i)
       @}
   @}
 @end example
+
+@subsubsection Enumerations
+
+@code{libffi} does not have any special support for C @code{enum}s.
+Although any given @code{enum} is implemented using a specific
+underlying integral type, exactly which type will be used cannot be
+determined by @code{libffi} -- it may depend on the values in the
+enumeration or on compiler flags such as @option{-fshort-enums}.
+@xref{Structures unions enumerations and bit-fields implementation, , , gcc},
+for more information about how GCC handles enumerations.
 
 @node Type Example
 @subsection Type Example
