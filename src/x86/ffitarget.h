@@ -87,6 +87,8 @@ typedef enum ffi_abi {
 #elif defined(X86_64) || (defined (__x86_64__) && defined (X86_DARWIN))
   FFI_FIRST_ABI = 1,
   FFI_UNIX64,
+  FFI_WIN64,
+  FFI_EFI64 = FFI_WIN64,
   FFI_LAST_ABI,
   FFI_DEFAULT_ABI = FFI_UNIX64
 

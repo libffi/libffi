@@ -246,7 +246,7 @@ case "${TARGET}" in
 	SOURCES="ffi.c sysv.S"
 	;;
   X86_64)
-	SOURCES="ffi64.c unix64.S"
+	SOURCES="ffi64.c unix64.S ffiw64.c win64.S"
 	;;
   X86_WIN64)
 	SOURCES="ffiw64.c win64.S"

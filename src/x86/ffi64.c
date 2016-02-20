@@ -388,6 +388,9 @@ examine_argument (ffi_type *type, enum x86_64_reg_class classes[MAX_CLASSES],
 
 /* Perform machine dependent cif processing.  */
 
+extern ffi_status
+ffi_prep_cif_machdep_efi64(ffi_cif *cif);
+
 ffi_status
 ffi_prep_cif_machdep (ffi_cif *cif)
 {
@@ -396,6 +399,8 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   size_t bytes, n, rtype_size;
   ffi_type *rtype;
 
+  if (cif->abi == FFI_EFI64)
+    return ffi_prep_cif_machdep_efi64(cif);
   if (cif->abi != FFI_UNIX64)
     return FFI_BAD_ABI;
 
@@ -657,21 +662,40 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 		   flags, rvalue, fn);
 }
 
+extern void
+ffi_call_efi64(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue);
+
 void
 ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 {
+  if (cif->abi == FFI_EFI64)
+    return ffi_call_efi64(cif, fn, rvalue, avalue);
   ffi_call_int (cif, fn, rvalue, avalue, NULL);
 }
+
+extern void
+ffi_call_go_efi64(ffi_cif *cif, void (*fn)(void), void *rvalue,
+		  void **avalue, void *closure);
 
 void
 ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	     void **avalue, void *closure)
 {
+  if (cif->abi == FFI_EFI64)
+    ffi_call_go_efi64(cif, fn, rvalue, avalue, closure);
   ffi_call_int (cif, fn, rvalue, avalue, closure);
 }
 
+
 extern void ffi_closure_unix64(void) FFI_HIDDEN;
 extern void ffi_closure_unix64_sse(void) FFI_HIDDEN;
+
+extern ffi_status
+ffi_prep_closure_loc_efi64(ffi_closure* closure,
+			   ffi_cif* cif,
+			   void (*fun)(ffi_cif*, void*, void**, void*),
+			   void *user_data,
+			   void *codeloc);
 
 ffi_status
 ffi_prep_closure_loc (ffi_closure* closure,
@@ -691,6 +715,8 @@ ffi_prep_closure_loc (ffi_closure* closure,
   void (*dest)(void);
   char *tramp = closure->tramp;
 
+  if (cif->abi == FFI_EFI64)
+    return ffi_prep_closure_loc_efi64(closure, cif, fun, user_data, codeloc);
   if (cif->abi != FFI_UNIX64)
     return FFI_BAD_ABI;
 
@@ -805,10 +831,16 @@ ffi_closure_unix64_inner(ffi_cif *cif,
 extern void ffi_go_closure_unix64(void) FFI_HIDDEN;
 extern void ffi_go_closure_unix64_sse(void) FFI_HIDDEN;
 
+extern ffi_status
+ffi_prep_go_closure_efi64(ffi_go_closure* closure, ffi_cif* cif,
+			  void (*fun)(ffi_cif*, void*, void**, void*));
+
 ffi_status
 ffi_prep_go_closure (ffi_go_closure* closure, ffi_cif* cif,
 		     void (*fun)(ffi_cif*, void*, void**, void*))
 {
+  if (cif->abi == FFI_EFI64)
+    return ffi_prep_go_closure_efi64(closure, cif, fun);
   if (cif->abi != FFI_UNIX64)
     return FFI_BAD_ABI;
 

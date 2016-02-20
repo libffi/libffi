@@ -2,20 +2,24 @@
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_cfi.h>
+#include "asmnames.h"
 
 #if defined(HAVE_AS_CFI_PSEUDO_OP)
         .cfi_sections   .debug_frame
 #endif
 
+#ifdef X86_WIN64
+#define SEH(...) __VA_ARGS__
 #define arg0	%rcx
 #define arg1	%rdx
 #define arg2	%r8
 #define arg3	%r9
-
-#ifdef SYMBOL_UNDERSCORE
-#define SYMBOL_NAME(name) _##name
 #else
-#define SYMBOL_NAME(name) name
+#define SEH(...)
+#define arg0	%rdi
+#define arg1	%rsi
+#define arg2	%rdx
+#define arg3	%rcx
 #endif
 
 .macro E which
@@ -34,7 +38,7 @@
 	.align	8
 	.globl	ffi_call_win64
 
-	.seh_proc ffi_call_win64
+	SEH(.seh_proc ffi_call_win64)
 ffi_call_win64:
 	cfi_startproc
 	/* Set up the local stack frame and install it in rbp/rsp.  */
@@ -44,9 +48,9 @@ ffi_call_win64:
 	movq	arg1, %rbp
 	cfi_def_cfa(%rbp, 16)
 	cfi_rel_offset(%rbp, 0)
-	.seh_pushreg %rbp
-	.seh_setframe %rbp, 0
-	.seh_endprologue
+	SEH(.seh_pushreg %rbp)
+	SEH(.seh_setframe %rbp, 0)
+	SEH(.seh_endprologue)
 	movq	arg0, %rsp
 
 	movq	arg2, %r10
@@ -97,7 +101,7 @@ E FFI_TYPE_DOUBLE
 	movsd	%xmm0, (%r8)
 	epilogue
 E FFI_TYPE_LONGDOUBLE
-	call	abort
+	call	PLT(C(abort))
 E FFI_TYPE_UINT8
 	movzbl	%al, %eax
 	movq	%rax, (%r8)
@@ -132,7 +136,7 @@ E FFI_TYPE_POINTER
 	movq	%rax, (%r8)
 	epilogue
 E FFI_TYPE_COMPLEX
-	call	abort
+	call	PLT(C(abort))
 E FFI_TYPE_SMALL_STRUCT_1B
 	movb	%al, (%r8)
 	epilogue
@@ -144,12 +148,12 @@ E FFI_TYPE_SMALL_STRUCT_4B
 	epilogue
 
 	.align	8
-99:	call	abort
+99:	call	PLT(C(abort))
 
 .purgem epilogue
 
 	cfi_endproc
-	.seh_endproc
+	SEH(.seh_endproc)
 
 
 /* 32 bytes of outgoing register stack space, 8 bytes of alignment,
@@ -161,33 +165,33 @@ E FFI_TYPE_SMALL_STRUCT_4B
 	.align	8
 	.globl	ffi_go_closure_win64
 
-	.seh_proc ffi_go_closure_win64
+	SEH(.seh_proc ffi_go_closure_win64)
 ffi_go_closure_win64:
 	cfi_startproc
 	/* Save all integer arguments into the incoming reg stack space.  */
-	movq	arg0, 8(%rsp)
-	movq	arg1, 16(%rsp)
-	movq	arg2, 24(%rsp)
-	movq	arg3, 32(%rsp)
+	movq	%rcx, 8(%rsp)
+	movq	%rdx, 16(%rsp)
+	movq	%r8, 24(%rsp)
+	movq	%r9, 32(%rsp)
 
 	movq	8(%r10), arg0			/* load cif */
 	movq	16(%r10), arg1			/* load fun */
 	movq	%r10, arg2			/* closure is user_data */
 	jmp	0f
 	cfi_endproc
-	.seh_endproc
+	SEH(.seh_endproc)
 
 	.align	8
 	.globl	ffi_closure_win64
 
-	.seh_proc ffi_closure_win64
+	SEH(.seh_proc ffi_closure_win64)
 ffi_closure_win64:
 	cfi_startproc
 	/* Save all integer arguments into the incoming reg stack space.  */
-	movq	arg0, 8(%rsp)
-	movq	arg1, 16(%rsp)
-	movq	arg2, 24(%rsp)
-	movq	arg3, 32(%rsp)
+	movq	%rcx, 8(%rsp)
+	movq	%rdx, 16(%rsp)
+	movq	%r8, 24(%rsp)
+	movq	%r9, 32(%rsp)
 
 	movq	FFI_TRAMPOLINE_SIZE(%r10), arg0		/* load cif */
 	movq	FFI_TRAMPOLINE_SIZE+8(%r10), arg1	/* load fun */
@@ -195,8 +199,8 @@ ffi_closure_win64:
 0:
 	subq	$ffi_clo_FS, %rsp
 	cfi_adjust_cfa_offset(ffi_clo_FS)
-	.seh_stackalloc ffi_clo_FS
-	.seh_endprologue
+	SEH(.seh_stackalloc ffi_clo_FS)
+	SEH(.seh_endprologue)
 
 	/* Save all sse arguments into the stack frame.  */
 	movsd	%xmm0, ffi_clo_OFF_X(%rsp)
@@ -216,4 +220,4 @@ ffi_closure_win64:
 	ret
 
 	cfi_endproc
-	.seh_endproc
+	SEH(.seh_endproc)
