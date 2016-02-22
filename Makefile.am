@@ -5,6 +5,14 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = include testsuite man
+if BUILD_DOCS
+## This hack is needed because it doesn't seem possible to make a
+## conditional info_TEXINFOS in Automake.  At least Automake 1.14
+## either gives errors -- if this attempted in the most
+## straightforward way -- or simply unconditionally tries to build the
+## info file.
+SUBDIRS += doc
+endif
 
 EXTRA_DIST = LICENSE ChangeLog.v1 ChangeLog.libgcj			\
 	ChangeLog.libffi ChangeLog.libffi-3.1				\
@@ -15,11 +23,6 @@ EXTRA_DIST = LICENSE ChangeLog.v1 ChangeLog.libgcj			\
 	libffi.xcodeproj/project.pbxproj				\
 	libtool-ldflags
 
-
-info_TEXINFOS =
-if BUILD_DOCS
-#info_TEXINFOS += doc/libffi.texi
-endif
 
 ## ################################################################
 
