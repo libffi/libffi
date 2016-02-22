@@ -25,23 +25,14 @@
    ----------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------
-   The basic API is described in the README file.
+   Most of the API is documented in doc/libffi.texi.
 
-   The raw API is designed to bypass some of the argument packing
-   and unpacking on architectures for which it can be avoided.
+   The raw API is designed to bypass some of the argument packing and
+   unpacking on architectures for which it can be avoided.  Routines
+   are provided to emulate the raw API if the underlying platform
+   doesn't allow faster implementation.
 
-   The closure API allows interpreted functions to be packaged up
-   inside a C function pointer, so that they can be called as C functions,
-   with no understanding on the client side that they are interpreted.
-   It can also be used in other cases in which it is necessary to package
-   up a user specified parameter and a function pointer as a single
-   function pointer.
-
-   The closure API must be implemented in order to get its functionality,
-   e.g. for use by gij.  Routines are provided to emulate the raw API
-   if the underlying platform doesn't allow faster implementation.
-
-   More details on the raw and cloure API can be found in:
+   More details on the raw API can be found in:
 
    http://gcc.gnu.org/ml/java/1999-q3/msg00138.html
 
@@ -106,8 +97,8 @@ extern "C" {
 # endif
 #endif
 
-/* The closure code assumes that this works on pointers, i.e. a size_t	*/
-/* can hold a pointer.							*/
+/* The closure code assumes that this works on pointers, i.e. a size_t
+   can hold a pointer.  */
 
 typedef struct _ffi_type
 {
@@ -166,21 +157,20 @@ typedef struct _ffi_type
  #error "long size not supported"
 #endif
 
-/* Need minimal decorations for DLLs to works on Windows. */
-/* GCC has autoimport and autoexport.  Rely on Libtool to */
-/* help MSVC export from a DLL, but always declare data   */
-/* to be imported for MSVC clients.  This costs an extra  */
-/* indirection for MSVC clients using the static version  */
-/* of the library, but don't worry about that.  Besides,  */
-/* as a workaround, they can define FFI_BUILDING if they  */
-/* *know* they are going to link with the static library. */
+/* Need minimal decorations for DLLs to works on Windows.  GCC has
+   autoimport and autoexport.  Rely on Libtool to help MSVC export
+   from a DLL, but always declare data to be imported for MSVC
+   clients.  This costs an extra indirection for MSVC clients using
+   the static version of the library, but don't worry about that.
+   Besides, as a workaround, they can define FFI_BUILDING if they
+   *know* they are going to link with the static library.  */
 #if defined _MSC_VER && !defined FFI_BUILDING
 #define FFI_EXTERN extern __declspec(dllimport)
 #else
 #define FFI_EXTERN extern
 #endif
 
-/* These are defined in types.c */
+/* These are defined in types.c.  */
 FFI_EXTERN ffi_type ffi_type_void;
 FFI_EXTERN ffi_type ffi_type_uint8;
 FFI_EXTERN ffi_type ffi_type_sint8;
@@ -275,9 +265,9 @@ void ffi_ptrarray_to_raw (ffi_cif *cif, void **args, ffi_raw *raw);
 void ffi_raw_to_ptrarray (ffi_cif *cif, ffi_raw *raw, void **args);
 size_t ffi_raw_size (ffi_cif *cif);
 
-/* This is analogous to the raw API, except it uses Java parameter	*/
-/* packing, even on 64-bit machines.  I.e. on 64-bit machines		*/
-/* longs and doubles are followed by an empty 64-bit word.		*/
+/* This is analogous to the raw API, except it uses Java parameter
+   packing, even on 64-bit machines.  I.e. on 64-bit machines longs
+   and doubles are followed by an empty 64-bit word.  */
 
 void ffi_java_raw_call (ffi_cif *cif,
 			void (*fn)(void),
@@ -348,9 +338,9 @@ typedef struct {
 
 #if !FFI_NATIVE_RAW_API
 
-  /* if this is enabled, then a raw closure has the same layout 
+  /* If this is enabled, then a raw closure has the same layout 
      as a regular closure.  We use this to install an intermediate 
-     handler to do the transaltion, void** -> ffi_raw*. */
+     handler to do the transaltion, void** -> ffi_raw*.  */
 
   void     (*translate_args)(ffi_cif*,void*,void**,void*);
   void      *this_closure;
@@ -374,9 +364,9 @@ typedef struct {
 
 #if !FFI_NATIVE_RAW_API
 
-  /* if this is enabled, then a raw closure has the same layout 
+  /* If this is enabled, then a raw closure has the same layout 
      as a regular closure.  We use this to install an intermediate 
-     handler to do the transaltion, void** -> ffi_raw*. */
+     handler to do the translation, void** -> ffi_raw*.  */
 
   void     (*translate_args)(ffi_cif*,void*,void**,void*);
   void      *this_closure;
@@ -455,7 +445,7 @@ void ffi_call(ffi_cif *cif,
 ffi_status ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type,
 				   size_t *offsets);
 
-/* Useful for eliminating compiler warnings */
+/* Useful for eliminating compiler warnings.  */
 #define FFI_FN(f) ((void (*)(void))f)
 
 /* ---- Definitions shared with assembly code ---------------------------- */
@@ -484,7 +474,7 @@ ffi_status ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type,
 #define FFI_TYPE_POINTER    14
 #define FFI_TYPE_COMPLEX    15
 
-/* This should always refer to the last type code (for sanity checks) */
+/* This should always refer to the last type code (for sanity checks).  */
 #define FFI_TYPE_LAST       FFI_TYPE_COMPLEX
 
 #ifdef __cplusplus
