@@ -372,6 +372,9 @@ else
 fi
 AC_SUBST(toolexeclibdir)
 
+# Check linker support.
+LIBFFI_ENABLE_SYMVERS
+
 AC_CONFIG_COMMANDS(include, [test -d include || mkdir include])
 AC_CONFIG_COMMANDS(src, [
 test -d src || mkdir src
