@@ -144,6 +144,9 @@ will add some extra code which will suppress certain warnings when you
 are using Purify with libffi. Only use this switch when using 
 Purify, as it will slow down the library.
 
+If you don't want to build documentation, use the --disable-docs
+configure switch.
+
 It's also possible to build libffi on Windows platforms with
 Microsoft's Visual C++ compiler.  In this case, use the msvcc.sh
 wrapper script during configuration like so:
