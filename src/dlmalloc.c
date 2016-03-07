@@ -438,6 +438,11 @@ DEFAULT_MMAP_THRESHOLD       default: 256K
 
 */
 
+#if defined __linux__ && !defined _GNU_SOURCE
+/* mremap() on Linux requires this via sys/mman.h */
+#define _GNU_SOURCE 1
+#endif
+
 #ifndef WIN32
 #ifdef _WIN32
 #define WIN32 1
