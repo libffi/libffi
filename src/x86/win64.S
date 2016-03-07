@@ -22,10 +22,15 @@
 #define arg3	%rcx
 #endif
 
-.macro E which
-	.align	8
-	.org	0b + \which * 8
-.endm
+/* This macro allows the safe creation of jump tables without an
+   actual table.  The entry points into the table are all 8 bytes.
+   The use of ORG asserts that we're at the correct location.  */
+/* ??? The clang assembler doesn't handle .org with symbolic expressions.  */
+#if defined(__clang__) || defined(__APPLE__) || (defined (__sun__) && defined(__svr4__))
+# define E(BASE, X)	.balign 8
+#else
+# define E(BASE, X)	.balign 8; .org BASE + X * 8
+#endif
 
 	.text
 
@@ -88,62 +93,62 @@ ffi_call_win64:
 
 	.align	8
 0:
-E FFI_TYPE_VOID
+E(0b, FFI_TYPE_VOID)
 	epilogue
-E FFI_TYPE_INT
+E(0b, FFI_TYPE_INT)
 	movslq	%eax, %rax
 	movq	%rax, (%r8)
 	epilogue
-E FFI_TYPE_FLOAT
+E(0b, FFI_TYPE_FLOAT)
 	movss	%xmm0, (%r8)
 	epilogue
-E FFI_TYPE_DOUBLE
+E(0b, FFI_TYPE_DOUBLE)
 	movsd	%xmm0, (%r8)
 	epilogue
-E FFI_TYPE_LONGDOUBLE
+E(0b, FFI_TYPE_LONGDOUBLE)
 	call	PLT(C(abort))
-E FFI_TYPE_UINT8
+E(0b, FFI_TYPE_UINT8)
 	movzbl	%al, %eax
 	movq	%rax, (%r8)
 	epilogue
-E FFI_TYPE_SINT8
+E(0b, FFI_TYPE_SINT8)
 	movsbq	%al, %rax
 	jmp	98f
-E FFI_TYPE_UINT16
+E(0b, FFI_TYPE_UINT16)
 	movzwl	%ax, %eax
 	movq	%rax, (%r8)
 	epilogue
-E FFI_TYPE_SINT16
+E(0b, FFI_TYPE_SINT16)
 	movswq	%ax, %rax
 	jmp	98f
-E FFI_TYPE_UINT32
+E(0b, FFI_TYPE_UINT32)
 	movl	%eax, %eax
 	movq	%rax, (%r8)
 	epilogue
-E FFI_TYPE_SINT32
+E(0b, FFI_TYPE_SINT32)
 	movslq	%eax, %rax
 	movq	%rax, (%r8)
 	epilogue
-E FFI_TYPE_UINT64
+E(0b, FFI_TYPE_UINT64)
 98:	movq	%rax, (%r8)
 	epilogue
-E FFI_TYPE_SINT64
+E(0b, FFI_TYPE_SINT64)
 	movq	%rax, (%r8)
 	epilogue
-E FFI_TYPE_STRUCT
+E(0b, FFI_TYPE_STRUCT)
 	epilogue
-E FFI_TYPE_POINTER
+E(0b, FFI_TYPE_POINTER)
 	movq	%rax, (%r8)
 	epilogue
-E FFI_TYPE_COMPLEX
+E(0b, FFI_TYPE_COMPLEX)
 	call	PLT(C(abort))
-E FFI_TYPE_SMALL_STRUCT_1B
+E(0b, FFI_TYPE_SMALL_STRUCT_1B)
 	movb	%al, (%r8)
 	epilogue
-E FFI_TYPE_SMALL_STRUCT_2B
+E(0b, FFI_TYPE_SMALL_STRUCT_2B)
 	movw	%ax, (%r8)
 	epilogue
-E FFI_TYPE_SMALL_STRUCT_4B
+E(0b, FFI_TYPE_SMALL_STRUCT_4B)
 	movl	%eax, (%r8)
 	epilogue
 
