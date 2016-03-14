@@ -440,7 +440,8 @@ on the chosen ABI.
 
 @item
 The size and alignment of a new structure type will not be set by
-@code{libffi} until it has been passed to @code{ffi_prep_cif}.
+@code{libffi} until it has been passed to @code{ffi_prep_cif} or
+@code{ffi_get_struct_offsets}.
 
 @item
 A structure type cannot be shared across ABIs.  Instead each ABI needs
@@ -448,8 +449,9 @@ its own copy of the structure type.
 @end itemize
 
 So, before examining these fields, it is safest to pass the
-@code{ffi_type} object to @code{ffi_prep_cif} first.  This function
-will do all the needed setup.
+@code{ffi_type} object to @code{ffi_prep_cif} or
+@code{ffi_get_struct_offsets} first.  This function will do all the
+needed setup.
 
 @example
 ffi_type *desired_type;
@@ -462,6 +464,28 @@ if (ffi_prep_cif (&cif, desired_abi, 0, desired_type, NULL) == FFI_OK)
     unsigned short alignment = desired_type->alignment;
   @}
 @end example
+
+@code{libffi} also provides a way to get the offsets of the members of
+a structure.
+
+@findex ffi_get_struct_offsets
+@defun ffi_status ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type, size_t *offsets)
+Compute the offset of each element of the given structure type.
+@var{abi} is the ABI to use; this is needed because in some cases the
+layout depends on the ABI.
+
+@var{sizes} is an out parameter.  The caller is responsible for
+providing enough space for all the results to be written -- one
+element per element type in @var{struct_type}.  If @var{sizes} is
+@code{NULL}, then the type will be laid out but not otherwise
+modified.  This can be useful for accessing the type's size or layout,
+as mentioned above.
+
+This function returns @code{FFI_OK} on success; @code{FFI_BAD_ABI} if
+@var{abi} is invalid; or @code{FFI_BAD_TYPEDEF} if @var{struct_type}
+is invalid in some way.  Note that only @code{FFI_STRUCT} types are
+valid here.
+@end defun
 
 @node Arrays Unions Enums
 @subsection Arrays, Unions, and Enumerations
