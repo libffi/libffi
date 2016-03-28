@@ -341,6 +341,9 @@ done
 changequote([,])
 AC_SUBST(TARGET_OBJ)
 
+STATIC=0
+AC_SUBST(STATIC)
+
 AC_SUBST(SHELL)
 
 AC_ARG_ENABLE(debug,

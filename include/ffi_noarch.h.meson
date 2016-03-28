@@ -1,0 +1,21 @@
+/* Include the correct @HEADER@.h automatically. This helps us create prefixes
+ * with multi-lib Linux and OSX/iOS universal builds. To avoid listing all
+ * possible architectures here, we try the configured target arch first and then
+ * include the most common multilib/universal setups in the #elif ladder */
+#ifdef __@ARCH@__
+#include "@HEADER@-@ARCH@.h"
+#elif defined(__i386__) || defined(_M_IX86)
+#include "@HEADER@-x86.h"
+#elif defined(__x86_64__) || defined(_M_X64)
+#include "@HEADER@-x86_64.h"
+#elif defined(__arm__) || defined(_M_ARM)
+#include "@HEADER@-arm.h"
+#elif defined(__aarch64__) || defined(_M_ARM64)
+#include "@HEADER@-aarch64.h"
+#elif defined(__powerpc__) || defined(_M_PPC)
+#include "@HEADER@-powerpc.h"
+#elif defined(__powerpc64__)
+#include "@HEADER@-powerpc64.h"
+#else
+#error "Unsupported Architecture"
+#endif

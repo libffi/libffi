@@ -53,6 +53,10 @@ extern "C" {
 #define @TARGET@
 #endif
 
+#if @STATIC@
+#define FFI_STATIC_BUILD
+#endif
+
 /* ---- System configuration information --------------------------------- */
 
 #include <ffitarget.h>
@@ -114,24 +118,22 @@ typedef struct _ffi_type
    when using the static version of the library.
    Besides, as a workaround, they can define FFI_BUILDING if they
    *know* they are going to link with the static library.  */
-#if defined _MSC_VER
-# if defined FFI_BUILDING_DLL /* Building libffi.DLL with msvcc.sh */
+#if defined _MSC_VER && !defined FFI_STATIC_BUILD
+# ifdef FFI_BUILDING
 #  define FFI_API __declspec(dllexport)
-# elif !defined FFI_BUILDING  /* Importing libffi.DLL */
+# else
 #  define FFI_API __declspec(dllimport)
-# else                        /* Building/linking static library */
-#  define FFI_API
 # endif
 #else
-# define FFI_API
+# define FFI_API extern
 #endif
 
 /* The externally visible type declarations also need the MSVC DLL
    decorations, or they will not be exported from the object file.  */
 #if defined LIBFFI_HIDE_BASIC_TYPES
-# define FFI_EXTERN FFI_API
+# define FFI_EXTERN
 #else
-# define FFI_EXTERN extern FFI_API
+# define FFI_EXTERN FFI_API
 #endif
 
 #ifndef LIBFFI_HIDE_BASIC_TYPES
