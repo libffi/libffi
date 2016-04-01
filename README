@@ -113,6 +113,7 @@ tested:
 | X86-64          | Solaris          | Oracle Solaris Studio C |
 | X86-64          | Windows/Cygwin   | GCC                     |
 | X86-64          | Windows/MingW    | GCC                     |
+| X86-64          | Mac OSX          | GCC                     |
 | Xtensa          | Linux            | GCC                     |
 |-----------------+------------------+-------------------------|
 
