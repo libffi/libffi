@@ -231,7 +231,11 @@ struct win64_closure_frame
   UINT64 args[];
 };
 
-int FFI_HIDDEN
+/* Force the inner function to use the MS ABI.  When compiling on win64
+   this is a nop.  When compiling on unix, this simplifies the assembly,
+   and places the burden of saving the extra call-saved registers on
+   the compiler.  */
+int FFI_HIDDEN __attribute__((ms_abi))
 ffi_closure_win64_inner(ffi_cif *cif,
 			void (*fun)(ffi_cif*, void*, void**, void*),
 			void *user_data,

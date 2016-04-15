@@ -315,6 +315,11 @@ proc run-many-tests { testcases extra_flags } {
                 "-DABI_NUM=FFI_THISCALL -DABI_ATTR=__THISCALL__"
                 "-DABI_NUM=FFI_FASTCALL -DABI_ATTR=__FASTCALL__"
             }
+        } elseif [istarget "x86_64-*-*"] {
+            set targetabis {
+                ""
+                "-DABI_NUM=FFI_WIN64 -DABI_ATTR=__MSABI__"
+            }
         }
     }
 

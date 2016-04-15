@@ -179,9 +179,9 @@ ffi_go_closure_win64:
 	movq	%r8, 24(%rsp)
 	movq	%r9, 32(%rsp)
 
-	movq	8(%r10), arg0			/* load cif */
-	movq	16(%r10), arg1			/* load fun */
-	movq	%r10, arg2			/* closure is user_data */
+	movq	8(%r10), %rcx			/* load cif */
+	movq	16(%r10), %rdx			/* load fun */
+	movq	%r10, %r8			/* closure is user_data */
 	jmp	0f
 	cfi_endproc
 	SEH(.seh_endproc)
@@ -198,9 +198,9 @@ ffi_closure_win64:
 	movq	%r8, 24(%rsp)
 	movq	%r9, 32(%rsp)
 
-	movq	FFI_TRAMPOLINE_SIZE(%r10), arg0		/* load cif */
-	movq	FFI_TRAMPOLINE_SIZE+8(%r10), arg1	/* load fun */
-	movq	FFI_TRAMPOLINE_SIZE+16(%r10), arg2	/* load user_data */
+	movq	FFI_TRAMPOLINE_SIZE(%r10), %rcx		/* load cif */
+	movq	FFI_TRAMPOLINE_SIZE+8(%r10), %rdx	/* load fun */
+	movq	FFI_TRAMPOLINE_SIZE+16(%r10), %r8	/* load user_data */
 0:
 	subq	$ffi_clo_FS, %rsp
 	cfi_adjust_cfa_offset(ffi_clo_FS)
@@ -213,7 +213,7 @@ ffi_closure_win64:
 	movsd	%xmm2, ffi_clo_OFF_X+16(%rsp)
 	movsd	%xmm3, ffi_clo_OFF_X+24(%rsp)
 
-	leaq	ffi_clo_OFF_R(%rsp), arg3
+	leaq	ffi_clo_OFF_R(%rsp), %r9
 	call	ffi_closure_win64_inner
 
 	/* Load the result into both possible result registers.  */
