@@ -24,6 +24,7 @@
 #define __STDCALL__ __attribute__((stdcall))
 #define __THISCALL__ __attribute__((thiscall))
 #define __FASTCALL__ __attribute__((fastcall))
+#define __MSABI__ __attribute__((ms_abi))
 #else
 #define __UNUSED__
 #define __STDCALL__ __stdcall
