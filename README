@@ -183,7 +183,7 @@ To install the library and header files, type "make install".
 History
 =======
 
-See the git log for details at http://github.com/atgreen/libffi.
+See the git log for details at http://github.com/libffi/libffi.
 
 4.0 TBD
         New API in support of GO closures.
