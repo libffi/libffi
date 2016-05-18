@@ -45,7 +45,7 @@ LIBFFI_BASE_7.0 {
 LIBFFI_BASE_7.1 {
   global:
 	ffi_get_struct_offsets;
-};
+} LIBFFI_BASE_7.0;
 
 #ifdef FFI_TARGET_HAS_COMPLEX_TYPE
 LIBFFI_COMPLEX_7.0 {
