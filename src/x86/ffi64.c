@@ -219,7 +219,7 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 	const size_t UNITS_PER_WORD = 8;
 	size_t words = (type->size + UNITS_PER_WORD - 1) / UNITS_PER_WORD;
 	ffi_type **ptr;
-	int i;
+	unsigned int i;
 	enum x86_64_reg_class subclasses[MAX_CLASSES];
 
 	/* If the struct is larger than 32 bytes, pass it on the stack.  */
@@ -350,7 +350,8 @@ examine_argument (ffi_type *type, enum x86_64_reg_class classes[MAX_CLASSES],
 		  _Bool in_return, int *pngpr, int *pnsse)
 {
   size_t n;
-  int i, ngpr, nsse;
+  unsigned int i;
+  int ngpr, nsse;
 
   n = classify_argument (type, classes, 0);
   if (n == 0)
@@ -611,7 +612,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	{
 	  /* The argument is passed entirely in registers.  */
 	  char *a = (char *) avalue[i];
-	  int j;
+	  unsigned int j;
 
 	  for (j = 0; j < n; j++, a += 8, size -= 8)
 	    {
@@ -808,7 +809,7 @@ ffi_closure_unix64_inner(ffi_cif *cif,
       else
 	{
 	  char *a = alloca (16);
-	  int j;
+	  unsigned int j;
 
 	  avalue[i] = a;
 	  for (j = 0; j < n; j++, a += 8)
