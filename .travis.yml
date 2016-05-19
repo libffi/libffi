@@ -3,7 +3,6 @@ compiler:
   - gcc
   - clang
 env:
-  -
   - HOST=i386-pc-linux-gnu
 matrix:
   exclude:
