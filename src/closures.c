@@ -331,14 +331,6 @@ ffi_closure_free (void *ptr)
 /* Don't allocate more than a page unless needed.  */
 #define DEFAULT_GRANULARITY ((size_t)malloc_getpagesize)
 
-#if FFI_CLOSURE_TEST
-/* Don't release single pages, to avoid a worst-case scenario of
-   continuously allocating and releasing single pages, but release
-   pairs of pages, which should do just as well given that allocations
-   are likely to be small.  */
-#define DEFAULT_TRIM_THRESHOLD ((size_t)malloc_getpagesize)
-#endif
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -758,10 +750,6 @@ dlmmap (void *start, size_t length, int prot,
 	  && flags == (MAP_PRIVATE | MAP_ANONYMOUS)
 	  && fd == -1 && offset == 0);
 
-#if FFI_CLOSURE_TEST
-  printf ("mapping in %zi\n", length);
-#endif
-
   if (execfd == -1 && is_emutramp_enabled ())
     {
       ptr = mmap (start, length, prot & ~PROT_EXEC, flags, fd, offset);
@@ -806,10 +794,6 @@ dlmunmap (void *start, size_t length)
      Yuck.  */
   msegmentptr seg = segment_holding (gm, start);
   void *code;
-
-#if FFI_CLOSURE_TEST
-  printf ("unmapping %zi\n", length);
-#endif
 
   if (seg && (code = add_segment_exec_offset (start, seg)) != start)
     {
@@ -879,26 +863,6 @@ ffi_closure_free (void *ptr)
   dlfree (ptr);
 }
 
-
-#if FFI_CLOSURE_TEST
-/* Do some internal sanity testing to make sure allocation and
-   deallocation of pages are working as intended.  */
-int main ()
-{
-  void *p[3];
-#define GET(idx, len) do { p[idx] = dlmalloc (len); printf ("allocated %zi for p[%i]\n", (len), (idx)); } while (0)
-#define PUT(idx) do { printf ("freeing p[%i]\n", (idx)); dlfree (p[idx]); } while (0)
-  GET (0, malloc_getpagesize / 2);
-  GET (1, 2 * malloc_getpagesize - 64 * sizeof (void*));
-  PUT (1);
-  GET (1, 2 * malloc_getpagesize);
-  GET (2, malloc_getpagesize / 2);
-  PUT (1);
-  PUT (0);
-  PUT (2);
-  return 0;
-}
-#endif /* FFI_CLOSURE_TEST */
 # else /* ! FFI_MMAP_EXEC_WRIT */
 
 /* On many systems, memory returned by malloc is writable and
