@@ -25,11 +25,25 @@
 /* This macro allows the safe creation of jump tables without an
    actual table.  The entry points into the table are all 8 bytes.
    The use of ORG asserts that we're at the correct location.  */
-/* ??? The clang assembler doesn't handle .org with symbolic expressions.  */
+/* ??? The clang assembler doesn't handle .org with symbolic expressions. */
 #if defined(__clang__) || defined(__APPLE__) || (defined (__sun__) && defined(__svr4__))
 # define E(BASE, X)	.balign 8
 #else
 # define E(BASE, X)	.balign 8; .org BASE + X * 8
+#endif
+
+/* Darwin/OS X uses a label prefix of '_' and the cctools assembler does not
+   accept .purgem  */
+#if defined(__APPLE__)
+# if ! defined(__clang__)
+#  define PURGEM
+# else
+#  define PURGEM .purgem
+# endif
+# define SYMBOL(x) _##x
+#else
+# define PURGEM .purgem
+# define SYMBOL(x) x
 #endif
 
 	.text
@@ -41,10 +55,10 @@
    deallocate some of the stack that has been alloca'd.  */
 
 	.align	8
-	.globl	ffi_call_win64
+	.globl	SYMBOL(ffi_call_win64)
 
 	SEH(.seh_proc ffi_call_win64)
-ffi_call_win64:
+SYMBOL(ffi_call_win64):
 	cfi_startproc
 	/* Set up the local stack frame and install it in rbp/rsp.  */
 	movq	(%rsp), %rax
@@ -155,7 +169,7 @@ E(0b, FFI_TYPE_SMALL_STRUCT_4B)
 	.align	8
 99:	call	PLT(C(abort))
 
-.purgem epilogue
+PURGEM epilogue
 
 	cfi_endproc
 	SEH(.seh_endproc)
@@ -168,10 +182,10 @@ E(0b, FFI_TYPE_SMALL_STRUCT_4B)
 #define ffi_clo_OFF_X	(32+8+16)
 
 	.align	8
-	.globl	ffi_go_closure_win64
+	.globl	SYMBOL(ffi_go_closure_win64)
 
 	SEH(.seh_proc ffi_go_closure_win64)
-ffi_go_closure_win64:
+SYMBOL(ffi_go_closure_win64):
 	cfi_startproc
 	/* Save all integer arguments into the incoming reg stack space.  */
 	movq	%rcx, 8(%rsp)
@@ -187,10 +201,10 @@ ffi_go_closure_win64:
 	SEH(.seh_endproc)
 
 	.align	8
-	.globl	ffi_closure_win64
+	.globl	SYMBOL(ffi_closure_win64)
 
 	SEH(.seh_proc ffi_closure_win64)
-ffi_closure_win64:
+SYMBOL(ffi_closure_win64):
 	cfi_startproc
 	/* Save all integer arguments into the incoming reg stack space.  */
 	movq	%rcx, 8(%rsp)
@@ -214,7 +228,7 @@ ffi_closure_win64:
 	movsd	%xmm3, ffi_clo_OFF_X+24(%rsp)
 
 	leaq	ffi_clo_OFF_R(%rsp), %r9
-	call	ffi_closure_win64_inner
+	call	SYMBOL(ffi_closure_win64_inner)
 
 	/* Load the result into both possible result registers.  */
 	movq    ffi_clo_OFF_R(%rsp), %rax
