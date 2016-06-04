@@ -41,10 +41,10 @@
    deallocate some of the stack that has been alloca'd.  */
 
 	.align	8
-	.globl	ffi_call_win64
+	.globl	C(ffi_call_win64)
 
 	SEH(.seh_proc ffi_call_win64)
-ffi_call_win64:
+C(ffi_call_win64):
 	cfi_startproc
 	/* Set up the local stack frame and install it in rbp/rsp.  */
 	movq	(%rsp), %rax
@@ -155,7 +155,7 @@ E(0b, FFI_TYPE_SMALL_STRUCT_4B)
 	.align	8
 99:	call	PLT(C(abort))
 
-.purgem epilogue
+	epilogue
 
 	cfi_endproc
 	SEH(.seh_endproc)
@@ -168,10 +168,10 @@ E(0b, FFI_TYPE_SMALL_STRUCT_4B)
 #define ffi_clo_OFF_X	(32+8+16)
 
 	.align	8
-	.globl	ffi_go_closure_win64
+	.globl	C(ffi_go_closure_win64)
 
 	SEH(.seh_proc ffi_go_closure_win64)
-ffi_go_closure_win64:
+C(ffi_go_closure_win64):
 	cfi_startproc
 	/* Save all integer arguments into the incoming reg stack space.  */
 	movq	%rcx, 8(%rsp)
@@ -187,10 +187,10 @@ ffi_go_closure_win64:
 	SEH(.seh_endproc)
 
 	.align	8
-	.globl	ffi_closure_win64
+	.globl	C(ffi_closure_win64)
 
 	SEH(.seh_proc ffi_closure_win64)
-ffi_closure_win64:
+C(ffi_closure_win64):
 	cfi_startproc
 	/* Save all integer arguments into the incoming reg stack space.  */
 	movq	%rcx, 8(%rsp)
@@ -214,7 +214,7 @@ ffi_closure_win64:
 	movsd	%xmm3, ffi_clo_OFF_X+24(%rsp)
 
 	leaq	ffi_clo_OFF_R(%rsp), %r9
-	call	ffi_closure_win64_inner
+	call	C(ffi_closure_win64_inner)
 
 	/* Load the result into both possible result registers.  */
 	movq    ffi_clo_OFF_R(%rsp), %rax
