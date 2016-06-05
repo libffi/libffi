@@ -226,3 +226,7 @@ C(ffi_closure_win64):
 
 	cfi_endproc
 	SEH(.seh_endproc)
+
+#if defined __ELF__ && defined __linux__
+	.section	.note.GNU-stack,"",@progbits
+#endif
