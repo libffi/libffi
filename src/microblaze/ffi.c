@@ -46,11 +46,11 @@ void ffi_prep_args(void* stack, extended_cif* ecif)
 	void** p_argv;
 	void* stack_args_p = stack;
 
-	p_argv = ecif->avalue;
-
 	if (ecif == NULL || ecif->cif == NULL) {
 		return; /* no description to prepare */
 	}
+
+	p_argv = ecif->avalue;
 
 	if ((ecif->cif->rtype != NULL) &&
 			(ecif->cif->rtype->type == FFI_TYPE_STRUCT))
