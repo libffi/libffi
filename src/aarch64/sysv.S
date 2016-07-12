@@ -358,7 +358,7 @@ CNAME(ffi_closure_SYSV):
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
 #ifdef __MACH__
-#include <mach/vm_param.h>
+#include <mach/machine/vm_param.h>
     .align PAGE_MAX_SHIFT
 CNAME(ffi_closure_trampoline_table_page):
     .rept PAGE_MAX_SIZE / FFI_TRAMPOLINE_SIZE
