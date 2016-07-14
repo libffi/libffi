@@ -296,7 +296,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = DB13B18B1849DF1E0010F42D /* Build configuration list for PBXNativeTarget "libffi-iOS" */;
 			buildPhases = (
-				43B5D3FB1D35480D00D1E1FD /* ShellScript */,
+				43B5D3FB1D35480D00D1E1FD /* Run Script */,
 				DB13B1621849DF1E0010F42D /* Sources */,
 				DB13B1641849DF1E0010F42D /* CopyFiles */,
 			);
@@ -353,18 +353,19 @@
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		43B5D3FB1D35480D00D1E1FD /* ShellScript */ = {
+		43B5D3FB1D35480D00D1E1FD /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "Run Script";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ ! -f \"./compile\" ]\nthen\n./autogen.sh\n/usr/bin/python generate-darwin-source-and-headers.py --only-ios\nfi";
+			shellScript = "if [ ! -f \"./compile\" ]\nthen\nautoreconf -i -f -v\nif [ -f \"../ltmain.sh\" ]\nthen\necho \"fixing ltmain.sh for some reason\"\nmv ../ltmain.sh ./\nautoreconf -i -f -v\nfi\n/usr/bin/python generate-darwin-source-and-headers.py --only-ios\nfi";
 		};
 		DB13B3061849E0490010F42D /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -377,7 +378,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ ! -f \"./compile\" ]\nthen\n./autogen.sh\n/usr/bin/python generate-darwin-source-and-headers.py --only-osx\nfi";
+			shellScript = "if [ ! -f \"./compile\" ]\nthen\nautoreconf -i -f -v\nif [ -f \"../ltmain.sh\" ]\nthen\necho \"fixing ltmain.sh for some reason\"\nmv ../ltmain.sh ./\nautoreconf -i -f -v\nfi\n/usr/bin/python generate-darwin-source-and-headers.py --only-osx\nfi";
 		};
 /* End PBXShellScriptBuildPhase section */
 
