@@ -473,6 +473,7 @@
 					"$(inherited)",
 					darwin_ios/include,
 				);
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = ffi;
 				SDKROOT = iphoneos;
@@ -506,6 +507,7 @@
 					"$(inherited)",
 					darwin_ios/include,
 				);
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = ffi;
 				SDKROOT = iphoneos;
