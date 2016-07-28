@@ -219,6 +219,10 @@ proc libffi_target_compile { source dest type options } {
 	lappend options "c++"
     }
 
+    if { [string match "arc*-*-linux*" $target_triplet] } {
+	lappend options "libs= -lpthread"
+    }
+
     verbose "options: $options"
     return [target_compile $source $dest $type $options]
 }
