@@ -102,11 +102,14 @@ proc libffi-init { args } {
     global ld_library_path
     global compiler_vendor
 
-    set blddirffi [pwd]/.. 
+    if ![info exists blddirffi] {
+	set blddirffi [pwd]/..
+    }
+
     verbose "libffi $blddirffi"
 
     # Which compiler are we building with?
-    set tmp [grep ../config.log "^ax_cv_c_compiler_vendor.*$"]
+    set tmp [grep "$blddirffi/config.log" "^ax_cv_c_compiler_vendor.*$"]
     regexp -- {^[^=]*=(.*)$} $tmp nil compiler_vendor
 
     if { [string match $compiler_vendor "gnu"] } {
