@@ -57,10 +57,10 @@ int main(int argc __UNUSED__, char** argv __UNUSED__)
 	CHECK(ffi_prep_closure_loc(pcl, &cif, closure_test_gn, NULL, code) == FFI_OK);
 
 	((void*(*)(Dbls))(code))(arg);
-	/* { dg-output "1.0 2.0\n" } */
+	/* { dg-output "1.0 2.0" } */
 
 	closure_test_fn(arg);
-	/* { dg-output "1.0 2.0\n" } */
+	/* { dg-output "\n1.0 2.0" } */
 
 	return 0;
 }

@@ -102,11 +102,14 @@ proc libffi-init { args } {
     global ld_library_path
     global compiler_vendor
 
-    set blddirffi [pwd]/.. 
+    if ![info exists blddirffi] {
+	set blddirffi [pwd]/..
+    }
+
     verbose "libffi $blddirffi"
 
     # Which compiler are we building with?
-    set tmp [grep ../config.log "^ax_cv_c_compiler_vendor.*$"]
+    set tmp [grep "$blddirffi/config.log" "^ax_cv_c_compiler_vendor.*$"]
     regexp -- {^[^=]*=(.*)$} $tmp nil compiler_vendor
 
     if { [string match $compiler_vendor "gnu"] } {
@@ -217,6 +220,10 @@ proc libffi_target_compile { source dest type options } {
 
     if { [string match "*.cc" $source] } {
 	lappend options "c++"
+    }
+
+    if { [string match "arc*-*-linux*" $target_triplet] } {
+	lappend options "libs= -lpthread"
     }
 
     verbose "options: $options"
