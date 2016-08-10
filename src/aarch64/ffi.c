@@ -920,6 +920,15 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
 	default:
 	  abort();
 	}
+
+#if defined (__APPLE__)
+      if (i + 1 == cif->aarch64_nfixedargs)
+	{
+	  state.ngrn = N_X_ARG_REG;
+	  state.nsrn = N_V_ARG_REG;
+	  state.allocating_variadic = 1;
+	}
+#endif
     }
 
   flags = cif->flags;
