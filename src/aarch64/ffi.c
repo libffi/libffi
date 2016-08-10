@@ -668,6 +668,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 		   the argument is replaced by a pointer to the copy.  */
 		a = &avalue[i];
 		t = FFI_TYPE_POINTER;
+		s = sizeof (void *);
 		goto do_pointer;
 	      }
 	    else
