@@ -316,7 +316,7 @@ extend_integer_type (void *source, int type)
 static void
 extend_hfa_type (void *dest, void *src, int h)
 {
-  int f = h - AARCH64_RET_S4;
+  ssize_t f = h - AARCH64_RET_S4;
   void *x0;
 
   asm volatile (
