@@ -55,6 +55,14 @@ struct call_context
   UINT64 x[N_X_ARG_REG];
 };
 
+#if FFI_EXEC_TRAMPOLINE_TABLE
+
+#ifdef __MACH__
+#include <mach/vm_param.h>
+#endif
+
+#else
+
 #if defined (__clang__) && defined (__APPLE__)
 extern void sys_icache_invalidate (void *start, size_t len);
 #endif
@@ -70,12 +78,6 @@ ffi_clear_cache (void *start, void *end)
 #error "Missing builtin to flush instruction cache"
 #endif
 }
-
-#if FFI_EXEC_TRAMPOLINE_TABLE
-
-#ifdef __MACH__
-#include <mach/vm_param.h>
-#endif
 
 #endif
 
