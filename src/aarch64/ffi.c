@@ -55,6 +55,14 @@ struct call_context
   UINT64 x[N_X_ARG_REG];
 };
 
+#if FFI_EXEC_TRAMPOLINE_TABLE
+
+#ifdef __MACH__
+#include <mach/vm_param.h>
+#endif
+
+#else
+
 #if defined (__clang__) && defined (__APPLE__)
 extern void sys_icache_invalidate (void *start, size_t len);
 #endif
@@ -70,12 +78,6 @@ ffi_clear_cache (void *start, void *end)
 #error "Missing builtin to flush instruction cache"
 #endif
 }
-
-#if FFI_EXEC_TRAMPOLINE_TABLE
-
-#ifdef __MACH__
-#include <mach/vm_param.h>
-#endif
 
 #endif
 
@@ -316,7 +318,7 @@ extend_integer_type (void *source, int type)
 static void
 extend_hfa_type (void *dest, void *src, int h)
 {
-  int f = h - AARCH64_RET_S4;
+  ssize_t f = h - AARCH64_RET_S4;
   void *x0;
 
   asm volatile (
