@@ -474,9 +474,9 @@ Compute the offset of each element of the given structure type.
 @var{abi} is the ABI to use; this is needed because in some cases the
 layout depends on the ABI.
 
-@var{sizes} is an out parameter.  The caller is responsible for
+@var{offsets} is an out parameter.  The caller is responsible for
 providing enough space for all the results to be written -- one
-element per element type in @var{struct_type}.  If @var{sizes} is
+element per element type in @var{struct_type}.  If @var{offsets} is
 @code{NULL}, then the type will be laid out but not otherwise
 modified.  This can be useful for accessing the type's size or layout,
 as mentioned above.
