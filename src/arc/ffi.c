@@ -46,12 +46,10 @@ void
 ffi_prep_args (char *stack, extended_cif * ecif)
 {
   unsigned int i;
-  int tmp;
   void **p_argv;
   char *argp;
   ffi_type **p_arg;
 
-  tmp = 0;
   argp = stack;
 
   if (ecif->cif->rtype->type == FFI_TYPE_STRUCT)
