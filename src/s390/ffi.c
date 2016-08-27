@@ -675,17 +675,27 @@ ffi_closure_helper_SYSV (ffi_cif *cif,
 	break;
 
       case FFI_TYPE_POINTER:
-      case FFI_TYPE_UINT32:
-      case FFI_TYPE_UINT16:
-      case FFI_TYPE_UINT8:
 	p_gpr[0] = *(unsigned long *) rvalue;
+	break;
+      case FFI_TYPE_UINT32:
+	p_gpr[0] = *(unsigned int *) rvalue;
+	break;
+      case FFI_TYPE_UINT16:
+	p_gpr[0] = *(unsigned short *) rvalue;
+	break;
+      case FFI_TYPE_UINT8:
+	p_gpr[0] = *(unsigned char *) rvalue;
 	break;
 
       case FFI_TYPE_INT:
       case FFI_TYPE_SINT32:
+	p_gpr[0] = *(signed int *) rvalue;
+	break;
       case FFI_TYPE_SINT16:
+	p_gpr[0] = *(signed short *) rvalue;
+	break;
       case FFI_TYPE_SINT8:
-	p_gpr[0] = *(signed long *) rvalue;
+	p_gpr[0] = *(signed char *) rvalue;
 	break;
 
       default:
