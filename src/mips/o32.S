@@ -82,13 +82,16 @@ sixteen:
 		
 	ADDU	$sp, 4 * FFI_SIZEOF_ARG		# adjust $sp to new args
 
+#ifndef __mips_soft_float
 	bnez	t0, pass_d			# make it quick for int
+#endif
 	REG_L	a0, 0*FFI_SIZEOF_ARG($sp)	# just go ahead and load the
 	REG_L	a1, 1*FFI_SIZEOF_ARG($sp)	# four regs.
 	REG_L	a2, 2*FFI_SIZEOF_ARG($sp)
 	REG_L	a3, 3*FFI_SIZEOF_ARG($sp)
 	b	call_it
 
+#ifndef __mips_soft_float
 pass_d:
 	bne	t0, FFI_ARGS_D, pass_f
 	l.d	$f12, 0*FFI_SIZEOF_ARG($sp)	# load $fp regs from args
@@ -130,6 +133,7 @@ pass_f_d:
  #	bne	t0, FFI_ARGS_F_D, call_it
 	l.s	$f12, 0*FFI_SIZEOF_ARG($sp)	# load $fp regs from args
 	l.d	$f14, 2*FFI_SIZEOF_ARG($sp)	# passing double and float
+#endif
 
 call_it:	
 	# Load the static chain pointer
@@ -161,14 +165,23 @@ retfloat:
 	bne     t2, FFI_TYPE_FLOAT, retdouble
 	jalr	t9
 	REG_L	t0, SIZEOF_FRAME + 4*FFI_SIZEOF_ARG($fp)
+#ifndef __mips_soft_float
 	s.s	$f0, 0(t0)
+#else
+	REG_S	v0, 0(t0)
+#endif
 	b	epilogue
 
 retdouble:	
 	bne	t2, FFI_TYPE_DOUBLE, noretval
 	jalr	t9
 	REG_L	t0, SIZEOF_FRAME + 4*FFI_SIZEOF_ARG($fp)
+#ifndef __mips_soft_float
 	s.d	$f0, 0(t0)
+#else
+	REG_S	v1, 4(t0)
+	REG_S	v0, 0(t0)
+#endif
 	b	epilogue
 	
 noretval:	
@@ -324,9 +337,11 @@ $LCFI22:
 	li	$13, 1		# FFI_O32
 	bne	$16, $13, 1f	# Skip fp save if FFI_O32_SOFT_FLOAT
 	
+#ifndef __mips_soft_float
 	# Store all possible float/double registers.
 	s.d	$f12, FA_0_0_OFF2($fp)
 	s.d	$f14, FA_1_0_OFF2($fp)
+#endif
 1:	
 	# prepare arguments for ffi_closure_mips_inner_O32
 	REG_L	a0, 20($12)	 # cif pointer follows tramp.
@@ -353,6 +368,7 @@ $do_closure:
 	li	$13, 1		# FFI_O32
 	bne	$16, $13, 1f	# Skip fp restore if FFI_O32_SOFT_FLOAT
 
+#ifndef __mips_soft_float
 	li	$9, FFI_TYPE_FLOAT
 	l.s	$f0, V0_OFF2($fp)
 	beq	$8, $9, closure_done
@@ -360,6 +376,7 @@ $do_closure:
 	li	$9, FFI_TYPE_DOUBLE
 	l.d	$f0, V0_OFF2($fp)
 	beq	$8, $9, closure_done
+#endif
 1:	
 	REG_L	$3, V1_OFF2($fp)
 	REG_L	$2, V0_OFF2($fp)

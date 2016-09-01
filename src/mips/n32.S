@@ -112,6 +112,16 @@ loadregs:
 
 	REG_L	t6, 3*FFI_SIZEOF_ARG($fp)  # load the flags word into t6.
 
+#ifdef __mips_soft_float
+	REG_L	a0, 0*FFI_SIZEOF_ARG(t9)
+	REG_L	a1, 1*FFI_SIZEOF_ARG(t9)
+	REG_L	a2, 2*FFI_SIZEOF_ARG(t9)
+	REG_L	a3, 3*FFI_SIZEOF_ARG(t9)
+	REG_L	a4, 4*FFI_SIZEOF_ARG(t9)
+	REG_L	a5, 5*FFI_SIZEOF_ARG(t9)
+	REG_L	a6, 6*FFI_SIZEOF_ARG(t9)
+	REG_L	a7, 7*FFI_SIZEOF_ARG(t9)
+#else
 	and	t4, t6, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a0, 0*FFI_SIZEOF_ARG(t9)
 	beqz	t4, arg1_next
@@ -198,6 +208,7 @@ arg7_next:
 arg8_doublep:	
  	l.d	$f19, 7*FFI_SIZEOF_ARG(t9)	
 arg8_next:	
+#endif
 
 callit:		
 	# Load the function pointer
@@ -222,6 +233,7 @@ retint:
 	b	epilogue
 
 retfloat:
+#ifndef __mips_soft_float
 	bne     t6, FFI_TYPE_FLOAT, retdouble
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
@@ -280,6 +292,7 @@ retstruct_f_d:
 	s.s	$f0, 0(t4)
 	s.d	$f2, 8(t4)
 	b	epilogue
+#endif
 
 retstruct_d_soft:
 	bne	t6, FFI_TYPE_STRUCT_D_SOFT, retstruct_f_soft
@@ -483,6 +496,7 @@ $do_closure:
 	REG_S	a6, A6_OFF2($sp)
 	REG_S	a7, A7_OFF2($sp)
 
+#ifndef __mips_soft_float
 	# Store all possible float/double registers.
 	s.d	$f12, F12_OFF2($sp)
 	s.d	$f13, F13_OFF2($sp)
@@ -492,6 +506,7 @@ $do_closure:
 	s.d	$f17, F17_OFF2($sp)
 	s.d	$f18, F18_OFF2($sp)
 	s.d	$f19, F19_OFF2($sp)
+#endif
 
 	jalr	t9
 
@@ -506,6 +521,7 @@ cls_retint:
 	b	cls_epilogue
 
 cls_retfloat:
+#ifndef __mips_soft_float
 	bne     v0, FFI_TYPE_FLOAT, cls_retdouble
 	l.s	$f0, V0_OFF2($sp)
 	b	cls_epilogue
@@ -548,6 +564,7 @@ cls_retstruct_f_d:
 	l.s	$f0, V0_OFF2($sp)
 	l.d	$f2, V1_OFF2($sp)
 	b	cls_epilogue
+#endif
 	
 cls_retstruct_small2:	
 	REG_L	v0, V0_OFF2($sp)
