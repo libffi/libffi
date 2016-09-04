@@ -1,22 +1,24 @@
 language: cpp
+os:
+  - linux
+  - osx
 compiler:
   - gcc
   - clang
-env:
-  - HOST=i386-pc-linux-gnu
 matrix:
-  exclude:
-    - compiler: clang
+  include:
+    - os: linux
+      compiler: gcc
       env: HOST=i386-pc-linux-gnu
 
-before_script:
-  - sudo apt-get update
-  - sudo apt-get install dejagnu texinfo
-  - if [ "$HOST" = i386-pc-linux-gnu ] ; then sudo apt-get install gcc-multilib g++-multilib && CC="$CC -m32" && CXX="$CXX -m32" ; fi
+install:
+  - ./.travis/install.sh
 
 script:
   - ./autogen.sh
+  - if test x"$HOST" = x"i386-pc-linux-gnu"; then CC="$CC -m32"; CXX="$CXX -m32"; fi
   - ./configure ${HOST+--host=$HOST}
   - make
   - make dist
   - make check
+  - cat */testsuite/libffi.log
