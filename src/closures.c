@@ -769,16 +769,11 @@ dlmmap (void *start, size_t length, int prot,
 	 MREMAP_DUP and prot at this point.  */
     }
 
-  if (execsize == 0 || execfd == -1)
-    {
-      pthread_mutex_lock (&open_temp_exec_file_mutex);
-      ptr = dlmmap_locked (start, length, prot, flags, offset);
-      pthread_mutex_unlock (&open_temp_exec_file_mutex);
+  pthread_mutex_lock (&open_temp_exec_file_mutex);
+  ptr = dlmmap_locked (start, length, prot, flags, offset);
+  pthread_mutex_unlock (&open_temp_exec_file_mutex);
 
-      return ptr;
-    }
-
-  return dlmmap_locked (start, length, prot, flags, offset);
+  return ptr;
 }
 
 /* Release memory at the given address, as well as the corresponding
