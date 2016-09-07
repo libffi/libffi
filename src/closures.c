@@ -401,14 +401,15 @@ selinux_enabled_check (void)
 
 #endif /* !FFI_MMAP_EXEC_SELINUX */
 
-/* On PaX enable kernels that have MPROTECT enable we can't use PROT_EXEC. */
+/* On PaX enable kernels that have MPROTECT enabled we can't use PROT_EXEC. */
 #ifdef FFI_MMAP_EXEC_EMUTRAMP_PAX
 #include <stdlib.h>
 
-static int emutramp_enabled = -1;
+/* -1: not read yet; 0: no PaX or MPROTECT disabled; 1: MPROTECT enabled.  */
+static int mprotect_enabled = -1;
 
 static int
-emutramp_enabled_check (void)
+mprotect_enabled_check (void)
 {
   char *buf = NULL;
   size_t len = 0;
@@ -422,9 +423,7 @@ emutramp_enabled_check (void)
   while (getline (&buf, &len, f) != -1)
     if (!strncmp (buf, "PaX:", 4))
       {
-        char emutramp;
-        if (sscanf (buf, "%*s %*c%c", &emutramp) == 1)
-          ret = (emutramp == 'E');
+        ret = (NULL != strchr (buf + 4, 'M'));
         break;
       }
   free (buf);
@@ -432,8 +431,9 @@ emutramp_enabled_check (void)
   return ret;
 }
 
-#define is_emutramp_enabled() (emutramp_enabled >= 0 ? emutramp_enabled \
-                               : (emutramp_enabled = emutramp_enabled_check ()))
+#define is_mprotect_enabled() (mprotect_enabled >= 0 ? mprotect_enabled \
+                               : (mprotect_enabled = mprotect_enabled_check ()))
+
 #endif /* FFI_MMAP_EXEC_EMUTRAMP_PAX */
 
 #elif defined (__CYGWIN__) || defined(__INTERIX)
@@ -446,7 +446,7 @@ emutramp_enabled_check (void)
 #endif /* !defined(X86_WIN32) && !defined(X86_WIN64) */
 
 #ifndef FFI_MMAP_EXEC_EMUTRAMP_PAX
-#define is_emutramp_enabled() 0
+#define is_mprotect_enabled() 0
 #endif /* FFI_MMAP_EXEC_EMUTRAMP_PAX */
 
 /* Declare all functions defined in dlmalloc.c as static.  */
@@ -750,13 +750,10 @@ dlmmap (void *start, size_t length, int prot,
 	  && flags == (MAP_PRIVATE | MAP_ANONYMOUS)
 	  && fd == -1 && offset == 0);
 
-  if (execfd == -1 && is_emutramp_enabled ())
-    {
-      ptr = mmap (start, length, prot & ~PROT_EXEC, flags, fd, offset);
-      return ptr;
-    }
-
-  if (execfd == -1 && !is_selinux_enabled ())
+  /* -1 != execfd hints that we already decided to use dlmmap_locked
+     last time.  If PaX MPROTECT or SELinux is active fallback to
+     dlmmap_locked.  */
+  if (execfd == -1 && !is_mprotect_enabled () && !is_selinux_enabled ())
     {
       ptr = mmap (start, length, prot | PROT_EXEC, flags, fd, offset);
 
