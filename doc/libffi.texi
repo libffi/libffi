@@ -155,7 +155,7 @@ If the function being called is variadic (varargs) then
 @findex ffi_prep_cif_var
 @defun ffi_status ffi_prep_cif_var (ffi_cif *@var{cif}, ffi_abi @var{abi}, unsigned int @var{nfixedargs}, unsigned int @var{ntotalargs}, ffi_type *@var{rtype}, ffi_type **@var{argtypes})
 This initializes @var{cif} according to the given parameters for
-a call to a variadic function.  In general it's operation is the
+a call to a variadic function.  In general its operation is the
 same as for @code{ffi_prep_cif} except that:
 
 @var{nfixedargs} is the number of fixed arguments, prior to any
@@ -214,7 +214,7 @@ burden of copying pass-by-value arguments is placed on the caller.
 
 Note that while the return value must be register-sized, arguments
 should exactly match their declared type.  For example, if an argument
-is a @code{short}, then the entry is @var{avalues} should point to an
+is a @code{short}, then the entry in @var{avalues} should point to an
 object declared as @code{short}; but if the return type is
 @code{short}, then @var{rvalue} should point to an object declared as
 a larger type -- usually @code{ffi_arg}.
