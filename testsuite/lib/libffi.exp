@@ -175,7 +175,7 @@ proc libffi_target_compile { source dest type options } {
     global libffi_link_flags
     global libffi_include
     global target_triplet
-
+    global compiler_vendor
 
     if { [target_info needs_status_wrapper]!="" && [info exists gluefile] } {
 	lappend options "libs=${gluefile}"
@@ -218,8 +218,11 @@ proc libffi_target_compile { source dest type options } {
 	lappend options "libs= -lpthread"
     }
 
+    # this may be required for g++, but just confused clang.
     if { [string match "*.cc" $source] } {
-	lappend options "c++"
+        if { [string match $compiler_vendor "gnu"] }
+	    lappend options "c++"
+        }
     }
 
     if { [string match "arc*-*-linux*" $target_triplet] } {
