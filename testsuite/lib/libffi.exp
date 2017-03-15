@@ -220,7 +220,7 @@ proc libffi_target_compile { source dest type options } {
 
     # this may be required for g++, but just confused clang.
     if { [string match "*.cc" $source] } {
-        if { [string match $compiler_vendor "gnu"] }
+        if { [string match $compiler_vendor "gnu"] } {
 	    lappend options "c++"
         }
     }
