@@ -211,6 +211,7 @@ ffi_closure_alloc (size_t size, void **code)
       table = ffi_trampoline_table_alloc ();
       if (table == NULL)
 	{
+	  pthread_mutex_unlock (&ffi_trampoline_lock);
 	  free (closure);
 	  return NULL;
 	}
