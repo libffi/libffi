@@ -1,5 +1,6 @@
 /* -----------------------------------------------------------------------
-   ffi.c - Copyright (c) 1996, 1998, 1999, 2001, 2007, 2008  Red Hat, Inc.
+   ffi.c - Copyright (c) 2017  Anthony Green
+           Copyright (c) 1996, 1998, 1999, 2001, 2007, 2008  Red Hat, Inc.
            Copyright (c) 2002  Ranjit Mathew
            Copyright (c) 2002  Bo Thorsen
            Copyright (c) 2002  Roger Sayle
@@ -234,11 +235,17 @@ static const struct abi_params abi_params[FFI_LAST_ABI] = {
   [FFI_MS_CDECL] = { 1, R_ECX, 0 }
 };
 
-extern void ffi_call_i386(struct call_frame *, char *)
-#if HAVE_FASTCALL
-	__declspec(fastcall)
+#ifdef HAVE_FASTCALL
+  #ifdef _MSC_VER
+    #define FFI_DECLARE_FASTCALL __fastcall
+  #else
+    #define FFI_DECLARE_FASTCALL __declspec(fastcall)
+  #endif
+#else
+  #define FFI_DECLARE_FASTCALL
 #endif
-	FFI_HIDDEN;
+
+extern void FFI_DECLARE_FASTCALL ffi_call_i386(struct call_frame *, char *) FFI_HIDDEN;
 
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
@@ -395,10 +402,7 @@ struct closure_frame
   void *user_data;				/* 36 */
 };
 
-int FFI_HIDDEN
-#if HAVE_FASTCALL
-__declspec(fastcall)
-#endif
+int FFI_HIDDEN FFI_DECLARE_FASTCALL
 ffi_closure_inner (struct closure_frame *frame, char *stack)
 {
   ffi_cif *cif = frame->cif;
