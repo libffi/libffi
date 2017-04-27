@@ -60,7 +60,7 @@ ffi_align (ffi_type *ty, void *p)
   if (alignment < 4)
     alignment = 4;
 #endif
-  return (void *) ALIGN (p, alignment);
+  return (void *) FFI_ALIGN (p, alignment);
 }
 
 static size_t
@@ -106,7 +106,7 @@ ffi_put_arg (ffi_type *ty, void *src, void *dst)
       abort();
     }
 
-  return ALIGN (z, 4);
+  return FFI_ALIGN (z, 4);
 }
 
 /* ffi_prep_args is called once stack space has been allocated
@@ -287,7 +287,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   /* Round the stack up to a multiple of 8 bytes.  This isn't needed
      everywhere, but it is on some platforms, and it doesn't harm anything
      when it isn't needed.  */
-  bytes = ALIGN (bytes, 8);
+  bytes = FFI_ALIGN (bytes, 8);
 
   /* Minimum stack space is the 4 register arguments that we pop.  */
   if (bytes < 4*4)

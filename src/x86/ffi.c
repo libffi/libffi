@@ -135,7 +135,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 	      break;
 	    }
 	  /* Allocate space for return value pointer.  */
-	  bytes += ALIGN (sizeof(void*), FFI_SIZEOF_ARG);
+	  bytes += FFI_ALIGN (sizeof(void*), FFI_SIZEOF_ARG);
 	}
       break;
     case FFI_TYPE_COMPLEX:
@@ -173,10 +173,10 @@ ffi_prep_cif_machdep(ffi_cif *cif)
     {
       ffi_type *t = cif->arg_types[i];
 
-      bytes = ALIGN (bytes, t->alignment);
-      bytes += ALIGN (t->size, FFI_SIZEOF_ARG);
+      bytes = FFI_ALIGN (bytes, t->alignment);
+      bytes += FFI_ALIGN (t->size, FFI_SIZEOF_ARG);
     }
-  cif->bytes = ALIGN (bytes, 16);
+  cif->bytes = FFI_ALIGN (bytes, 16);
 
   return FFI_OK;
 }
@@ -341,7 +341,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	}
       else
 	{
-	  size_t za = ALIGN (z, FFI_SIZEOF_ARG);
+	  size_t za = FFI_ALIGN (z, FFI_SIZEOF_ARG);
 	  size_t align = FFI_SIZEOF_ARG;
 
 	  /* Alignment rules for arguments are quite complex.  Vectors and
@@ -363,7 +363,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	    }
 	  else
 	    {
-	      argp = (char *)ALIGN (argp, align);
+	      argp = (char *)FFI_ALIGN (argp, align);
 	      memcpy (argp, valp, z);
 	      argp += za;
 	    }
@@ -467,7 +467,7 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
 	}
       else
 	{
-	  size_t za = ALIGN (z, FFI_SIZEOF_ARG);
+	  size_t za = FFI_ALIGN (z, FFI_SIZEOF_ARG);
 	  size_t align = FFI_SIZEOF_ARG;
 
 	  /* See the comment in ffi_call_int.  */
@@ -483,7 +483,7 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
 	    }
 	  else
 	    {
-	      argp = (char *)ALIGN (argp, align);
+	      argp = (char *)FFI_ALIGN (argp, align);
 	      valp = argp;
 	      argp += za;
 	    }
@@ -718,7 +718,7 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *avalue)
       else
 	{
 	  memcpy (argp, avalue, z);
-	  z = ALIGN (z, FFI_SIZEOF_ARG);
+	  z = FFI_ALIGN (z, FFI_SIZEOF_ARG);
 	  argp += z;
 	}
       avalue += z;

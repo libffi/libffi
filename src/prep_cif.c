@@ -29,7 +29,7 @@
 
 /* Round up to FFI_SIZEOF_ARG. */
 
-#define STACK_ARG_SIZE(x) ALIGN(x, FFI_SIZEOF_ARG)
+#define STACK_ARG_SIZE(x) FFI_ALIGN(x, FFI_SIZEOF_ARG)
 
 /* Perform machine independent initialization of aggregate type
    specifications. */
@@ -58,7 +58,7 @@ static ffi_status initialize_aggregate(ffi_type *arg, size_t *offsets)
       /* Perform a sanity check on the argument type */
       FFI_ASSERT_VALID_TYPE(*ptr);
 
-      arg->size = ALIGN(arg->size, (*ptr)->alignment);
+      arg->size = FFI_ALIGN(arg->size, (*ptr)->alignment);
       if (offsets)
 	*offsets++ = arg->size;
       arg->size += (*ptr)->size;
@@ -76,7 +76,7 @@ static ffi_status initialize_aggregate(ffi_type *arg, size_t *offsets)
      struct A { long a; char b; }; struct B { struct A x; char y; };
      should find y at an offset of 2*sizeof(long) and result in a
      total size of 3*sizeof(long).  */
-  arg->size = ALIGN (arg->size, arg->alignment);
+  arg->size = FFI_ALIGN (arg->size, arg->alignment);
 
   /* On some targets, the ABI defines that structures have an additional
      alignment beyond the "natural" one based on their elements.  */
@@ -183,7 +183,7 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
 	{
 	  /* Add any padding if necessary */
 	  if (((*ptr)->alignment - 1) & bytes)
-	    bytes = (unsigned)ALIGN(bytes, (*ptr)->alignment);
+	    bytes = (unsigned)FFI_ALIGN(bytes, (*ptr)->alignment);
 
 #ifdef TILE
 	  if (bytes < 10 * FFI_SIZEOF_ARG &&
