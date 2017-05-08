@@ -243,7 +243,7 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 	  {
 	    size_t num;
 
-	    byte_offset = ALIGN (byte_offset, (*ptr)->alignment);
+	    byte_offset = FFI_ALIGN (byte_offset, (*ptr)->alignment);
 
 	    num = classify_argument (*ptr, subclasses, byte_offset % 8);
 	    if (num == 0)
@@ -529,7 +529,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	  if (align < 8)
 	    align = 8;
 
-	  bytes = ALIGN (bytes, align);
+	  bytes = FFI_ALIGN (bytes, align);
 	  bytes += cif->arg_types[i]->size;
 	}
       else
@@ -542,7 +542,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
     flags |= UNIX64_FLAG_XMM_ARGS;
 
   cif->flags = flags;
-  cif->bytes = ALIGN (bytes, 8);
+  cif->bytes = FFI_ALIGN (bytes, 8);
 
   return FFI_OK;
 }
@@ -604,7 +604,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	    align = 8;
 
 	  /* Pass this argument in memory.  */
-	  argp = (void *) ALIGN (argp, align);
+	  argp = (void *) FFI_ALIGN (argp, align);
 	  memcpy (argp, avalue[i], size);
 	  argp += size;
 	}
@@ -783,7 +783,7 @@ ffi_closure_unix64_inner(ffi_cif *cif,
 	    align = 8;
 
 	  /* Pass this argument in memory.  */
-	  argp = (void *) ALIGN (argp, align);
+	  argp = (void *) FFI_ALIGN (argp, align);
 	  avalue[i] = argp;
 	  argp += arg_types[i]->size;
 	}

@@ -219,7 +219,7 @@ ffi_prep_cif_linux64_core (ffi_cif *cif)
 		align = 16;
 	      align = align / 8;
 	      if (align > 1)
-		intarg_count = ALIGN (intarg_count, align);
+		intarg_count = FFI_ALIGN (intarg_count, align);
 	    }
 	  intarg_count += ((*ptr)->size + 7) / 8;
 #if _CALL_ELF == 2
@@ -536,7 +536,7 @@ ffi_prep_args64 (extended_cif *ecif, unsigned long *const stack)
 	      if (align > 16)
 		align = 16;
 	      if (align > 1)
-		next_arg.p = ALIGN (next_arg.p, align);
+		next_arg.p = FFI_ALIGN (next_arg.p, align);
 	    }
 #if _CALL_ELF == 2
 	  elt = discover_homogeneous_aggregate (*ptr, &elnum);
@@ -794,7 +794,7 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
 	      if (align > 16)
 		align = 16;
 	      if (align > 1)
-		pst = (unsigned long *) ALIGN ((size_t) pst, align);
+		pst = (unsigned long *) FFI_ALIGN ((size_t) pst, align);
 	    }
 	  elt = 0;
 #if _CALL_ELF == 2

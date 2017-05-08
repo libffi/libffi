@@ -280,7 +280,7 @@ allocate_to_stack (struct arg_state *state, void *stack,
     alignment = 8;
 #endif
     
-  nsaa = ALIGN (nsaa, alignment);
+  nsaa = FFI_ALIGN (nsaa, alignment);
   state->nsaa = nsaa + size;
 
   return (char *)stack + nsaa;
@@ -528,7 +528,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
       }
 
   /* Round the stack up to a multiple of the stack alignment requirement. */
-  cif->bytes = ALIGN(bytes, 16);
+  cif->bytes = FFI_ALIGN(bytes, 16);
   cif->flags = flags;
 #if defined (__APPLE__)
   cif->aarch64_nfixedargs = 0;
