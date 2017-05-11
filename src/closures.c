@@ -735,6 +735,8 @@ dlmmap_locked (void *start, size_t length, int prot, int flags, off_t offset)
 
   execsize += length;
 
+  close(execfd);
+
   return start;
 }
 
