@@ -24,6 +24,14 @@ libffi, -lffi
 .Fa "ffi_type *rtype"
 .Fa "ffi_type **atypes"
 .Fc
+.Ft ffi_status
+.Fo ffi_prep_closure_loc
+.Fa "ffi_closure *closure"
+.Fa "ffi_cif *cif"
+.Fa "void (*fun) (ffi_cif *cif, void *ret, void **args, void *user_data)"
+.Fa "void *user_data"
+.Fa "void *codeloc"
+.Fc
 .Ft void
 .Fo ffi_call
 .Fa "ffi_cif *cif"
@@ -35,7 +43,12 @@ libffi, -lffi
 The foreign function interface provides a mechanism by which a function can
 generate a call to another function at runtime without requiring knowledge of
 the called function's interface at compile time.
+
+The full manual could be found in
+.Nm info libffi\fR.
 .Sh SEE ALSO
+info libffi,
 .Xr ffi_prep_cif 3 ,
 .Xr ffi_prep_cif_var 3 ,
-.Xr ffi_call 3
+.Xr ffi_call 3 ,
+.Xr ffi_prep_closure_loc 3

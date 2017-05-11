@@ -1,0 +1,121 @@
+.Dd October 20, 2016
+.Dt ffi_prep_closure_loc 3
+.Sh NAME
+.Nm ffi_prep_closure_loc
+.Nd Bind a function and an argument together.
+.Sh SYNOPSIS
+.In ffi.h
+#ifdef FFI_CLOSURES
+.Ft ffi_status
+.Fo ffi_prep_closure_loc
+.Fa "ffi_closure *closure"
+.Fa "ffi_cif *cif"
+.Fa "void (*fun) (ffi_cif *cif, void *ret, void **args, void *user_data)"
+.Fa "void *user_data"
+.Fa "void *codeloc"
+.Fc
+.Ft void*
+.Fo ffi_closure_alloc
+.Fa "size_t size"
+.Fa "void **code"
+.Fc
+.Ft void
+.Fo ffi_closure_free
+.Fa "void *writable"
+.Fc
+#endif
+.Sh DESCRIPTION
+The
+.Nm ffi_prep_closure_loc
+binds a
+.Fa user_data
+argument to the
+.Fa fun
+function.
+
+The result would be that
+.Fa codeloc\fR,
+when nativelly called,
+would return the result of
+.Fa fun
+invocation with the arguments in
+.Fa args\fR,
+and
+.Fa user_data
+in the argument with the same name.
+
+To initialize a closure, call
+.Nm ffi_closure_alloc
+first.
+Then call
+.Nm ffi_prep_cif
+to supply the
+.Fa fun\fR-related information
+(Note that you do not ever need to
+.Nm ffi_call
+the cif).
+
+To destroy a closure, call
+.Nm ffi_closure_free\fR.
+
+Not supported on all platforms. Where supported, the
+.Nm FFI_CLOSURES
+is defined.
+
+.Sh EXAMPLES
+.Bd -literal
+#include <stdio.h>
+#include <ffi.h>
+
+/* Acts like puts with the file given at time of enclosure. */
+void puts_binding(ffi_cif *cif, void *ret, void* args[],
+                  void *stream)
+{
+  *(ffi_arg *)ret = fputs(*(char **)args[0], (FILE *)stream);
+}
+
+typedef int (*puts_t)(char *);
+
+int main()
+{
+  ffi_cif cif;
+  ffi_type *args[1];
+  ffi_closure *closure;
+
+  void *bound_puts;
+  int rc;
+
+  /* Allocate closure and bound_puts */
+  closure = ffi_closure_alloc(sizeof(ffi_closure), &bound_puts);
+
+  if (closure)
+    {
+      /* Initialize the argument info vectors */
+      args[0] = &ffi_type_pointer;
+
+      /* Initialize the cif */
+      if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1,
+                       &ffi_type_sint, args) == FFI_OK)
+        {
+          /* Initialize the closure, setting stream to stdout */
+          if (ffi_prep_closure_loc(closure, &cif, puts_binding,
+                                   stdout, bound_puts) == FFI_OK)
+            {
+              rc = ((puts_t)bound_puts)("Hello World!");
+              /* rc now holds the result of the call to fputs */
+            }
+        }
+    }
+
+  /* Deallocate both closure, and bound_puts */
+  ffi_closure_free(closure);
+
+  return 0;
+.Ed
+.Sh APPLICATION USAGE
+Used to call into native libraries from interpreted languages,
+provide callbacks to do the inverse,
+or embed, and then call, another interpreted one.
+.Sh SEE ALSO
+info libffi,
+.Xr ffi 3
