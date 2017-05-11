@@ -275,6 +275,7 @@ $LCFI12:
 	REG_S	a2, A2_OFF2($fp)
 	REG_S	a3, A3_OFF2($fp)
 
+#ifndef __mips_soft_float
 	# Load ABI enum to s0
 	REG_L	$16, 4($15)	# cif 
 	REG_L	$16, 0($16)	# abi is first member.
@@ -286,6 +287,8 @@ $LCFI12:
 	s.d	$f12, FA_0_0_OFF2($fp)
 	s.d	$f14, FA_1_0_OFF2($fp)
 1:
+#endif
+
 	# prepare arguments for ffi_closure_mips_inner_O32
 	REG_L	a0, 4($15)	 # cif 
 	REG_L	a1, 8($15)	 # fun
@@ -330,6 +333,7 @@ $LCFI22:
 	REG_S	a2, A2_OFF2($fp)
 	REG_S	a3, A3_OFF2($fp)
 
+#ifndef __mips_soft_float
 	# Load ABI enum to s0
 	REG_L	$16, 20($12)	# cif pointer follows tramp.
 	REG_L	$16, 0($16)	# abi is first member.
@@ -343,6 +347,8 @@ $LCFI22:
 	s.d	$f14, FA_1_0_OFF2($fp)
 #endif
 1:	
+#endif
+
 	# prepare arguments for ffi_closure_mips_inner_O32
 	REG_L	a0, 20($12)	 # cif pointer follows tramp.
 	REG_L	a1, 24($12)	 # fun
@@ -365,6 +371,7 @@ $do_closure:
 	li	$9, FFI_TYPE_VOID
 	beq	$8, $9, closure_done
 
+#ifndef __mips_soft_float
 	li	$13, 1		# FFI_O32
 	bne	$16, $13, 1f	# Skip fp restore if FFI_O32_SOFT_FLOAT
 
@@ -378,6 +385,8 @@ $do_closure:
 	beq	$8, $9, closure_done
 #endif
 1:	
+#endif
+
 	REG_L	$3, V1_OFF2($fp)
 	REG_L	$2, V0_OFF2($fp)
 
