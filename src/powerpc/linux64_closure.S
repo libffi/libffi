@@ -191,11 +191,7 @@ ffi_closure_LINUX64:
 	.cfi_def_cfa_offset STACKFRAME
 	nop
 # case FFI_TYPE_INT
-# ifdef __LITTLE_ENDIAN__
 	lwa %r3, RETVAL+0(%r1)
-# else
-	lwa %r3, RETVAL+4(%r1)
-# endif
 	mtlr %r0
 	addi %r1, %r1, STACKFRAME
 	.cfi_def_cfa_offset 0
@@ -221,31 +217,19 @@ ffi_closure_LINUX64:
 	lfd %f2, RETVAL+8(%r1)
 	b .Lfinish
 # case FFI_TYPE_UINT8
-# ifdef __LITTLE_ENDIAN__
 	lbz %r3, RETVAL+0(%r1)
-# else
-	lbz %r3, RETVAL+7(%r1)
-# endif
 	mtlr %r0
 	addi %r1, %r1, STACKFRAME
 	.cfi_def_cfa_offset 0
 	blr
 	.cfi_def_cfa_offset STACKFRAME
 # case FFI_TYPE_SINT8
-# ifdef __LITTLE_ENDIAN__
 	lbz %r3, RETVAL+0(%r1)
-# else
-	lbz %r3, RETVAL+7(%r1)
-# endif
 	extsb %r3,%r3
 	mtlr %r0
 	b .Lfinish
 # case FFI_TYPE_UINT16
-# ifdef __LITTLE_ENDIAN__
 	lhz %r3, RETVAL+0(%r1)
-# else
-	lhz %r3, RETVAL+6(%r1)
-# endif
 	mtlr %r0
 .Lfinish:
 	addi %r1, %r1, STACKFRAME
@@ -253,33 +237,21 @@ ffi_closure_LINUX64:
 	blr
 	.cfi_def_cfa_offset STACKFRAME
 # case FFI_TYPE_SINT16
-# ifdef __LITTLE_ENDIAN__
 	lha %r3, RETVAL+0(%r1)
-# else
-	lha %r3, RETVAL+6(%r1)
-# endif
 	mtlr %r0
 	addi %r1, %r1, STACKFRAME
 	.cfi_def_cfa_offset 0
 	blr
 	.cfi_def_cfa_offset STACKFRAME
 # case FFI_TYPE_UINT32
-# ifdef __LITTLE_ENDIAN__
 	lwz %r3, RETVAL+0(%r1)
-# else
-	lwz %r3, RETVAL+4(%r1)
-# endif
 	mtlr %r0
 	addi %r1, %r1, STACKFRAME
 	.cfi_def_cfa_offset 0
 	blr
 	.cfi_def_cfa_offset STACKFRAME
 # case FFI_TYPE_SINT32
-# ifdef __LITTLE_ENDIAN__
 	lwa %r3, RETVAL+0(%r1)
-# else
-	lwa %r3, RETVAL+4(%r1)
-# endif
 	mtlr %r0
 	addi %r1, %r1, STACKFRAME
 	.cfi_def_cfa_offset 0
