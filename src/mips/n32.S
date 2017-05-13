@@ -124,6 +124,7 @@ loadregs:
 #else
 	and	t4, t6, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a0, 0*FFI_SIZEOF_ARG(t9)
+#ifndef __mips_soft_float
 	beqz	t4, arg1_next
 	bne	t4, FFI_TYPE_FLOAT, arg1_doublep
 	l.s	$f12, 0*FFI_SIZEOF_ARG(t9)
@@ -131,10 +132,11 @@ loadregs:
 arg1_doublep:	
 	l.d	$f12, 0*FFI_SIZEOF_ARG(t9)
 arg1_next:	
-	
+#endif
 	SRL	t4, t6, 1*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a1, 1*FFI_SIZEOF_ARG(t9)
+#ifndef __mips_soft_float
 	beqz	t4, arg2_next
 	bne	t4, FFI_TYPE_FLOAT, arg2_doublep
 	l.s	$f13, 1*FFI_SIZEOF_ARG(t9)	
@@ -142,10 +144,11 @@ arg1_next:
 arg2_doublep:	
 	l.d	$f13, 1*FFI_SIZEOF_ARG(t9)	
 arg2_next:	
-	
+#endif
 	SRL	t4, t6, 2*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a2, 2*FFI_SIZEOF_ARG(t9)
+#ifndef __mips_soft_float
 	beqz	t4, arg3_next
 	bne	t4, FFI_TYPE_FLOAT, arg3_doublep
 	l.s	$f14, 2*FFI_SIZEOF_ARG(t9)	
@@ -153,10 +156,11 @@ arg2_next:
 arg3_doublep:	
 	l.d	$f14, 2*FFI_SIZEOF_ARG(t9)	
 arg3_next:	
-	
+#endif
 	SRL	t4, t6, 3*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a3, 3*FFI_SIZEOF_ARG(t9)
+#ifndef __mips_soft_float
 	beqz	t4, arg4_next
 	bne	t4, FFI_TYPE_FLOAT, arg4_doublep
 	l.s	$f15, 3*FFI_SIZEOF_ARG(t9)	
@@ -164,10 +168,11 @@ arg3_next:
 arg4_doublep:	
 	l.d	$f15, 3*FFI_SIZEOF_ARG(t9)	
 arg4_next:	
-	
+#endif
 	SRL	t4, t6, 4*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a4, 4*FFI_SIZEOF_ARG(t9)
+#ifndef __mips_soft_float
 	beqz	t4, arg5_next
 	bne	t4, FFI_TYPE_FLOAT, arg5_doublep
 	l.s	$f16, 4*FFI_SIZEOF_ARG(t9)	
@@ -175,10 +180,11 @@ arg4_next:
 arg5_doublep:	
 	l.d	$f16, 4*FFI_SIZEOF_ARG(t9)	
 arg5_next:	
-	
+#endif
 	SRL	t4, t6, 5*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a5, 5*FFI_SIZEOF_ARG(t9)
+#ifndef __mips_soft_float
 	beqz	t4, arg6_next
 	bne	t4, FFI_TYPE_FLOAT, arg6_doublep
 	l.s	$f17, 5*FFI_SIZEOF_ARG(t9)	
@@ -186,10 +192,11 @@ arg5_next:
 arg6_doublep:	
 	l.d	$f17, 5*FFI_SIZEOF_ARG(t9)	
 arg6_next:	
-	
+#endif
 	SRL	t4, t6, 6*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a6, 6*FFI_SIZEOF_ARG(t9)
+#ifndef __mips_soft_float
 	beqz	t4, arg7_next
 	bne	t4, FFI_TYPE_FLOAT, arg7_doublep
 	l.s	$f18, 6*FFI_SIZEOF_ARG(t9)	
@@ -197,10 +204,11 @@ arg6_next:
 arg7_doublep:	
 	l.d	$f18, 6*FFI_SIZEOF_ARG(t9)	
 arg7_next:	
-	
+#endif
 	SRL	t4, t6, 7*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a7, 7*FFI_SIZEOF_ARG(t9)
+#ifndef __mips_soft_float
 	beqz	t4, arg8_next
 	bne	t4, FFI_TYPE_FLOAT, arg8_doublep
  	l.s	$f19, 7*FFI_SIZEOF_ARG(t9)	
@@ -295,6 +303,7 @@ retstruct_f_d:
 #endif
 
 retstruct_d_soft:
+#endif
 	bne	t6, FFI_TYPE_STRUCT_D_SOFT, retstruct_f_soft
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
@@ -498,6 +507,7 @@ $do_closure:
 
 #ifndef __mips_soft_float
 	# Store all possible float/double registers.
+#ifndef __mips_soft_float
 	s.d	$f12, F12_OFF2($sp)
 	s.d	$f13, F13_OFF2($sp)
 	s.d	$f14, F14_OFF2($sp)
@@ -567,6 +577,7 @@ cls_retstruct_f_d:
 #endif
 	
 cls_retstruct_small2:	
+#endif
 	REG_L	v0, V0_OFF2($sp)
 	REG_L	v1, V1_OFF2($sp)
 	
