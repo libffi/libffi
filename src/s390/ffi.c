@@ -32,6 +32,7 @@
 #include <ffi_common.h>
 #include <stdint.h>
 #include "internal.h"
+#include <inttypes.h>
 
 /*====================== End of Includes =============================*/
 
@@ -508,7 +509,7 @@ ffi_closure_helper_SYSV (ffi_cif *cif,
 			 unsigned long long *p_fpr,
 			 unsigned long *p_ov)
 {
-  unsigned long long ret_buffer;
+  unsigned long long ret_buffer = 0;
 
   void *rvalue = &ret_buffer;
   void **avalue;
@@ -675,17 +676,27 @@ ffi_closure_helper_SYSV (ffi_cif *cif,
 	break;
 
       case FFI_TYPE_POINTER:
-      case FFI_TYPE_UINT32:
-      case FFI_TYPE_UINT16:
-      case FFI_TYPE_UINT8:
 	p_gpr[0] = *(unsigned long *) rvalue;
+      case FFI_TYPE_UINT32:
+	p_gpr[0] = (uint32_t)(*(signed long *) rvalue);
+	break;
+      case FFI_TYPE_UINT16:
+	p_gpr[0] = (uint16_t)(*(signed long *) rvalue);
+	break;
+      case FFI_TYPE_UINT8:
+	p_gpr[0] = (uint8_t)(*(unsigned long *) rvalue);
 	break;
 
       case FFI_TYPE_INT:
-      case FFI_TYPE_SINT32:
-      case FFI_TYPE_SINT16:
-      case FFI_TYPE_SINT8:
 	p_gpr[0] = *(signed long *) rvalue;
+      case FFI_TYPE_SINT32:
+	p_gpr[0] = (int32_t)(*(signed long *) rvalue);
+	break;
+      case FFI_TYPE_SINT16:
+	p_gpr[0] = (int16_t)(*(signed long *) rvalue);
+	break;
+      case FFI_TYPE_SINT8:
+	p_gpr[0] = (int8_t)(*(signed long *) rvalue);
 	break;
 
       default:
