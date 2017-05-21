@@ -92,7 +92,7 @@ case "${host}" in
 	fi
 	;;
 
-  i?86-*-darwin* | x86_64-*-darwin* | x86_64-*-ios)
+  i?86-*-darwin* | x86_64-*-darwin* | i?86-*-ios | x86_64-*-ios)
 	TARGETDIR=x86
 	if test $ac_cv_sizeof_size_t = 4; then
 	  TARGET=X86_DARWIN
