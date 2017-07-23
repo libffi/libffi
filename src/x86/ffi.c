@@ -176,7 +176,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       bytes = FFI_ALIGN (bytes, t->alignment);
       bytes += FFI_ALIGN (t->size, FFI_SIZEOF_ARG);
     }
-#ifdef __clang__
+#if defined(_WIN32) && defined(__clang__)
   cif->bytes = FFI_ALIGN (bytes, 4);
 #else
   cif->bytes = FFI_ALIGN (bytes, 16);
