@@ -646,10 +646,10 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 		  break;
 		case X86_64_SSE_CLASS:
 		case X86_64_SSEDF_CLASS:
-		  reg_args->sse[ssecount++].i64 = *(UINT64 *) a;
+		  memcpy (&reg_args->sse[ssecount++].i64, a, sizeof(UINT64));
 		  break;
 		case X86_64_SSESF_CLASS:
-		  reg_args->sse[ssecount++].i32 = *(UINT32 *) a;
+		  memcpy (&reg_args->sse[ssecount++].i32, a, sizeof(UINT32));
 		  break;
 		default:
 		  abort();
