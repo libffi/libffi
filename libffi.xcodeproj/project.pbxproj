@@ -35,10 +35,32 @@
 		DBFA7191187F1DA100A76262 /* fficonfig_x86_64.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7185187F1DA100A76262 /* fficonfig_x86_64.h */; };
 		DBFA7192187F1DA100A76262 /* ffitarget_i386.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7186187F1DA100A76262 /* ffitarget_i386.h */; };
 		DBFA7193187F1DA100A76262 /* ffitarget_x86_64.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7187187F1DA100A76262 /* ffitarget_x86_64.h */; };
-		DBFA7194187F1DA100A76262 /* darwin64_x86_64.S in Sources */ = {isa = PBXBuildFile; fileRef = DBFA718A187F1DA100A76262 /* darwin64_x86_64.S */; };
-		DBFA7195187F1DA100A76262 /* darwin_i386.S in Sources */ = {isa = PBXBuildFile; fileRef = DBFA718B187F1DA100A76262 /* darwin_i386.S */; };
+		DBFA7194187F1DA100A76262 /* unix64_x86_64.S in Sources */ = {isa = PBXBuildFile; fileRef = DBFA718A187F1DA100A76262 /* unix64_x86_64.S */; };
+		DBFA7195187F1DA100A76262 /* sysv_i386.S in Sources */ = {isa = PBXBuildFile; fileRef = DBFA718B187F1DA100A76262 /* sysv_i386.S */; };
 		DBFA7196187F1DA100A76262 /* ffi64_x86_64.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFA718C187F1DA100A76262 /* ffi64_x86_64.c */; };
 		DBFA7197187F1DA100A76262 /* ffi_i386.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFA718D187F1DA100A76262 /* ffi_i386.c */; };
+		FDDB2F411F5D66E200EF414E /* ffiw64_x86_64.c in Sources */ = {isa = PBXBuildFile; fileRef = FDDB2F3F1F5D666900EF414E /* ffiw64_x86_64.c */; };
+		FDDB2F461F5D691E00EF414E /* win64_x86_64.S in Sources */ = {isa = PBXBuildFile; fileRef = FDDB2F441F5D68C900EF414E /* win64_x86_64.S */; };
+		FDDB2F4A1F5D846400EF414E /* ffi64_x86_64.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFA718C187F1DA100A76262 /* ffi64_x86_64.c */; };
+		FDDB2F4B1F5D846400EF414E /* sysv_i386.S in Sources */ = {isa = PBXBuildFile; fileRef = DBFA718B187F1DA100A76262 /* sysv_i386.S */; };
+		FDDB2F4C1F5D846400EF414E /* prep_cif.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFA7147187F1D8600A76262 /* prep_cif.c */; };
+		FDDB2F4D1F5D846400EF414E /* ffi_i386.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFA718D187F1DA100A76262 /* ffi_i386.c */; };
+		FDDB2F4E1F5D846400EF414E /* ffiw64_x86_64.c in Sources */ = {isa = PBXBuildFile; fileRef = FDDB2F3F1F5D666900EF414E /* ffiw64_x86_64.c */; };
+		FDDB2F4F1F5D846400EF414E /* types.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFA7149187F1D8600A76262 /* types.c */; };
+		FDDB2F501F5D846400EF414E /* raw_api.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFA7148187F1D8600A76262 /* raw_api.c */; };
+		FDDB2F511F5D846400EF414E /* closures.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFA7143187F1D8600A76262 /* closures.c */; };
+		FDDB2F521F5D846400EF414E /* unix64_x86_64.S in Sources */ = {isa = PBXBuildFile; fileRef = DBFA718A187F1DA100A76262 /* unix64_x86_64.S */; };
+		FDDB2F531F5D846400EF414E /* win64_x86_64.S in Sources */ = {isa = PBXBuildFile; fileRef = FDDB2F441F5D68C900EF414E /* win64_x86_64.S */; };
+		FDDB2F551F5D846400EF414E /* fficonfig.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7140187F1D8600A76262 /* fficonfig.h */; };
+		FDDB2F561F5D846400EF414E /* ffitarget.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7141187F1D8600A76262 /* ffitarget.h */; };
+		FDDB2F571F5D846400EF414E /* ffi.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA713E187F1D8600A76262 /* ffi.h */; };
+		FDDB2F581F5D846400EF414E /* ffi_x86_64.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7183187F1DA100A76262 /* ffi_x86_64.h */; };
+		FDDB2F591F5D846400EF414E /* fficonfig_x86_64.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7185187F1DA100A76262 /* fficonfig_x86_64.h */; };
+		FDDB2F5A1F5D846400EF414E /* ffi_i386.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7182187F1DA100A76262 /* ffi_i386.h */; };
+		FDDB2F5B1F5D846400EF414E /* fficonfig_i386.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7184187F1DA100A76262 /* fficonfig_i386.h */; };
+		FDDB2F5C1F5D846400EF414E /* ffi_common.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA713F187F1D8600A76262 /* ffi_common.h */; };
+		FDDB2F5D1F5D846400EF414E /* ffitarget_x86_64.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7187187F1DA100A76262 /* ffitarget_x86_64.h */; };
+		FDDB2F5E1F5D846400EF414E /* ffitarget_i386.h in Headers */ = {isa = PBXBuildFile; fileRef = DBFA7186187F1DA100A76262 /* ffitarget_i386.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -97,10 +119,16 @@
 		DBFA7185187F1DA100A76262 /* fficonfig_x86_64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fficonfig_x86_64.h; sourceTree = "<group>"; };
 		DBFA7186187F1DA100A76262 /* ffitarget_i386.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ffitarget_i386.h; sourceTree = "<group>"; };
 		DBFA7187187F1DA100A76262 /* ffitarget_x86_64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ffitarget_x86_64.h; sourceTree = "<group>"; };
-		DBFA718A187F1DA100A76262 /* darwin64_x86_64.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = darwin64_x86_64.S; sourceTree = "<group>"; };
-		DBFA718B187F1DA100A76262 /* darwin_i386.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = darwin_i386.S; sourceTree = "<group>"; };
-		DBFA718C187F1DA100A76262 /* ffi64_x86_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ffi64_x86_64.c; sourceTree = "<group>"; };
+		DBFA718A187F1DA100A76262 /* unix64_x86_64.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = unix64_x86_64.S; sourceTree = "<group>"; };
+		DBFA718B187F1DA100A76262 /* sysv_i386.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = sysv_i386.S; sourceTree = "<group>"; };
+		DBFA718C187F1DA100A76262 /* ffi64_x86_64.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.c; path = ffi64_x86_64.c; sourceTree = "<group>"; };
 		DBFA718D187F1DA100A76262 /* ffi_i386.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ffi_i386.c; sourceTree = "<group>"; };
+		FDDB2F3E1F5D61BC00EF414E /* asmnames.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asmnames.h; sourceTree = "<group>"; };
+		FDDB2F3F1F5D666900EF414E /* ffiw64_x86_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ffiw64_x86_64.c; sourceTree = "<group>"; };
+		FDDB2F421F5D68C900EF414E /* internal64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = internal64.h; sourceTree = "<group>"; };
+		FDDB2F431F5D68C900EF414E /* internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = internal.h; sourceTree = "<group>"; };
+		FDDB2F441F5D68C900EF414E /* win64_x86_64.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = win64_x86_64.S; sourceTree = "<group>"; };
+		FDDB2F621F5D846400EF414E /* libffi.a */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libffi.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -119,6 +147,7 @@
 			children = (
 				DB13B1661849DF1E0010F42D /* libffi.a */,
 				DB13B1911849DF510010F42D /* ffi.dylib */,
+				FDDB2F621F5D846400EF414E /* libffi.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -261,10 +290,15 @@
 		DBFA7189187F1DA100A76262 /* x86 */ = {
 			isa = PBXGroup;
 			children = (
-				DBFA718A187F1DA100A76262 /* darwin64_x86_64.S */,
-				DBFA718B187F1DA100A76262 /* darwin_i386.S */,
+				FDDB2F431F5D68C900EF414E /* internal.h */,
+				FDDB2F421F5D68C900EF414E /* internal64.h */,
+				FDDB2F3E1F5D61BC00EF414E /* asmnames.h */,
 				DBFA718C187F1DA100A76262 /* ffi64_x86_64.c */,
+				FDDB2F3F1F5D666900EF414E /* ffiw64_x86_64.c */,
 				DBFA718D187F1DA100A76262 /* ffi_i386.c */,
+				DBFA718B187F1DA100A76262 /* sysv_i386.S */,
+				DBFA718A187F1DA100A76262 /* unix64_x86_64.S */,
+				FDDB2F441F5D68C900EF414E /* win64_x86_64.S */,
 			);
 			path = x86;
 			sourceTree = "<group>";
@@ -286,6 +320,23 @@
 				DBFA714B187F1D8600A76262 /* ffi_common.h in Headers */,
 				DBFA7193187F1DA100A76262 /* ffitarget_x86_64.h in Headers */,
 				DBFA7192187F1DA100A76262 /* ffitarget_i386.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDDB2F541F5D846400EF414E /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FDDB2F551F5D846400EF414E /* fficonfig.h in Headers */,
+				FDDB2F561F5D846400EF414E /* ffitarget.h in Headers */,
+				FDDB2F571F5D846400EF414E /* ffi.h in Headers */,
+				FDDB2F581F5D846400EF414E /* ffi_x86_64.h in Headers */,
+				FDDB2F591F5D846400EF414E /* fficonfig_x86_64.h in Headers */,
+				FDDB2F5A1F5D846400EF414E /* ffi_i386.h in Headers */,
+				FDDB2F5B1F5D846400EF414E /* fficonfig_i386.h in Headers */,
+				FDDB2F5C1F5D846400EF414E /* ffi_common.h in Headers */,
+				FDDB2F5D1F5D846400EF414E /* ffitarget_x86_64.h in Headers */,
+				FDDB2F5E1F5D846400EF414E /* ffitarget_i386.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,6 +377,23 @@
 			productReference = DB13B1911849DF510010F42D /* ffi.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
+		FDDB2F471F5D846400EF414E /* libffi-static-Mac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FDDB2F5F1F5D846400EF414E /* Build configuration list for PBXNativeTarget "libffi-static-Mac" */;
+			buildPhases = (
+				FDDB2F481F5D846400EF414E /* ShellScript */,
+				FDDB2F491F5D846400EF414E /* Sources */,
+				FDDB2F541F5D846400EF414E /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "libffi-static-Mac";
+			productName = ffi;
+			productReference = FDDB2F621F5D846400EF414E /* libffi.a */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -348,6 +416,7 @@
 			targets = (
 				DB13B1651849DF1E0010F42D /* libffi-iOS */,
 				DB13B1901849DF510010F42D /* libffi-Mac */,
+				FDDB2F471F5D846400EF414E /* libffi-static-Mac */,
 			);
 		};
 /* End PBXProject section */
@@ -368,6 +437,19 @@
 			shellScript = "if [ ! -f \"./compile\" ]\nthen\nautoreconf -i -f -v\nif [ -f \"../ltmain.sh\" ]\nthen\necho \"fixing ltmain.sh for some reason\"\nmv ../ltmain.sh ./\nautoreconf -i -f -v\nfi\n/usr/bin/python generate-darwin-source-and-headers.py --only-ios\nfi";
 		};
 		DB13B3061849E0490010F42D /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ ! -f \"./compile\" ]\nthen\nautoreconf -i -f -v\nif [ -f \"../ltmain.sh\" ]\nthen\necho \"fixing ltmain.sh for some reason\"\nmv ../ltmain.sh ./\nautoreconf -i -f -v\nfi\n/usr/bin/python generate-darwin-source-and-headers.py --only-osx\nfi";
+		};
+		FDDB2F481F5D846400EF414E /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -409,13 +491,32 @@
 			buildActionMask = 2147483647;
 			files = (
 				DBFA7196187F1DA100A76262 /* ffi64_x86_64.c in Sources */,
-				DBFA7195187F1DA100A76262 /* darwin_i386.S in Sources */,
+				DBFA7195187F1DA100A76262 /* sysv_i386.S in Sources */,
 				DBFA7157187F1D8600A76262 /* prep_cif.c in Sources */,
 				DBFA7197187F1DA100A76262 /* ffi_i386.c in Sources */,
+				FDDB2F411F5D66E200EF414E /* ffiw64_x86_64.c in Sources */,
 				DBFA715B187F1D8600A76262 /* types.c in Sources */,
 				DBFA7159187F1D8600A76262 /* raw_api.c in Sources */,
 				DBFA714F187F1D8600A76262 /* closures.c in Sources */,
-				DBFA7194187F1DA100A76262 /* darwin64_x86_64.S in Sources */,
+				DBFA7194187F1DA100A76262 /* unix64_x86_64.S in Sources */,
+				FDDB2F461F5D691E00EF414E /* win64_x86_64.S in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDDB2F491F5D846400EF414E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FDDB2F4A1F5D846400EF414E /* ffi64_x86_64.c in Sources */,
+				FDDB2F4B1F5D846400EF414E /* sysv_i386.S in Sources */,
+				FDDB2F4C1F5D846400EF414E /* prep_cif.c in Sources */,
+				FDDB2F4D1F5D846400EF414E /* ffi_i386.c in Sources */,
+				FDDB2F4E1F5D846400EF414E /* ffiw64_x86_64.c in Sources */,
+				FDDB2F4F1F5D846400EF414E /* types.c in Sources */,
+				FDDB2F501F5D846400EF414E /* raw_api.c in Sources */,
+				FDDB2F511F5D846400EF414E /* closures.c in Sources */,
+				FDDB2F521F5D846400EF414E /* unix64_x86_64.S in Sources */,
+				FDDB2F531F5D846400EF414E /* win64_x86_64.S in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -637,6 +738,98 @@
 			};
 			name = Release;
 		};
+		FDDB2F601F5D846400EF414E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_EXTENSION = a;
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					darwin_osx/include,
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-Wl,-no_compact_unwind";
+				PRODUCT_NAME = ffi;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		FDDB2F611F5D846400EF414E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				ENABLE_NS_ASSERTIONS = NO;
+				EXECUTABLE_EXTENSION = a;
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					darwin_osx/include,
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				OTHER_LDFLAGS = "-Wl,-no_compact_unwind";
+				PRODUCT_NAME = ffi;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -663,6 +856,15 @@
 			buildConfigurations = (
 				DB13B1B11849DF520010F42D /* Debug */,
 				DB13B1B21849DF520010F42D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FDDB2F5F1F5D846400EF414E /* Build configuration list for PBXNativeTarget "libffi-static-Mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FDDB2F601F5D846400EF414E /* Debug */,
+				FDDB2F611F5D846400EF414E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
