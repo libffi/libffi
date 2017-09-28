@@ -566,8 +566,13 @@ ffi_prep_closure_loc (ffi_closure * closure,
   config[1] = closure_func;
 #else
   memcpy (closure->tramp, ffi_arm_trampoline, 8);
+#if defined (__QNX__)
+  msync(closure->tramp, 8, 0x1000000);	/* clear data map */
+  msync(codeloc, 8, 0x1000000);	/* clear insn map */
+#else
   __clear_cache(closure->tramp, closure->tramp + 8);	/* clear data map */
   __clear_cache(codeloc, codeloc + 8);			/* clear insn map */
+#endif
   *(void (**)(void))(closure->tramp + 8) = closure_func;
 #endif
 
