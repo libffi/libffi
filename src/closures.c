@@ -107,91 +107,81 @@ static pthread_mutex_t ffi_trampoline_lock = PTHREAD_MUTEX_INITIALIZER;
 static ffi_trampoline_table *ffi_trampoline_tables = NULL;
 
 static ffi_trampoline_table *
-ffi_trampoline_table_alloc ()
+ffi_trampoline_table_alloc (void)
 {
-  ffi_trampoline_table *table = NULL;
+  ffi_trampoline_table *table;
+  vm_address_t config_page;
+  vm_address_t trampoline_page;
+  vm_address_t trampoline_page_template;
+  vm_prot_t cur_prot;
+  vm_prot_t max_prot;
+  kern_return_t kt;
+  uint16_t i;
 
-  /* Loop until we can allocate two contiguous pages */
-  while (table == NULL)
-    {
-      vm_address_t config_page = 0x0;
-      kern_return_t kt;
+  /* Allocate two pages -- a config page and a placeholder page */
+  config_page = 0x0;
+  kt = vm_allocate (mach_task_self (), &config_page, PAGE_MAX_SIZE * 2,
+		    VM_FLAGS_ANYWHERE);
+  if (kt != KERN_SUCCESS)
+    return NULL;
 
-      /* Try to allocate two pages */
-      kt =
-	vm_allocate (mach_task_self (), &config_page, PAGE_MAX_SIZE * 2,
-		     VM_FLAGS_ANYWHERE);
-      if (kt != KERN_SUCCESS)
-	{
-	  fprintf (stderr, "vm_allocate() failure: %d at %s:%d\n", kt,
-		   __FILE__, __LINE__);
-	  break;
-	}
-
-      /* Now drop the second half of the allocation to make room for the trampoline table */
-      vm_address_t trampoline_page = config_page + PAGE_MAX_SIZE;
-      kt = vm_deallocate (mach_task_self (), trampoline_page, PAGE_MAX_SIZE);
-      if (kt != KERN_SUCCESS)
-	{
-	  fprintf (stderr, "vm_deallocate() failure: %d at %s:%d\n", kt,
-		   __FILE__, __LINE__);
-	  break;
-	}
-
-      /* Remap the trampoline table to directly follow the config page */
-      vm_prot_t cur_prot;
-      vm_prot_t max_prot;
-
-	  vm_address_t trampoline_page_template = (vm_address_t)&ffi_closure_trampoline_table_page;
+  /* Remap the trampoline table on top of the placeholder page */
+  trampoline_page = config_page + PAGE_MAX_SIZE;
+  trampoline_page_template = (vm_address_t)&ffi_closure_trampoline_table_page;
 #ifdef __arm__
-	  /* ffi_closure_trampoline_table_page can be thumb-biased on some ARM archs */
-	  trampoline_page_template &= ~1UL;
+  /* ffi_closure_trampoline_table_page can be thumb-biased on some ARM archs */
+  trampoline_page_template &= ~1UL;
 #endif
-
-      kt =
-	vm_remap (mach_task_self (), &trampoline_page, PAGE_MAX_SIZE, 0x0, FALSE,
-		  mach_task_self (), trampoline_page_template, FALSE,
-		  &cur_prot, &max_prot, VM_INHERIT_SHARE);
-
-      /* If we lost access to the destination trampoline page, drop our config allocation mapping and retry */
-      if (kt != KERN_SUCCESS)
-	{
-	  /* Log unexpected failures */
-	  if (kt != KERN_NO_SPACE)
-	    {
-	      fprintf (stderr, "vm_remap() failure: %d at %s:%d\n", kt,
-		       __FILE__, __LINE__);
-	    }
-
-	  vm_deallocate (mach_task_self (), config_page, PAGE_SIZE);
-	  continue;
-	}
-
-      /* We have valid trampoline and config pages */
-      table = calloc (1, sizeof (ffi_trampoline_table));
-      table->free_count = FFI_TRAMPOLINE_COUNT;
-      table->config_page = config_page;
-      table->trampoline_page = trampoline_page;
-
-      /* Create and initialize the free list */
-      table->free_list_pool =
-	calloc (FFI_TRAMPOLINE_COUNT, sizeof (ffi_trampoline_table_entry));
-
-      uint16_t i;
-      for (i = 0; i < table->free_count; i++)
-	{
-	  ffi_trampoline_table_entry *entry = &table->free_list_pool[i];
-	  entry->trampoline =
-	    (void *) (table->trampoline_page + (i * FFI_TRAMPOLINE_SIZE));
-
-	  if (i < table->free_count - 1)
-	    entry->next = &table->free_list_pool[i + 1];
-	}
-
-      table->free_list = table->free_list_pool;
+  kt = vm_remap (mach_task_self (), &trampoline_page, PAGE_MAX_SIZE, 0x0,
+		 VM_FLAGS_OVERWRITE, mach_task_self (), trampoline_page_template,
+		 FALSE, &cur_prot, &max_prot, VM_INHERIT_SHARE);
+  if (kt != KERN_SUCCESS)
+    {
+      vm_deallocate (mach_task_self (), config_page, PAGE_MAX_SIZE * 2);
+      return NULL;
     }
 
+  /* We have valid trampoline and config pages */
+  table = calloc (1, sizeof (ffi_trampoline_table));
+  table->free_count = FFI_TRAMPOLINE_COUNT;
+  table->config_page = config_page;
+  table->trampoline_page = trampoline_page;
+
+  /* Create and initialize the free list */
+  table->free_list_pool =
+    calloc (FFI_TRAMPOLINE_COUNT, sizeof (ffi_trampoline_table_entry));
+
+  for (i = 0; i < table->free_count; i++)
+    {
+      ffi_trampoline_table_entry *entry = &table->free_list_pool[i];
+      entry->trampoline =
+	(void *) (table->trampoline_page + (i * FFI_TRAMPOLINE_SIZE));
+
+      if (i < table->free_count - 1)
+	entry->next = &table->free_list_pool[i + 1];
+    }
+
+  table->free_list = table->free_list_pool;
+
   return table;
+}
+
+static void
+ffi_trampoline_table_free (ffi_trampoline_table *table)
+{
+  /* Remove from the list */
+  if (table->prev != NULL)
+    table->prev->next = table->next;
+
+  if (table->next != NULL)
+    table->next->prev = table->prev;
+
+  /* Deallocate pages */
+  vm_deallocate (mach_task_self (), table->config_page, PAGE_MAX_SIZE * 2);
+
+  /* Deallocate free list */
+  free (table->free_list_pool);
+  free (table);
 }
 
 void *
@@ -261,29 +251,7 @@ ffi_closure_free (void *ptr)
   if (table->free_count == FFI_TRAMPOLINE_COUNT
       && ffi_trampoline_tables != table)
     {
-      /* Remove from the list */
-      if (table->prev != NULL)
-	table->prev->next = table->next;
-
-      if (table->next != NULL)
-	table->next->prev = table->prev;
-
-      /* Deallocate pages */
-      kern_return_t kt;
-      kt = vm_deallocate (mach_task_self (), table->config_page, PAGE_SIZE);
-      if (kt != KERN_SUCCESS)
-	fprintf (stderr, "vm_deallocate() failure: %d at %s:%d\n", kt,
-		 __FILE__, __LINE__);
-
-      kt =
-	vm_deallocate (mach_task_self (), table->trampoline_page, PAGE_SIZE);
-      if (kt != KERN_SUCCESS)
-	fprintf (stderr, "vm_deallocate() failure: %d at %s:%d\n", kt,
-		 __FILE__, __LINE__);
-
-      /* Deallocate free list */
-      free (table->free_list_pool);
-      free (table);
+      ffi_trampoline_table_free (table);
     }
   else if (ffi_trampoline_tables != table)
     {
