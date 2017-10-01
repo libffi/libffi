@@ -113,7 +113,7 @@ noinst_HEADERS = \
 	src/sparc/ffitarget.h src/sparc/internal.h			\
 	src/tile/ffitarget.h						\
 	src/vax/ffitarget.h						\
-	src/x86/ffitarget.h src/x86/internal.h src/x86/internal64.h	\
+	src/x86/ffitarget.h src/x86/internal.h src/x86/internal64.h src/x86/asmnames.h \
 	src/xtensa/ffitarget.h						\
 	src/dlmalloc.c
 
