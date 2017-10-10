@@ -419,6 +419,11 @@ ffi_prep_incoming_args_SYSV (ffi_cif *cif, void *rvalue,
       rvalue = *(void **) argp;
       argp += 4;
     }
+  else
+    {
+      if (cif->rtype->size && cif->rtype->size < 4)
+	**(int32_t **) rvalue = 0;
+    }
 
   for (i = 0, n = cif->nargs; i < n; i++)
     {
