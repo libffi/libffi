@@ -82,4 +82,5 @@ libffi.call/va_1.c libffi.call/va_struct1.c libffi.call/va_struct2.c	\
 libffi.call/va_struct3.c \
 libffi.call/strlen2.c \
 libffi.call/strlen3.c \
-libffi.call/strlen4.c
+libffi.call/strlen4.c \
+libffi.call/cls_3float.c
