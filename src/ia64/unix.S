@@ -529,6 +529,7 @@ ffi_closure_unix:
 	data8	@pcrel(.Lst_int64)		// FFI_TYPE_SINT64
 	data8	@pcrel(.Lst_void)		// FFI_TYPE_STRUCT
 	data8	@pcrel(.Lst_int64)		// FFI_TYPE_POINTER
+	data8	@pcrel(.Lst_void)		// FFI_TYPE_COMPLEX (not implemented)
 	data8 	@pcrel(.Lst_small_struct)	// FFI_IA64_TYPE_SMALL_STRUCT
 	data8	@pcrel(.Lst_hfa_float)		// FFI_IA64_TYPE_HFA_FLOAT
 	data8	@pcrel(.Lst_hfa_double)		// FFI_IA64_TYPE_HFA_DOUBLE
@@ -550,6 +551,7 @@ ffi_closure_unix:
 	data8	@pcrel(.Lld_int)		// FFI_TYPE_SINT64
 	data8	@pcrel(.Lld_void)		// FFI_TYPE_STRUCT
 	data8	@pcrel(.Lld_int)		// FFI_TYPE_POINTER
+	data8	@pcrel(.Lld_void)		// FFI_TYPE_COMPLEX (not implemented)
 	data8 	@pcrel(.Lld_small_struct)	// FFI_IA64_TYPE_SMALL_STRUCT
 	data8	@pcrel(.Lld_hfa_float)		// FFI_IA64_TYPE_HFA_FLOAT
 	data8	@pcrel(.Lld_hfa_double)		// FFI_IA64_TYPE_HFA_DOUBLE
