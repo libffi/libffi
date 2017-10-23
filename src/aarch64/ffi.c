@@ -231,7 +231,7 @@ is_vfp_type (const ffi_type *ty)
 
   /* All tests succeeded.  Encode the result.  */
  done:
-  return candidate * 4 + (4 - ele_count);
+  return candidate * 4 + (4 - (int)ele_count);
 }
 
 /* Representation of the procedure call argument marshalling
@@ -528,7 +528,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
       }
 
   /* Round the stack up to a multiple of the stack alignment requirement. */
-  cif->bytes = FFI_ALIGN(bytes, 16);
+  cif->bytes = (unsigned) FFI_ALIGN(bytes, 16);
   cif->flags = flags;
 #if defined (__APPLE__)
   cif->aarch64_nfixedargs = 0;

@@ -68,7 +68,7 @@ class desktop32_platform(Platform):
     triple = 'i386-apple-darwin10'
     version_min = '-mmacosx-version-min=10.6'
     src_dir = 'x86'
-    src_files = ['sysv.S', 'ffi.c']
+    src_files = ['sysv.S', 'ffi.c', 'internal.h']
 
     prefix = "#ifdef __i386__\n\n"
     suffix = "\n\n#endif"
@@ -84,7 +84,7 @@ class desktop64_platform(Platform):
     prefix = "#ifdef __x86_64__\n\n"
     suffix = "\n\n#endif"
     src_dir = 'x86'
-    src_files = ['unix64.S', 'ffi64.c']
+    src_files = ['unix64.S', 'ffi64.c', 'ffiw64.c', 'win64.S', 'internal64.h', 'asmnames.h']
 
 
 def mkdir_p(path):
