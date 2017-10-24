@@ -58,11 +58,15 @@ EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
   flags = cif->rtype->type;
   switch (flags)
     {
+    case FFI_TYPE_FLOAT:
+    case FFI_TYPE_DOUBLE:
     default:
       break;
+#if HAVE_LONG_DOUBLE_VARIANT
     case FFI_TYPE_LONGDOUBLE:
       flags = FFI_TYPE_STRUCT;
       break;
+#endif
     case FFI_TYPE_COMPLEX:
       flags = FFI_TYPE_STRUCT;
       /* FALLTHRU */
