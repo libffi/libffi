@@ -31,6 +31,7 @@
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_common.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include "internal.h"
 
@@ -422,7 +423,7 @@ ffi_prep_incoming_args_SYSV (ffi_cif *cif, void *rvalue,
   else
     {
       if (cif->rtype->size && cif->rtype->size < 4)
-	**(int32_t **) rvalue = 0;
+        *(uint32_t *) rvalue = 0;
     }
 
   for (i = 0, n = cif->nargs; i < n; i++)
