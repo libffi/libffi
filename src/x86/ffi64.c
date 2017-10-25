@@ -397,7 +397,8 @@ ffi_prep_cif_machdep_efi64(ffi_cif *cif);
 ffi_status
 ffi_prep_cif_machdep (ffi_cif *cif)
 {
-  int gprcount, ssecount, i, avn, ngpr, nsse, flags;
+  int gprcount, ssecount, i, avn, ngpr, nsse;
+  unsigned flags;
   enum x86_64_reg_class classes[MAX_CLASSES];
   size_t bytes, n, rtype_size;
   ffi_type *rtype;
@@ -498,7 +499,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	case FFI_TYPE_SINT32:
 	case FFI_TYPE_UINT64:
 	case FFI_TYPE_SINT64:
-	  flags = UNIX64_RET_ST_RAX_RDX | (rtype_size << UNIX64_SIZE_SHIFT);
+	  flags = UNIX64_RET_ST_RAX_RDX | ((unsigned) rtype_size << UNIX64_SIZE_SHIFT);
 	  break;
 	case FFI_TYPE_FLOAT:
 	  flags = UNIX64_RET_XMM64;
@@ -546,7 +547,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
     flags |= UNIX64_FLAG_XMM_ARGS;
 
   cif->flags = flags;
-  cif->bytes = FFI_ALIGN (bytes, 8);
+  cif->bytes = (unsigned) FFI_ALIGN (bytes, 8);
 
   return FFI_OK;
 }

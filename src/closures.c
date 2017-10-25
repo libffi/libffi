@@ -506,7 +506,7 @@ open_temp_exec_file_dir (const char *dir)
   }
 #endif
 
-  lendir = strlen (dir);
+  lendir = (int) strlen (dir);
   tempname = __builtin_alloca (lendir + sizeof (suffix));
 
   if (!tempname)
