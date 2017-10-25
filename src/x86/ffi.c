@@ -32,6 +32,7 @@
 #ifndef __x86_64__
 #include <ffi.h>
 #include <ffi_common.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include "internal.h"
 
@@ -674,7 +675,8 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *avalue)
     }
 
   bytes = cif->bytes;
-  argp = stack = alloca(bytes + sizeof(*frame) + rsize);
+  argp = stack =
+      (void *)((uintptr_t)alloca(bytes + sizeof(*frame) + rsize + 15) & ~16);
   frame = (struct call_frame *)(stack + bytes);
   if (rsize)
     rvalue = frame + 1;
