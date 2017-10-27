@@ -32,7 +32,7 @@
 #error "Please do not include ffitarget.h directly into your source.  Use ffi.h instead."
 #endif
 
-#ifdef linux
+#ifdef __linux__
 # include <asm/sgidefs.h>
 #elif defined(__rtems__)
 /*
