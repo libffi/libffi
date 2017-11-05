@@ -109,7 +109,7 @@ noinst_HEADERS = \
 	src/or1k/ffitarget.h						\
 	src/pa/ffitarget.h						\
 	src/powerpc/ffitarget.h src/powerpc/asm.h src/powerpc/ffi_powerpc.h \
-	src/s390/ffitarget.h						\
+	src/s390/ffitarget.h src/s390/internal.h			\
 	src/sh/ffitarget.h						\
 	src/sh64/ffitarget.h						\
 	src/sparc/ffitarget.h src/sparc/internal.h			\
