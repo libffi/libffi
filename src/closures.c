@@ -723,6 +723,36 @@ open_temp_exec_file (void)
   return fd;
 }
 
+/* We need to allocate space in a file that will be backing a writable
+   mapping.  Several problems exist with the usual approaches:
+   - fallocate() is Linux-only
+   - posix_fallocate() is not available on all platforms
+   - ftruncate() does not allocate space on filesystems with sparse files
+   Failure to allocate the space will cause SIGBUS to be thrown when
+   the mapping is subsequently written to.  */
+static int
+allocate_space (int fd, off_t offset, off_t len)
+{
+  static size_t page_size;
+
+  /* Obtain system page size. */
+  if (!page_size)
+    page_size = sysconf(_SC_PAGESIZE);
+
+  unsigned char buf[page_size];
+  memset (buf, 0, page_size);
+
+  while (len > 0)
+    {
+      off_t to_write = (len < page_size) ? len : page_size;
+      if (write (fd, buf, to_write) < to_write)
+        return -1;
+      len -= to_write;
+    }
+
+  return 0;
+}
+
 /* Map in a chunk of memory from the temporary exec file into separate
    locations in the virtual memory address space, one writable and one
    executable.  Returns the address of the writable portion, after
@@ -744,7 +774,7 @@ dlmmap_locked (void *start, size_t length, int prot, int flags, off_t offset)
 
   offset = execsize;
 
-  if (ftruncate (execfd, offset + length))
+  if (allocate_space (execfd, offset, length))
     return MFAIL;
 
   flags &= ~(MAP_PRIVATE | MAP_ANONYMOUS);
