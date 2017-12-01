@@ -214,7 +214,7 @@ C(ffi_closure_win64):
 	movsd	%xmm3, ffi_clo_OFF_X+24(%rsp)
 
 	leaq	ffi_clo_OFF_R(%rsp), %r9
-	call	C(ffi_closure_win64_inner)
+	call	PLT(C(ffi_closure_win64_inner))
 
 	/* Load the result into both possible result registers.  */
 	movq    ffi_clo_OFF_R(%rsp), %rax
