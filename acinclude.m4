@@ -278,6 +278,10 @@ AC_DEFUN([LIBFFI_CHECK_LINKER_FEATURES], [
   if $LD --version 2>/dev/null | grep 'GNU gold'> /dev/null 2>&1; then
     libat_ld_is_gold=yes
   fi
+  libat_ld_is_lld=no
+  if $LD --version 2>/dev/null | grep 'LLD '> /dev/null 2>&1; then
+    libat_ld_is_lld=yes
+  fi
   changequote(,)
   ldver=`$LD --version 2>/dev/null |
          sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
@@ -431,6 +435,8 @@ if test $enable_symvers != no && test $libat_shared_libgcc = yes; then
     if test $libat_gnu_ld_version -ge $libat_min_gnu_ld_version ; then
       enable_symvers=gnu
     elif test $libat_ld_is_gold = yes ; then
+      enable_symvers=gnu
+    elif test $libat_ld_is_lld = yes ; then
       enable_symvers=gnu
     else
       # The right tools, the right setup, but too old.  Fallbacks?
