@@ -8,12 +8,14 @@ os:
 compiler:
   - gcc
   - clang
+env:
+  - CONFIGURE_OPTIONS=--disable-shared
+  - CONFIGURE_OPTIONS=
 matrix:
   include:
     - os: linux
       compiler: gcc
       env: HOST=i386-pc-linux-gnu
-      env: CONFIGURE_OPTIONS=--disable-shared
 
 install:
   - ./.travis/install.sh
