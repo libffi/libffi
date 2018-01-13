@@ -514,6 +514,20 @@ array_type.type = FFI_TYPE_STRUCT;
 array_type.elements = elements;
 @end example
 
+Since an array of objects is a block of memory of consecutively allocated objects,
+the align of an array is the same of the object's type align, 
+and the size of the array is the object's type size multiplied by the numbers of elements.
+Because of that an array could be represented as follow:
+@example
+ffi_type* ffi_type_nullptr = 0; // Hold a null pointer.
+ffi_type ffi_type_array;
+    
+ffi_type_array.alignment = ffi_type_uint16.alignment;
+ffi_type_array.size = ffi_type_uint16.size * 4;
+ffi_type_array.type = FFI_TYPE_STRUCT; // Trick.
+ffi_type_array.elements = &ffi_type_nullptr; // Pointer to a null pointer.
+@end example
+
 Note that arrays cannot be passed or returned by value in C --
 structure types created like this should only be used to refer to
 members of real @code{FFI_TYPE_STRUCT} objects.
