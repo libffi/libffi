@@ -274,7 +274,7 @@ L(C1(pc,N)):								\
 #  define FFI_CLOSURE_CALL_INNER(UWN)					\
 	movl	%ebx, 40(%esp);			/* save ebx */		\
 L(C1(UW,UWN)):								\
-	# cfi_rel_offset(%ebx, 40);					\
+	/* cfi_rel_offset(%ebx, 40); */					\
 	call	C(__x86.get_pc_thunk.bx);	/* load got register */	\
 	addl	$C(_GLOBAL_OFFSET_TABLE_), %ebx;			\
 	call	ffi_closure_inner@PLT
@@ -284,7 +284,7 @@ L(C1(UW,UWN)):								\
 	leal	L(C1(load_table,N))@GOTOFF(%ebx, %eax, 8), %edx;	\
 	movl	40(%esp), %ebx;			/* restore ebx */	\
 L(C1(UW,UWN)):								\
-	# cfi_restore(%ebx);						\
+	/* cfi_restore(%ebx); */					\
 	movl	closure_CF(%esp), %eax;		/* optimiztic load */	\
 	jmp	*%edx
 # endif /* DARWIN || HIDDEN */
