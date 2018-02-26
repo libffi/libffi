@@ -208,6 +208,7 @@ case "${host}" in
 
   riscv*-*)
 	TARGET=RISCV; TARGETDIR=riscv
+	SOURCES="ffi.c sysv.S"
 	;;
 
   s390-*-* | s390x-*-*)
