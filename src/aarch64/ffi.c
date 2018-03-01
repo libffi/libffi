@@ -115,6 +115,10 @@ is_hfa0 (const ffi_type *ty)
 
 static size_t is_simd(const ffi_type *ty)//return 0 if no SIMD elements
 {
+    if (ty->type == FFI_TYPE_EXT_VECTOR) {
+      return type->size;
+    }
+
     ffi_type **elements = ty->elements;
     int i, ret = -1;
     size_t size = 0;
@@ -262,7 +266,7 @@ is_vfp_type (const ffi_type *ty)
       else if (t != candidate)
         return 0;
     }
-  if (simd_size || ty->type == FFI_TYPE_EXT_VECTOR)
+  if (simd_size)
     {
       size_t regSize = simd_size;
       if (candidate == elements[0]->type) {

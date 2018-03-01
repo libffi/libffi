@@ -486,7 +486,7 @@ ffi_status ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type,
 
 
 /* This should always refer to the last type code (for sanity checks).  */
-#define FFI_TYPE_LAST       FFI_TYPE_EXT_VECTOR
+#define FFI_TYPE_LAST       MAX(FFI_TYPE_EXT_VECTOR, FFI_TYPE_COMPLEX)
 
 #ifdef __cplusplus
 }
