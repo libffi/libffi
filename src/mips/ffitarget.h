@@ -32,7 +32,7 @@
 #error "Please do not include ffitarget.h directly into your source.  Use ffi.h instead."
 #endif
 
-#ifdef linux
+#ifdef __linux__
 # include <asm/sgidefs.h>
 #elif defined(__rtems__)
 /*
@@ -231,12 +231,14 @@ typedef enum ffi_abi {
 
 #if defined(FFI_MIPS_O32)
 #define FFI_CLOSURES 1
+#define FFI_GO_CLOSURES 1
 #define FFI_TRAMPOLINE_SIZE 20
 #else
 /* N32/N64. */
 # define FFI_CLOSURES 1
+#define FFI_GO_CLOSURES 1
 #if _MIPS_SIM==_ABI64
-#define FFI_TRAMPOLINE_SIZE 52
+#define FFI_TRAMPOLINE_SIZE 56
 #else
 #define FFI_TRAMPOLINE_SIZE 20
 #endif

@@ -1,5 +1,6 @@
 /* -----------------------------------------------------------------------
-   ffi.c - Copyright (c) 1996, 1998, 1999, 2001, 2007, 2008  Red Hat, Inc.
+   ffi.c - Copyright (c) 2017  Anthony Green
+           Copyright (c) 1996, 1998, 1999, 2001, 2007, 2008  Red Hat, Inc.
            Copyright (c) 2002  Ranjit Mathew
            Copyright (c) 2002  Bo Thorsen
            Copyright (c) 2002  Roger Sayle
@@ -31,6 +32,7 @@
 #ifndef __x86_64__
 #include <ffi.h>
 #include <ffi_common.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include "internal.h"
 
@@ -134,7 +136,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 	      break;
 	    }
 	  /* Allocate space for return value pointer.  */
-	  bytes += ALIGN (sizeof(void*), FFI_SIZEOF_ARG);
+	  bytes += FFI_ALIGN (sizeof(void*), FFI_SIZEOF_ARG);
 	}
       break;
     case FFI_TYPE_COMPLEX:
@@ -172,10 +174,10 @@ ffi_prep_cif_machdep(ffi_cif *cif)
     {
       ffi_type *t = cif->arg_types[i];
 
-      bytes = ALIGN (bytes, t->alignment);
-      bytes += ALIGN (t->size, FFI_SIZEOF_ARG);
+      bytes = FFI_ALIGN (bytes, t->alignment);
+      bytes += FFI_ALIGN (t->size, FFI_SIZEOF_ARG);
     }
-  cif->bytes = ALIGN (bytes, 16);
+  cif->bytes = FFI_ALIGN (bytes, 16);
 
   return FFI_OK;
 }
@@ -234,11 +236,17 @@ static const struct abi_params abi_params[FFI_LAST_ABI] = {
   [FFI_MS_CDECL] = { 1, R_ECX, 0 }
 };
 
-extern void ffi_call_i386(struct call_frame *, char *)
-#if HAVE_FASTCALL
-	__declspec(fastcall)
+#ifdef HAVE_FASTCALL
+  #ifdef _MSC_VER
+    #define FFI_DECLARE_FASTCALL __fastcall
+  #else
+    #define FFI_DECLARE_FASTCALL __declspec(fastcall)
+  #endif
+#else
+  #define FFI_DECLARE_FASTCALL
 #endif
-	FFI_HIDDEN;
+
+extern void FFI_DECLARE_FASTCALL ffi_call_i386(struct call_frame *, char *) FFI_HIDDEN;
 
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
@@ -334,7 +342,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	}
       else
 	{
-	  size_t za = ALIGN (z, FFI_SIZEOF_ARG);
+	  size_t za = FFI_ALIGN (z, FFI_SIZEOF_ARG);
 	  size_t align = FFI_SIZEOF_ARG;
 
 	  /* Alignment rules for arguments are quite complex.  Vectors and
@@ -356,7 +364,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	    }
 	  else
 	    {
-	      argp = (char *)ALIGN (argp, align);
+	      argp = (char *)FFI_ALIGN (argp, align);
 	      memcpy (argp, valp, z);
 	      argp += za;
 	    }
@@ -395,10 +403,7 @@ struct closure_frame
   void *user_data;				/* 36 */
 };
 
-int FFI_HIDDEN
-#if HAVE_FASTCALL
-__declspec(fastcall)
-#endif
+int FFI_HIDDEN FFI_DECLARE_FASTCALL
 ffi_closure_inner (struct closure_frame *frame, char *stack)
 {
   ffi_cif *cif = frame->cif;
@@ -463,7 +468,7 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
 	}
       else
 	{
-	  size_t za = ALIGN (z, FFI_SIZEOF_ARG);
+	  size_t za = FFI_ALIGN (z, FFI_SIZEOF_ARG);
 	  size_t align = FFI_SIZEOF_ARG;
 
 	  /* See the comment in ffi_call_int.  */
@@ -479,7 +484,7 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
 	    }
 	  else
 	    {
-	      argp = (char *)ALIGN (argp, align);
+	      argp = (char *)FFI_ALIGN (argp, align);
 	      valp = argp;
 	      argp += za;
 	    }
@@ -670,7 +675,8 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *avalue)
     }
 
   bytes = cif->bytes;
-  argp = stack = alloca(bytes + sizeof(*frame) + rsize);
+  argp = stack =
+      (void *)((uintptr_t)alloca(bytes + sizeof(*frame) + rsize + 15) & ~16);
   frame = (struct call_frame *)(stack + bytes);
   if (rsize)
     rvalue = frame + 1;
@@ -714,7 +720,7 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *avalue)
       else
 	{
 	  memcpy (argp, avalue, z);
-	  z = ALIGN (z, FFI_SIZEOF_ARG);
+	  z = FFI_ALIGN (z, FFI_SIZEOF_ARG);
 	  argp += z;
 	}
       avalue += z;

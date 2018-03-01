@@ -31,13 +31,14 @@
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_common.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include "internal.h"
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
 #ifdef __MACH__
-#include <mach/vm_param.h>
+#include <mach/machine/vm_param.h>
 #endif
 
 #else
@@ -60,7 +61,7 @@ ffi_align (ffi_type *ty, void *p)
   if (alignment < 4)
     alignment = 4;
 #endif
-  return (void *) ALIGN (p, alignment);
+  return (void *) FFI_ALIGN (p, alignment);
 }
 
 static size_t
@@ -106,7 +107,7 @@ ffi_put_arg (ffi_type *ty, void *src, void *dst)
       abort();
     }
 
-  return ALIGN (z, 4);
+  return FFI_ALIGN (z, 4);
 }
 
 /* ffi_prep_args is called once stack space has been allocated
@@ -287,7 +288,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   /* Round the stack up to a multiple of 8 bytes.  This isn't needed
      everywhere, but it is on some platforms, and it doesn't harm anything
      when it isn't needed.  */
-  bytes = ALIGN (bytes, 8);
+  bytes = FFI_ALIGN (bytes, 8);
 
   /* Minimum stack space is the 4 register arguments that we pop.  */
   if (bytes < 4*4)
@@ -418,6 +419,11 @@ ffi_prep_incoming_args_SYSV (ffi_cif *cif, void *rvalue,
     {
       rvalue = *(void **) argp;
       argp += 4;
+    }
+  else
+    {
+      if (cif->rtype->size && cif->rtype->size < 4)
+        *(uint32_t *) rvalue = 0;
     }
 
   for (i = 0, n = cif->nargs; i < n; i++)
@@ -566,8 +572,13 @@ ffi_prep_closure_loc (ffi_closure * closure,
   config[1] = closure_func;
 #else
   memcpy (closure->tramp, ffi_arm_trampoline, 8);
+#if defined (__QNX__)
+  msync(closure->tramp, 8, 0x1000000);	/* clear data map */
+  msync(codeloc, 8, 0x1000000);	/* clear insn map */
+#else
   __clear_cache(closure->tramp, closure->tramp + 8);	/* clear data map */
   __clear_cache(codeloc, codeloc + 8);			/* clear insn map */
+#endif
   *(void (**)(void))(closure->tramp + 8) = closure_func;
 #endif
 

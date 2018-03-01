@@ -55,6 +55,10 @@ while [ $# -gt 0 ]
 do
   case $1
   in
+    --version)
+      args="-help"
+      shift 1
+    ;;
     -fexceptions)
       # Don't enable exceptions for now.
       #args="$args -EHac"
@@ -70,7 +74,6 @@ do
     ;;
     -clang-cl)
       cl="clang-cl"
-      safeseh=
       shift 1
     ;;
     -O0)

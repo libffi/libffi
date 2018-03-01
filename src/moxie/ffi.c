@@ -111,7 +111,7 @@ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
   else
     cif->flags = cif->rtype->size;
 
-  cif->bytes = ALIGN (cif->bytes, 8);
+  cif->bytes = FFI_ALIGN (cif->bytes, 8);
 
   return FFI_OK;
 }

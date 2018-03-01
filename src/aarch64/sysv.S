@@ -296,7 +296,7 @@ CNAME(ffi_closure_SYSV):
 	nop
 8:	ldr	s3, [x3, #12]		/* S4 */
 	nop
-9:	ldr	s2, [x2, #8]		/* S3 */
+9:	ldr	s2, [x3, #8]		/* S3 */
 	nop
 10:	ldp	s0, s1, [x3]		/* S2 */
 	b	99f
@@ -358,7 +358,7 @@ CNAME(ffi_closure_SYSV):
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
 #ifdef __MACH__
-#include <mach/vm_param.h>
+#include <mach/machine/vm_param.h>
     .align PAGE_MAX_SHIFT
 CNAME(ffi_closure_trampoline_table_page):
     .rept PAGE_MAX_SIZE / FFI_TRAMPOLINE_SIZE

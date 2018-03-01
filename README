@@ -113,6 +113,7 @@ tested:
 | X86-64          | Solaris          | Oracle Solaris Studio C |
 | X86-64          | Windows/Cygwin   | GCC                     |
 | X86-64          | Windows/MingW    | GCC                     |
+| X86-64          | Mac OSX          | GCC                     |
 | Xtensa          | Linux            | GCC                     |
 |-----------------+------------------+-------------------------|
 
@@ -143,6 +144,9 @@ Another useful configure switch is --enable-purify-safety. Using this
 will add some extra code which will suppress certain warnings when you
 are using Purify with libffi. Only use this switch when using 
 Purify, as it will slow down the library.
+
+If you don't want to build documentation, use the --disable-docs
+configure switch.
 
 It's also possible to build libffi on Windows platforms with
 Microsoft's Visual C++ compiler.  In this case, use the msvcc.sh
@@ -180,7 +184,7 @@ To install the library and header files, type "make install".
 History
 =======
 
-See the git log for details at http://github.com/atgreen/libffi.
+See the git log for details at http://github.com/libffi/libffi.
 
 4.0 TBD
         New API in support of GO closures.

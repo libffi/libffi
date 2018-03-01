@@ -155,7 +155,7 @@ If the function being called is variadic (varargs) then
 @findex ffi_prep_cif_var
 @defun ffi_status ffi_prep_cif_var (ffi_cif *@var{cif}, ffi_abi @var{abi}, unsigned int @var{nfixedargs}, unsigned int @var{ntotalargs}, ffi_type *@var{rtype}, ffi_type **@var{argtypes})
 This initializes @var{cif} according to the given parameters for
-a call to a variadic function.  In general it's operation is the
+a call to a variadic function.  In general its operation is the
 same as for @code{ffi_prep_cif} except that:
 
 @var{nfixedargs} is the number of fixed arguments, prior to any
@@ -214,7 +214,7 @@ burden of copying pass-by-value arguments is placed on the caller.
 
 Note that while the return value must be register-sized, arguments
 should exactly match their declared type.  For example, if an argument
-is a @code{short}, then the entry is @var{avalues} should point to an
+is a @code{short}, then the entry in @var{avalues} should point to an
 object declared as @code{short}; but if the return type is
 @code{short}, then @var{rvalue} should point to an object declared as
 a larger type -- usually @code{ffi_arg}.
@@ -269,7 +269,7 @@ int main()
 * Primitive Types::             Built-in types.
 * Structures::                  Structure types.
 * Size and Alignment::          Size and alignment of types.
-* Arrays and Unions::           Arrays and unions.
+* Arrays Unions Enums::         Arrays, unions, and enumerations.
 * Type Example::                Structure type example.
 * Complex::                     Complex types.
 * Complex Type Example::        Complex type example.
@@ -440,7 +440,8 @@ on the chosen ABI.
 
 @item
 The size and alignment of a new structure type will not be set by
-@code{libffi} until it has been passed to @code{ffi_prep_cif}.
+@code{libffi} until it has been passed to @code{ffi_prep_cif} or
+@code{ffi_get_struct_offsets}.
 
 @item
 A structure type cannot be shared across ABIs.  Instead each ABI needs
@@ -448,8 +449,9 @@ its own copy of the structure type.
 @end itemize
 
 So, before examining these fields, it is safest to pass the
-@code{ffi_type} object to @code{ffi_prep_cif} first.  This function
-will do all the needed setup.
+@code{ffi_type} object to @code{ffi_prep_cif} or
+@code{ffi_get_struct_offsets} first.  This function will do all the
+needed setup.
 
 @example
 ffi_type *desired_type;
@@ -463,8 +465,30 @@ if (ffi_prep_cif (&cif, desired_abi, 0, desired_type, NULL) == FFI_OK)
   @}
 @end example
 
-@node Arrays and Unions
-@subsection Arrays and Unions
+@code{libffi} also provides a way to get the offsets of the members of
+a structure.
+
+@findex ffi_get_struct_offsets
+@defun ffi_status ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type, size_t *offsets)
+Compute the offset of each element of the given structure type.
+@var{abi} is the ABI to use; this is needed because in some cases the
+layout depends on the ABI.
+
+@var{offsets} is an out parameter.  The caller is responsible for
+providing enough space for all the results to be written -- one
+element per element type in @var{struct_type}.  If @var{offsets} is
+@code{NULL}, then the type will be laid out but not otherwise
+modified.  This can be useful for accessing the type's size or layout,
+as mentioned above.
+
+This function returns @code{FFI_OK} on success; @code{FFI_BAD_ABI} if
+@var{abi} is invalid; or @code{FFI_BAD_TYPEDEF} if @var{struct_type}
+is invalid in some way.  Note that only @code{FFI_STRUCT} types are
+valid here.
+@end defun
+
+@node Arrays Unions Enums
+@subsection Arrays, Unions, and Enumerations
 
 @subsubsection Arrays
 
@@ -540,6 +564,16 @@ for (i = 0; union_elements[i]; ++i)
       @}
   @}
 @end example
+
+@subsubsection Enumerations
+
+@code{libffi} does not have any special support for C @code{enum}s.
+Although any given @code{enum} is implemented using a specific
+underlying integral type, exactly which type will be used cannot be
+determined by @code{libffi} -- it may depend on the values in the
+enumeration or on compiler flags such as @option{-fshort-enums}.
+@xref{Structures unions enumerations and bit-fields implementation, , , gcc},
+for more information about how GCC handles enumerations.
 
 @node Type Example
 @subsection Type Example

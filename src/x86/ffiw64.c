@@ -30,6 +30,10 @@
 #include <stdint.h>
 
 #ifdef X86_WIN64
+#define EFI64(name) name
+#else
+#define EFI64(name) name##_efi64
+#endif
 
 struct win64_call_frame
 {
@@ -44,7 +48,7 @@ extern void ffi_call_win64 (void *stack, struct win64_call_frame *,
 			    void *closure) FFI_HIDDEN;
 
 ffi_status
-ffi_prep_cif_machdep (ffi_cif *cif)
+EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
 {
   int flags, n;
 
@@ -159,13 +163,13 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 }
 
 void
-ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+EFI64(ffi_call)(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 {
   ffi_call_int (cif, fn, rvalue, avalue, NULL);
 }
 
 void
-ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
+EFI64(ffi_call_go)(ffi_cif *cif, void (*fn)(void), void *rvalue,
 	     void **avalue, void *closure)
 {
   ffi_call_int (cif, fn, rvalue, avalue, closure);
@@ -176,7 +180,7 @@ extern void ffi_closure_win64(void) FFI_HIDDEN;
 extern void ffi_go_closure_win64(void) FFI_HIDDEN;
 
 ffi_status
-ffi_prep_closure_loc (ffi_closure* closure,
+EFI64(ffi_prep_closure_loc)(ffi_closure* closure,
 		      ffi_cif* cif,
 		      void (*fun)(ffi_cif*, void*, void**, void*),
 		      void *user_data,
@@ -190,7 +194,7 @@ ffi_prep_closure_loc (ffi_closure* closure,
     /* nopl  (%rax) */
     0x0f, 0x1f, 0x00
   };
-  unsigned char *tramp = closure->tramp;
+  char *tramp = closure->tramp;
 
   if (cif->abi != FFI_WIN64)
     return FFI_BAD_ABI;
@@ -206,7 +210,7 @@ ffi_prep_closure_loc (ffi_closure* closure,
 }
 
 ffi_status
-ffi_prep_go_closure (ffi_go_closure* closure, ffi_cif* cif,
+EFI64(ffi_prep_go_closure)(ffi_go_closure* closure, ffi_cif* cif,
 		     void (*fun)(ffi_cif*, void*, void**, void*))
 {
   if (cif->abi != FFI_WIN64)
@@ -227,7 +231,11 @@ struct win64_closure_frame
   UINT64 args[];
 };
 
-int FFI_HIDDEN
+/* Force the inner function to use the MS ABI.  When compiling on win64
+   this is a nop.  When compiling on unix, this simplifies the assembly,
+   and places the burden of saving the extra call-saved registers on
+   the compiler.  */
+int FFI_HIDDEN __attribute__((ms_abi))
 ffi_closure_win64_inner(ffi_cif *cif,
 			void (*fun)(ffi_cif*, void*, void**, void*),
 			void *user_data,
@@ -277,5 +285,3 @@ ffi_closure_win64_inner(ffi_cif *cif,
   fun (cif, rvalue, avalue, user_data);
   return flags;
 }
-
-#endif /* X86_WIN64 */

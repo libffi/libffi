@@ -7,6 +7,7 @@
 # Most of the time we can define all the variables all at once...
 case "${host}" in
   aarch64*-*-*)
+  	HAVE_EXT_VECTOR=1
 	TARGET=AARCH64; TARGETDIR=aarch64
 	SOURCES="ffi.c sysv.S"
 	;;
@@ -64,13 +65,22 @@ case "${host}" in
 	TARGET=X86_FREEBSD; TARGETDIR=x86
 	;;
 
-  i?86-win32* | i?86-*-cygwin* | i?86-*-mingw* | i?86-*-os2* | i?86-*-interix* \
-  | x86_64-*-cygwin* | x86_64-*-mingw*)
+  i?86-*-cygwin* | i?86-*-mingw* | i?86-*-os2* | i?86-*-interix* \
+  | x86_64-*-cygwin* | x86_64-*-mingw* | x86_64-*-win* )
 	TARGETDIR=x86
 	if test $ac_cv_sizeof_size_t = 4; then
 	  TARGET=X86_WIN32
 	else
 	  TARGET=X86_WIN64
+	fi
+	if test "${ax_cv_c_compiler_vendor}" = "microsoft"; then
+	  MSVC=1
+	  if test $ac_cv_sizeof_size_t = 4; then
+	    # libffi does not support microsoft tools for 32-bit windows
+	    # hosts.  Try porting src/x86/sysv.S to intel assembly
+	    # format.
+	    UNSUPPORTED=1
+          fi
 	fi
 	# All mingw/cygwin/win32 builds require -no-undefined for sharedlib.
 	# We must also check with_cross_host to decide if this is a native
@@ -83,7 +93,7 @@ case "${host}" in
 	fi
 	;;
 
-  i?86-*-darwin* | x86_64-*-darwin*)
+  i?86-*-darwin* | x86_64-*-darwin* | i?86-*-ios | x86_64-*-ios)
 	TARGETDIR=x86
 	if test $ac_cv_sizeof_size_t = 4; then
 	  TARGET=X86_DARWIN
@@ -96,11 +106,19 @@ case "${host}" in
 	TARGETDIR=x86
 	if test $ac_cv_sizeof_size_t = 4; then
 	  case "$host" in
-	    *-gnux32)
+	    x86_64-*x32|x86_64-x32-*)
+	      TARGET_X32=yes
 	      TARGET=X86_64
 	      ;;
 	    *)
-	      TARGET=X86
+	      echo 'int foo (void) { return __x86_64__; }' > conftest.c
+	      if $CC $CFLAGS -Werror -S conftest.c -o conftest.s > /dev/null 2>&1; then
+		TARGET_X32=yes
+		TARGET=X86_64
+	      else
+		TARGET=X86;
+	      fi
+	      rm -f conftest.*
 	      ;;
           esac
 	else
@@ -246,10 +264,18 @@ case "${TARGET}" in
 	SOURCES="ffi.c sysv.S"
 	;;
   X86_64)
-	SOURCES="ffi64.c unix64.S"
+	if test x"$TARGET_X32" = xyes; then
+		SOURCES="ffi64.c unix64.S"
+	else
+		SOURCES="ffi64.c unix64.S ffiw64.c win64.S"
+	fi
 	;;
   X86_WIN64)
-	SOURCES="ffiw64.c win64.S"
+	if test "$MSVC" = 1; then
+		SOURCES="ffiw64.c win64_intel.S"
+	else
+		SOURCES="ffiw64.c win64.S"
+	fi
 	;;
 esac
 

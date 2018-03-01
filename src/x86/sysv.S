@@ -1,6 +1,7 @@
 /* -----------------------------------------------------------------------
-   sysv.S - Copyright (c) 2013  The Written Word, Inc.
-	  - Copyright (c) 1996,1998,2001-2003,2005,2008,2010  Red Hat, Inc.
+   sysv.S - Copyright (c) 2017  Anthony Green
+          - Copyright (c) 2013  The Written Word, Inc.
+          - Copyright (c) 1996,1998,2001-2003,2005,2008,2010  Red Hat, Inc.
    
    X86 Foreign Function Interface 
 
@@ -26,6 +27,7 @@
    ----------------------------------------------------------------------- */
 
 #ifndef __x86_64__
+#ifndef _MSC_VER
 
 #define LIBFFI_ASM	
 #include <fficonfig.h>
@@ -272,7 +274,7 @@ L(C1(pc,N)):								\
 #  define FFI_CLOSURE_CALL_INNER(UWN)					\
 	movl	%ebx, 40(%esp);			/* save ebx */		\
 L(C1(UW,UWN)):								\
-	# cfi_rel_offset(%ebx, 40);					\
+	/* cfi_rel_offset(%ebx, 40); */					\
 	call	C(__x86.get_pc_thunk.bx);	/* load got register */	\
 	addl	$C(_GLOBAL_OFFSET_TABLE_), %ebx;			\
 	call	ffi_closure_inner@PLT
@@ -282,7 +284,7 @@ L(C1(UW,UWN)):								\
 	leal	L(C1(load_table,N))@GOTOFF(%ebx, %eax, 8), %edx;	\
 	movl	40(%esp), %ebx;			/* restore ebx */	\
 L(C1(UW,UWN)):								\
-	# cfi_restore(%ebx);						\
+	/* cfi_restore(%ebx); */					\
 	movl	closure_CF(%esp), %eax;		/* optimiztic load */	\
 	jmp	*%edx
 # endif /* DARWIN || HIDDEN */
@@ -1033,6 +1035,7 @@ L(SFDE9):
 L(EFDE9):
 #endif /* !FFI_NO_RAW_API */
 
+#endif /* ifndef _MSC_VER */
 #endif /* ifndef __x86_64__ */
 
 #if defined __ELF__ && defined __linux__
