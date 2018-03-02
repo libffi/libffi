@@ -149,7 +149,7 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
   /* x86, x86-64 and s390 stack space allocation is handled in prep_machdep. */
 #if !defined FFI_TARGET_SPECIFIC_STACK_SPACE_ALLOCATION
   /* Make space for the return structure pointer */
-  if (cif->rtype->type == FFI_TYPE_STRUCT
+  if ((cif->rtype->type == FFI_TYPE_STRUCT || cif->rtype->type == FFI_TYPE_EXT_VECTOR)
 #ifdef TILE
       && (cif->rtype->size > 10 * FFI_SIZEOF_ARG)
 #endif
@@ -250,7 +250,7 @@ ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type, size_t *offsets)
 {
   if (! (abi > FFI_FIRST_ABI && abi < FFI_LAST_ABI))
     return FFI_BAD_ABI;
-  if (struct_type->type != FFI_TYPE_STRUCT)
+  if (struct_type->type != FFI_TYPE_STRUCT || struct_type->type != FFI_TYPE_EXT_VECTOR)
     return FFI_BAD_TYPEDEF;
 
 #if HAVE_LONG_DOUBLE_VARIANT

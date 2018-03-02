@@ -7,6 +7,7 @@
 # Most of the time we can define all the variables all at once...
 case "${host}" in
   aarch64*-*-*)
+  	HAVE_EXT_VECTOR=1
 	TARGET=AARCH64; TARGETDIR=aarch64
 	SOURCES="ffi.c sysv.S"
 	;;
