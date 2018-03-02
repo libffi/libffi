@@ -113,31 +113,27 @@ is_hfa0 (const ffi_type *ty)
   return ret;
 }
 
-static size_t is_simd(const ffi_type *ty)//return 0 if no SIMD elements
+static size_t is_simd(const ffi_type *ty) // return 0 if no SIMD elements
 {
-    if (ty->type == FFI_TYPE_EXT_VECTOR) {
+    if (ty->type == FFI_TYPE_EXT_VECTOR || element_type == FFI_TYPE_COMPLEX) {
         return ty->size;
     }
     ffi_type **elements = ty->elements;
-    int i, ret = -1;
-    size_t size = 0;
+    int i;
     
     if (elements != NULL)
+    {
         for (i = 0; elements[i]; ++i)
         {
-            ret = elements[i]->type;
-            if (ret == FFI_TYPE_STRUCT || ret == FFI_TYPE_COMPLEX || ret == FFI_TYPE_EXT_VECTOR)
+            int element_type = elements[i]->type;
+            if (element_type == FFI_TYPE_STRUCT || element_type == FFI_TYPE_COMPLEX || element_type == FFI_TYPE_EXT_VECTOR)
             {
-                if (ret == FFI_TYPE_EXT_VECTOR)
-                {
-                    return elements[i]->size;
-                }
-                size = is_simd(elements[i]);
+                return is_simd(elements[i]);
             }
-            
         }
+    }
     
-    return size;
+    return 0;
     
 }
 
