@@ -265,9 +265,6 @@ is_vfp_type (const ffi_type *ty)
   /* All tests succeeded.  Encode the result.  */
     if (simd_size) {
         size_t regSize = simd_size;
-        if (candidate == elements[0]->type) {
-            regSize = ty->size;
-        }
         
         int num_registers = (int) size / regSize + (size % regSize ? 1 : 0);
         int first_level_element_type = FFI_TYPE_FLOAT + intlog2((int)regSize) - 2;
