@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Flibffi%2Flibffi.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Flibffi%2Flibffi?ref=badge_shield)
+
 Status
 ======
 
@@ -452,3 +454,7 @@ happy to make corrections or additions upon request.
 If you have a problem, or have found a bug, please send a note to the
 author at green@moxielogic.com, or the project mailing list at
 libffi-discuss@sourceware.org.
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Flibffi%2Flibffi.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Flibffi%2Flibffi?ref=badge_large)
