@@ -115,7 +115,7 @@ is_hfa0 (const ffi_type *ty)
 
 static size_t is_simd(const ffi_type *ty) // return 0 if no SIMD elements
 {
-    if (ty->type == FFI_TYPE_EXT_VECTOR || element_type == FFI_TYPE_COMPLEX) {
+    if (ty->type == FFI_TYPE_EXT_VECTOR || ty->type == FFI_TYPE_COMPLEX) {
         return ty->size;
     }
     ffi_type **elements = ty->elements;
