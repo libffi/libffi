@@ -68,6 +68,7 @@ libffi.call/float4.c \
 libffi.call/return_ldl.c \
 libffi.call/closure_fn5.c \
 libffi.call/struct6.c libffi.call/return_ll.c libffi.call/struct9.c	\
+libffi.call/struct10.c \
 libffi.call/return_sc.c libffi.call/struct7.c				\
 libffi.call/cls_align_uint64.c libffi.call/cls_4byte.c			\
 libffi.call/cls_6_1_byte.c			\
