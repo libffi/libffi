@@ -238,18 +238,13 @@ is_vfp_type (const ffi_type *ty)
    state.
 
    The terse state variable names match the names used in the AARCH64
-   PCS.
-
-   The struct area is allocated downwards from the top of the argument
-   area.  It is used to hold copies of structures passed by value that are
-   bigger than 16 bytes.  */
+   PCS. */
 
 struct arg_state
 {
   unsigned ngrn;                /* Next general-purpose register number. */
   unsigned nsrn;                /* Next vector register number. */
   size_t nsaa;                  /* Next stack offset. */
-  size_t next_struct_area;	/* Place to allocate big structs. */
 
 #if defined (__APPLE__)
   unsigned allocating_variadic;
@@ -258,12 +253,11 @@ struct arg_state
 
 /* Initialize a procedure call argument marshalling state.  */
 static void
-arg_init (struct arg_state *state, size_t size)
+arg_init (struct arg_state *state)
 {
   state->ngrn = 0;
   state->nsrn = 0;
   state->nsaa = 0;
-  state->next_struct_area = size;
 #if defined (__APPLE__)
   state->allocating_variadic = 0;
 #endif
@@ -290,21 +284,6 @@ allocate_to_stack (struct arg_state *state, void *stack,
   state->nsaa = nsaa + size;
 
   return (char *)stack + nsaa;
-}
-
-/* Allocate and copy a structure that is passed by value on the stack and
-   return a pointer to it.  */
-static void *
-allocate_and_copy_struct_to_stack (struct arg_state *state, void *stack,
-				   size_t alignment, size_t size, void *value)
-{
-  size_t dest = state->next_struct_area - size;
-
-  /* Round down to the natural alignment of the value.  */
-  dest = ALIGN_DOWN (dest, alignment);
-  state->next_struct_area = dest;
-
-  return memcpy ((char *) stack + dest, value, size);
 }
 
 static ffi_arg
@@ -612,14 +591,13 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
   frame = stack + stack_bytes;
   rvalue = (rsize ? frame + 32 : orig_rvalue);
 
-  arg_init (&state, stack_bytes);
+  arg_init (&state);
   for (i = 0, nargs = cif->nargs; i < nargs; i++)
     {
       ffi_type *ty = cif->arg_types[i];
       size_t s = ty->size;
       void *a = avalue[i];
       int h, t;
-      void *dest;
 
       t = ty->type;
       switch (t)
@@ -667,6 +645,8 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 	case FFI_TYPE_STRUCT:
 	case FFI_TYPE_COMPLEX:
 	  {
+	    void *dest;
+
 	    h = is_vfp_type (ty);
 	    if (h)
 	      {
@@ -684,12 +664,9 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 	    else if (s > 16)
 	      {
 		/* If the argument is a composite type that is larger than 16
-		   bytes, then the argument is copied to memory, and
+		   bytes, then the argument has been copied to memory, and
 		   the argument is replaced by a pointer to the copy.  */
-		dest = allocate_and_copy_struct_to_stack (&state, stack,
-							  ty->alignment, s,
-							  avalue[i]);
-		a = &dest;
+		a = &avalue[i];
 		t = FFI_TYPE_POINTER;
 		s = sizeof (void *);
 		goto do_pointer;
@@ -858,7 +835,7 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
   int i, h, nargs, flags;
   struct arg_state state;
 
-  arg_init (&state, cif->bytes);
+  arg_init (&state);
 
   for (i = 0, nargs = cif->nargs; i < nargs; i++)
     {
