@@ -1,7 +1,9 @@
 Status
 ======
 
-libffi-4?? was released on TBD.  Check the libffi web
+THIS IS A WORK IN PROGRESS..
+
+libffi-3.3 was released on [TBD].  Check the libffi web
 page for updates: <URL:http://sourceware.org/libffi/>.
 
 
@@ -188,7 +190,7 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
-4.0 TBD
+3.3 TBD
         New API in support of GO closures.
         Add RISC-V support.
 
