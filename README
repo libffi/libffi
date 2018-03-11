@@ -84,6 +84,8 @@ tested:
 | PowerPC 64-bit  | FreeBSD          | GCC                     |
 | PowerPC 64-bit  | Linux ELFv1      | GCC                     |
 | PowerPC 64-bit  | Linux ELFv2      | GCC                     |
+| RISC-V 32-bit   | Linux            | GCC                     |
+| RISC-V 64-bit   | Linux            | GCC                     |
 | S390            | Linux            | GCC                     |
 | S390X           | Linux            | GCC                     |
 | SPARC           | Linux            | GCC                     |
@@ -188,6 +190,7 @@ See the git log for details at http://github.com/libffi/libffi.
 
 4.0 TBD
         New API in support of GO closures.
+        Add RISC-V support.
 
 3.2.1 Nov-12-14
         Build fix for non-iOS AArch64 targets.
