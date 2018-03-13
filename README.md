@@ -52,7 +52,6 @@ refer to the wiki page here:
 At the time of release, the following basic configurations have been
 tested:
 
-| --------------- | ---------------- | ----------------------- |
 | Architecture    | Operating System | Compiler                |
 | --------------- | ---------------- | ----------------------- |
 | AArch64 (ARM64) | iOS              | Clang                   |
