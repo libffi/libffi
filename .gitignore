@@ -5,6 +5,7 @@
 .dirstamp
 *.la
 Makefile
+!testsuite/libffi.bhaible/Makefile
 Makefile.in
 aclocal.m4
 compile
