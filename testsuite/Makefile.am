@@ -114,7 +114,4 @@ libffi.go/aa-direct.c libffi.go/ffitest.h libffi.go/go.exp		\
 libffi.go/static-chain.h libffi.bhaible/bhaible.exp			\
 libffi.bhaible/test-call.c libffi.bhaible/alignof.h			\
 libffi.bhaible/testcases.c libffi.bhaible/test-callback.c		\
-libffi.bhaible/Makefile libffi.bhaible/README				\
-libffi-testsuite/test-call.c libffi-testsuite/alignof.h			\
-libffi-testsuite/testcases.c libffi-testsuite/test-callback.c		\
-libffi-testsuite/Makefile libffi-testsuite/README config/default.exp  
+libffi.bhaible/Makefile libffi.bhaible/README config/default.exp  
