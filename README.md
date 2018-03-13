@@ -52,9 +52,9 @@ refer to the wiki page here:
 At the time of release, the following basic configurations have been
 tested:
 
-|-----------------+------------------+-------------------------|
+| --------------- | ---------------- | ----------------------- |
 | Architecture    | Operating System | Compiler                |
-|-----------------+------------------+-------------------------|
+| --------------- | ---------------- | ----------------------- |
 | AArch64 (ARM64) | iOS              | Clang                   |
 | AArch64         | Linux            | GCC                     |
 | Alpha           | Linux            | GCC                     |
@@ -121,7 +121,7 @@ tested:
 | X86-64          | Windows/MingW    | GCC                     |
 | X86-64          | Mac OSX          | GCC                     |
 | Xtensa          | Linux            | GCC                     |
-|-----------------+------------------+-------------------------|
+| --------------- | ---------------- | ----------------------- |
 
 Please send additional platform test results to
 libffi-discuss@sourceware.org and feel free to update the wiki page
