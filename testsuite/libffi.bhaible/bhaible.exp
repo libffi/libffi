@@ -20,6 +20,9 @@ libffi-init
 global srcdir subdir
 global compiler_vendor
 
+# The conversion of this testsuite into a dejagnu compatible testsuite
+# was done in a pretty lazy fashion, and requires the use of compiler
+# flags to disable warnings for now.
 if { [string match $compiler_vendor "gnu"] } {
     set warning_options "-Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-uninitialized";
 } else {
