@@ -3,7 +3,8 @@ Status
 
 THIS IS A WORK IN PROGRESS..
 
-[![Build Status](https://travis-ci.org/libffi/libffi.svg?branch=master)](https://travis-ci.org/libffi/libffi) [![Build status](https://ci.appveyor.com/api/projects/status/8lko9vagbx4w2kxq?svg=true)](https://ci.appveyor.com/project/atgreen/libffi) 
+[![Build Status](https://travis-ci.org/libffi/libffi.svg?branch=master)](https://travis-ci.org/libffi/libffi)
+[![Build status](https://ci.appveyor.com/api/projects/status/8lko9vagbx4w2kxq?svg=true)](https://ci.appveyor.com/project/atgreen/libffi)
 
 libffi-3.3 was released on [TBD].  Check the libffi web
 page for updates: <URL:http://sourceware.org/libffi/>.
