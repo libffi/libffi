@@ -17,7 +17,7 @@ matrix:
       compiler: gcc
       env: HOST=i386-pc-linux-gnu
     - os: linux
-      env: HOST=moxie-elf
+      env: HOST=moxie-elf PATH=/opt/moxielogic/bin:$PATH
 
 install:
   - ./.travis/install.sh
@@ -29,6 +29,5 @@ script:
   - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
   - make
   - make dist
-  - echo "$TRAVIS_BUILD_DIR"/.travis
-  - DEJAGNU="$TRAVIS_BUILD_DIR"/.travis make check
+  - ${DEJAGNU+DEJAGNU="$TRAVIS_BUILD_DIR"/.travis} make check
   - cat */testsuite/libffi.log
