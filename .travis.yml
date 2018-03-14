@@ -17,7 +17,6 @@ matrix:
       compiler: gcc
       env: HOST=i386-pc-linux-gnu
     - os: linux
-      compiler: gcc
       env: HOST=moxie-elf
 
 install:
@@ -30,5 +29,6 @@ script:
   - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
   - make
   - make dist
-  - DEJAGNU=$TRAVIS_BUILD_DIR/.travis make check
+  - echo "$TRAVIS_BUILD_DIR"/.travis
+  - DEJAGNU="$TRAVIS_BUILD_DIR"/.travis make check
   - cat */testsuite/libffi.log
