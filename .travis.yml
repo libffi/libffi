@@ -17,7 +17,7 @@ matrix:
       compiler: gcc
       env: HOST=i386-pc-linux-gnu MEVAL='export CC="$CC -m32" && CXX="$CXX -m32"'
     - os: linux
-      env: HOST=moxie-elf MEVAL='export PATH=/opt/moxielogic/bin:$PATH && LDFLAGS="-Tsim.ld" && RUNTESTFLAGS="--target_board moxie-sim" && DEJAGNU="$TRAVIS_BUILD_DIR"/.travis && CC=moxie-elf-gcc && CXX=moxie-elf-g++'
+      env: HOST=moxie-elf MEVAL='export PATH=/opt/moxielogic/bin:$PATH && LDFLAGS=-Tsim.ld && RUNTESTFLAGS=--target_board\ moxie-sim && DEJAGNU=$TRAVIS_BUILD_DIR/.travis && CC=moxie-elf-gcc && CXX=moxie-elf-gpp++'
 
 before_install:
   - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
