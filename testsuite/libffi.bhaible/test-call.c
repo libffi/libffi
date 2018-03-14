@@ -462,6 +462,7 @@ void
   /* Unsigned types.
    */
 #ifdef TEST20
+  ucr = uc_ucsil(uc1, us2, ui3, ul4);
   FPRINTF(out,"->%u\n",ucr);
   fflush(out);
   ucr = 0; clear_traces();
@@ -470,8 +471,10 @@ void
     ffi_cif cif;
     FFI_PREP_CIF(cif,argtypes,ffi_type_uchar);
     {
+      ffi_arg rint;
       /*const*/ void* args[] = { &uc1, &us2, &ui3, &ul4 };
-      FFI_CALL(cif,uc_ucsil,args,&ucr);
+      FFI_CALL(cif,uc_ucsil,args,&rint);
+      ucr = (uchar) rint;
     }
   }
   FPRINTF(out,"->%u\n",ucr);
@@ -562,8 +565,10 @@ void
     ffi_cif cif;
     FFI_PREP_CIF(cif,argtypes,ffi_type_ushort);
     {
+      ffi_arg rint;
       /*const*/ void* args[] = { &c1, &d2, &c3, &d4 };
-      FFI_CALL(cif,us_cdcd,args,&usr);
+      FFI_CALL(cif,us_cdcd,args,&rint);
+      usr = (ushort) rint;
     }
   }
   FPRINTF(out,"->%u\n",usr);
