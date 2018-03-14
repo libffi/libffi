@@ -12,7 +12,7 @@ else
     i386-pc-linux-gnu)
 	sudo apt-get install gcc-multilib g++-multilib
 	;;
-    moxie-unknown-elf-no-match)
+    moxie-unknown-elf)
 	echo 'deb http://repos.moxielogic.org:7114/MoxieLogic moxiedev main' | sudo tee -a /etc/apt/sources.list
 	sudo apt-get update -qq
 	sudo apt-get install -y --allow-unauthenticated moxielogic-moxie-elf-gcc moxielogic-moxie-elf-gdb-sim
