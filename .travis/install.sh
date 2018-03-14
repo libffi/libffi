@@ -8,7 +8,14 @@ if [[ $TRAVIS_OS_NAME != 'linux' ]]; then
 else
   sudo apt-get update
   sudo apt-get install dejagnu texinfo
-  if [ "$HOST" = i386-pc-linux-gnu ] ; then
-      sudo apt-get install gcc-multilib g++-multilib;
-  fi
+  case "$HOST" in
+    i386-pc-linux-gnu)
+	sudo apt-get install gcc-multilib g++-multilib
+	;;
+    moxie-unknown-elf)
+	echo 'deb http://repos.moxielogic.org:7114/MoxieLogic moxiedev main' | sudo tee -a /etc/apt/sources.list
+	sudo apt-get update -qq
+	sudo apt-get install -y --allow-unauthenticated moxielogic-moxie-elf-gcc moxielogic-moxie-elf-gdb-sim
+	;;
+  esac
 fi

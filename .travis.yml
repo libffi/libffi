@@ -16,6 +16,9 @@ matrix:
     - os: linux
       compiler: gcc
       env: HOST=i386-pc-linux-gnu
+    - os: linux
+      compiler: gcc
+      env: HOST=moxie-elf
 
 install:
   - ./.travis/install.sh
@@ -23,8 +26,9 @@ install:
 script:
   - ./autogen.sh
   - if test x"$HOST" = x"i386-pc-linux-gnu"; then CC="$CC -m32"; CXX="$CXX -m32"; fi
+  - if test x"$HOST" = x"moxie-unknown-elf"; then LDFLAGS="-Tsim.ld"; RUNTESTFLAGS="--target_board moxie-sim"; fi
   - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
   - make
   - make dist
-  - make check
+  - DEJAGNU=$TRAVIS_BUILD_DIR/.travis make check
   - cat */testsuite/libffi.log
