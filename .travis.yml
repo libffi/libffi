@@ -19,12 +19,16 @@ matrix:
     - os: linux
       env: HOST=moxie-elf MEVAL='export PATH=/opt/moxielogic/bin:$PATH && LDFLAGS="-Tsim.ld" && CC=moxie-elf-gcc && CXX=moxie-elf-g++ && RUNTESTFLAGS="--target_board moxie-sim" && DEJAGNU="$TRAVIS_BUILD_DIR"/.travis'
 
+before_install:
+  - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
+
 install:
   - ./.travis/install.sh
 
 script:
+  - echo $MEVAL
+  - env
   - ./autogen.sh
-  - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
   - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
   - make
   - make dist
