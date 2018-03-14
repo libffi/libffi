@@ -32,7 +32,7 @@ script:
   - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
   - echo ------------------------------------------
   - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
-- ./autogen.sh
+  - ./autogen.sh
   - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
   - make
   - make dist
