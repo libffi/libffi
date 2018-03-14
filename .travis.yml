@@ -33,5 +33,5 @@ script:
   - make dist
   - echo $DEJAGNU
   - echo $RUNTESTFLAGS
-  - make check RUNTESTFLAGS="-v $RUNTESTFLAGS"
+  - make check RUNTESTFLAGS="-vvvv $RUNTESTFLAGS"
   - cat */testsuite/libffi.log
