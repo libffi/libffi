@@ -28,6 +28,7 @@ install:
 script:
   - echo $MEVAL
   - env
+  - echo ------------------------------------------
   - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
   - echo ------------------------------------------
   - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
