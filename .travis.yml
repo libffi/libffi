@@ -29,9 +29,9 @@ script:
   - echo $MEVAL
   - env
   - echo ------------------------------------------
-  - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
+  - if ! test x"$MEVAL" = x; then eval ${MEVAL}; fi
   - echo ------------------------------------------
-  - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
+  - env
   - ./autogen.sh
   - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
   - make
