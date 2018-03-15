@@ -33,5 +33,7 @@ script:
   - make dist
   - echo $DEJAGNU
   - echo $RUNTESTFLAGS
+  - which runtest
+  - runtest --version
   - make check RUNTESTFLAGS="-vvvv $RUNTESTFLAGS"
   - cat */testsuite/libffi.log
