@@ -40,7 +40,6 @@
 
    http://gcc.gnu.org/ml/java/1999-q3/msg00174.html
    -------------------------------------------------------------------- */
-
 #ifndef LIBFFI_H
 #define LIBFFI_H
 
@@ -478,9 +477,18 @@ ffi_status ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type,
 #define FFI_TYPE_STRUCT     13
 #define FFI_TYPE_POINTER    14
 #define FFI_TYPE_COMPLEX    15
+#if @HAVE_EXT_VECTOR@
+#define FFI_TYPE_EXT_VECTOR 16
+#else
+#define FFI_TYPE_EXT_VECTOR FFI_TYPE_STRUCT
+#endif
 
 /* This should always refer to the last type code (for sanity checks).  */
-#define FFI_TYPE_LAST       FFI_TYPE_COMPLEX
+#if @HAVE_EXT_VECTOR@
+#define FFI_TYPE_LAST  FFI_TYPE_EXT_VECTOR
+#else
+#define FFI_TYPE_LAST  FFI_TYPE_COMPLEX
+#endif    
 
 #ifdef __cplusplus
 }

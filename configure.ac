@@ -72,6 +72,7 @@ AM_CONDITIONAL(TESTSUBDIR, test -d $srcdir/testsuite)
 
 TARGETDIR="unknown"
 HAVE_LONG_DOUBLE_VARIANT=0
+HAVE_EXT_VECTOR=0
 
 . ${srcdir}/configure.host
 
@@ -106,6 +107,7 @@ if test -z "$HAVE_LONG_DOUBLE"; then
 fi
 AC_SUBST(HAVE_LONG_DOUBLE)
 AC_SUBST(HAVE_LONG_DOUBLE_VARIANT)
+AC_SUBST(HAVE_EXT_VECTOR)
 
 AC_C_BIGENDIAN
 
@@ -191,7 +193,7 @@ fi
 
 FFI_EXEC_TRAMPOLINE_TABLE=0
 case "$target" in
-     *arm*-apple-* | aarch64-apple-*)
+     *arm*-apple-darwin* | aarch64-apple-darwin*)
        FFI_EXEC_TRAMPOLINE_TABLE=1
        AC_DEFINE(FFI_EXEC_TRAMPOLINE_TABLE, 1,
                  [Cannot use PROT_EXEC on this target, so, we revert to
@@ -202,6 +204,12 @@ case "$target" in
                  [Cannot use malloc on this target, so, we revert to
                    alternative means])
      ;;
+esac
+
+
+case "$target" in
+     aarch64-apple-darwin*)
+       HAVE_EXT_VECTOR=1
 esac
 AM_CONDITIONAL(FFI_EXEC_TRAMPOLINE_TABLE, test x$FFI_EXEC_TRAMPOLINE_TABLE = x1)
 AC_SUBST(FFI_EXEC_TRAMPOLINE_TABLE)
