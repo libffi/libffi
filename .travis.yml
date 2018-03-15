@@ -31,9 +31,7 @@ script:
   - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
   - make
   - make dist
-  - echo $DEJAGNU
-  - echo $RUNTESTFLAGS
-  - which runtest
-  - runtest --version
-  - make check RUNTESTFLAGS="-vvvv $RUNTESTFLAGS"
+  - make check RUNTESTFLAGS="-v $RUNTESTFLAGS" &
+  - GITPID=$!
+  - while kill -0 $GITPID 2>/dev/null; do echo "Waiting for testsuite completion"; sleep 30; done;
   - cat */testsuite/libffi.log
