@@ -83,4 +83,6 @@ libffi.call/va_struct3.c \
 libffi.call/strlen2.c \
 libffi.call/strlen3.c \
 libffi.call/strlen4.c \
+libffi.call/simd_float_matrices.c \
+libffi.call/simd_double_matrices.c \
 libffi.call/cls_3float.c
