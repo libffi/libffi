@@ -113,28 +113,27 @@ is_hfa0 (const ffi_type *ty)
   return ret;
 }
 
-static size_t is_simd(const ffi_type *ty)//return 0 if no SIMD elements
+static size_t is_simd(const ffi_type *ty) // return 0 if no SIMD elements
 {
+    if (ty->type == FFI_TYPE_EXT_VECTOR || ty->type == FFI_TYPE_COMPLEX) {
+        return ty->size;
+    }
     ffi_type **elements = ty->elements;
-    int i, ret = -1;
-    size_t size = 0;
+    int i;
     
     if (elements != NULL)
+    {
         for (i = 0; elements[i]; ++i)
         {
-            ret = elements[i]->type;
-            if (ret == FFI_TYPE_STRUCT || ret == FFI_TYPE_COMPLEX || ret == FFI_TYPE_EXT_VECTOR)
+            int element_type = elements[i]->type;
+            if (element_type == FFI_TYPE_STRUCT || element_type == FFI_TYPE_COMPLEX || element_type == FFI_TYPE_EXT_VECTOR)
             {
-                if (ret == FFI_TYPE_EXT_VECTOR)
-                {
-                    return elements[i]->size;
-                }
-                size = is_simd(elements[i]);
+                return is_simd(elements[i]);
             }
-            
         }
+    }
     
-    return size;
+    return 0;
     
 }
 
@@ -262,22 +261,18 @@ is_vfp_type (const ffi_type *ty)
       else if (t != candidate)
         return 0;
     }
-  if (simd_size || ty->type == FFI_TYPE_EXT_VECTOR)
-    {
-      size_t regSize = simd_size;
-      if (candidate == elements[0]->type) {
-        regSize = ty->size;
-      }
-        
-      int num_registers = (int) size / regSize + (size % regSize ? 1 : 0);
-      int first_level_element_type = FFI_TYPE_FLOAT + intlog2((int)regSize) - 2;
-
-      return (int) (first_level_element_type * 4 + (4 - num_registers));
-    }
 
   /* All tests succeeded.  Encode the result.  */
- done:
-  return candidate * 4 + (4 - (int)ele_count);
+    if (simd_size) {
+        size_t regSize = simd_size;
+        
+        int num_registers = (int) size / regSize + (size % regSize ? 1 : 0);
+        int first_level_element_type = FFI_TYPE_FLOAT + intlog2((int)regSize) - 2;
+        return (int) (first_level_element_type * 4 + (4 - num_registers));
+    }
+   
+  done:
+    return candidate * 4 + (4 - (int)ele_count);
 }
 
 /* Representation of the procedure call argument marshalling
