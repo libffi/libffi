@@ -1,9 +1,9 @@
 typedef double simd_double2 __attribute__ ((vector_size (16)));
-typedef double simd_double3 __attribute__ ((vector_size (24)));
+typedef double simd_double3 __attribute__ ((vector_size (32)));
 typedef double simd_double4 __attribute__ ((vector_size (32)));
 
 typedef float simd_float2 __attribute__ ((vector_size (8)));
-typedef float simd_float3 __attribute__ ((vector_size (12)));
+typedef float simd_float3 __attribute__ ((vector_size (16)));
 typedef float simd_float4 __attribute__ ((vector_size (16)));
 
 typedef struct { simd_float2 columns[2]; } simd_float2x2;
