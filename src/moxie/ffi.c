@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   ffi.c - Copyright (C) 2012, 2013  Anthony Green
+   ffi.c - Copyright (C) 2012, 2013, 2018  Anthony Green
    
    Moxie Foreign Function Interface 
 
@@ -159,7 +159,7 @@ void ffi_closure_eabi (unsigned arg1, unsigned arg2, unsigned arg3,
 		       unsigned arg4, unsigned arg5, unsigned arg6)
 {
   /* This function is called by a trampoline.  The trampoline stows a
-     pointer to the ffi_closure object in $r7.  We must save this
+     pointer to the ffi_closure object in $r12.  We must save this
      pointer in a place that will persist while we do our work.  */
   register ffi_closure *creg __asm__ ("$r12");
   ffi_closure *closure = creg;
@@ -225,6 +225,8 @@ void ffi_closure_eabi (unsigned arg1, unsigned arg2, unsigned arg3,
 	 start looking at the those passed on the stack.  */
       if (ptr == &register_args[6])
 	ptr = stack_args;
+      else if (ptr == &register_args[7])
+	ptr = stack_args + 4;
     }
 
   /* Invoke the closure.  */
@@ -257,7 +259,7 @@ ffi_prep_closure_loc (ffi_closure* closure,
 
   fn = (unsigned long) ffi_closure_eabi;
 
-  tramp[0] = 0x01e0; /* ldi.l $r7, .... */
+  tramp[0] = 0x01e0; /* ldi.l $r12, .... */
   tramp[1] = cls >> 16;
   tramp[2] = cls & 0xffff;
   tramp[3] = 0x1a00; /* jmpa .... */
