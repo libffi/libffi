@@ -31,5 +31,5 @@ script:
   - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
   - make
   - make dist
-  - make check ${RUNTESTFLAGS+RUNTESTFLAGS="$RUNTESTFLAGS"}
+  - make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
   - cat */testsuite/libffi.log
