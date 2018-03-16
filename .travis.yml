@@ -15,16 +15,21 @@ matrix:
   include:
     - os: linux
       compiler: gcc
-      env: HOST=i386-pc-linux-gnu
+      env: HOST=i386-pc-linux-gnu MEVAL='export CC="$CC -m32" && CXX="$CXX -m32"'
+    - os: linux
+      env: HOST=moxie-elf MEVAL='export PATH=/opt/moxielogic/bin:$PATH && CC=moxie-elf-gcc && CXX=moxie-elf-g++' LDFLAGS=-Tsim.ld RUNTESTFLAGS="--target_board moxie-sim" DEJAGNU="$TRAVIS_BUILD_DIR/.travis/site.exp"
+
+before_install:
+  - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
 
 install:
   - ./.travis/install.sh
 
 script:
+  - if ! test x"$MEVAL" = x; then eval ${MEVAL}; fi
   - ./autogen.sh
-  - if test x"$HOST" = x"i386-pc-linux-gnu"; then CC="$CC -m32"; CXX="$CXX -m32"; fi
   - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
   - make
   - make dist
-  - make check
+  - make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
   - cat */testsuite/libffi.log
