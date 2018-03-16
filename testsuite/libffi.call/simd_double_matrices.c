@@ -1,7 +1,5 @@
 /* Area:    fficall.
-   Purpose: Check multiple values passing from different type.
-        Also, exceed the limit of gpr and fpr registers on PowerPC
-        Darwin.
+   Purpose: Check wheter simd doubles are handled properly.
    Limitations: none.
    PR:      none.
    Originator:  <teodor.dermendzhiev@progress.com> 20180228  */
@@ -9,7 +7,7 @@
 /* { dg-do run } */
 #include "ffitest.h"
 #include <stdio.h>
-#include <simd/simd.h>
+#include "simd_types.h"
 #include <stdlib.h>
 
 double doublesContainer[16] = {
@@ -17,8 +15,8 @@ double doublesContainer[16] = {
     9.2345, 10.3456, 11.4567, 12.5678, 13.6789, 14.7891, 15.8912, 16.9123
 };
 
-matrix_double2x2 getMatrixDouble2x2() {
-    matrix_double2x2 result;
+simd_double2x2 getMatrixDouble2x2() {
+    simd_double2x2 result;
     for (int i = 0; i < 2; i++) {
         static int u = 0;
         for (int y = 0; y < 2; y++) {
@@ -29,8 +27,8 @@ matrix_double2x2 getMatrixDouble2x2() {
     return result;
 }
 
-matrix_double2x3 getMatrixDouble2x3() {
-    matrix_double2x3 result;
+simd_double2x3 getMatrixDouble2x3() {
+    simd_double2x3 result;
     
     for (int i = 0; i < 2; i++) {
         static int u = 0;
@@ -42,8 +40,8 @@ matrix_double2x3 getMatrixDouble2x3() {
     return result;
 }
 
-matrix_double2x4 getMatrixDouble2x4() {
-    matrix_double2x4 result;
+simd_double2x4 getMatrixDouble2x4() {
+    simd_double2x4 result;
     
     for (int i = 0; i < 2; i++) {
         static int u = 0;
@@ -55,8 +53,8 @@ matrix_double2x4 getMatrixDouble2x4() {
     return result;
 }
 
-matrix_double3x2 getMatrixDouble3x2() {
-    matrix_double3x2 result;
+simd_double3x2 getMatrixDouble3x2() {
+    simd_double3x2 result;
     for (int i = 0; i < 3; i++) {
         static int u = 0;
         for (int y = 0; y < 2; y++) {
@@ -67,8 +65,8 @@ matrix_double3x2 getMatrixDouble3x2() {
     return result;
 }
 
-matrix_double3x3 getMatrixDouble3x3() {
-    matrix_double3x3 result;
+simd_double3x3 getMatrixDouble3x3() {
+    simd_double3x3 result;
     for (int i = 0; i < 3; i++) {
         static int u = 0;
         for (int y = 0; y < 3; y++) {
@@ -79,8 +77,8 @@ matrix_double3x3 getMatrixDouble3x3() {
     return result;
 }
 
-matrix_double3x4 getMatrixDouble3x4() {
-    matrix_double3x4 result;
+simd_double3x4 getMatrixDouble3x4() {
+    simd_double3x4 result;
     for (int i = 0; i < 3; i++) {
         static int u = 0;
         for (int y = 0; y < 4; y++) {
@@ -91,8 +89,8 @@ matrix_double3x4 getMatrixDouble3x4() {
     return result;
 }
 
-matrix_double4x2 getMatrixDouble4x2() {
-    matrix_double4x2 result;
+simd_double4x2 getMatrixDouble4x2() {
+    simd_double4x2 result;
     for (int i = 0; i < 4; i++) {
         static int u = 0;
         for (int y = 0; y < 2; y++) {
@@ -103,8 +101,8 @@ matrix_double4x2 getMatrixDouble4x2() {
     return result;
 }
 
-matrix_double4x3 getMatrixDouble4x3() {
-    matrix_double4x3 result;
+simd_double4x3 getMatrixDouble4x3() {
+    simd_double4x3 result;
     for (int i = 0; i < 4; i++) {
         static int u = 0;
         for (int y = 0; y < 3; y++) {
@@ -115,8 +113,8 @@ matrix_double4x3 getMatrixDouble4x3() {
     return result;
 }
 
-matrix_double4x4 getMatrixDouble4x4() {
-    matrix_double4x4 result;
+simd_double4x4 getMatrixDouble4x4() {
+    simd_double4x4 result;
     for (int i = 0; i < 4; i++) {
         static int u = 0;
         for (int y = 0; y < 4; y++) {
@@ -188,7 +186,7 @@ int main(void) {
             switch (i) {
                 case 0: {
                     ffi_call(&cif, FFI_FN(getMatrixDouble2x2), buffer, 0);
-                    matrix_double2x2 *m = (matrix_double2x2*)buffer;
+                    simd_double2x2 *m = (simd_double2x2*)buffer;
                     int u = 0;
                     for (int i = 0; i < dimensions[0]; i++) {
                         for (int y = 0; y < dimensions[1]; y++) {
@@ -200,7 +198,7 @@ int main(void) {
                 }
                 case 1: {
                     ffi_call(&cif, FFI_FN(getMatrixDouble2x3), buffer, 0);
-                    matrix_double2x3 *m = (matrix_double2x3*)buffer;
+                    simd_double2x3 *m = (simd_double2x3*)buffer;
                     for (int i = 0; i < dimensions[0]; i++) {
                         static int u = 0;
                         for (int y = 0; y < dimensions[1]; y++) {
@@ -212,7 +210,7 @@ int main(void) {
                 }
                 case 2: {
                     ffi_call(&cif, FFI_FN(getMatrixDouble2x4), buffer, 0);
-                    matrix_double2x4 *m = (matrix_double2x4*)buffer;
+                    simd_double2x4 *m = (simd_double2x4*)buffer;
                     for (int i = 0; i < dimensions[0]; i++) {
                         static int u = 0;
                         for (int y = 0; y < dimensions[1]; y++) {
@@ -224,7 +222,7 @@ int main(void) {
                 }
                 case 3: {
                     ffi_call(&cif, FFI_FN(getMatrixDouble3x2), buffer, 0);
-                    matrix_double3x2 *m = (matrix_double3x2*)buffer;
+                    simd_double3x2 *m = (simd_double3x2*)buffer;
                     for (int i = 0; i < dimensions[0]; i++) {
                         static int u = 0;
                         for (int y = 0; y < dimensions[1]; y++) {
@@ -236,7 +234,7 @@ int main(void) {
                 }
                 case 4: {
                     ffi_call(&cif, FFI_FN(getMatrixDouble3x3), buffer, 0);
-                    matrix_double3x3 *m = (matrix_double3x3*)buffer;
+                    simd_double3x3 *m = (simd_double3x3*)buffer;
                     for (int i = 0; i < dimensions[0]; i++) {
                         static int u = 0;
                         for (int y = 0; y < dimensions[1]; y++) {
@@ -248,7 +246,7 @@ int main(void) {
                 }
                 case 5: {
                     ffi_call(&cif, FFI_FN(getMatrixDouble3x4), buffer, 0);
-                    matrix_double3x4 *m = (matrix_double3x4*)buffer;
+                    simd_double3x4 *m = (simd_double3x4*)buffer;
                     for (int i = 0; i < dimensions[0]; i++) {
                         static int u = 0;
                         for (int y = 0; y < dimensions[1]; y++) {
@@ -260,7 +258,7 @@ int main(void) {
                 }
                 case 6: {
                     ffi_call(&cif, FFI_FN(getMatrixDouble4x2), buffer, 0);
-                    matrix_double4x2 *m = (matrix_double4x2*)buffer;
+                    simd_double4x2 *m = (simd_double4x2*)buffer;
                     for (int i = 0; i < dimensions[0]; i++) {
                         static int u = 0;
                         for (int y = 0; y < dimensions[1]; y++) {
@@ -272,7 +270,7 @@ int main(void) {
                 }
                 case 7: {
                     ffi_call(&cif, FFI_FN(getMatrixDouble4x3), buffer, 0);
-                    matrix_double4x3 *m = (matrix_double4x3*)buffer;
+                    simd_double4x3 *m = (simd_double4x3*)buffer;
                     for (int i = 0; i < dimensions[0]; i++) {
                         static int u = 0;
                         for (int y = 0; y < dimensions[1]; y++) {
@@ -284,7 +282,7 @@ int main(void) {
                 }
                 case 8: {
                     ffi_call(&cif, FFI_FN(getMatrixDouble4x4), buffer, 0);
-                    matrix_double4x4 *m = (matrix_double4x4*)buffer;
+                    simd_double4x4 *m = (simd_double4x4*)buffer;
                     for (int i = 0; i < dimensions[0]; i++) {
                         static int u = 0;
                         for (int y = 0; y < dimensions[1]; y++) {
@@ -302,4 +300,3 @@ int main(void) {
     printf("End matrix double tests\n");
     exit(0);
 }
-
