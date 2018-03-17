@@ -190,24 +190,25 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     3.3 TBD
-            New API in support of GO closures.
-            Add RISC-V support.
+        New API in support of GO closures.
+        Add RISC-V support.
+	Many bug fixes.
     
     3.2.1 Nov-12-14
-            Build fix for non-iOS AArch64 targets.
+        Build fix for non-iOS AArch64 targets.
     
     3.2 Nov-11-14
-            Add C99 Complex Type support (currently only supported on
-              s390).
+        Add C99 Complex Type support (currently only supported on
+          s390).
     	Add support for PASCAL and REGISTER calling conventions on x86
     	  Windows/Linux.
     	Add OpenRISC and Cygwin-64 support.
-            Bug fixes.
+        Bug fixes.
     
     3.1 May-19-14
-            Add AArch64 (ARM64) iOS support.
-            Add Nios II support.
-            Add m88k and DEC VAX support.
+        Add AArch64 (ARM64) iOS support.
+        Add Nios II support.
+        Add m88k and DEC VAX support.
     	Add support for stdcall, thiscall, and fastcall on non-Windows
     	  32-bit x86 targets such as Linux.
     	Various Android, MIPS N32, x86, FreeBSD and UltraSPARC IIi
@@ -228,7 +229,7 @@ See the git log for details at http://github.com/libffi/libffi.
     	Fix Cygwin regression.
     
     3.0.12 Feb-11-13
-            Add Moxie support.
+        Add Moxie support.
     	Add AArch64 support.
     	Add Blackfin support.
     	Add TILE-Gx/TILEPro support.
@@ -240,7 +241,7 @@ See the git log for details at http://github.com/libffi/libffi.
     	Work around LLVM/GCC interoperability issue on x86_64.
     
     3.0.11 Apr-11-12
-            Lots of build fixes.
+        Lots of build fixes.
     	Add support for variadic functions (ffi_prep_cif_var).
     	Add Linux/x32 support.
     	Add thiscall, fastcall and MSVC cdecl support on Windows.
@@ -251,9 +252,9 @@ See the git log for details at http://github.com/libffi/libffi.
     	Fix code pessimizations.
     
     3.0.10 Aug-23-11
-            Add support for Apple's iOS.
+        Add support for Apple's iOS.
     	Add support for ARM VFP ABI.
-            Add RTEMS support for MIPS and M68K.
+        Add RTEMS support for MIPS and M68K.
     	Fix instruction cache clearing problems on
     	  ARM and SPARC.
     	Fix the N64 build on mips-sgi-irix6.5.
@@ -265,46 +266,46 @@ See the git log for details at http://github.com/libffi/libffi.
     	Additional platform support.
     
     3.0.9 Dec-31-09
-            Add AVR32 and win64 ports.  Add ARM softfp support.
+        Add AVR32 and win64 ports.  Add ARM softfp support.
     	Many fixes for AIX, Solaris, HP-UX, *BSD.
     	Several PowerPC and x86-64 bug fixes.
     	Build DLL for windows.
     
     3.0.8 Dec-19-08
-            Add *BSD, BeOS, and PA-Linux support.
+        Add *BSD, BeOS, and PA-Linux support.
     
     3.0.7 Nov-11-08
-            Fix for ppc FreeBSD.
+        Fix for ppc FreeBSD.
     	(thanks to Andreas Tobler)
     
     3.0.6 Jul-17-08
-            Fix for closures on sh.
+        Fix for closures on sh.
     	Mark the sh/sh64 stack as non-executable.
     	(both thanks to Kaz Kojima)
     
     3.0.5 Apr-3-08
-            Fix libffi.pc file.
+        Fix libffi.pc file.
     	Fix #define ARM for IcedTea users.
     	Fix x86 closure bug.
     
     3.0.4 Feb-24-08
-            Fix x86 OpenBSD configury.
+        Fix x86 OpenBSD configury.
     
     3.0.3 Feb-22-08
-            Enable x86 OpenBSD thanks to Thomas Heller, and
-    	x86-64 FreeBSD thanks to Björn König and Andreas Tobler.
+        Enable x86 OpenBSD thanks to Thomas Heller, and
+    	  x86-64 FreeBSD thanks to Björn König and Andreas Tobler.
     	Clean up test instruction in README.
     
     3.0.2 Feb-21-08
-            Improved x86 FreeBSD support.
+        Improved x86 FreeBSD support.
     	Thanks to Björn König.
     
     3.0.1 Feb-15-08
-            Fix instruction cache flushing bug on MIPS.
+        Fix instruction cache flushing bug on MIPS.
     	Thanks to David Daney.
     
     3.0.0 Feb-15-08
-            Many changes, mostly thanks to the GCC project.
+        Many changes, mostly thanks to the GCC project.
     	Cygnus Solutions is now Red Hat.
     
       [10 years go by...]
@@ -316,7 +317,7 @@ See the git log for details at http://github.com/libffi/libffi.
     	Fixed x86 long double and long long return support.
     	m68k bug fixes from Andreas Schwab.
     	Patch for DU assembler compatibility for the Alpha from Richard
-    	Henderson.
+    	  Henderson.
     
     1.18 Apr-17-98
     	Bug fixes and MIPS configuration changes.
@@ -338,14 +339,14 @@ See the git log for details at http://github.com/libffi/libffi.
     
     1.13 Dec-2-96
     	Added --enable-purify-safety to keep Purify from complaining
-    	about certain low level code.
+    	  about certain low level code.
     	Sparc fix for calling functions with < 6 args.
     	Linux x86 a.out fix.
     
     1.12 Nov-22-96
     	Added missing ffi_type_void, needed for supporting void return 
-    	types. Fixed test case for non MIPS machines. Cygnus Support 
-    	is now Cygnus Solutions. 
+    	  types. Fixed test case for non MIPS machines. Cygnus Support 
+    	  is now Cygnus Solutions. 
     
     1.11 Oct-30-96
     	Added notes about GNU make.
