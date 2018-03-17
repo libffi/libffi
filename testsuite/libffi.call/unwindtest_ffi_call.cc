@@ -4,7 +4,7 @@
    PR:		none.
    Originator:	Andreas Tobler <andreast@gcc.gnu.org> 20061213  */
 
-/* { dg-do run } */
+/* { dg-do run { xfail moxie*-*-* } } */
 
 #include "ffitest.h"
 

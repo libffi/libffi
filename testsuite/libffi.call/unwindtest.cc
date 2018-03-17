@@ -4,7 +4,7 @@
    PR:		none.
    Originator:	Jeff Sturm <jsturm@one-point.com>  */
 
-/* { dg-do run { xfail x86_64-apple-darwin* } } */
+/* { dg-do run { xfail x86_64-apple-darwin* moxie*-*-* } } */
 
 #include "ffitest.h"
 
