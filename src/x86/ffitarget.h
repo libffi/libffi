@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------*-C-*-
-   ffitarget.h - Copyright (c) 2012, 2014  Anthony Green
+   ffitarget.h - Copyright (c) 2012, 2014, 2018  Anthony Green
                  Copyright (c) 1996-2003, 2010  Red Hat, Inc.
                  Copyright (C) 2008  Free Software Foundation, Inc.
 
@@ -80,9 +80,14 @@ typedef signed long            ffi_sarg;
 typedef enum ffi_abi {
 #if defined(X86_WIN64)
   FFI_FIRST_ABI = 0,
-  FFI_WIN64,
+  FFI_WIN64,            /* sizeof(long double) == 8  - microsoft compilers */
+  FFI_GNUW64,           /* sizeof(long double) == 16 - GNU compilers */
   FFI_LAST_ABI,
+#ifdef __GNUC__
+  FFI_DEFAULT_ABI = FFI_GNUW64
+#else  
   FFI_DEFAULT_ABI = FFI_WIN64
+#endif  
 
 #elif defined(X86_64) || (defined (__x86_64__) && defined (X86_DARWIN))
   FFI_FIRST_ABI = 1,
