@@ -99,7 +99,7 @@ void i_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, v
  {int r=99;
   FPRINTF(out,"int f(void):");
   fflush(out);
-  *(int*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 void i_i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -108,7 +108,7 @@ void i_i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, v
   int r=a+1;
   FPRINTF(out,"int f(int):(%d)",a);
   fflush(out);
-  *(int*)retp = r;
+  *(ffi_arg*)retp = r;
 }
 void i_i2_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -118,7 +118,7 @@ void i_i2_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
   int r=a+b;
   FPRINTF(out,"int f(2*int):(%d,%d)",a,b);
   fflush(out);
-  *(int*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 void i_i4_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -130,7 +130,7 @@ void i_i4_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
   int r=a+b+c+d;
   FPRINTF(out,"int f(4*int):(%d,%d,%d,%d)",a,b,c,d);
   fflush(out);
-  *(int*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 void i_i8_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -146,7 +146,7 @@ void i_i8_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
   int r=a+b+c+d+e+f+g+h;
   FPRINTF(out,"int f(8*int):(%d,%d,%d,%d,%d,%d,%d,%d)",a,b,c,d,e,f,g,h);
   fflush(out);
-  *(int*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 void i_i16_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -171,7 +171,7 @@ void i_i16_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   FPRINTF(out,"int f(16*int):(%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)",
           a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
   fflush(out);
-  *(int*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 
 /* float tests */
@@ -377,7 +377,7 @@ void uc_ucsil_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *ar
   uchar r = (uchar)-1;
   FPRINTF(out,"uchar f(uchar,ushort,uint,ulong):(%u,%u,%u,%lu)",a,b,c,d);
   fflush(out);
-  *(unsigned char *)retp = r;
+  *(ffi_arg *)retp = r;
 }}
 void d_iidd_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -437,7 +437,7 @@ void us_cdcd_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *arg
   ushort r = (ushort)(a + b + c + d);
   FPRINTF(out,"ushort f(char,double,char,double):('%c',%g,'%c',%g)",a,b,c,d);
   fflush(out);
-  *(unsigned short *)retp = r;
+  *(ffi_arg *)retp = r;
 }}
 void ll_iiilli_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -895,7 +895,7 @@ void l_l0K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   long r = b.l1 + b.l2 + b.l3 + b.l4 + c;
   FPRINTF(out,"long f(K,long):(%ld,%ld,%ld,%ld,%ld)",b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
-  *(long*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 void l_l1K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -906,7 +906,7 @@ void l_l1K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   long r = a1 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   FPRINTF(out,"long f(long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld)",a1,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
-  *(long*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 void l_l2K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -918,7 +918,7 @@ void l_l2K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   long r = a1 + a2 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   FPRINTF(out,"long f(2*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
-  *(long*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 void l_l3K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -931,7 +931,7 @@ void l_l3K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   long r = a1 + a2 + a3 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   FPRINTF(out,"long f(3*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
-  *(long*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 void l_l4K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -945,7 +945,7 @@ void l_l4K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   long r = a1 + a2 + a3 + a4 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   FPRINTF(out,"long f(4*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
-  *(long*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 void l_l5K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -960,7 +960,7 @@ void l_l5K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   long r = a1 + a2 + a3 + a4 + a5 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   FPRINTF(out,"long f(5*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,a5,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
-  *(long*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 void l_l6K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
@@ -976,7 +976,7 @@ void l_l6K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   long r = a1 + a2 + a3 + a4 + a5 + a6 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   FPRINTF(out,"long f(6*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,a5,a6,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
-  *(long*)retp = r;
+  *(ffi_arg*)retp = r;
 }}
 void f_f17l3L_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
