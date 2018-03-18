@@ -1,5 +1,5 @@
 # ===========================================================================
-#     http://www.gnu.org/software/autoconf-archive/ax_configure_args.html
+#    https://www.gnu.org/software/autoconf-archive/ax_configure_args.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -15,7 +15,7 @@
 #   to rely on eval'ing $ac_configure_args however some old autoconf
 #   versions do not provide that. To ensure maximum portability of autoconf
 #   extension macros this helper can be AC_REQUIRE'd so that
-#   $ac_configure_args will alsways be present.
+#   $ac_configure_args will always be present.
 #
 #   Sadly, the traditional "exec $SHELL" of the enable_builddir macros is
 #   spoiled now and must be replaced by "eval + exit $?".
@@ -42,7 +42,7 @@
 #   Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 #   As a special exception, the respective Autoconf Macro's copyright owner
 #   gives unlimited permission to copy, distribute and modify the configure
@@ -57,10 +57,10 @@
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 9
+#serial 13
 
 AC_DEFUN([AX_CONFIGURE_ARGS],[
-   # [$]@ is unsable in 2.60+ but earlier autoconf had no ac_configure_args
+   # [$]@ is unusable in 2.60+ but earlier autoconf had no ac_configure_args
    if test "${ac_configure_args+set}" != "set" ; then
       ac_configure_args=
       for ac_arg in ${1+"[$]@"}; do
