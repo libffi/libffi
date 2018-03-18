@@ -190,9 +190,11 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     3.3 TBD
+        Default to Microsoft's 64 bit long double ABI with Visual C++.
+	  GNU compiler uses 80 bits (128 in memory) FFI_GNUW64 ABI.
         New API in support of GO closures.
         Add RISC-V support.
-	Many bug fixes.
+        Many bug fixes.
     
     3.2.1 Nov-12-14
         Build fix for non-iOS AArch64 targets.
