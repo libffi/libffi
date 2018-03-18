@@ -29,7 +29,6 @@ script:
   - if ! test x"$MEVAL" = x; then eval ${MEVAL}; fi
   - ./autogen.sh
   - ls -l m4
-  - cat ./configure
   - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
   - make
   - make dist
