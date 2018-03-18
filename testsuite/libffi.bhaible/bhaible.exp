@@ -32,13 +32,13 @@ if { [string match $compiler_vendor "gnu"] } {
 set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/test-call.c]]
 
 for {set i 1} {$i < 82} {incr i} {
-    run-many-tests $tlist [format "-DTEST%02d %s" $i $warning_options]
+    run-many-tests $tlist [format "-DDGTEST=%d %s" $i $warning_options]
 }
 
 set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/test-callback.c]]
 
-for {set i 1} {$i < 73} {incr i} {
-    run-many-tests $tlist [format "-DTEST%02d %s" $i $warning_options]
+for {set i 1} {$i < 81} {incr i} {
+    run-many-tests $tlist [format "-DDGTEST=%d %s" $i $warning_options]
 }
 
 dg-finish
