@@ -94,6 +94,7 @@ typedef enum ffi_abi {
   FFI_UNIX64,
   FFI_WIN64,
   FFI_EFI64 = FFI_WIN64,
+  FFI_GNUW64,
   FFI_LAST_ABI,
   FFI_DEFAULT_ABI = FFI_UNIX64
 
