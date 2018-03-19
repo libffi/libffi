@@ -409,35 +409,35 @@ Thorup.
 Major processor architecture ports were contributed by the following
 developers:
 
-    aarch64		Marcus Shawcroft, James Greenhalgh
-    alpha		Richard Henderson
-    arm			Raffaele Sena
-    blackfin        	Alexandre Keunecke I. de Mendonca
-    cris		Simon Posnjak, Hans-Peter Nilsson
-    frv			Anthony Green
-    ia64		Hans Boehm
-    m32r		Kazuhiro Inaoka
-    m68k		Andreas Schwab
-    m88k		Miod Vallat
-    microblaze		Nathan Rossi
-    mips		Anthony Green, Casey Marshall
-    mips64		David Daney
-    moxie		Anthony Green
-    nios ii		Sandra Loosemore
-    openrisc        	Sebastian Macke
-    pa		    	Randolph Chung, Dave Anglin, Andreas Tobler
-    powerpc		Geoffrey Keating, Andreas Tobler, 
-    			David Edelsohn, John Hornkvist
-    powerpc64		Jakub Jelinek
-    s390		Gerhard Tonn, Ulrich Weigand
-    sh			Kaz Kojima
-    sh64		Kaz Kojima
-    sparc		Anthony Green, Gordon Irlam
-    tile-gx/tilepro	Walter Lee
-    vax		    	Miod Vallat
-    x86			Anthony Green, Jon Beniston
-    x86-64		Bo Thorsen
-    xtensa		Chris Zankel
+    aarch64             Marcus Shawcroft, James Greenhalgh
+    alpha               Richard Henderson
+    arm                 Raffaele Sena
+    blackfin            Alexandre Keunecke I. de Mendonca
+    cris                Simon Posnjak, Hans-Peter Nilsson
+    frv                 Anthony Green
+    ia64                Hans Boehm
+    m32r                Kazuhiro Inaoka
+    m68k                Andreas Schwab
+    m88k                Miod Vallat
+    microblaze          Nathan Rossi
+    mips                Anthony Green, Casey Marshall
+    mips64              David Daney
+    moxie               Anthony Green
+    nios ii             Sandra Loosemore
+    openrisc            Sebastian Macke
+    pa                  Randolph Chung, Dave Anglin, Andreas Tobler
+    powerpc             Geoffrey Keating, Andreas Tobler,
+                        David Edelsohn, John Hornkvist
+    powerpc64           Jakub Jelinek
+    s390                Gerhard Tonn, Ulrich Weigand
+    sh                  Kaz Kojima
+    sh64                Kaz Kojima
+    sparc               Anthony Green, Gordon Irlam
+    tile-gx/tilepro     Walter Lee
+    vax                 Miod Vallat
+    x86                 Anthony Green, Jon Beniston
+    x86-64              Bo Thorsen
+    xtensa              Chris Zankel
 
 Jesper Skov and Andrew Haley both did more than their fair share of
 stepping through the code and tracking down bugs.
