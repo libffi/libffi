@@ -46,8 +46,8 @@ simd_float2x2 getMatrixFloat2x2() {
 simd_float2x3 getMatrixFloat2x3() {
     simd_float2x3 result;
     int i;
+    int u = 0;
     for (i = 0; i < 2; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 3; y++) {
             result.columns[i][y] = floatsContainer[u];
@@ -60,8 +60,8 @@ simd_float2x3 getMatrixFloat2x3() {
 simd_float2x4 getMatrixFloat2x4() {
     simd_float2x4 result;
     int i;
+    int u = 0;
     for (i = 0; i < 2; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 4; y++) {
             result.columns[i][y] = floatsContainer[u];
@@ -74,8 +74,8 @@ simd_float2x4 getMatrixFloat2x4() {
 simd_float3x2 getMatrixFloat3x2() {
     simd_float3x2 result;
     int i;
+    int u = 0;
     for (i = 0; i < 3; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 2; y++) {
             result.columns[i][y] = floatsContainer[u];
@@ -88,8 +88,8 @@ simd_float3x2 getMatrixFloat3x2() {
 simd_float3x3 getMatrixFloat3x3() {
     simd_float3x3 result;
     int i;
+    int u = 0;
     for (i = 0; i < 3; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 3; y++) {
             result.columns[i][y] = floatsContainer[u];
@@ -102,8 +102,8 @@ simd_float3x3 getMatrixFloat3x3() {
 simd_float3x4 getMatrixFloat3x4() {
     simd_float3x4 result;
     int i;
+    int u = 0;
     for (i = 0; i < 3; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 4; y++) {
             result.columns[i][y] = floatsContainer[u];
@@ -116,8 +116,8 @@ simd_float3x4 getMatrixFloat3x4() {
 simd_float4x2 getMatrixFloat4x2() {
     simd_float4x2 result;
     int i;
+    int u = 0;
     for (i = 0; i < 4; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 2; y++) {
             result.columns[i][y] = floatsContainer[u];
@@ -130,8 +130,8 @@ simd_float4x2 getMatrixFloat4x2() {
 simd_float4x3 getMatrixFloat4x3() {
     simd_float4x3 result;
     int i;
+    int u = 0;
     for (i = 0; i < 4; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 3; y++) {
             result.columns[i][y] = floatsContainer[u];
@@ -144,8 +144,8 @@ simd_float4x3 getMatrixFloat4x3() {
 simd_float4x4 getMatrixFloat4x4() {
     simd_float4x4 result;
     int i;
+    int u = 0;
     for (i = 0; i < 4; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 4; y++) {
             result.columns[i][y] = floatsContainer[u];
@@ -162,9 +162,9 @@ int main(void) {
     for (i = 0; i < 9; i++) {
         int dimensions[2] = {matrixDimensionsArray[i][0], matrixDimensionsArray[i][1]};
         ffi_cif cif;
-        int el_size = 4;
-        unsigned short alignment = dimensions[1] == 3 ? 4 : dimensions[1];
-        int bufferSize = el_size * dimensions[0] * alignment;
+        int el_size = sizeof(float);
+        int alignment = (dimensions[1] == 3 ? 4 : dimensions[1]) * el_size;
+        int bufferSize = dimensions[0] * alignment;
         void* buffer = malloc(bufferSize);
         
         ffi_type ffiType;
@@ -183,8 +183,8 @@ int main(void) {
         ffiTypeVector.type = FFI_TYPE_EXT_VECTOR;
         
         ffi_type ffiTypeEl;
-        ffiTypeEl.size = 4;
-        ffiTypeEl.alignment = alignment;
+        ffiTypeEl.size = el_size;
+        ffiTypeEl.alignment = el_size;
         ffiTypeEl.type = FFI_TYPE_FLOAT;
         
         ffi_type* colElements[2];

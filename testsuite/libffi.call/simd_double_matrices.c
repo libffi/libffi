@@ -18,8 +18,8 @@ double doublesContainer[16] = {
 simd_double2x2 getMatrixDouble2x2() {
     simd_double2x2 result;
     int i;
+    int u = 0;
     for (i = 0; i < 2; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 2; y++) {
             result.columns[i][y] = doublesContainer[u];
@@ -32,8 +32,8 @@ simd_double2x2 getMatrixDouble2x2() {
 simd_double2x3 getMatrixDouble2x3() {
     simd_double2x3 result;
     int i;
+    int u = 0;
     for (i = 0; i < 2; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 3; y++) {
             result.columns[i][y] = doublesContainer[u];
@@ -46,8 +46,8 @@ simd_double2x3 getMatrixDouble2x3() {
 simd_double2x4 getMatrixDouble2x4() {
     simd_double2x4 result;
     int i;
+    int u = 0;
     for (i = 0; i < 2; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 4; y++) {
             result.columns[i][y] = doublesContainer[u];
@@ -60,8 +60,8 @@ simd_double2x4 getMatrixDouble2x4() {
 simd_double3x2 getMatrixDouble3x2() {
     simd_double3x2 result;
     int i;
+    int u = 0;
     for (i = 0; i < 3; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 2; y++) {
             result.columns[i][y] = doublesContainer[u];
@@ -74,8 +74,8 @@ simd_double3x2 getMatrixDouble3x2() {
 simd_double3x3 getMatrixDouble3x3() {
     simd_double3x3 result;
     int i;
+    int u = 0;
     for (i = 0; i < 3; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 3; y++) {
             result.columns[i][y] = doublesContainer[u];
@@ -88,8 +88,8 @@ simd_double3x3 getMatrixDouble3x3() {
 simd_double3x4 getMatrixDouble3x4() {
     simd_double3x4 result;
     int i;
+    int u = 0;
     for (i = 0; i < 3; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 4; y++) {
             result.columns[i][y] = doublesContainer[u];
@@ -102,8 +102,8 @@ simd_double3x4 getMatrixDouble3x4() {
 simd_double4x2 getMatrixDouble4x2() {
     simd_double4x2 result;
     int i;
+    int u = 0;
     for (i = 0; i < 4; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 2; y++) {
             result.columns[i][y] = doublesContainer[u];
@@ -116,8 +116,8 @@ simd_double4x2 getMatrixDouble4x2() {
 simd_double4x3 getMatrixDouble4x3() {
     simd_double4x3 result;
     int i;
+    int u = 0;
     for (i = 0; i < 4; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 3; y++) {
             result.columns[i][y] = doublesContainer[u];
@@ -130,8 +130,8 @@ simd_double4x3 getMatrixDouble4x3() {
 simd_double4x4 getMatrixDouble4x4() {
     simd_double4x4 result;
     int i;
+    int u = 0;
     for (i = 0; i < 4; i++) {
-        static int u = 0;
         int y;
         for (y = 0; y < 4; y++) {
             result.columns[i][y] = doublesContainer[u];
@@ -148,9 +148,9 @@ int main(void) {
     for (i = 0; i < 9; i++) {
         int dimensions[2] = {matrixDimensionsArray[i][0], matrixDimensionsArray[i][1]};
         ffi_cif cif;
-        int el_size = 8;
-        unsigned short alignment = dimensions[1] == 3 ? 4 : dimensions[1];
-        int bufferSize = el_size * dimensions[0] * alignment;
+        int el_size = sizeof(double);
+        unsigned short alignment = (dimensions[1] == 3 ? 4 : dimensions[1]) * el_size;
+        int bufferSize = dimensions[0] * alignment;
         void* buffer = malloc(bufferSize);
         
         ffi_type ffiType;
@@ -169,8 +169,8 @@ int main(void) {
         ffiTypeVector.type = bufferSize/dimensions[0] > 16 ? FFI_TYPE_POINTER : FFI_TYPE_EXT_VECTOR;
         
         ffi_type ffiTypeEl;
-        ffiTypeEl.size = 8;
-        ffiTypeEl.alignment = alignment;
+        ffiTypeEl.size = el_size;
+        ffiTypeEl.alignment = el_size;
         ffiTypeEl.type = FFI_TYPE_DOUBLE;
         
         ffi_type* colElements[2];
