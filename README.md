@@ -43,10 +43,6 @@ Supported Platforms
 ===================
 
 Libffi has been ported to many different platforms.
-For specific configuration details and testing status, please
-refer to the wiki page here:
-
- http://www.moxielogic.org/wiki/index.php?title=Libffi_3.2
 
 At the time of release, the following basic configurations have been
 tested:
@@ -157,9 +153,9 @@ wrapper script during configuration like so:
 
     path/to/configure CC=path/to/msvcc.sh CXX=path/to/msvcc.sh LD=link CPP="cl -nologo -EP"
 
-For 64-bit Windows builds, use CC="path/to/msvcc.sh -m64" and
-CXX="path/to/msvcc.sh -m64".  You may also need to specify --build
-appropriately.
+For 64-bit Windows builds, use ``CC="path/to/msvcc.sh -m64"`` and
+``CXX="path/to/msvcc.sh -m64"``.  You may also need to specify
+``--build`` appropriately.
 
 It is also possible to build libffi on Windows platforms with the LLVM
 project's clang-cl compiler, like below:
@@ -171,9 +167,13 @@ remove the line in configure that sets 'fix_srcfile_path' to a 'cygpath'
 command.  ('cygpath' is not present in MingW, and is not required when
 using MingW-style paths.)
 
-For iOS builds, the 'libffi.xcodeproj' Xcode project is available.
+SPARC Solaris builds require the use of the GNU assembler and linker.
+Point ``AS`` and ``LD`` environment variables at those tool prior to
+configuration.
 
-Configure has many other options. Use "configure --help" to see them all.
+For iOS builds, the ``libffi.xcodeproj`` Xcode project is available.
+
+Configure has many other options. Use ``configure --help`` to see them all.
 
 Once configure has finished, type "make". Note that you must be using
 GNU make.  You can ftp GNU make from ftp.gnu.org:/pub/gnu/make .
@@ -181,7 +181,7 @@ GNU make.  You can ftp GNU make from ftp.gnu.org:/pub/gnu/make .
 To ensure that libffi is working as advertised, type "make check".
 This will require that you have DejaGNU installed.
 
-To install the library and header files, type "make install".
+To install the library and header files, type ``make install``.
 
 
 History
@@ -190,11 +190,11 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     3.3 TBD
+        Add RISC-V support.
+        New API in support of GO closures.
         Default to Microsoft's 64 bit long double ABI with Visual C++.
           GNU compiler uses 80 bits (128 in memory) FFI_GNUW64 ABI.
-        New API in support of GO closures.
-        Add RISC-V support.
-        Many bug fixes.
+	Many new tests cases and bug fixes.
     
     3.2.1 Nov-12-14
         Build fix for non-iOS AArch64 targets.
