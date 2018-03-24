@@ -132,19 +132,19 @@ If you're building libffi directly from version control, configure won't
 exist yet; run ./autogen.sh first.
 
 You may want to tell configure where to install the libffi library and
-header files. To do that, use the --prefix configure switch.  Libffi
+header files. To do that, use the ``--prefix`` configure switch.  Libffi
 will install under /usr/local by default. 
 
 If you want to enable extra run-time debugging checks use the the
---enable-debug configure switch. This is useful when your program dies
+``--enable-debug`` configure switch. This is useful when your program dies
 mysteriously while using libffi. 
 
-Another useful configure switch is --enable-purify-safety. Using this
+Another useful configure switch is ``--enable-purify-safety``. Using this
 will add some extra code which will suppress certain warnings when you
 are using Purify with libffi. Only use this switch when using 
 Purify, as it will slow down the library.
 
-If you don't want to build documentation, use the --disable-docs
+If you don't want to build documentation, use the ``--disable-docs``
 configure switch.
 
 It's also possible to build libffi on Windows platforms with
