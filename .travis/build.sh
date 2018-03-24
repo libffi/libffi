@@ -20,6 +20,7 @@ function build_ios()
     ./generate-darwin-source-and-headers.py
     xcodebuild -showsdks
     xcodebuild -project libffi.xcodeproj -target "libffi-iOS" -configuration Release -sdk iphoneos10.3
+    find ./ 
 }
 
 ./autogen.sh
