@@ -18,6 +18,8 @@ matrix:
       env: HOST=i386-pc-linux-gnu MEVAL='export CC="$CC -m32" && CXX="$CXX -m32"'
     - os: linux
       env: HOST=moxie-elf MEVAL='export PATH=/opt/moxielogic/bin:$PATH && CC=moxie-elf-gcc && CXX=moxie-elf-g++' LDFLAGS=-Tsim.ld RUNTESTFLAGS="--target_board moxie-sim" DEJAGNU="$TRAVIS_BUILD_DIR/.travis/site.exp"
+    - os: osx
+      env: HOST=arm-apple-darwin
 
 before_install:
   - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
@@ -27,10 +29,4 @@ install:
 
 script:
   - if ! test x"$MEVAL" = x; then eval ${MEVAL}; fi
-  - ./autogen.sh
-  - ls -l m4
-  - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
-  - make
-  - make dist
-  - make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
-  - cat */testsuite/libffi.log
+  - ./.travis/build.sh
