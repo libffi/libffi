@@ -21,6 +21,7 @@ function build_ios()
     xcodebuild -project libffi.xcodeproj -target "libffi iOS" -configuration Release -sdk iphoneos6.1 OTHER_CFLAGS="-no-integrated-as"
 }
 
+./autogen.sh
 case "$HOST" in
     arm-apple-darwin*)
 	build_ios
