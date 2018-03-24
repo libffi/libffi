@@ -18,7 +18,8 @@ function build_ios()
     which python
 # export PYTHON_BIN=/usr/local/bin/python
     ./generate-darwin-source-and-headers.py
-    xcodebuild -project libffi.xcodeproj -target "libffi iOS" -configuration Release -sdk iphoneos6.1 OTHER_CFLAGS="-no-integrated-as"
+    xcodebuild -showsdks
+    xcodebuild -project libffi.xcodeproj -target "libffi iOS" -configuration Release -sdk iphoneos10.0 OTHER_CFLAGS="-no-integrated-as"
 }
 
 ./autogen.sh
