@@ -41,7 +41,6 @@ install:
 build_script:
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; ./autogen.sh;)"
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; ./configure CC='/cygdrive/c/projects/libffi/msvcc.sh -m64' CXX='/cygdrive/c/projects/libffi/msvcc.sh -m64' LD=link CPP='cl -nologo -EP' --build=$BUILD --host=$HOST; cp src/x86/ffitarget.h include; make;)"
-  - c:\cygwin\bin\sh -lc "(cd $OLDPWD/x86_64-pc-winnt/testsuite/libffi.bhaible; make CC='/cygdrive/c/projects/libffi/msvcc.sh -m64' CXX='/cygdrive/c/projects/libffi/msvcc.sh -m64' LD=link CPP='cl -nologo -EP'; )"
 
 # FIXME: "make check" currently fails.  It just looks like msvcc needs
 # to learn about -L and -l options.  If you add "make check; cat `find
