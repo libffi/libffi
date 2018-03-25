@@ -168,7 +168,7 @@ command.  ('cygpath' is not present in MingW, and is not required when
 using MingW-style paths.)
 
 SPARC Solaris builds require the use of the GNU assembler and linker.
-Point ``AS`` and ``LD`` environment variables at those tool prior to
+Point ``AS`` and ``LD`` environment variables at those tools prior to
 configuration.
 
 For iOS builds, the ``libffi.xcodeproj`` Xcode project is available.
