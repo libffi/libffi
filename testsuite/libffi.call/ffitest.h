@@ -79,13 +79,11 @@
 #define PRIdLL "ld"
 #undef PRIuLL
 #define PRIuLL "lu"
-#ifndef _MSC_VER
 #define PRId8 "hd"
 #define PRIu8 "hu"
 #define PRId64 "ld"
 #define PRIu64 "lu"
 #define PRIuPTR "lu"
-#endif
 #endif
 
 /* PA HP-UX kludge.  */
@@ -126,11 +124,13 @@
 
 /* MSVC kludge.  */
 #if defined _MSC_VER
+#if !defined(__cplusplus) || defined(__STDC_FORMAT_MACROS)
 #define PRIuPTR "lu"
 #define PRIu8 "u"
 #define PRId8 "d"
 #define PRIu64 "I64u"
 #define PRId64 "I64d"
+#endif
 #endif
 
 #ifndef PRIuPTR
