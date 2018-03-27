@@ -1,7 +1,7 @@
 #! /bin/sh
 # Wrapper for compilers which do not understand '-c -o'.
 
-scriptversion=2018-03-07.03; # UTC
+scriptversion=2018-03-27.18; # UTC
 
 # Copyright (C) 1999-2018 Free Software Foundation, Inc.
 # Written by Tom Tromey <tromey@cygnus.com>.
@@ -186,6 +186,9 @@ func_cl_wrapper ()
 	  ;;
 	-static)
 	  shared=false
+	  ;;
+	-warn)
+	  eat=1
 	  ;;
 	-Wl,*)
 	  arg=${1#-Wl,}
