@@ -13,6 +13,8 @@ env:
   - CONFIGURE_OPTIONS=
 matrix:
   include:
+    - os: osx
+      env: HOST=arm-apple-darwin
     - os: linux
       compiler: gcc
       env: HOST=i386-pc-linux-gnu MEVAL='export CC="$CC -m32" && CXX="$CXX -m32"'
@@ -27,10 +29,4 @@ install:
 
 script:
   - if ! test x"$MEVAL" = x; then eval ${MEVAL}; fi
-  - ./autogen.sh
-  - ls -l m4
-  - ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
-  - make
-  - make dist
-  - make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
-  - cat */testsuite/libffi.log
+  - ./.travis/build.sh
