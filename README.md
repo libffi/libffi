@@ -125,10 +125,12 @@ Installing libffi
 First you must configure the distribution for your particular
 system. Go to the directory you wish to build libffi in and run the
 "configure" program found in the root directory of the libffi source
-distribution.
+distribution.  Note that building libffi requires a C99 compatible
+compiler.
 
-If you're building libffi directly from version control, configure won't
-exist yet; run ./autogen.sh first.
+If you're building libffi directly from git hosted sources, configure
+won't exist yet; run ./autogen.sh first.  This will require that you
+install autoconf, automake and libtool.
 
 You may want to tell configure where to install the libffi library and
 header files. To do that, use the ``--prefix`` configure switch.  Libffi
