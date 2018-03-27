@@ -177,7 +177,7 @@ do
 	      linkargs="$linkargs lib${1#-l}.a"
 	      ;;
 	  *)
-	      linkargs="$linkargs ${1#-l}.lib"
+	      # linkargs="$linkargs ${1#-l}.lib"
 	      ;;
       esac
       shift 1

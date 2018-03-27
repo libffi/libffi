@@ -85,10 +85,10 @@ char *str1="hello",str2[]="goodbye",*str3="still here?";
 Char C1={'A'}, C2={'B'}, C3={'C'}, C4={'\377'}, C5={(char)(-1)};
 Short S1={1}, S2={2}, S3={3}, S4={4}, S5={5}, S6={6}, S7={7}, S8={8}, S9={9};
 Int I1={1}, I2={2}, I3={3}, I4={4}, I5={5}, I6={6}, I7={7}, I8={8}, I9={9};
-Float F1={0.1}, F2={0.2}, F3={0.3}, F4={0.4}, F5={0.5}, F6={0.6}, F7={0.7}, F8={0.8}, F9={0.9};
+Float F1={0.1f}, F2={0.2f}, F3={0.3f}, F4={0.4f}, F5={0.5f}, F6={0.6f}, F7={0.7f}, F8={0.8f}, F9={0.9f};
 Double D1={0.1}, D2={0.2}, D3={0.3}, D4={0.4}, D5={0.5}, D6={0.6}, D7={0.7}, D8={0.8}, D9={0.9};
 
-A A1={'a',0.1},A2={'b',0.2},A3={'\377',0.3};
+A A1={'a',0.1f},A2={'b',0.2f},A3={'\377',0.3f};
 B B1={0.1,{1,2,3}},B2={0.2,{5,4,3}};
 J J1={47,11},J2={73,55};
 K K1={19,69,12,28};
@@ -161,7 +161,7 @@ int i_i16 (int a, int b, int c, int d, int e, int f, int g, int h,
 /* float tests */
 float f_f (float a)
 {
-  float r=a+1.0;
+  float r=a+1.0f;
   fprintf(out,"float f(float):(%g)",a);
   fflush(out);
   return r;
@@ -514,7 +514,7 @@ Char C_CdC (Char a, double b, Char c)
 Float F_Ffd (Float a, float b, double c)
 {
   Float r;
-  r.x = a.x + b + c;
+  r.x = (float) (a.x + b + c);
   fprintf(out,"Float f(Float,float,double):({%g},%g,%g)",a.x,b,c);
   fflush(out);
   return r;
