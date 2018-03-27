@@ -79,11 +79,13 @@
 #define PRIdLL "ld"
 #undef PRIuLL
 #define PRIuLL "lu"
+#ifndef _MSC_VER
 #define PRId8 "hd"
 #define PRIu8 "hu"
 #define PRId64 "ld"
 #define PRIu64 "lu"
 #define PRIuPTR "lu"
+#endif
 #endif
 
 /* PA HP-UX kludge.  */

@@ -171,7 +171,15 @@ do
       shift 1
     ;;
     -l*)
-      linkargs="$linkargs lib${1#-l}.a}"
+      case $1
+      in
+          -lffi)
+	      linkargs="$linkargs lib${1#-l}.a"
+	      ;;
+	  *)
+	      linkargs="$linkargs ${1#-l}.lib"
+	      ;;
+      esac
       shift 1
     ;;
     -W|-Wextra)
