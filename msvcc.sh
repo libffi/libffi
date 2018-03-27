@@ -147,13 +147,15 @@ do
       shift 1
     ;;
     -I)
-      args="$args -I$2"
-      includes="$includes -I$2"
+      p=$(cygpath -w $2)
+      args="$args -I$p"
+      includes="$includes -I$p"
       shift 2
     ;;
     -I*)
-      args="$args $1"
-      includes="$includes $1"
+      p=$(cygpath -w ${1#-I})
+      args="$args -I$p"
+      includes="$includes -I$p"
       shift 1
     ;;
     -L*)
