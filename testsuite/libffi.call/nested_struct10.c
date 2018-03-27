@@ -32,6 +32,7 @@ static B B_fn(struct A b2, struct B b3, struct C b4)
   result.x.a = b2.a + b3.x.a + b3.z + b4.d;
   result.x.b = b2.b + b3.x.b + b3.y + b4.e;
   result.y = b2.b + b3.x.b + b4.e;
+  result.z = 0;
 
   printf("%d %d %d %d %d %d %d %d: %d %d %d\n", (int)b2.a, b2.b,
 	 (int)b3.x.a, b3.x.b, b3.y, b3.z, (int)b4.d, b4.e,
