@@ -9,6 +9,7 @@ Makefile
 Makefile.in
 aclocal.m4
 compile
+!.travis/compile
 configure
 depcomp
 doc/libffi.info
