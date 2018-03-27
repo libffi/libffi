@@ -117,8 +117,7 @@ tested:
 | Xtensa          | Linux            | GCC                     |
 
 Please send additional platform test results to
-libffi-discuss@sourceware.org and feel free to update the wiki page
-above.
+libffi-discuss@sourceware.org.
 
 Installing libffi
 =================
