@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -x
+
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -159,6 +161,7 @@ do
     -L*)
         path=`echo "$1" | sed 's/-L//'`
         args+=("/LIBPATH:$path")
+	shift 1
         ;;
     -l*)
       IFS_save="$IFS"
