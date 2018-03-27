@@ -171,18 +171,7 @@ do
       shift 1
     ;;
     -l*)
-      IFS_save="$IFS"
-      IFS=\;
-      found=
-      for d in $libpaths; do
-          d=$(cygpath $d)
-          if [ -f "$d/lib${1#-l}.a" ]; then
-              found="lib${1#-l}.a"
-              break;
-          fi
-      done
-      IFS="$IFS_save"
-      linkargs="$linkargs ${found:-${1#-l}.lib}"
+      linkargs="$linkargs lib${1#-l}.a}"
       shift 1
     ;;
     -W|-Wextra)
@@ -242,14 +231,15 @@ do
   esac
 done
 
-# If -Zi is specified, certain optimizations are implicitly disabled
-# by MSVC. Add back those optimizations if this is an optimized build.
-# NOTE: These arguments must come after all others.
-if [ -n "$opt" ]; then
-    linkargs="$linkargs -OPT:REF -OPT:ICF -INCREMENTAL:NO"
-fi
-
 if [ -n "$linkargs" ]; then
+
+    # If -Zi is specified, certain optimizations are implicitly disabled
+    # by MSVC. Add back those optimizations if this is an optimized build.
+    # NOTE: These arguments must come after all others.
+    if [ -n "$opt" ]; then
+	linkargs="$linkargs -OPT:REF -OPT:ICF -INCREMENTAL:NO"
+    fi
+
     args="$args /link $linkargs"
 fi
 
