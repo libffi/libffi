@@ -381,8 +381,10 @@ test -d src || mkdir src
 test -d src/$TARGETDIR || mkdir src/$TARGETDIR
 ], [TARGETDIR="$TARGETDIR"])
 
-AC_CONFIG_LINKS(include/ffitarget.h:src/$TARGETDIR/ffitarget.h)
-
 AC_CONFIG_FILES(include/Makefile include/ffi.h Makefile testsuite/Makefile man/Makefile doc/Makefile libffi.pc)
 
 AC_OUTPUT
+
+# Copy this file instead of using AC_CONFIG_LINK in order to support
+# compiling with MSVC, which won't understand cygwin style symlinks.
+cp ${srcdir}/src/$TARGETDIR/ffitarget.h include/ffitarget.h
