@@ -1,4 +1,4 @@
-#!/bin/sh
+!/bin/sh
 
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -44,12 +44,14 @@
 
 args_orig=$@
 args="-nologo -W3"
+linkargs=
 static_crt=
 debug_crt=
 cl="cl"
 ml="ml"
 safeseh="-safeseh"
 output=
+libpaths=
 
 while [ $# -gt 0 ]
 do
@@ -160,22 +162,22 @@ do
     ;;
     -L)
       p=$(cygpath -m $2)
-      args="$args /LIBPATH:$p"
+      linkargs="$linkargs /LIBPATH:$p"
       shift 2
     ;;
     -L*)
       p=$(cygpath -m ${1#-L})
-      args="$args /LIBPATH:$p"
+      linkargs="$linkargs /LIBPATH:$p"
       shift 1
     ;;
     -l*)
       IFS_save="$IFS"
       IFS=\;
       found=
-      for d in $LIB; do
-          d="$(echo $d | sed -e 's,\\,/,g')"
-          if [ -f "$d/lib${1#-l}.lib" ]; then
-              found="lib${1#-l}.lib"
+      for d in $libpaths; do
+          d=`cygpath $d`
+          if [ -f "$d/lib${1#-l}.a" ]; then
+              found="lib${1#-l}.a"
               break;
           fi
       done
@@ -244,8 +246,17 @@ done
 # by MSVC. Add back those optimizations if this is an optimized build.
 # NOTE: These arguments must come after all others.
 if [ -n "$opt" ]; then
-    args="$args -link -OPT:REF -OPT:ICF -INCREMENTAL:NO"
+    linkargs="$linkargs -OPT:REF -OPT:ICF -INCREMENTAL:NO"
 fi
+
+if [ -n "$linkargs" ]; then
+    args="$args /link $linkargs"
+fi
+
+echo *******************************************************************************************
+echo $args
+echo *******************************************************************************************
+
 
 if [ -n "$static_crt" ]; then
     md=-MT
