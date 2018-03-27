@@ -158,11 +158,16 @@ do
       includes="$includes -I$p"
       shift 1
     ;;
+    -L)
+      p=$(cygpath -m $2)
+      args="$args /LIBPATH:$p"
+      shift 2
+    ;;
     -L*)
-        path=`echo "$1" | sed 's/-L//'`
-        args+=("/LIBPATH:$path")
-	shift 1
-        ;;
+      p=$(cygpath -m ${1#-L})
+      args="$args /LIBPATH:$p"
+      shift 1
+    ;;
     -l*)
       IFS_save="$IFS"
       IFS=\;
