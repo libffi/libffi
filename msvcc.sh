@@ -156,6 +156,25 @@ do
       includes="$includes $1"
       shift 1
     ;;
+    -L*)
+        path=`echo "$1" | sed 's/-L//'`
+        args+=("/LIBPATH:$path")
+        ;;
+    -l*)
+      IFS_save="$IFS"
+      IFS=\;
+      found=
+      for d in $LIB; do
+          d="$(echo $d | sed -e 's,\\,/,g')"
+          if [ -f "$d/lib${1#-l}.lib" ]; then
+              found="lib${1#-l}.lib"
+              break;
+          fi
+      done
+      IFS="$IFS_save"
+      args="$args ${found:-${1#-l}.lib}"
+      shift 1
+    ;;
     -W|-Wextra)
       # TODO map extra warnings
       shift 1
