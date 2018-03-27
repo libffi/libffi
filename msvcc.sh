@@ -1,4 +1,4 @@
-!/bin/sh
+#!/bin/sh
 
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -175,14 +175,14 @@ do
       IFS=\;
       found=
       for d in $libpaths; do
-          d=`cygpath $d`
+          d=$(cygpath $d)
           if [ -f "$d/lib${1#-l}.a" ]; then
               found="lib${1#-l}.a"
               break;
           fi
       done
       IFS="$IFS_save"
-      args="$args ${found:-${1#-l}.lib}"
+      linkargs="$linkargs ${found:-${1#-l}.lib}"
       shift 1
     ;;
     -W|-Wextra)
