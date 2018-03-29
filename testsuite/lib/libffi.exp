@@ -302,11 +302,11 @@ proc run-many-tests { testcases extra_flags } {
     switch $compiler_vendor {
       "clang" {
 	set common "-W -Wall"
-	set optimizations { "-O0" "-O1" "-O2" "-O3" "-Os" }
+	set optimizations { "-O0" "-O2" "-Os" }
       }
       "gnu" {
         set common "-W -Wall -Wno-psabi"
-        set optimizations { "-O0" "-O2" "-O3" "-Os" "-O2 -fomit-frame-pointer" }
+        set optimizations { "-O0" "-O2" "-Os" "-O2 -fomit-frame-pointer" }
       }
       default {
         # Assume we are using the vendor compiler.
