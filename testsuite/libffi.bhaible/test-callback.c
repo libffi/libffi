@@ -23,6 +23,7 @@
 #include <string.h>
 #include <ffi.h>
 #include "alignof.h"
+#include <stdarg.h>
 
 #include "testcases.c"
 
@@ -33,27 +34,38 @@
 int count = 0;
 char rbuf1[2048];
 char rbuf2[2048];
-#define FPRINTF(STREAM,FMT,ARGS...)			\
-  { fprintf(STREAM, FMT, ##ARGS) ;			\
-    switch (count++)					\
-      {							\
-        case 0:						\
-        case 1:						\
-	  sprintf(&rbuf1[strlen(rbuf1)], FMT, ##ARGS);	\
-	  break ;					\
-        case 2:						\
-	  sprintf(rbuf2, FMT, ##ARGS);	                \
-	  break;					\
-        case 3:						\
-	  sprintf(&rbuf2[strlen(rbuf2)], FMT, ##ARGS);	\
-	  if (strcmp (rbuf1, rbuf2)) abort();		\
-	  break;					\
-      }							\
-  }
-#else
-#define FPRINTF fprintf
+int fprintf(FILE *stream, const char *format, ...)
+{
+  va_list args;
+  va_start(args, format);
+
+  switch (count++)
+    {
+    case 0:
+    case 1:
+      vsprintf(&rbuf1[strlen(rbuf1)], format, args);
+      break;
+    case 2:
+      printf(rbuf1);
+      vsprintf(rbuf2, format, args);
+      break;
+    case 3:
+      vsprintf(&rbuf2[strlen(rbuf2)], format, args);
+      printf(rbuf2);
+      if (strcmp (rbuf1, rbuf2)) abort();
+      break;
+    }
+
+  va_end(args);
+
+  return 0;
+}
 #endif
 /* --------------------------------------------------------------- */
+
+#ifndef ABI_NUM
+#define ABI_NUM FFI_DEFAULT_ABI
+#endif
 
 /* Definitions that ought to be part of libffi. */
 static ffi_type ffi_type_char;
@@ -64,9 +76,9 @@ static ffi_type ffi_type_char;
 #define SKIP_EXTRA_STRUCTS
 
 #define FFI_PREP_CIF(cif,argtypes,rettype) \
-  if (ffi_prep_cif(&(cif),FFI_DEFAULT_ABI,sizeof(argtypes)/sizeof(argtypes[0]),&rettype,argtypes) != FFI_OK) abort()
+  if (ffi_prep_cif(&(cif),ABI_NUM,sizeof(argtypes)/sizeof(argtypes[0]),&rettype,argtypes) != FFI_OK) abort()
 #define FFI_PREP_CIF_NOARGS(cif,rettype) \
-  if (ffi_prep_cif(&(cif),FFI_DEFAULT_ABI,0,&rettype,NULL) != FFI_OK) abort()
+  if (ffi_prep_cif(&(cif),ABI_NUM,0,&rettype,NULL) != FFI_OK) abort()
 
 #if defined(__sparc__) && defined(__sun) && defined(__SUNPRO_C) /* SUNWspro cc */
 /* SunPRO cc miscompiles the simulator function for X_BcdB: d.i[1] is
@@ -88,7 +100,7 @@ static ffi_type ffi_type_char;
 void v_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, void* data)
 {
   if (data != (void*)&v_v) { fprintf(out,"wrong data for v_v\n"); exit(1); }
-  FPRINTF(out,"void f(void):\n");
+  fprintf(out,"void f(void):\n");
   fflush(out);
 }
 
@@ -97,7 +109,7 @@ void i_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, v
 {
   if (data != (void*)&i_v) { fprintf(out,"wrong data for i_v\n"); exit(1); }
  {int r=99;
-  FPRINTF(out,"int f(void):");
+  fprintf(out,"int f(void):");
   fflush(out);
   *(ffi_arg*)retp = r;
 }}
@@ -106,7 +118,7 @@ void i_i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, v
   if (data != (void*)&i_i) { fprintf(out,"wrong data for i_i\n"); exit(1); }
   int a = *(int*)(*args++);
   int r=a+1;
-  FPRINTF(out,"int f(int):(%d)",a);
+  fprintf(out,"int f(int):(%d)",a);
   fflush(out);
   *(ffi_arg*)retp = r;
 }
@@ -116,7 +128,7 @@ void i_i2_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
  {int a = *(int*)(*args++);
   int b = *(int*)(*args++);
   int r=a+b;
-  FPRINTF(out,"int f(2*int):(%d,%d)",a,b);
+  fprintf(out,"int f(2*int):(%d,%d)",a,b);
   fflush(out);
   *(ffi_arg*)retp = r;
 }}
@@ -128,7 +140,7 @@ void i_i4_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
   int c = *(int*)(*args++);
   int d = *(int*)(*args++);
   int r=a+b+c+d;
-  FPRINTF(out,"int f(4*int):(%d,%d,%d,%d)",a,b,c,d);
+  fprintf(out,"int f(4*int):(%d,%d,%d,%d)",a,b,c,d);
   fflush(out);
   *(ffi_arg*)retp = r;
 }}
@@ -144,7 +156,7 @@ void i_i8_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
   int g = *(int*)(*args++);
   int h = *(int*)(*args++);
   int r=a+b+c+d+e+f+g+h;
-  FPRINTF(out,"int f(8*int):(%d,%d,%d,%d,%d,%d,%d,%d)",a,b,c,d,e,f,g,h);
+  fprintf(out,"int f(8*int):(%d,%d,%d,%d,%d,%d,%d,%d)",a,b,c,d,e,f,g,h);
   fflush(out);
   *(ffi_arg*)retp = r;
 }}
@@ -168,7 +180,7 @@ void i_i16_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   int o = *(int*)(*args++);
   int p = *(int*)(*args++);
   int r=a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p;
-  FPRINTF(out,"int f(16*int):(%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)",
+  fprintf(out,"int f(16*int):(%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)",
           a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
   fflush(out);
   *(ffi_arg*)retp = r;
@@ -180,7 +192,7 @@ void f_f_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, v
   if (data != (void*)&f_f) { fprintf(out,"wrong data for f_f\n"); exit(1); }
  {float a = *(float*)(*args++);
   float r=a+1.0;
-  FPRINTF(out,"float f(float):(%g)",a);
+  fprintf(out,"float f(float):(%g)",a);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -190,7 +202,7 @@ void f_f2_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
  {float a = *(float*)(*args++);
   float b = *(float*)(*args++);
   float r=a+b;
-  FPRINTF(out,"float f(2*float):(%g,%g)",a,b);
+  fprintf(out,"float f(2*float):(%g,%g)",a,b);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -202,7 +214,7 @@ void f_f4_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
   float c = *(float*)(*args++);
   float d = *(float*)(*args++);
   float r=a+b+c+d;
-  FPRINTF(out,"float f(4*float):(%g,%g,%g,%g)",a,b,c,d);
+  fprintf(out,"float f(4*float):(%g,%g,%g,%g)",a,b,c,d);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -218,7 +230,7 @@ void f_f8_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
   float g = *(float*)(*args++);
   float h = *(float*)(*args++);
   float r=a+b+c+d+e+f+g+h;
-  FPRINTF(out,"float f(8*float):(%g,%g,%g,%g,%g,%g,%g,%g)",a,b,c,d,e,f,g,h);
+  fprintf(out,"float f(8*float):(%g,%g,%g,%g,%g,%g,%g,%g)",a,b,c,d,e,f,g,h);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -242,7 +254,7 @@ void f_f16_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   float o = *(float*)(*args++);
   float p = *(float*)(*args++);
   float r=a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p;
-  FPRINTF(out,"float f(16*float):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)",a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
+  fprintf(out,"float f(16*float):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)",a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -274,7 +286,7 @@ void f_f24_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   float x = *(float*)(*args++);
   float y = *(float*)(*args++);
   float r=a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+s+t+u+v+w+x+y;
-  FPRINTF(out,"float f(24*float):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)",a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,s,t,u,v,w,x,y);
+  fprintf(out,"float f(24*float):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)",a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,s,t,u,v,w,x,y);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -285,7 +297,7 @@ void d_d_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, v
   if (data != (void*)&d_d) { fprintf(out,"wrong data for d_d\n"); exit(1); }
  {double a = *(double*)(*args++);
   double r=a+1.0;
-  FPRINTF(out,"double f(double):(%g)",a);
+  fprintf(out,"double f(double):(%g)",a);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -295,7 +307,7 @@ void d_d2_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
  {double a = *(double*)(*args++);
   double b = *(double*)(*args++);
   double r=a+b;
-  FPRINTF(out,"double f(2*double):(%g,%g)",a,b);
+  fprintf(out,"double f(2*double):(%g,%g)",a,b);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -307,7 +319,7 @@ void d_d4_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
   double c = *(double*)(*args++);
   double d = *(double*)(*args++);
   double r=a+b+c+d;
-  FPRINTF(out,"double f(4*double):(%g,%g,%g,%g)",a,b,c,d);
+  fprintf(out,"double f(4*double):(%g,%g,%g,%g)",a,b,c,d);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -323,7 +335,7 @@ void d_d8_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
   double g = *(double*)(*args++);
   double h = *(double*)(*args++);
   double r=a+b+c+d+e+f+g+h;
-  FPRINTF(out,"double f(8*double):(%g,%g,%g,%g,%g,%g,%g,%g)",a,b,c,d,e,f,g,h);
+  fprintf(out,"double f(8*double):(%g,%g,%g,%g,%g,%g,%g,%g)",a,b,c,d,e,f,g,h);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -347,7 +359,7 @@ void d_d16_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double o = *(double*)(*args++);
   double p = *(double*)(*args++);
   double r=a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p;
-  FPRINTF(out,"double f(16*double):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)",a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
+  fprintf(out,"double f(16*double):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)",a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -361,7 +373,7 @@ void vp_vpdpcpsp_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ 
   char* c = *(char* *)(*args++);
   Int* d = *(Int* *)(*args++);
   void* ret = (char*)b + 1;
-  FPRINTF(out,"void* f(void*,double*,char*,Int*):(0x%p,0x%p,0x%p,0x%p)",a,b,c,d);
+  fprintf(out,"void* f(void*,double*,char*,Int*):(0x%p,0x%p,0x%p,0x%p)",a,b,c,d);
   fflush(out);
   *(void* *)retp = ret;
 }}
@@ -375,7 +387,7 @@ void uc_ucsil_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *ar
   uint c = *(unsigned int *)(*args++);
   ulong d = *(unsigned long *)(*args++);
   uchar r = (uchar)-1;
-  FPRINTF(out,"uchar f(uchar,ushort,uint,ulong):(%u,%u,%u,%lu)",a,b,c,d);
+  fprintf(out,"uchar f(uchar,ushort,uint,ulong):(%u,%u,%u,%lu)",a,b,c,d);
   fflush(out);
   *(ffi_arg *)retp = r;
 }}
@@ -387,7 +399,7 @@ void d_iidd_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args
   double c = *(double*)(*args++);
   double d = *(double*)(*args++);
   double r=a+b+c+d;
-  FPRINTF(out,"double f(int,int,double,double):(%d,%d,%g,%g)",a,b,c,d);
+  fprintf(out,"double f(int,int,double,double):(%d,%d,%g,%g)",a,b,c,d);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -400,7 +412,7 @@ void d_iiidi_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *arg
   double d = *(double*)(*args++);
   int e = *(int*)(*args++);
   double r=a+b+c+d+e;
-  FPRINTF(out,"double f(int,int,int,double,int):(%d,%d,%d,%g,%d)",a,b,c,d,e);
+  fprintf(out,"double f(int,int,int,double,int):(%d,%d,%d,%g,%d)",a,b,c,d,e);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -412,7 +424,7 @@ void d_idid_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args
   int c = *(int*)(*args++);
   double d = *(double*)(*args++);
   double r=a+b+c+d;
-  FPRINTF(out,"double f(int,double,int,double):(%d,%g,%d,%g)",a,b,c,d);
+  fprintf(out,"double f(int,double,int,double):(%d,%g,%d,%g)",a,b,c,d);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -423,7 +435,7 @@ void d_fdi_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double b = *(double*)(*args++);
   int c = *(int*)(*args++);
   double r=a+b+c;
-  FPRINTF(out,"double f(float,double,int):(%g,%g,%d)",a,b,c);
+  fprintf(out,"double f(float,double,int):(%g,%g,%d)",a,b,c);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -435,7 +447,7 @@ void us_cdcd_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *arg
   char c = *(char*)(*args++);
   double d = *(double*)(*args++);
   ushort r = (ushort)(a + b + c + d);
-  FPRINTF(out,"ushort f(char,double,char,double):('%c',%g,'%c',%g)",a,b,c,d);
+  fprintf(out,"ushort f(char,double,char,double):('%c',%g,'%c',%g)",a,b,c,d);
   fflush(out);
   *(ffi_arg *)retp = r;
 }}
@@ -448,7 +460,7 @@ void ll_iiilli_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *a
   long long d = *(long long *)(*args++);
   int e = *(int*)(*args++);
   long long r = (long long)(int)a + (long long)(int)b + (long long)(int)c + d + (long long)e;
-  FPRINTF(out,"long long f(int,int,int,long long,int):(%d,%d,%d,0x%lx%08lx,%d)",a,b,c,(long)(d>>32),(long)(d&0xffffffff),e);
+  fprintf(out,"long long f(int,int,int,long long,int):(%d,%d,%d,0x%lx%08lx,%d)",a,b,c,(long)(d>>32),(long)(d&0xffffffff),e);
   fflush(out);
   *(long long *)retp = r;
 }}
@@ -459,7 +471,7 @@ void ll_flli_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *arg
   long long b = *(long long *)(*args++);
   int c = *(int*)(*args++);
   long long r = (long long)(int)a + b + (long long)c;
-  FPRINTF(out,"long long f(float,long long,int):(%g,0x%lx%08lx,0x%lx)",a,(long)(b>>32),(long)(b&0xffffffff),(long)c);
+  fprintf(out,"long long f(float,long long,int):(%g,0x%lx%08lx,0x%lx)",a,(long)(b>>32),(long)(b&0xffffffff),(long)c);
   fflush(out);
   *(long long *)retp = r;
 }}
@@ -469,7 +481,7 @@ void f_fi_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
  {float a = *(float*)(*args++);
   int z = *(int*)(*args++);
   float r=a+z;
-  FPRINTF(out,"float f(float,int):(%g,%d)",a,z);
+  fprintf(out,"float f(float,int):(%g,%d)",a,z);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -480,7 +492,7 @@ void f_f2i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   float b = *(float*)(*args++);
   int z = *(int*)(*args++);
   float r=a+b+z;
-  FPRINTF(out,"float f(2*float,int):(%g,%g,%d)",a,b,z);
+  fprintf(out,"float f(2*float,int):(%g,%g,%d)",a,b,z);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -492,7 +504,7 @@ void f_f3i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   float c = *(float*)(*args++);
   int z = *(int*)(*args++);
   float r=a+b+c+z;
-  FPRINTF(out,"float f(3*float,int):(%g,%g,%g,%d)",a,b,c,z);
+  fprintf(out,"float f(3*float,int):(%g,%g,%g,%d)",a,b,c,z);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -505,7 +517,7 @@ void f_f4i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   float d = *(float*)(*args++);
   int z = *(int*)(*args++);
   float r=a+b+c+d+z;
-  FPRINTF(out,"float f(4*float,int):(%g,%g,%g,%g,%d)",a,b,c,d,z);
+  fprintf(out,"float f(4*float,int):(%g,%g,%g,%g,%d)",a,b,c,d,z);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -521,7 +533,7 @@ void f_f7i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   float g = *(float*)(*args++);
   int z = *(int*)(*args++);
   float r=a+b+c+d+e+f+g+z;
-  FPRINTF(out,"float f(7*float,int):(%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,z);
+  fprintf(out,"float f(7*float,int):(%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,z);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -538,7 +550,7 @@ void f_f8i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   float h = *(float*)(*args++);
   int z = *(int*)(*args++);
   float r=a+b+c+d+e+f+g+h+z;
-  FPRINTF(out,"float f(8*float,int):(%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,z);
+  fprintf(out,"float f(8*float,int):(%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,z);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -559,7 +571,7 @@ void f_f12i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args
   float l = *(float*)(*args++);
   int z = *(int*)(*args++);
   float r=a+b+c+d+e+f+g+h+i+j+k+l+z;
-  FPRINTF(out,"float f(12*float,int):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,i,j,k,l,z);
+  fprintf(out,"float f(12*float,int):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,i,j,k,l,z);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -581,7 +593,7 @@ void f_f13i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args
   float m = *(float*)(*args++);
   int z = *(int*)(*args++);
   float r=a+b+c+d+e+f+g+h+i+j+k+l+m+z;
-  FPRINTF(out,"float f(13*float,int):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,i,j,k,l,m,z);
+  fprintf(out,"float f(13*float,int):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,i,j,k,l,m,z);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -591,7 +603,7 @@ void d_di_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
  {double a = *(double*)(*args++);
   int z = *(int*)(*args++);
   double r=a+z;
-  FPRINTF(out,"double f(double,int):(%g,%d)",a,z);
+  fprintf(out,"double f(double,int):(%g,%d)",a,z);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -602,7 +614,7 @@ void d_d2i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double b = *(double*)(*args++);
   int z = *(int*)(*args++);
   double r=a+b+z;
-  FPRINTF(out,"double f(2*double,int):(%g,%g,%d)",a,b,z);
+  fprintf(out,"double f(2*double,int):(%g,%g,%d)",a,b,z);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -614,7 +626,7 @@ void d_d3i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double c = *(double*)(*args++);
   int z = *(int*)(*args++);
   double r=a+b+c+z;
-  FPRINTF(out,"double f(3*double,int):(%g,%g,%g,%d)",a,b,c,z);
+  fprintf(out,"double f(3*double,int):(%g,%g,%g,%d)",a,b,c,z);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -627,7 +639,7 @@ void d_d4i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double d = *(double*)(*args++);
   int z = *(int*)(*args++);
   double r=a+b+c+d+z;
-  FPRINTF(out,"double f(4*double,int):(%g,%g,%g,%g,%d)",a,b,c,d,z);
+  fprintf(out,"double f(4*double,int):(%g,%g,%g,%g,%d)",a,b,c,d,z);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -643,7 +655,7 @@ void d_d7i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double g = *(double*)(*args++);
   int z = *(int*)(*args++);
   double r=a+b+c+d+e+f+g+z;
-  FPRINTF(out,"double f(7*double,int):(%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,z);
+  fprintf(out,"double f(7*double,int):(%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,z);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -660,7 +672,7 @@ void d_d8i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double h = *(double*)(*args++);
   int z = *(int*)(*args++);
   double r=a+b+c+d+e+f+g+h+z;
-  FPRINTF(out,"double f(8*double,int):(%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,z);
+  fprintf(out,"double f(8*double,int):(%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,z);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -681,7 +693,7 @@ void d_d12i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args
   double l = *(double*)(*args++);
   int z = *(int*)(*args++);
   double r=a+b+c+d+e+f+g+h+i+j+k+l+z;
-  FPRINTF(out,"double f(12*double,int):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,i,j,k,l,z);
+  fprintf(out,"double f(12*double,int):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,i,j,k,l,z);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -703,7 +715,7 @@ void d_d13i_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args
   double m = *(double*)(*args++);
   int z = *(int*)(*args++);
   double r=a+b+c+d+e+f+g+h+i+j+k+l+m+z;
-  FPRINTF(out,"double f(13*double,int):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,i,j,k,l,m,z);
+  fprintf(out,"double f(13*double,int):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d)",a,b,c,d,e,f,g,h,i,j,k,l,m,z);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -713,7 +725,7 @@ void S1_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
 {
   if (data != (void*)&S1_v) { fprintf(out,"wrong data for S1_v\n"); exit(1); }
  {Size1 r = Size1_1;
-  FPRINTF(out,"Size1 f(void):");
+  fprintf(out,"Size1 f(void):");
   fflush(out);
   *(Size1*)retp = r;
 }}
@@ -721,7 +733,7 @@ void S2_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
 {
   if (data != (void*)&S2_v) { fprintf(out,"wrong data for S2_v\n"); exit(1); }
  {Size2 r = Size2_1;
-  FPRINTF(out,"Size2 f(void):");
+  fprintf(out,"Size2 f(void):");
   fflush(out);
   *(Size2*)retp = r;
 }}
@@ -729,7 +741,7 @@ void S3_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
 {
   if (data != (void*)&S3_v) { fprintf(out,"wrong data for S3_v\n"); exit(1); }
  {Size3 r = Size3_1;
-  FPRINTF(out,"Size3 f(void):");
+  fprintf(out,"Size3 f(void):");
   fflush(out);
   *(Size3*)retp = r;
 }}
@@ -737,7 +749,7 @@ void S4_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
 {
   if (data != (void*)&S4_v) { fprintf(out,"wrong data for S4_v\n"); exit(1); }
  {Size4 r = Size4_1;
-  FPRINTF(out,"Size4 f(void):");
+  fprintf(out,"Size4 f(void):");
   fflush(out);
   *(Size4*)retp = r;
 }}
@@ -745,7 +757,7 @@ void S7_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
 {
   if (data != (void*)&S7_v) { fprintf(out,"wrong data for S7_v\n"); exit(1); }
  {Size7 r = Size7_1;
-  FPRINTF(out,"Size7 f(void):");
+  fprintf(out,"Size7 f(void):");
   fflush(out);
   *(Size7*)retp = r;
 }}
@@ -753,7 +765,7 @@ void S8_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args, 
 {
   if (data != (void*)&S8_v) { fprintf(out,"wrong data for S8_v\n"); exit(1); }
  {Size8 r = Size8_1;
-  FPRINTF(out,"Size8 f(void):");
+  fprintf(out,"Size8 f(void):");
   fflush(out);
   *(Size8*)retp = r;
 }}
@@ -761,7 +773,7 @@ void S12_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
 {
   if (data != (void*)&S12_v) { fprintf(out,"wrong data for S12_v\n"); exit(1); }
  {Size12 r = Size12_1;
-  FPRINTF(out,"Size12 f(void):");
+  fprintf(out,"Size12 f(void):");
   fflush(out);
   *(Size12*)retp = r;
 }}
@@ -769,7 +781,7 @@ void S15_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
 {
   if (data != (void*)&S15_v) { fprintf(out,"wrong data for S15_v\n"); exit(1); }
  {Size15 r = Size15_1;
-  FPRINTF(out,"Size15 f(void):");
+  fprintf(out,"Size15 f(void):");
   fflush(out);
   *(Size15*)retp = r;
 }}
@@ -777,7 +789,7 @@ void S16_v_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
 {
   if (data != (void*)&S16_v) { fprintf(out,"wrong data for S16_v\n"); exit(1); }
  {Size16 r = Size16_1;
-  FPRINTF(out,"Size16 f(void):");
+  fprintf(out,"Size16 f(void):");
   fflush(out);
   *(Size16*)retp = r;
 }}
@@ -791,7 +803,7 @@ void I_III_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   Int c = *(Int*)(*args++);
   Int r;
   r.x = a.x + b.x + c.x;
-  FPRINTF(out,"Int f(Int,Int,Int):({%d},{%d},{%d})",a.x,b.x,c.x);
+  fprintf(out,"Int f(Int,Int,Int):({%d},{%d},{%d})",a.x,b.x,c.x);
   fflush(out);
   *(Int*)retp = r;
 }}
@@ -803,7 +815,7 @@ void C_CdC_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   Char c = *(Char*)(*args++);
   Char r;
   r.x = (a.x + c.x)/2;
-  FPRINTF(out,"Char f(Char,double,Char):({'%c'},%g,{'%c'})",a.x,b,c.x);
+  fprintf(out,"Char f(Char,double,Char):({'%c'},%g,{'%c'})",a.x,b,c.x);
   fflush(out);
   *(Char*)retp = r;
 }}
@@ -815,7 +827,7 @@ void F_Ffd_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double c = *(double*)(*args++);
   Float r;
   r.x = a.x + b + c;
-  FPRINTF(out,"Float f(Float,float,double):({%g},%g,%g)",a.x,b,c);
+  fprintf(out,"Float f(Float,float,double):({%g},%g,%g)",a.x,b,c);
   fflush(out);
   *(Float*)retp = r;
 }}
@@ -827,7 +839,7 @@ void D_fDd_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double c = *(double*)(*args++);
   Double r;
   r.x = a + b.x + c;
-  FPRINTF(out,"Double f(float,Double,double):(%g,{%g},%g)",a,b.x,c);
+  fprintf(out,"Double f(float,Double,double):(%g,{%g},%g)",a,b.x,c);
   fflush(out);
   *(Double*)retp = r;
 }}
@@ -839,7 +851,7 @@ void D_Dfd_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double c = *(double*)(*args++);
   Double r;
   r.x = a.x + b + c;
-  FPRINTF(out,"Double f(Double,float,double):({%g},%g,%g)",a.x,b,c);
+  fprintf(out,"Double f(Double,float,double):({%g},%g,%g)",a.x,b,c);
   fflush(out);
   *(Double*)retp = r;
 }}
@@ -851,7 +863,7 @@ void J_JiJ_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   J c = *(J*)(*args++);
   J r;
   r.l1 = a.l1+c.l1; r.l2 = a.l2+b+c.l2;
-  FPRINTF(out,"J f(J,int,J):({%ld,%ld},%d,{%ld,%ld})",a.l1,a.l2,b,c.l1,c.l2);
+  fprintf(out,"J f(J,int,J):({%ld,%ld},%d,{%ld,%ld})",a.l1,a.l2,b,c.l1,c.l2);
   fflush(out);
   *(J*)retp = r;
 }}
@@ -864,7 +876,7 @@ void T_TcT_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   T c = *(T*)(*args++);
   T r;
   r.c[0]='b'; r.c[1]=c.c[1]; r.c[2]=c.c[2];
-  FPRINTF(out,"T f(T,char,T):({\"%c%c%c\"},'%c',{\"%c%c%c\"})",a.c[0],a.c[1],a.c[2],b,c.c[0],c.c[1],c.c[2]);
+  fprintf(out,"T f(T,char,T):({\"%c%c%c\"},'%c',{\"%c%c%c\"})",a.c[0],a.c[1],a.c[2],b,c.c[0],c.c[1],c.c[2]);
   fflush(out);
   *(T*)retp = r;
 }}
@@ -879,7 +891,7 @@ void X_BcdB_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args
   X r;
   r = xr;
   r.c1 = b;
-  FPRINTF(out,"X f(B,char,double,B):({%g,{%d,%d,%d}},'%c',%g,{%g,{%d,%d,%d}})",
+  fprintf(out,"X f(B,char,double,B):({%g,{%d,%d,%d}},'%c',%g,{%g,{%d,%d,%d}})",
           a.d,a.i[0],a.i[1],a.i[2],b,c,d.d,d.i[0],d.i[1],d.i[2]);
   fflush(out);
   *(X*)retp = r;
@@ -893,7 +905,7 @@ void l_l0K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
  {K b = *(K*)(*args++);
   long c = *(long*)(*args++);
   long r = b.l1 + b.l2 + b.l3 + b.l4 + c;
-  FPRINTF(out,"long f(K,long):(%ld,%ld,%ld,%ld,%ld)",b.l1,b.l2,b.l3,b.l4,c);
+  fprintf(out,"long f(K,long):(%ld,%ld,%ld,%ld,%ld)",b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   *(ffi_arg*)retp = r;
 }}
@@ -904,7 +916,7 @@ void l_l1K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   K b = *(K*)(*args++);
   long c = *(long*)(*args++);
   long r = a1 + b.l1 + b.l2 + b.l3 + b.l4 + c;
-  FPRINTF(out,"long f(long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld)",a1,b.l1,b.l2,b.l3,b.l4,c);
+  fprintf(out,"long f(long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld)",a1,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   *(ffi_arg*)retp = r;
 }}
@@ -916,7 +928,7 @@ void l_l2K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   K b = *(K*)(*args++);
   long c = *(long*)(*args++);
   long r = a1 + a2 + b.l1 + b.l2 + b.l3 + b.l4 + c;
-  FPRINTF(out,"long f(2*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,b.l1,b.l2,b.l3,b.l4,c);
+  fprintf(out,"long f(2*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   *(ffi_arg*)retp = r;
 }}
@@ -929,7 +941,7 @@ void l_l3K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   K b = *(K*)(*args++);
   long c = *(long*)(*args++);
   long r = a1 + a2 + a3 + b.l1 + b.l2 + b.l3 + b.l4 + c;
-  FPRINTF(out,"long f(3*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,b.l1,b.l2,b.l3,b.l4,c);
+  fprintf(out,"long f(3*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   *(ffi_arg*)retp = r;
 }}
@@ -943,7 +955,7 @@ void l_l4K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   K b = *(K*)(*args++);
   long c = *(long*)(*args++);
   long r = a1 + a2 + a3 + a4 + b.l1 + b.l2 + b.l3 + b.l4 + c;
-  FPRINTF(out,"long f(4*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,b.l1,b.l2,b.l3,b.l4,c);
+  fprintf(out,"long f(4*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   *(ffi_arg*)retp = r;
 }}
@@ -958,7 +970,7 @@ void l_l5K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   K b = *(K*)(*args++);
   long c = *(long*)(*args++);
   long r = a1 + a2 + a3 + a4 + a5 + b.l1 + b.l2 + b.l3 + b.l4 + c;
-  FPRINTF(out,"long f(5*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,a5,b.l1,b.l2,b.l3,b.l4,c);
+  fprintf(out,"long f(5*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,a5,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   *(ffi_arg*)retp = r;
 }}
@@ -974,7 +986,7 @@ void l_l6K_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   K b = *(K*)(*args++);
   long c = *(long*)(*args++);
   long r = a1 + a2 + a3 + a4 + a5 + a6 + b.l1 + b.l2 + b.l3 + b.l4 + c;
-  FPRINTF(out,"long f(6*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,a5,a6,b.l1,b.l2,b.l3,b.l4,c);
+  fprintf(out,"long f(6*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,a5,a6,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   *(ffi_arg*)retp = r;
 }}
@@ -1003,7 +1015,7 @@ void f_f17l3L_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *ar
   long u = *(long*)(*args++);
   L z = *(L*)(*args++);
   float r = a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+s+t+u+z.l1+z.l2+z.l3+z.l4+z.l5+z.l6;
-  FPRINTF(out,"float f(17*float,3*int,L):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,s,t,u,z.l1,z.l2,z.l3,z.l4,z.l5,z.l6);
+  fprintf(out,"float f(17*float,3*int,L):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,s,t,u,z.l1,z.l2,z.l3,z.l4,z.l5,z.l6);
   fflush(out);
   *(float*)retp = r;
 }}
@@ -1032,7 +1044,7 @@ void d_d17l3L_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *ar
   long u = *(long*)(*args++);
   L z = *(L*)(*args++);
   double r = a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+s+t+u+z.l1+z.l2+z.l3+z.l4+z.l5+z.l6;
-  FPRINTF(out,"double f(17*double,3*int,L):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,s,t,u,z.l1,z.l2,z.l3,z.l4,z.l5,z.l6);
+  fprintf(out,"double f(17*double,3*int,L):(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,s,t,u,z.l1,z.l2,z.l3,z.l4,z.l5,z.l6);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -1044,7 +1056,7 @@ void ll_l2ll_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *arg
   long long b = *(long long *)(*args++);
   long c = *(long*)(*args++);
   long long r = (long long) (a1 + a2) + b + c;
-  FPRINTF(out,"long long f(2*long,long long,long):(%ld,%ld,0x%lx%08lx,%ld)",a1,a2,(long)(b>>32),(long)(b&0xffffffff),c);
+  fprintf(out,"long long f(2*long,long long,long):(%ld,%ld,0x%lx%08lx,%ld)",a1,a2,(long)(b>>32),(long)(b&0xffffffff),c);
   fflush(out);
   *(long long *)retp = r;
 }}
@@ -1057,7 +1069,7 @@ void ll_l3ll_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *arg
   long long b = *(long long *)(*args++);
   long c = *(long*)(*args++);
   long long r = (long long) (a1 + a2 + a3) + b + c;
-  FPRINTF(out,"long long f(3*long,long long,long):(%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,(long)(b>>32),(long)(b&0xffffffff),c);
+  fprintf(out,"long long f(3*long,long long,long):(%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,(long)(b>>32),(long)(b&0xffffffff),c);
   fflush(out);
   *(long long *)retp = r;
 }}
@@ -1071,7 +1083,7 @@ void ll_l4ll_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *arg
   long long b = *(long long *)(*args++);
   long c = *(long*)(*args++);
   long long r = (long long) (a1 + a2 + a3 + a4) + b + c;
-  FPRINTF(out,"long long f(4*long,long long,long):(%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,(long)(b>>32),(long)(b&0xffffffff),c);
+  fprintf(out,"long long f(4*long,long long,long):(%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,(long)(b>>32),(long)(b&0xffffffff),c);
   fflush(out);
   *(long long *)retp = r;
 }}
@@ -1086,7 +1098,7 @@ void ll_l5ll_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *arg
   long long b = *(long long *)(*args++);
   long c = *(long*)(*args++);
   long long r = (long long) (a1 + a2 + a3 + a4 + a5) + b + c;
-  FPRINTF(out,"long long f(5*long,long long,long):(%ld,%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,a5,(long)(b>>32),(long)(b&0xffffffff),c);
+  fprintf(out,"long long f(5*long,long long,long):(%ld,%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,a5,(long)(b>>32),(long)(b&0xffffffff),c);
   fflush(out);
   *(long long *)retp = r;
 }}
@@ -1102,7 +1114,7 @@ void ll_l6ll_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *arg
   long long b = *(long long *)(*args++);
   long c = *(long*)(*args++);
   long long r = (long long) (a1 + a2 + a3 + a4 + a5 + a6) + b + c;
-  FPRINTF(out,"long long f(6*long,long long,long):(%ld,%ld,%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,a5,a6,(long)(b>>32),(long)(b&0xffffffff),c);
+  fprintf(out,"long long f(6*long,long long,long):(%ld,%ld,%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,a5,a6,(long)(b>>32),(long)(b&0xffffffff),c);
   fflush(out);
   *(long long *)retp = r;
 }}
@@ -1119,7 +1131,7 @@ void ll_l7ll_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *arg
   long long b = *(long long *)(*args++);
   long c = *(long*)(*args++);
   long long r = (long long) (a1 + a2 + a3 + a4 + a5 + a6 + a7) + b + c;
-  FPRINTF(out,"long long f(7*long,long long,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,a5,a6,a7,(long)(b>>32),(long)(b&0xffffffff),c);
+  fprintf(out,"long long f(7*long,long long,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,a5,a6,a7,(long)(b>>32),(long)(b&0xffffffff),c);
   fflush(out);
   *(long long *)retp = r;
 }}
@@ -1131,7 +1143,7 @@ void d_l2d_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double b = *(double*)(*args++);
   long c = *(long*)(*args++);
   double r = (double) (a1 + a2) + b + c;
-  FPRINTF(out,"double f(2*long,double,long):(%ld,%ld,%g,%ld)",a1,a2,b,c);
+  fprintf(out,"double f(2*long,double,long):(%ld,%ld,%g,%ld)",a1,a2,b,c);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -1144,7 +1156,7 @@ void d_l3d_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double b = *(double*)(*args++);
   long c = *(long*)(*args++);
   double r = (double) (a1 + a2 + a3) + b + c;
-  FPRINTF(out,"double f(3*long,double,long):(%ld,%ld,%ld,%g,%ld)",a1,a2,a3,b,c);
+  fprintf(out,"double f(3*long,double,long):(%ld,%ld,%ld,%g,%ld)",a1,a2,a3,b,c);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -1158,7 +1170,7 @@ void d_l4d_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double b = *(double*)(*args++);
   long c = *(long*)(*args++);
   double r = (double) (a1 + a2 + a3 + a4) + b + c;
-  FPRINTF(out,"double f(4*long,double,long):(%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,b,c);
+  fprintf(out,"double f(4*long,double,long):(%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,b,c);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -1173,7 +1185,7 @@ void d_l5d_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double b = *(double*)(*args++);
   long c = *(long*)(*args++);
   double r = (double) (a1 + a2 + a3 + a4 + a5) + b + c;
-  FPRINTF(out,"double f(5*long,double,long):(%ld,%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,a5,b,c);
+  fprintf(out,"double f(5*long,double,long):(%ld,%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,a5,b,c);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -1189,7 +1201,7 @@ void d_l6d_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double b = *(double*)(*args++);
   long c = *(long*)(*args++);
   double r = (double) (a1 + a2 + a3 + a4 + a5 + a6) + b + c;
-  FPRINTF(out,"double f(6*long,double,long):(%ld,%ld,%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,a5,a6,b,c);
+  fprintf(out,"double f(6*long,double,long):(%ld,%ld,%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,a5,a6,b,c);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -1206,7 +1218,7 @@ void d_l7d_simulator (ffi_cif* cif, void* retp, /*const*/ void* /*const*/ *args,
   double b = *(double*)(*args++);
   long c = *(long*)(*args++);
   double r = (double) (a1 + a2 + a3 + a4 + a5 + a6 + a7) + b + c;
-  FPRINTF(out,"double f(7*long,double,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,a5,a6,a7,b,c);
+  fprintf(out,"double f(7*long,double,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,a5,a6,a7,b,c);
   fflush(out);
   *(double*)retp = r;
 }}
@@ -1284,7 +1296,7 @@ int main (void)
       ir = ((int (*) (void)) callback_code) ();
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%d\n",ir);
+    fprintf(out,"->%d\n",ir);
     fflush(out);
 #endif    
 
@@ -1302,7 +1314,7 @@ int main (void)
       ir = ((int (*) (int)) callback_code) (i1);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%d\n",ir);
+    fprintf(out,"->%d\n",ir);
     fflush(out);
 #endif
 
@@ -1320,7 +1332,7 @@ int main (void)
       ir = ((int (*) (int,int)) callback_code) (i1,i2);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%d\n",ir);
+    fprintf(out,"->%d\n",ir);
     fflush(out);
 #endif
 
@@ -1338,7 +1350,7 @@ int main (void)
       ir = ((int (*) (int,int,int,int)) callback_code) (i1,i2,i3,i4);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%d\n",ir);
+    fprintf(out,"->%d\n",ir);
     fflush(out);
 #endif
 
@@ -1356,7 +1368,7 @@ int main (void)
       ir = ((int (*) (int,int,int,int,int,int,int,int)) callback_code) (i1,i2,i3,i4,i5,i6,i7,i8);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%d\n",ir);
+    fprintf(out,"->%d\n",ir);
     fflush(out);
 #endif
   
@@ -1374,7 +1386,7 @@ int main (void)
       ir = ((int (*) (int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int)) callback_code) (i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%d\n",ir);
+    fprintf(out,"->%d\n",ir);
     fflush(out);
 #endif
   }
@@ -1396,7 +1408,7 @@ int main (void)
       fr = ((float (*) (float)) callback_code) (f1);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
@@ -1414,7 +1426,7 @@ int main (void)
       fr = ((float (*) (float,float)) callback_code) (f1,f2);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
@@ -1432,7 +1444,7 @@ int main (void)
       fr = ((float (*) (float,float,float,float)) callback_code) (f1,f2,f3,f4);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
@@ -1450,7 +1462,7 @@ int main (void)
       fr = ((float (*) (float,float,float,float,float,float,float,float)) callback_code) (f1,f2,f3,f4,f5,f6,f7,f8);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
@@ -1468,7 +1480,7 @@ int main (void)
       fr = ((float (*) (float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float)) callback_code) (f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
@@ -1486,7 +1498,7 @@ int main (void)
       fr = ((float (*) (float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float)) callback_code) (f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20,f21,f22,f23,f24);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
@@ -1509,7 +1521,7 @@ int main (void)
       dr = ((double (*) (double)) callback_code) (d1);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
@@ -1527,7 +1539,7 @@ int main (void)
       dr = ((double (*) (double,double)) callback_code) (d1,d2);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
   
@@ -1545,7 +1557,7 @@ int main (void)
       dr = ((double (*) (double,double,double,double)) callback_code) (d1,d2,d3,d4);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
@@ -1563,7 +1575,7 @@ int main (void)
       dr = ((double (*) (double,double,double,double,double,double,double,double)) callback_code) (d1,d2,d3,d4,d5,d6,d7,d8);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
@@ -1581,7 +1593,7 @@ int main (void)
       dr = ((double (*) (double,double,double,double,double,double,double,double,double,double,double,double,double,double,double,double)) callback_code) (d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
   }
@@ -1603,7 +1615,7 @@ int main (void)
       vpr = ((void* (*) (void*,double*,char*,Int*)) callback_code) (&uc1,&d2,str3,&I4);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->0x%p\n",vpr);
+    fprintf(out,"->0x%p\n",vpr);
     fflush(out);
 #endif
   }
@@ -1629,7 +1641,7 @@ int main (void)
       ucr = ((uchar (*) (uchar,ushort,uint,ulong)) callback_code) (uc1,us2,ui3,ul4);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%u\n",ucr);
+    fprintf(out,"->%u\n",ucr);
     fflush(out);
 #endif
 
@@ -1647,7 +1659,7 @@ int main (void)
       dr = ((double (*) (int,int,double,double)) callback_code) (i1,i2,d3,d4);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
@@ -1671,7 +1683,7 @@ int main (void)
 
 #if (!defined(DGTEST)) || DGTEST == 23    
     dr = d_idid(i1,d2,i3,d4);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1689,7 +1701,7 @@ int main (void)
 
 #if (!defined(DGTEST)) || DGTEST == 24    
     dr = d_fdi(f1,d2,i3);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1707,7 +1719,7 @@ int main (void)
 
 #if (!defined(DGTEST)) || DGTEST == 25    
     usr = us_cdcd(c1,d2,c3,d4);
-    FPRINTF(out,"->%u\n",usr);
+    fprintf(out,"->%u\n",usr);
     fflush(out);
     usr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -1725,7 +1737,7 @@ int main (void)
 
 #if (!defined(DGTEST)) || DGTEST == 26    
     llr = ll_iiilli(i1,i2,i3,ll1,i13);
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
     llr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -1737,13 +1749,13 @@ int main (void)
       llr = ((long long (*) (int,int,int,long long,int)) callback_code) (i1,i2,i3,ll1,i13);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 27    
     llr = ll_flli(f13,ll1,i13);
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
     llr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -1755,13 +1767,13 @@ int main (void)
       llr = ((long long (*) (float,long long,int)) callback_code) (f13,ll1,i13);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 28    
     fr = f_fi(f1,i9);
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
     fr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1773,13 +1785,13 @@ int main (void)
       fr = ((float (*) (float,int)) callback_code) (f1,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 29    
     fr = f_f2i(f1,f2,i9);
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
     fr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1791,13 +1803,13 @@ int main (void)
       fr = ((float (*) (float,float,int)) callback_code) (f1,f2,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 30    
     fr = f_f3i(f1,f2,f3,i9);
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
     fr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1809,13 +1821,13 @@ int main (void)
       fr = ((float (*) (float,float,float,int)) callback_code) (f1,f2,f3,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 31    
     fr = f_f4i(f1,f2,f3,f4,i9);
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
     fr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1827,13 +1839,13 @@ int main (void)
       fr = ((float (*) (float,float,float,float,int)) callback_code) (f1,f2,f3,f4,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 32    
     fr = f_f7i(f1,f2,f3,f4,f5,f6,f7,i9);
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
     fr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1845,13 +1857,13 @@ int main (void)
       fr = ((float (*) (float,float,float,float,float,float,float,int)) callback_code) (f1,f2,f3,f4,f5,f6,f7,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 33    
     fr = f_f8i(f1,f2,f3,f4,f5,f6,f7,f8,i9);
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
     fr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1863,13 +1875,13 @@ int main (void)
       fr = ((float (*) (float,float,float,float,float,float,float,float,int)) callback_code) (f1,f2,f3,f4,f5,f6,f7,f8,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 34    
     fr = f_f13i(f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,i9);
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
     fr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1881,13 +1893,13 @@ int main (void)
       fr = ((float (*) (float,float,float,float,float,float,float,float,float,float,float,float,float,int)) callback_code) (f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 35    
     dr = d_di(d1,i9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1899,13 +1911,13 @@ int main (void)
       dr = ((double (*) (double,int)) callback_code) (d1,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 36    
     dr = d_d2i(d1,d2,i9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1917,13 +1929,13 @@ int main (void)
       dr = ((double (*) (double,double,int)) callback_code) (d1,d2,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 37    
     dr = d_d3i(d1,d2,d3,i9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1935,13 +1947,13 @@ int main (void)
       dr = ((double (*) (double,double,double,int)) callback_code) (d1,d2,d3,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 38    
     dr = d_d4i(d1,d2,d3,d4,i9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1953,13 +1965,13 @@ int main (void)
       dr = ((double (*) (double,double,double,double,int)) callback_code) (d1,d2,d3,d4,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 39    
     dr = d_d7i(d1,d2,d3,d4,d5,d6,d7,i9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1971,13 +1983,13 @@ int main (void)
       dr = ((double (*) (double,double,double,double,double,double,double,int)) callback_code) (d1,d2,d3,d4,d5,d6,d7,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 40    
     dr = d_d8i(d1,d2,d3,d4,d5,d6,d7,d8,i9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -1989,13 +2001,13 @@ int main (void)
       dr = ((double (*) (double,double,double,double,double,double,double,double,int)) callback_code) (d1,d2,d3,d4,d5,d6,d7,d8,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 41    
     dr = d_d12i(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,i9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2007,13 +2019,13 @@ int main (void)
       dr = ((double (*) (double,double,double,double,double,double,double,double,double,double,double,double,int)) callback_code) (d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 42    
     dr = d_d13i(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,i9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2025,7 +2037,7 @@ int main (void)
       dr = ((double (*) (double,double,double,double,double,double,double,double,double,double,double,double,double,int)) callback_code) (d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,i9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
   }
@@ -2034,7 +2046,7 @@ int main (void)
 #if (!defined(DGTEST)) || DGTEST == 43
   {
     Size1 r = S1_v();
-    FPRINTF(out,"->{%c}\n",r.x1);
+    fprintf(out,"->{%c}\n",r.x1);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     ALLOC_CALLBACK();
@@ -2051,7 +2063,7 @@ int main (void)
       r = ((Size1 (*) (void)) callback_code) ();
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%c}\n",r.x1);
+    fprintf(out,"->{%c}\n",r.x1);
     fflush(out);
   }
 #endif
@@ -2059,7 +2071,7 @@ int main (void)
 #if (!defined(DGTEST)) || DGTEST == 44
   {
     Size2 r = S2_v();
-    FPRINTF(out,"->{%c%c}\n",r.x1,r.x2);
+    fprintf(out,"->{%c%c}\n",r.x1,r.x2);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     ALLOC_CALLBACK();
@@ -2076,7 +2088,7 @@ int main (void)
       r = ((Size2 (*) (void)) callback_code) ();
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%c%c}\n",r.x1,r.x2);
+    fprintf(out,"->{%c%c}\n",r.x1,r.x2);
     fflush(out);
   }
 #endif    
@@ -2084,7 +2096,7 @@ int main (void)
 #if (!defined(DGTEST)) || DGTEST == 45
   {
     Size3 r = S3_v();
-    FPRINTF(out,"->{%c%c%c}\n",r.x1,r.x2,r.x3);
+    fprintf(out,"->{%c%c%c}\n",r.x1,r.x2,r.x3);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     ALLOC_CALLBACK();
@@ -2101,7 +2113,7 @@ int main (void)
       r = ((Size3 (*) (void)) callback_code) ();
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%c%c%c}\n",r.x1,r.x2,r.x3);
+    fprintf(out,"->{%c%c%c}\n",r.x1,r.x2,r.x3);
     fflush(out);
   }
 #endif    
@@ -2109,7 +2121,7 @@ int main (void)
 #if (!defined(DGTEST)) || DGTEST == 46
   {
     Size4 r = S4_v();
-    FPRINTF(out,"->{%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4);
+    fprintf(out,"->{%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     ALLOC_CALLBACK();
@@ -2126,7 +2138,7 @@ int main (void)
       r = ((Size4 (*) (void)) callback_code) ();
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4);
+    fprintf(out,"->{%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4);
     fflush(out);
   }
 #endif
@@ -2134,7 +2146,7 @@ int main (void)
 #if (!defined(DGTEST)) || DGTEST == 47  
   {
     Size7 r = S7_v();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7);
+    fprintf(out,"->{%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     ALLOC_CALLBACK();
@@ -2151,7 +2163,7 @@ int main (void)
       r = ((Size7 (*) (void)) callback_code) ();
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7);
+    fprintf(out,"->{%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7);
     fflush(out);
   }
 #endif
@@ -2159,7 +2171,7 @@ int main (void)
 #if (!defined(DGTEST)) || DGTEST == 48  
   {
     Size8 r = S8_v();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     ALLOC_CALLBACK();
@@ -2176,7 +2188,7 @@ int main (void)
       r = ((Size8 (*) (void)) callback_code) ();
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8);
     fflush(out);
   }
 #endif
@@ -2184,7 +2196,7 @@ int main (void)
 #if (!defined(DGTEST)) || DGTEST == 49
   {
     Size12 r = S12_v();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     ALLOC_CALLBACK();
@@ -2201,7 +2213,7 @@ int main (void)
       r = ((Size12 (*) (void)) callback_code) ();
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12);
     fflush(out);
   }
 #endif
@@ -2209,7 +2221,7 @@ int main (void)
 #if (!defined(DGTEST)) || DGTEST == 50  
   {
     Size15 r = S15_v();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     ALLOC_CALLBACK();
@@ -2226,7 +2238,7 @@ int main (void)
       r = ((Size15 (*) (void)) callback_code) ();
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15);
     fflush(out);
   }
 #endif
@@ -2234,7 +2246,7 @@ int main (void)
 #if (!defined(DGTEST)) || DGTEST == 51
   {
     Size16 r = S16_v();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15,r.x16);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15,r.x16);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     ALLOC_CALLBACK();
@@ -2251,7 +2263,7 @@ int main (void)
       r = ((Size16 (*) (void)) callback_code) ();
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15,r.x16);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15,r.x16);
     fflush(out);
   }
 #endif
@@ -2270,7 +2282,7 @@ int main (void)
 
 #if (!defined(DGTEST)) || DGTEST == 52
     Ir = I_III(I1,I2,I3);
-    FPRINTF(out,"->{%d}\n",Ir.x);
+    fprintf(out,"->{%d}\n",Ir.x);
     fflush(out);
     Ir.x = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2288,13 +2300,13 @@ int main (void)
       Ir = ((Int (*) (Int,Int,Int)) callback_code) (I1,I2,I3);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%d}\n",Ir.x);
+    fprintf(out,"->{%d}\n",Ir.x);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 53
     Cr = C_CdC(C1,d2,C3);
-    FPRINTF(out,"->{'%c'}\n",Cr.x);
+    fprintf(out,"->{'%c'}\n",Cr.x);
     fflush(out);
     Cr.x = '\0'; clear_traces();
     ALLOC_CALLBACK();
@@ -2312,13 +2324,13 @@ int main (void)
       Cr = ((Char (*) (Char,double,Char)) callback_code) (C1,d2,C3);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{'%c'}\n",Cr.x);
+    fprintf(out,"->{'%c'}\n",Cr.x);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 54    
     Fr = F_Ffd(F1,f2,d3);
-    FPRINTF(out,"->{%g}\n",Fr.x);
+    fprintf(out,"->{%g}\n",Fr.x);
     fflush(out);
     Fr.x = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2336,13 +2348,13 @@ int main (void)
       Fr = ((Float (*) (Float,float,double)) callback_code) (F1,f2,d3);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%g}\n",Fr.x);
+    fprintf(out,"->{%g}\n",Fr.x);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 55    
     Dr = D_fDd(f1,D2,d3);
-    FPRINTF(out,"->{%g}\n",Dr.x);
+    fprintf(out,"->{%g}\n",Dr.x);
     fflush(out);
     Dr.x = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2360,13 +2372,13 @@ int main (void)
       Dr = ((Double (*) (float,Double,double)) callback_code) (f1,D2,d3);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%g}\n",Dr.x);
+    fprintf(out,"->{%g}\n",Dr.x);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 56
     Dr = D_Dfd(D1,f2,d3);
-    FPRINTF(out,"->{%g}\n",Dr.x);
+    fprintf(out,"->{%g}\n",Dr.x);
     fflush(out);
     Dr.x = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2384,13 +2396,13 @@ int main (void)
       Dr = ((Double (*) (Double,float,double)) callback_code) (D1,f2,d3);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%g}\n",Dr.x);
+    fprintf(out,"->{%g}\n",Dr.x);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 57
     Jr = J_JiJ(J1,i2,J2);
-    FPRINTF(out,"->{%ld,%ld}\n",Jr.l1,Jr.l2);
+    fprintf(out,"->{%ld,%ld}\n",Jr.l1,Jr.l2);
     fflush(out);
     Jr.l1 = Jr.l2 = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2408,14 +2420,14 @@ int main (void)
       Jr = ((J (*) (J,int,J)) callback_code) (J1,i2,J2);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{%ld,%ld}\n",Jr.l1,Jr.l2);
+    fprintf(out,"->{%ld,%ld}\n",Jr.l1,Jr.l2);
     fflush(out);
 #endif
 
 #ifndef SKIP_EXTRA_STRUCTS
 #if (!defined(DGTEST)) || DGTEST == 58
     Tr = T_TcT(T1,' ',T2);
-    FPRINTF(out,"->{\"%c%c%c\"}\n",Tr.c[0],Tr.c[1],Tr.c[2]);
+    fprintf(out,"->{\"%c%c%c\"}\n",Tr.c[0],Tr.c[1],Tr.c[2]);
     fflush(out);
     Tr.c[0] = Tr.c[1] = Tr.c[2] = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2433,14 +2445,14 @@ int main (void)
       Tr = ((T (*) (T,char,T)) callback_code) (T1,' ',T2);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{\"%c%c%c\"}\n",Tr.c[0],Tr.c[1],Tr.c[2]);
+    fprintf(out,"->{\"%c%c%c\"}\n",Tr.c[0],Tr.c[1],Tr.c[2]);
     fflush(out);
 #endif
 
 #ifndef SKIP_X
 #if (!defined(DGTEST)) || DGTEST == 59
     Xr = X_BcdB(B1,c2,d3,B2);
-    FPRINTF(out,"->{\"%s\",'%c'}\n",Xr.c,Xr.c1);
+    fprintf(out,"->{\"%s\",'%c'}\n",Xr.c,Xr.c1);
     fflush(out);
     Xr.c[0]=Xr.c1='\0'; clear_traces();
     ALLOC_CALLBACK();
@@ -2458,7 +2470,7 @@ int main (void)
       Xr = ((X (*) (B,char,double,B)) callback_code) (B1,c2,d3,B2);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->{\"%s\",'%c'}\n",Xr.c,Xr.c1);
+    fprintf(out,"->{\"%s\",'%c'}\n",Xr.c,Xr.c1);
     fflush(out);
 #endif
 #endif
@@ -2489,7 +2501,7 @@ int main (void)
 
 #if (!defined(DGTEST)) || DGTEST == 60
     lr = l_l0K(K1,l9);
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
     lr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2501,13 +2513,13 @@ int main (void)
       lr = ((long (*) (K,long)) callback_code) (K1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 61
     lr = l_l1K(l1,K1,l9);
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
     lr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2519,13 +2531,13 @@ int main (void)
       lr = ((long (*) (long,K,long)) callback_code) (l1,K1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 62
     lr = l_l2K(l1,l2,K1,l9);
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
     lr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2537,13 +2549,13 @@ int main (void)
       lr = ((long (*) (long,long,K,long)) callback_code) (l1,l2,K1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 63
     lr = l_l3K(l1,l2,l3,K1,l9);
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
     lr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2555,13 +2567,13 @@ int main (void)
       lr = ((long (*) (long,long,long,K,long)) callback_code) (l1,l2,l3,K1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 64
     lr = l_l4K(l1,l2,l3,l4,K1,l9);
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
     lr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2573,13 +2585,13 @@ int main (void)
       lr = ((long (*) (long,long,long,long,K,long)) callback_code) (l1,l2,l3,l4,K1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 65  
     lr = l_l5K(l1,l2,l3,l4,l5,K1,l9);
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
     lr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2591,13 +2603,13 @@ int main (void)
       lr = ((long (*) (long,long,long,long,long,K,long)) callback_code) (l1,l2,l3,l4,l5,K1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 66
     lr = l_l6K(l1,l2,l3,l4,l5,l6,K1,l9);
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
     lr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2609,13 +2621,13 @@ int main (void)
       lr = ((long (*) (long,long,long,long,long,long,K,long)) callback_code) (l1,l2,l3,l4,l5,l6,K1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%ld\n",lr);
+    fprintf(out,"->%ld\n",lr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 67    
     fr = f_f17l3L(f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,l6,l7,l8,L1);
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
     fr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2627,13 +2639,13 @@ int main (void)
       fr = ((float (*) (float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,long,long,long,L)) callback_code) (f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,l6,l7,l8,L1);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",fr);
+    fprintf(out,"->%g\n",fr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 68    
     dr = d_d17l3L(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,l6,l7,l8,L1);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2645,13 +2657,13 @@ int main (void)
       dr = ((double (*) (double,double,double,double,double,double,double,double,double,double,double,double,double,double,double,double,double,long,long,long,L)) callback_code) (d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,l6,l7,l8,L1);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 69    
     llr = ll_l2ll(l1,l2,ll1,l9);
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
     llr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2663,13 +2675,13 @@ int main (void)
       llr = ((long long (*) (long,long,long long,long)) callback_code) (l1,l2,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 70
     llr = ll_l3ll(l1,l2,l3,ll1,l9);
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
     llr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2681,13 +2693,13 @@ int main (void)
       llr = ((long long (*) (long,long,long,long long,long)) callback_code) (l1,l2,l3,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 71    
     llr = ll_l4ll(l1,l2,l3,l4,ll1,l9);
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
     llr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2699,13 +2711,13 @@ int main (void)
       llr = ((long long (*) (long,long,long,long,long long,long)) callback_code) (l1,l2,l3,l4,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 72    
     llr = ll_l5ll(l1,l2,l3,l4,l5,ll1,l9);
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
     llr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2717,13 +2729,13 @@ int main (void)
       llr = ((long long (*) (long,long,long,long,long,long long,long)) callback_code) (l1,l2,l3,l4,l5,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 73    
     llr = ll_l6ll(l1,l2,l3,l4,l5,l6,ll1,l9);
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
     llr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2735,13 +2747,13 @@ int main (void)
       llr = ((long long (*) (long,long,long,long,long,long,long long,long)) callback_code) (l1,l2,l3,l4,l5,l6,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 74    
     llr = ll_l7ll(l1,l2,l3,l4,l5,l6,l7,ll1,l9);
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
     llr = 0; clear_traces();
     ALLOC_CALLBACK();
@@ -2753,13 +2765,13 @@ int main (void)
       llr = ((long long (*) (long,long,long,long,long,long,long,long long,long)) callback_code) (l1,l2,l3,l4,l5,l6,l7,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+    fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 75    
     dr = d_l2d(l1,l2,ll1,l9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2771,13 +2783,13 @@ int main (void)
       dr = ((double (*) (long,long,double,long)) callback_code) (l1,l2,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 76    
     dr = d_l3d(l1,l2,l3,ll1,l9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2789,13 +2801,13 @@ int main (void)
       dr = ((double (*) (long,long,long,double,long)) callback_code) (l1,l2,l3,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 77    
     dr = d_l4d(l1,l2,l3,l4,ll1,l9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2807,13 +2819,13 @@ int main (void)
       dr = ((double (*) (long,long,long,long,double,long)) callback_code) (l1,l2,l3,l4,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 78
     dr = d_l5d(l1,l2,l3,l4,l5,ll1,l9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2825,13 +2837,13 @@ int main (void)
       dr = ((double (*) (long,long,long,long,long,double,long)) callback_code) (l1,l2,l3,l4,l5,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 79
     dr = d_l6d(l1,l2,l3,l4,l5,l6,ll1,l9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2843,13 +2855,13 @@ int main (void)
       dr = ((double (*) (long,long,long,long,long,long,double,long)) callback_code) (l1,l2,l3,l4,l5,l6,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 80
     dr = d_l7d(l1,l2,l3,l4,l5,l6,l7,ll1,l9);
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
     dr = 0.0; clear_traces();
     ALLOC_CALLBACK();
@@ -2861,7 +2873,7 @@ int main (void)
       dr = ((double (*) (long,long,long,long,long,long,long,double,long)) callback_code) (l1,l2,l3,l4,l5,l6,l7,ll1,l9);
     }
     FREE_CALLBACK();
-    FPRINTF(out,"->%g\n",dr);
+    fprintf(out,"->%g\n",dr);
     fflush(out);
 #endif
 

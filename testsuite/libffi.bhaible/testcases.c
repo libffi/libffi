@@ -4,7 +4,7 @@
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -105,50 +105,65 @@ Size16 Size16_1={'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p'
 T T1={{'t','h','e'}},T2={{'f','o','x'}};
 X X1={"abcdefghijklmnopqrstuvwxyzABCDEF",'G'}, X2={"123",'9'}, X3={"return-return-return",'R'};
 
+#if defined(__GNUC__)
+#define __STDCALL__ __attribute__((stdcall))
+#define __THISCALL__ __attribute__((thiscall))
+#define __FASTCALL__ __attribute__((fastcall))
+#define __MSABI__ __attribute__((ms_abi))
+#else
+#define __STDCALL__ __stdcall
+#define __THISCALL__ __thiscall
+#define __FASTCALL__ __fastcall
+#endif
+
+#ifndef ABI_ATTR
+#define ABI_ATTR
+#endif
+
 /* void tests */
-void v_v (void)
+void ABI_ATTR v_v (void)
 {
   fprintf(out,"void f(void):\n");
   fflush(out);
 }
 
 /* int tests */
-int i_v (void)
+int ABI_ATTR i_v (void)
 {
   int r=99;
   fprintf(out,"int f(void):");
   fflush(out);
   return r;
 }
-int i_i (int a)
+int ABI_ATTR i_i (int a)
 {
   int r=a+1;
   fprintf(out,"int f(int):(%d)",a);
   fflush(out);
   return r;
 }
-int i_i2 (int a, int b)
+int ABI_ATTR i_i2 (int a, int b)
 {
   int r=a+b;
   fprintf(out,"int f(2*int):(%d,%d)",a,b);
   fflush(out);
   return r;
 }
-int i_i4 (int a, int b, int c, int d)
+int ABI_ATTR i_i4 (int a, int b, int c, int d)
 {
   int r=a+b+c+d;
   fprintf(out,"int f(4*int):(%d,%d,%d,%d)",a,b,c,d);
   fflush(out);
   return r;
 }
-int i_i8 (int a, int b, int c, int d, int e, int f, int g, int h)
+int ABI_ATTR i_i8 (int a, int b, int c, int d, int e, int f, int g, int h)
 {
   int r=a+b+c+d+e+f+g+h;
   fprintf(out,"int f(8*int):(%d,%d,%d,%d,%d,%d,%d,%d)",a,b,c,d,e,f,g,h);
   fflush(out);
   return r;
 }
-int i_i16 (int a, int b, int c, int d, int e, int f, int g, int h,
+int ABI_ATTR i_i16 (int a, int b, int c, int d, int e, int f, int g, int h,
            int i, int j, int k, int l, int m, int n, int o, int p)
 {
   int r=a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p;
@@ -159,28 +174,28 @@ int i_i16 (int a, int b, int c, int d, int e, int f, int g, int h,
 }
 
 /* float tests */
-float f_f (float a)
+float ABI_ATTR f_f (float a)
 {
   float r=a+1.0f;
   fprintf(out,"float f(float):(%g)",a);
   fflush(out);
   return r;
 }
-float f_f2 (float a, float b)
+float ABI_ATTR f_f2 (float a, float b)
 {
   float r=a+b;
   fprintf(out,"float f(2*float):(%g,%g)",a,b);
   fflush(out);
   return r;
 }
-float f_f4 (float a, float b, float c, float d)
+float ABI_ATTR f_f4 (float a, float b, float c, float d)
 {
   float r=a+b+c+d;
   fprintf(out,"float f(4*float):(%g,%g,%g,%g)",a,b,c,d);
   fflush(out);
   return r;
 }
-float f_f8 (float a, float b, float c, float d, float e, float f,
+float ABI_ATTR f_f8 (float a, float b, float c, float d, float e, float f,
             float g, float h)
 {
   float r=a+b+c+d+e+f+g+h;
@@ -188,7 +203,7 @@ float f_f8 (float a, float b, float c, float d, float e, float f,
   fflush(out);
   return r;
 }
-float f_f16 (float a, float b, float c, float d, float e, float f, float g, float h,
+float ABI_ATTR f_f16 (float a, float b, float c, float d, float e, float f, float g, float h,
              float i, float j, float k, float l, float m, float n, float o, float p)
 {
   float r=a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p;
@@ -196,7 +211,7 @@ float f_f16 (float a, float b, float c, float d, float e, float f, float g, floa
   fflush(out);
   return r;
 }
-float f_f24 (float a, float b, float c, float d, float e, float f, float g, float h,
+float ABI_ATTR f_f24 (float a, float b, float c, float d, float e, float f, float g, float h,
              float i, float j, float k, float l, float m, float n, float o, float p,
              float q, float s, float t, float u, float v, float w, float x, float y)
 {
@@ -207,28 +222,28 @@ float f_f24 (float a, float b, float c, float d, float e, float f, float g, floa
 }
 
 /* double tests */
-double d_d (double a)
+double ABI_ATTR d_d (double a)
 {
   double r=a+1.0;
   fprintf(out,"double f(double):(%g)",a);
   fflush(out);
   return r;
 }
-double d_d2 (double a, double b)
+double ABI_ATTR d_d2 (double a, double b)
 {
   double r=a+b;
   fprintf(out,"double f(2*double):(%g,%g)",a,b);
   fflush(out);
   return r;
 }
-double d_d4 (double a, double b, double c, double d)
+double ABI_ATTR d_d4 (double a, double b, double c, double d)
 {
   double r=a+b+c+d;
   fprintf(out,"double f(4*double):(%g,%g,%g,%g)",a,b,c,d);
   fflush(out);
   return r;
 }
-double d_d8 (double a, double b, double c, double d, double e, double f,
+double ABI_ATTR d_d8 (double a, double b, double c, double d, double e, double f,
              double g, double h)
 {
   double r=a+b+c+d+e+f+g+h;
@@ -236,7 +251,7 @@ double d_d8 (double a, double b, double c, double d, double e, double f,
   fflush(out);
   return r;
 }
-double d_d16 (double a, double b, double c, double d, double e, double f,
+double ABI_ATTR d_d16 (double a, double b, double c, double d, double e, double f,
               double g, double h, double i, double j, double k, double l,
               double m, double n, double o, double p)
 {
@@ -247,7 +262,7 @@ double d_d16 (double a, double b, double c, double d, double e, double f,
 }
 
 /* pointer tests */
-void* vp_vpdpcpsp (void* a, double* b, char* c, Int* d)
+void* ABI_ATTR vp_vpdpcpsp (void* a, double* b, char* c, Int* d)
 {
   void* ret = (char*)b + 1;
   fprintf(out,"void* f(void*,double*,char*,Int*):(0x%p,0x%p,0x%p,0x%p)",a,b,c,d);
@@ -256,42 +271,42 @@ void* vp_vpdpcpsp (void* a, double* b, char* c, Int* d)
 }
 
 /* mixed number tests */
-uchar uc_ucsil (uchar a, ushort b, uint c, ulong d)
+uchar ABI_ATTR uc_ucsil (uchar a, ushort b, uint c, ulong d)
 {
   uchar r = (uchar)-1;
   fprintf(out,"uchar f(uchar,ushort,uint,ulong):(%u,%u,%u,%lu)",a,b,c,d);
   fflush(out);
   return r;
 }
-double d_iidd (int a, int b, double c, double d)
+double ABI_ATTR d_iidd (int a, int b, double c, double d)
 {
   double r = a+b+c+d;
   fprintf(out,"double f(int,int,double,double):(%d,%d,%g,%g)",a,b,c,d);
   fflush(out);
   return r;
 }
-double d_iiidi (int a, int b, int c, double d, int e)
+double ABI_ATTR d_iiidi (int a, int b, int c, double d, int e)
 {
   double r = a+b+c+d+e;
   fprintf(out,"double f(int,int,int,double,int):(%d,%d,%d,%g,%d)",a,b,c,d,e);
   fflush(out);
   return r;
 }
-double d_idid (int a, double b, int c, double d)
+double ABI_ATTR d_idid (int a, double b, int c, double d)
 {
   double r = a+b+c+d;
   fprintf(out,"double f(int,double,int,double):(%d,%g,%d,%g)",a,b,c,d);
   fflush(out);
   return r;
 }
-double d_fdi (float a, double b, int c)
+double ABI_ATTR d_fdi (float a, double b, int c)
 {
   double r = a+b+c;
   fprintf(out,"double f(float,double,int):(%g,%g,%d)",a,b,c);
   fflush(out);
   return r;
 }
-ushort us_cdcd (char a, double b, char c, double d)
+ushort ABI_ATTR us_cdcd (char a, double b, char c, double d)
 {
   ushort r = (ushort)(a + b + c + d);
   fprintf(out,"ushort f(char,double,char,double):('%c',%g,'%c',%g)",a,b,c,d);
@@ -299,14 +314,14 @@ ushort us_cdcd (char a, double b, char c, double d)
   return r;
 }
 
-long long ll_iiilli (int a, int b, int c, long long d, int e)
+long long ABI_ATTR ll_iiilli (int a, int b, int c, long long d, int e)
 {
   long long r = (long long)(int)a+(long long)(int)b+(long long)(int)c+d+(long long)(int)e;
   fprintf(out,"long long f(int,int,int,long long,int):(%d,%d,%d,0x%lx%08lx,%d)",a,b,c,(long)(d>>32),(long)(d&0xffffffff),e);
   fflush(out);
   return r;
 }
-long long ll_flli (float a, long long b, int c)
+long long ABI_ATTR ll_flli (float a, long long b, int c)
 {
   long long r = (long long)(int)a + b + (long long)c;
   fprintf(out,"long long f(float,long long,int):(%g,0x%lx%08lx,0x%lx)",a,(long)(b>>32),(long)(b&0xffffffff),(long)c);
@@ -314,35 +329,35 @@ long long ll_flli (float a, long long b, int c)
   return r;
 }
 
-float f_fi (float a, int z)
+float ABI_ATTR f_fi (float a, int z)
 {
   float r = a+z;
   fprintf(out,"float f(float,int):(%g,%d)",a,z);
   fflush(out);
   return r;
 }
-float f_f2i (float a, float b, int z)
+float ABI_ATTR f_f2i (float a, float b, int z)
 {
   float r = a+b+z;
   fprintf(out,"float f(2*float,int):(%g,%g,%d)",a,b,z);
   fflush(out);
   return r;
 }
-float f_f3i (float a, float b, float c, int z)
+float ABI_ATTR f_f3i (float a, float b, float c, int z)
 {
   float r = a+b+c+z;
   fprintf(out,"float f(3*float,int):(%g,%g,%g,%d)",a,b,c,z);
   fflush(out);
   return r;
 }
-float f_f4i (float a, float b, float c, float d, int z)
+float ABI_ATTR f_f4i (float a, float b, float c, float d, int z)
 {
   float r = a+b+c+d+z;
   fprintf(out,"float f(4*float,int):(%g,%g,%g,%g,%d)",a,b,c,d,z);
   fflush(out);
   return r;
 }
-float f_f7i (float a, float b, float c, float d, float e, float f, float g,
+float ABI_ATTR f_f7i (float a, float b, float c, float d, float e, float f, float g,
              int z)
 {
   float r = a+b+c+d+e+f+g+z;
@@ -350,7 +365,7 @@ float f_f7i (float a, float b, float c, float d, float e, float f, float g,
   fflush(out);
   return r;
 }
-float f_f8i (float a, float b, float c, float d, float e, float f, float g,
+float ABI_ATTR f_f8i (float a, float b, float c, float d, float e, float f, float g,
              float h, int z)
 {
   float r = a+b+c+d+e+f+g+h+z;
@@ -358,7 +373,7 @@ float f_f8i (float a, float b, float c, float d, float e, float f, float g,
   fflush(out);
   return r;
 }
-float f_f12i (float a, float b, float c, float d, float e, float f, float g,
+float ABI_ATTR f_f12i (float a, float b, float c, float d, float e, float f, float g,
               float h, float i, float j, float k, float l, int z)
 {
   float r = a+b+c+d+e+f+g+h+i+j+k+l+z;
@@ -366,7 +381,7 @@ float f_f12i (float a, float b, float c, float d, float e, float f, float g,
   fflush(out);
   return r;
 }
-float f_f13i (float a, float b, float c, float d, float e, float f, float g,
+float ABI_ATTR f_f13i (float a, float b, float c, float d, float e, float f, float g,
               float h, float i, float j, float k, float l, float m, int z)
 {
   float r = a+b+c+d+e+f+g+h+i+j+k+l+m+z;
@@ -375,35 +390,35 @@ float f_f13i (float a, float b, float c, float d, float e, float f, float g,
   return r;
 }
 
-double d_di (double a, int z)
+double ABI_ATTR d_di (double a, int z)
 {
   double r = a+z;
   fprintf(out,"double f(double,int):(%g,%d)",a,z);
   fflush(out);
   return r;
 }
-double d_d2i (double a, double b, int z)
+double ABI_ATTR d_d2i (double a, double b, int z)
 {
   double r = a+b+z;
   fprintf(out,"double f(2*double,int):(%g,%g,%d)",a,b,z);
   fflush(out);
   return r;
 }
-double d_d3i (double a, double b, double c, int z)
+double ABI_ATTR d_d3i (double a, double b, double c, int z)
 {
   double r = a+b+c+z;
   fprintf(out,"double f(3*double,int):(%g,%g,%g,%d)",a,b,c,z);
   fflush(out);
   return r;
 }
-double d_d4i (double a, double b, double c, double d, int z)
+double ABI_ATTR d_d4i (double a, double b, double c, double d, int z)
 {
   double r = a+b+c+d+z;
   fprintf(out,"double f(4*double,int):(%g,%g,%g,%g,%d)",a,b,c,d,z);
   fflush(out);
   return r;
 }
-double d_d7i (double a, double b, double c, double d, double e, double f,
+double ABI_ATTR d_d7i (double a, double b, double c, double d, double e, double f,
               double g, int z)
 {
   double r = a+b+c+d+e+f+g+z;
@@ -411,7 +426,7 @@ double d_d7i (double a, double b, double c, double d, double e, double f,
   fflush(out);
   return r;
 }
-double d_d8i (double a, double b, double c, double d, double e, double f,
+double ABI_ATTR d_d8i (double a, double b, double c, double d, double e, double f,
               double g, double h, int z)
 {
   double r = a+b+c+d+e+f+g+h+z;
@@ -419,7 +434,7 @@ double d_d8i (double a, double b, double c, double d, double e, double f,
   fflush(out);
   return r;
 }
-double d_d12i (double a, double b, double c, double d, double e, double f,
+double ABI_ATTR d_d12i (double a, double b, double c, double d, double e, double f,
                double g, double h, double i, double j, double k, double l,
                int z)
 {
@@ -428,7 +443,7 @@ double d_d12i (double a, double b, double c, double d, double e, double f,
   fflush(out);
   return r;
 }
-double d_d13i (double a, double b, double c, double d, double e, double f,
+double ABI_ATTR d_d13i (double a, double b, double c, double d, double e, double f,
                double g, double h, double i, double j, double k, double l,
                double m, int z)
 {
@@ -439,55 +454,55 @@ double d_d13i (double a, double b, double c, double d, double e, double f,
 }
 
 /* small structure return tests */
-Size1 S1_v (void)
+Size1 ABI_ATTR S1_v (void)
 {
   fprintf(out,"Size1 f(void):");
   fflush(out);
   return Size1_1;
 }
-Size2 S2_v (void)
+Size2 ABI_ATTR S2_v (void)
 {
   fprintf(out,"Size2 f(void):");
   fflush(out);
   return Size2_1;
 }
-Size3 S3_v (void)
+Size3 ABI_ATTR S3_v (void)
 {
   fprintf(out,"Size3 f(void):");
   fflush(out);
   return Size3_1;
 }
-Size4 S4_v (void)
+Size4 ABI_ATTR S4_v (void)
 {
   fprintf(out,"Size4 f(void):");
   fflush(out);
   return Size4_1;
 }
-Size7 S7_v (void)
+Size7 ABI_ATTR S7_v (void)
 {
   fprintf(out,"Size7 f(void):");
   fflush(out);
   return Size7_1;
 }
-Size8 S8_v (void)
+Size8 ABI_ATTR S8_v (void)
 {
   fprintf(out,"Size8 f(void):");
   fflush(out);
   return Size8_1;
 }
-Size12 S12_v (void)
+Size12 ABI_ATTR S12_v (void)
 {
   fprintf(out,"Size12 f(void):");
   fflush(out);
   return Size12_1;
 }
-Size15 S15_v (void)
+Size15 ABI_ATTR S15_v (void)
 {
   fprintf(out,"Size15 f(void):");
   fflush(out);
   return Size15_1;
 }
-Size16 S16_v (void)
+Size16 ABI_ATTR S16_v (void)
 {
   fprintf(out,"Size16 f(void):");
   fflush(out);
@@ -495,7 +510,7 @@ Size16 S16_v (void)
 }
 
 /* structure tests */
-Int I_III (Int a, Int b, Int c)
+Int ABI_ATTR I_III (Int a, Int b, Int c)
 {
   Int r;
   r.x = a.x + b.x + c.x;
@@ -503,7 +518,7 @@ Int I_III (Int a, Int b, Int c)
   fflush(out);
   return r;
 }
-Char C_CdC (Char a, double b, Char c)
+Char ABI_ATTR C_CdC (Char a, double b, Char c)
 {
   Char r;
   r.x = (a.x + c.x)/2;
@@ -511,7 +526,7 @@ Char C_CdC (Char a, double b, Char c)
   fflush(out);
   return r;
 }
-Float F_Ffd (Float a, float b, double c)
+Float ABI_ATTR F_Ffd (Float a, float b, double c)
 {
   Float r;
   r.x = (float) (a.x + b + c);
@@ -519,7 +534,7 @@ Float F_Ffd (Float a, float b, double c)
   fflush(out);
   return r;
 }
-Double D_fDd (float a, Double b, double c)
+Double ABI_ATTR D_fDd (float a, Double b, double c)
 {
   Double r;
   r.x = a + b.x + c;
@@ -527,7 +542,7 @@ Double D_fDd (float a, Double b, double c)
   fflush(out);
   return r;
 }
-Double D_Dfd (Double a, float b, double c)
+Double ABI_ATTR D_Dfd (Double a, float b, double c)
 {
   Double r;
   r.x = a.x + b + c;
@@ -535,7 +550,7 @@ Double D_Dfd (Double a, float b, double c)
   fflush(out);
   return r;
 }
-J J_JiJ (J a, int b, J c)
+J ABI_ATTR J_JiJ (J a, int b, J c)
 {
   J r;
   r.l1 = a.l1+c.l1; r.l2 = a.l2+b+c.l2;
@@ -543,7 +558,7 @@ J J_JiJ (J a, int b, J c)
   fflush(out);
   return r;
 }
-T T_TcT (T a, char b, T c)
+T ABI_ATTR T_TcT (T a, char b, T c)
 {
   T r;
   r.c[0]='b'; r.c[1]=c.c[1]; r.c[2]=c.c[2];
@@ -551,7 +566,7 @@ T T_TcT (T a, char b, T c)
   fflush(out);
   return r;
 }
-X X_BcdB (B a, char b, double c, B d)
+X ABI_ATTR X_BcdB (B a, char b, double c, B d)
 {
   static X xr={"return val",'R'};
   X r;
@@ -568,49 +583,49 @@ X X_BcdB (B a, char b, double c, B d)
    and partially on the stack. Different ABIs pass between 4 and 8 arguments
    (or none) in general-purpose argument registers. */
 
-long l_l0K (K b, long c)
+long ABI_ATTR l_l0K (K b, long c)
 {
   long r = b.l1 + b.l2 + b.l3 + b.l4 + c;
   fprintf(out,"long f(K,long):(%ld,%ld,%ld,%ld,%ld)",b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   return r;
 }
-long l_l1K (long a1, K b, long c)
+long ABI_ATTR l_l1K (long a1, K b, long c)
 {
   long r = a1 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   fprintf(out,"long f(long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld)",a1,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   return r;
 }
-long l_l2K (long a1, long a2, K b, long c)
+long ABI_ATTR l_l2K (long a1, long a2, K b, long c)
 {
   long r = a1 + a2 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   fprintf(out,"long f(2*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   return r;
 }
-long l_l3K (long a1, long a2, long a3, K b, long c)
+long ABI_ATTR l_l3K (long a1, long a2, long a3, K b, long c)
 {
   long r = a1 + a2 + a3 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   fprintf(out,"long f(3*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   return r;
 }
-long l_l4K (long a1, long a2, long a3, long a4, K b, long c)
+long ABI_ATTR l_l4K (long a1, long a2, long a3, long a4, K b, long c)
 {
   long r = a1 + a2 + a3 + a4 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   fprintf(out,"long f(4*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   return r;
 }
-long l_l5K (long a1, long a2, long a3, long a4, long a5, K b, long c)
+long ABI_ATTR l_l5K (long a1, long a2, long a3, long a4, long a5, K b, long c)
 {
   long r = a1 + a2 + a3 + a4 + a5 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   fprintf(out,"long f(5*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,a5,b.l1,b.l2,b.l3,b.l4,c);
   fflush(out);
   return r;
 }
-long l_l6K (long a1, long a2, long a3, long a4, long a5, long a6, K b, long c)
+long ABI_ATTR l_l6K (long a1, long a2, long a3, long a4, long a5, long a6, K b, long c)
 {
   long r = a1 + a2 + a3 + a4 + a5 + a6 + b.l1 + b.l2 + b.l3 + b.l4 + c;
   fprintf(out,"long f(6*long,K,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld)",a1,a2,a3,a4,a5,a6,b.l1,b.l2,b.l3,b.l4,c);
@@ -620,7 +635,7 @@ long l_l6K (long a1, long a2, long a3, long a4, long a5, long a6, K b, long c)
 /* These tests is crafted on the knowledge that for all known ABIs:
    * 17 > number of floating-point argument registers,
    * 3 < number of general-purpose argument registers < 3 + 6. */
-float f_f17l3L (float a, float b, float c, float d, float e, float f, float g,
+float ABI_ATTR f_f17l3L (float a, float b, float c, float d, float e, float f, float g,
                 float h, float i, float j, float k, float l, float m, float n,
                 float o, float p, float q,
                 long s, long t, long u, L z)
@@ -630,7 +645,7 @@ float f_f17l3L (float a, float b, float c, float d, float e, float f, float g,
   fflush(out);
   return r;
 }
-double d_d17l3L (double a, double b, double c, double d, double e, double f,
+double ABI_ATTR d_d17l3L (double a, double b, double c, double d, double e, double f,
                  double g, double h, double i, double j, double k, double l,
                  double m, double n, double o, double p, double q,
                  long s, long t, long u, L z)
@@ -641,42 +656,42 @@ double d_d17l3L (double a, double b, double c, double d, double e, double f,
   return r;
 }
 
-long long ll_l2ll (long a1, long a2, long long b, long c)
+long long ABI_ATTR ll_l2ll (long a1, long a2, long long b, long c)
 {
   long long r = (long long) (a1 + a2) + b + c;
   fprintf(out,"long long f(2*long,long long,long):(%ld,%ld,0x%lx%08lx,%ld)",a1,a2,(long)(b>>32),(long)(b&0xffffffff),c);
   fflush(out);
   return r;
 }
-long long ll_l3ll (long a1, long a2, long a3, long long b, long c)
+long long ABI_ATTR ll_l3ll (long a1, long a2, long a3, long long b, long c)
 {
   long long r = (long long) (a1 + a2 + a3) + b + c;
   fprintf(out,"long long f(3*long,long long,long):(%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,(long)(b>>32),(long)(b&0xffffffff),c);
   fflush(out);
   return r;
 }
-long long ll_l4ll (long a1, long a2, long a3, long a4, long long b, long c)
+long long ABI_ATTR ll_l4ll (long a1, long a2, long a3, long a4, long long b, long c)
 {
   long long r = (long long) (a1 + a2 + a3 + a4) + b + c;
   fprintf(out,"long long f(4*long,long long,long):(%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,(long)(b>>32),(long)(b&0xffffffff),c);
   fflush(out);
   return r;
 }
-long long ll_l5ll (long a1, long a2, long a3, long a4, long a5, long long b, long c)
+long long ABI_ATTR ll_l5ll (long a1, long a2, long a3, long a4, long a5, long long b, long c)
 {
   long long r = (long long) (a1 + a2 + a3 + a4 + a5) + b + c;
   fprintf(out,"long long f(5*long,long long,long):(%ld,%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,a5,(long)(b>>32),(long)(b&0xffffffff),c);
   fflush(out);
   return r;
 }
-long long ll_l6ll (long a1, long a2, long a3, long a4, long a5, long a6, long long b, long c)
+long long ABI_ATTR ll_l6ll (long a1, long a2, long a3, long a4, long a5, long a6, long long b, long c)
 {
   long long r = (long long) (a1 + a2 + a3 + a4 + a5 + a6) + b + c;
   fprintf(out,"long long f(6*long,long long,long):(%ld,%ld,%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,a5,a6,(long)(b>>32),(long)(b&0xffffffff),c);
   fflush(out);
   return r;
 }
-long long ll_l7ll (long a1, long a2, long a3, long a4, long a5, long a6, long a7, long long b, long c)
+long long ABI_ATTR ll_l7ll (long a1, long a2, long a3, long a4, long a5, long a6, long a7, long long b, long c)
 {
   long long r = (long long) (a1 + a2 + a3 + a4 + a5 + a6 + a7) + b + c;
   fprintf(out,"long long f(7*long,long long,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,0x%lx%08lx,%ld)",a1,a2,a3,a4,a5,a6,a7,(long)(b>>32),(long)(b&0xffffffff),c);
@@ -684,42 +699,42 @@ long long ll_l7ll (long a1, long a2, long a3, long a4, long a5, long a6, long a7
   return r;
 }
 
-double d_l2d (long a1, long a2, double b, long c)
+double ABI_ATTR d_l2d (long a1, long a2, double b, long c)
 {
   double r = (double) (a1 + a2) + b + c;
   fprintf(out,"double f(2*long,double,long):(%ld,%ld,%g,%ld)",a1,a2,b,c);
   fflush(out);
   return r;
 }
-double d_l3d (long a1, long a2, long a3, double b, long c)
+double ABI_ATTR d_l3d (long a1, long a2, long a3, double b, long c)
 {
   double r = (double) (a1 + a2 + a3) + b + c;
   fprintf(out,"double f(3*long,double,long):(%ld,%ld,%ld,%g,%ld)",a1,a2,a3,b,c);
   fflush(out);
   return r;
 }
-double d_l4d (long a1, long a2, long a3, long a4, double b, long c)
+double ABI_ATTR d_l4d (long a1, long a2, long a3, long a4, double b, long c)
 {
   double r = (double) (a1 + a2 + a3 + a4) + b + c;
   fprintf(out,"double f(4*long,double,long):(%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,b,c);
   fflush(out);
   return r;
 }
-double d_l5d (long a1, long a2, long a3, long a4, long a5, double b, long c)
+double ABI_ATTR d_l5d (long a1, long a2, long a3, long a4, long a5, double b, long c)
 {
   double r = (double) (a1 + a2 + a3 + a4 + a5) + b + c;
   fprintf(out,"double f(5*long,double,long):(%ld,%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,a5,b,c);
   fflush(out);
   return r;
 }
-double d_l6d (long a1, long a2, long a3, long a4, long a5, long a6, double b, long c)
+double ABI_ATTR d_l6d (long a1, long a2, long a3, long a4, long a5, long a6, double b, long c)
 {
   double r = (double) (a1 + a2 + a3 + a4 + a5 + a6) + b + c;
   fprintf(out,"double f(6*long,double,long):(%ld,%ld,%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,a5,a6,b,c);
   fflush(out);
   return r;
 }
-double d_l7d (long a1, long a2, long a3, long a4, long a5, long a6, long a7, double b, long c)
+double ABI_ATTR d_l7d (long a1, long a2, long a3, long a4, long a5, long a6, long a7, double b, long c)
 {
   double r = (double) (a1 + a2 + a3 + a4 + a5 + a6 + a7) + b + c;
   fprintf(out,"double f(7*long,double,long):(%ld,%ld,%ld,%ld,%ld,%ld,%ld,%g,%ld)",a1,a2,a3,a4,a5,a6,a7,b,c);

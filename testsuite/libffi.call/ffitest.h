@@ -64,7 +64,7 @@
 #endif
 
 /* MinGW kludge.  */
-#ifdef _WIN64
+#if defined(_WIN64) | defined(_WIN32)
 #define PRIdLL "I64d"
 #define PRIuLL "I64u"
 #else

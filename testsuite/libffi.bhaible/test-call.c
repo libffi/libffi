@@ -23,6 +23,7 @@
 #include <string.h>
 #include <ffi.h>
 #include "alignof.h"
+#include <stdarg.h>
 
 #include "testcases.c"
 
@@ -33,27 +34,38 @@
 int count = 0;
 char rbuf1[2048];
 char rbuf2[2048];
-#define FPRINTF(STREAM,FMT,ARGS...)			\
-  { fprintf(STREAM, FMT, ##ARGS) ;			\
-    switch (count++)					\
-      {							\
-        case 0:						\
-        case 1:						\
-	  sprintf(&rbuf1[strlen(rbuf1)], FMT, ##ARGS);	\
-	  break ;					\
-        case 2:						\
-	  sprintf(rbuf2, FMT, ##ARGS);	                \
-	  break;					\
-        case 3:						\
-	  sprintf(&rbuf2[strlen(rbuf2)], FMT, ##ARGS);	\
-	  if (strcmp (rbuf1, rbuf2)) abort();		\
-	  break;					\
-      }							\
-  }
-#else
-#define FPRINTF fprintf
+int fprintf(FILE *stream, const char *format, ...)
+{
+  va_list args;
+  va_start(args, format);
+
+  switch (count++)
+    {
+    case 0:
+    case 1:
+      vsprintf(&rbuf1[strlen(rbuf1)], format, args);
+      break;
+    case 2:
+      printf(rbuf1);
+      vsprintf(rbuf2, format, args);
+      break;
+    case 3:
+      vsprintf(&rbuf2[strlen(rbuf2)], format, args);
+      printf(rbuf2);
+      if (strcmp (rbuf1, rbuf2)) abort();
+      break;
+    }
+
+  va_end(args);
+
+  return 0;
+}
 #endif
 /* --------------------------------------------------------------- */
+
+#ifndef ABI_NUM
+#define ABI_NUM FFI_DEFAULT_ABI
+#endif
 
 /* Definitions that ought to be part of libffi. */
 static ffi_type ffi_type_char;
@@ -64,9 +76,9 @@ static ffi_type ffi_type_char;
 #define SKIP_EXTRA_STRUCTS
 
 #define FFI_PREP_CIF(cif,argtypes,rettype) \
-  if (ffi_prep_cif(&(cif),FFI_DEFAULT_ABI,sizeof(argtypes)/sizeof(argtypes[0]),&rettype,argtypes) != FFI_OK) abort()
+  if (ffi_prep_cif(&(cif),ABI_NUM,sizeof(argtypes)/sizeof(argtypes[0]),&rettype,argtypes) != FFI_OK) abort()
 #define FFI_PREP_CIF_NOARGS(cif,rettype) \
-  if (ffi_prep_cif(&(cif),FFI_DEFAULT_ABI,0,&rettype,NULL) != FFI_OK) abort()
+  if (ffi_prep_cif(&(cif),ABI_NUM,0,&rettype,NULL) != FFI_OK) abort()
 #define FFI_CALL(cif,fn,args,retaddr) \
   ffi_call(&(cif),(void(*)(void))(fn),retaddr,args)
 
@@ -112,7 +124,7 @@ void
   int ir;
 #if (!defined(DGTEST)) || DGTEST == 2
   ir = i_v();
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
   ir = 0; clear_traces();
   {
@@ -122,13 +134,13 @@ void
       FFI_CALL(cif,i_v,NULL,&ir);
     }
   }
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 3
   ir = i_i(i1);
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
   ir = 0; clear_traces();
   {
@@ -140,13 +152,13 @@ void
       FFI_CALL(cif,i_i,args,&ir);
     }
   }
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 4
   ir = i_i2(i1,i2);
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
   ir = 0; clear_traces();
   {
@@ -158,13 +170,13 @@ void
       FFI_CALL(cif,i_i2,args,&ir);
     }
   }
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 5
   ir = i_i4(i1,i2,i3,i4);
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
   ir = 0; clear_traces();
   {
@@ -176,13 +188,13 @@ void
       FFI_CALL(cif,i_i4,args,&ir);
     }
   }
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 6
   ir = i_i8(i1,i2,i3,i4,i5,i6,i7,i8);
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
   ir = 0; clear_traces();
   {
@@ -194,13 +206,13 @@ void
       FFI_CALL(cif,i_i8,args,&ir);
     }
   }
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 7
   ir = i_i16(i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16);
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
   ir = 0; clear_traces();
   {
@@ -212,7 +224,7 @@ void
       FFI_CALL(cif,i_i16,args,&ir);
     }
   }
-  FPRINTF(out,"->%d\n",ir);
+  fprintf(out,"->%d\n",ir);
   fflush(out);
 #endif
 
@@ -225,7 +237,7 @@ void
 
 #if (!defined(DGTEST)) || DGTEST == 8
   fr = f_f(f1);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -237,13 +249,13 @@ void
       FFI_CALL(cif,f_f,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 9
   fr = f_f2(f1,f2);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -255,13 +267,13 @@ void
       FFI_CALL(cif,f_f2,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 10
   fr = f_f4(f1,f2,f3,f4);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -273,13 +285,13 @@ void
       FFI_CALL(cif,f_f4,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 11
   fr = f_f8(f1,f2,f3,f4,f5,f6,f7,f8);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -291,13 +303,13 @@ void
       FFI_CALL(cif,f_f8,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 12
   fr = f_f16(f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -309,13 +321,13 @@ void
       FFI_CALL(cif,f_f16,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 13
   fr = f_f24(f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20,f21,f22,f23,f24);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -327,7 +339,7 @@ void
       FFI_CALL(cif,f_f24,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 }
@@ -339,7 +351,7 @@ void
 #if (!defined(DGTEST)) || DGTEST == 14
   
   dr = d_d(d1);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -351,13 +363,13 @@ void
       FFI_CALL(cif,d_d,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 15
   dr = d_d2(d1,d2);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -369,13 +381,13 @@ void
       FFI_CALL(cif,d_d2,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 16
   dr = d_d4(d1,d2,d3,d4);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -387,13 +399,13 @@ void
       FFI_CALL(cif,d_d4,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 17
   dr = d_d8(d1,d2,d3,d4,d5,d6,d7,d8);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -405,13 +417,13 @@ void
       FFI_CALL(cif,d_d8,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 18
   dr = d_d16(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -423,7 +435,7 @@ void
       FFI_CALL(cif,d_d16,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif  
   return;
@@ -435,7 +447,7 @@ void
 
 #if (!defined(DGTEST)) || DGTEST == 19
   vpr = vp_vpdpcpsp(&uc1,&d2,str3,&I4);
-  FPRINTF(out,"->0x%p\n",vpr);
+  fprintf(out,"->0x%p\n",vpr);
   fflush(out);
   vpr = 0; clear_traces();
   {
@@ -451,7 +463,7 @@ void
       FFI_CALL(cif,vp_vpdpcpsp,args,&vpr);
     }
   }
-  FPRINTF(out,"->0x%p\n",vpr);
+  fprintf(out,"->0x%p\n",vpr);
   fflush(out);
 #endif  
   return;
@@ -469,7 +481,7 @@ void
    */
 #if (!defined(DGTEST)) || DGTEST == 20
   ucr = uc_ucsil(uc1, us2, ui3, ul4);
-  FPRINTF(out,"->%u\n",ucr);
+  fprintf(out,"->%u\n",ucr);
   fflush(out);
   ucr = 0; clear_traces();
   {
@@ -483,7 +495,7 @@ void
       ucr = (uchar) r;
     }
   }
-  FPRINTF(out,"->%u\n",ucr);
+  fprintf(out,"->%u\n",ucr);
   fflush(out);
 #endif
 
@@ -491,7 +503,7 @@ void
   /* Mixed int & float types.
    */
   dr = d_iidd(i1,i2,d3,d4);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -503,13 +515,13 @@ void
       FFI_CALL(cif,d_iidd,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 22
   dr = d_iiidi(i1,i2,i3,d4,i5);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -521,13 +533,13 @@ void
       FFI_CALL(cif,d_iiidi,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 23
   dr = d_idid(i1,d2,i3,d4);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -539,13 +551,13 @@ void
       FFI_CALL(cif,d_idid,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 24
   dr = d_fdi(f1,d2,i3);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -557,13 +569,13 @@ void
       FFI_CALL(cif,d_fdi,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 25
   usr = us_cdcd(c1,d2,c3,d4);
-  FPRINTF(out,"->%u\n",usr);
+  fprintf(out,"->%u\n",usr);
   fflush(out);
   usr = 0; clear_traces();
   {
@@ -577,7 +589,7 @@ void
       usr = (ushort) rint;
     }
   }
-  FPRINTF(out,"->%u\n",usr);
+  fprintf(out,"->%u\n",usr);
   fflush(out);
 #endif
 
@@ -585,7 +597,7 @@ void
   /* Long long types.
    */
   llr = ll_iiilli(i1,i2,i3,ll1,i13);
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
   llr = 0; clear_traces();
   {
@@ -597,13 +609,13 @@ void
       FFI_CALL(cif,ll_iiilli,args,&llr);
     }
   }
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 27
   llr = ll_flli(f13,ll1,i13);
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
   llr = 0; clear_traces();
   {
@@ -615,13 +627,13 @@ void
       FFI_CALL(cif,ll_flli,args,&llr);
     }
   }
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 28
   fr = f_fi(f1,i9);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -633,13 +645,13 @@ void
       FFI_CALL(cif,f_fi,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 29
   fr = f_f2i(f1,f2,i9);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -651,13 +663,13 @@ void
       FFI_CALL(cif,f_f2i,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 30
   fr = f_f3i(f1,f2,f3,i9);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -669,13 +681,13 @@ void
       FFI_CALL(cif,f_f3i,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 31
   fr = f_f4i(f1,f2,f3,f4,i9);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -687,13 +699,13 @@ void
       FFI_CALL(cif,f_f4i,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 32
   fr = f_f7i(f1,f2,f3,f4,f5,f6,f7,i9);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -705,13 +717,13 @@ void
       FFI_CALL(cif,f_f7i,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 33
   fr = f_f8i(f1,f2,f3,f4,f5,f6,f7,f8,i9);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -723,13 +735,13 @@ void
       FFI_CALL(cif,f_f8i,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 34
   fr = f_f12i(f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,i9);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -741,13 +753,13 @@ void
       FFI_CALL(cif,f_f12i,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 35
   fr = f_f13i(f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,i9);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -759,13 +771,13 @@ void
       FFI_CALL(cif,f_f13i,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 36
   dr = d_di(d1,i9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -777,13 +789,13 @@ void
       FFI_CALL(cif,d_di,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 37
   dr = d_d2i(d1,d2,i9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -795,13 +807,13 @@ void
       FFI_CALL(cif,d_d2i,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 38
   dr = d_d3i(d1,d2,d3,i9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -813,13 +825,13 @@ void
       FFI_CALL(cif,d_d3i,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 39
   dr = d_d4i(d1,d2,d3,d4,i9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -831,13 +843,13 @@ void
       FFI_CALL(cif,d_d4i,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 40
   dr = d_d7i(d1,d2,d3,d4,d5,d6,d7,i9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -849,13 +861,13 @@ void
       FFI_CALL(cif,d_d7i,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 41
   dr = d_d8i(d1,d2,d3,d4,d5,d6,d7,d8,i9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -867,13 +879,13 @@ void
       FFI_CALL(cif,d_d8i,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 42
   dr = d_d12i(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,i9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -885,13 +897,13 @@ void
       FFI_CALL(cif,d_d12i,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 
 #if (!defined(DGTEST)) || DGTEST == 43
   dr = d_d13i(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,i9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -903,7 +915,7 @@ void
       FFI_CALL(cif,d_d13i,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif  
   return;
@@ -914,7 +926,7 @@ void
 #if (!defined(DGTEST)) || DGTEST == 44
   {
     Size1 r = S1_v();
-    FPRINTF(out,"->{%c}\n",r.x1);
+    fprintf(out,"->{%c}\n",r.x1);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     {
@@ -930,14 +942,14 @@ void
         FFI_CALL(cif,S1_v,NULL,&r);
       }
     }
-    FPRINTF(out,"->{%c}\n",r.x1);
+    fprintf(out,"->{%c}\n",r.x1);
     fflush(out);
   }
 #endif
 #if (!defined(DGTEST)) || DGTEST == 45
   {
     Size2 r = S2_v();
-    FPRINTF(out,"->{%c%c}\n",r.x1,r.x2);
+    fprintf(out,"->{%c%c}\n",r.x1,r.x2);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     {
@@ -953,14 +965,14 @@ void
         FFI_CALL(cif,S2_v,NULL,&r);
       }
     }
-    FPRINTF(out,"->{%c%c}\n",r.x1,r.x2);
+    fprintf(out,"->{%c%c}\n",r.x1,r.x2);
     fflush(out);
   }
 #endif
 #if (!defined(DGTEST)) || DGTEST == 46
   {
     Size3 r = S3_v();
-    FPRINTF(out,"->{%c%c%c}\n",r.x1,r.x2,r.x3);
+    fprintf(out,"->{%c%c%c}\n",r.x1,r.x2,r.x3);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     {
@@ -976,14 +988,14 @@ void
         FFI_CALL(cif,S3_v,NULL,&r);
       }
     }
-    FPRINTF(out,"->{%c%c%c}\n",r.x1,r.x2,r.x3);
+    fprintf(out,"->{%c%c%c}\n",r.x1,r.x2,r.x3);
     fflush(out);
   }
 #endif
 #if (!defined(DGTEST)) || DGTEST == 47
   {
     Size4 r = S4_v();
-    FPRINTF(out,"->{%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4);
+    fprintf(out,"->{%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     {
@@ -999,14 +1011,14 @@ void
         FFI_CALL(cif,S4_v,NULL,&r);
       }
     }
-    FPRINTF(out,"->{%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4);
+    fprintf(out,"->{%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4);
     fflush(out);
   }
 #endif
 #if (!defined(DGTEST)) || DGTEST == 48
   {
     Size7 r = S7_v();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7);
+    fprintf(out,"->{%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     {
@@ -1022,14 +1034,14 @@ void
         FFI_CALL(cif,S7_v,NULL,&r);
       }
     }
-    FPRINTF(out,"->{%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7);
+    fprintf(out,"->{%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7);
     fflush(out);
   }
 #endif
 #if (!defined(DGTEST)) || DGTEST == 49
   {
     Size8 r = S8_v();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     {
@@ -1045,14 +1057,14 @@ void
         FFI_CALL(cif,S8_v,NULL,&r);
       }
     }
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8);
     fflush(out);
   }
 #endif
 #if (!defined(DGTEST)) || DGTEST == 50
   {
     Size12 r = S12_v();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     {
@@ -1068,14 +1080,14 @@ void
         FFI_CALL(cif,S12_v,NULL,&r);
       }
     }
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12);
     fflush(out);
   }
 #endif
 #if (!defined(DGTEST)) || DGTEST == 51  
   {
     Size15 r = S15_v();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     {
@@ -1091,14 +1103,14 @@ void
         FFI_CALL(cif,S15_v,NULL,&r);
       }
     }
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15);
     fflush(out);
   }
 #endif
 #if (!defined(DGTEST)) || DGTEST == 52  
   {
     Size16 r = S16_v();
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15,r.x16);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15,r.x16);
     fflush(out);
     memset(&r,0,sizeof(r)); clear_traces();
     {
@@ -1114,7 +1126,7 @@ void
         FFI_CALL(cif,S16_v,NULL,&r);
       }
     }
-    FPRINTF(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15,r.x16);
+    fprintf(out,"->{%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c}\n",r.x1,r.x2,r.x3,r.x4,r.x5,r.x6,r.x7,r.x8,r.x9,r.x10,r.x11,r.x12,r.x13,r.x14,r.x15,r.x16);
     fflush(out);
   }
 #endif
@@ -1134,7 +1146,7 @@ void
 
 #if (!defined(DGTEST)) || DGTEST == 53  
   Ir = I_III(I1,I2,I3);
-  FPRINTF(out,"->{%d}\n",Ir.x);
+  fprintf(out,"->{%d}\n",Ir.x);
   fflush(out);
   Ir.x = 0; clear_traces();
   {
@@ -1152,12 +1164,12 @@ void
       FFI_CALL(cif,I_III,args,&Ir);
     }
   }
-  FPRINTF(out,"->{%d}\n",Ir.x);
+  fprintf(out,"->{%d}\n",Ir.x);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 54
   Cr = C_CdC(C1,d2,C3);
-  FPRINTF(out,"->{'%c'}\n",Cr.x);
+  fprintf(out,"->{'%c'}\n",Cr.x);
   fflush(out);
   Cr.x = '\0'; clear_traces();
   {
@@ -1175,12 +1187,12 @@ void
       FFI_CALL(cif,C_CdC,args,&Cr);
     }
   }
-  FPRINTF(out,"->{'%c'}\n",Cr.x);
+  fprintf(out,"->{'%c'}\n",Cr.x);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 55
   Fr = F_Ffd(F1,f2,d3);
-  FPRINTF(out,"->{%g}\n",Fr.x);
+  fprintf(out,"->{%g}\n",Fr.x);
   fflush(out);
   Fr.x = 0.0; clear_traces();
   {
@@ -1198,12 +1210,12 @@ void
       FFI_CALL(cif,F_Ffd,args,&Fr);
     }
   }
-  FPRINTF(out,"->{%g}\n",Fr.x);
+  fprintf(out,"->{%g}\n",Fr.x);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 56  
   Dr = D_fDd(f1,D2,d3);
-  FPRINTF(out,"->{%g}\n",Dr.x);
+  fprintf(out,"->{%g}\n",Dr.x);
   fflush(out);
   Dr.x = 0.0; clear_traces();
   {
@@ -1221,12 +1233,12 @@ void
       FFI_CALL(cif,D_fDd,args,&Dr);
     }
   }
-  FPRINTF(out,"->{%g}\n",Dr.x);
+  fprintf(out,"->{%g}\n",Dr.x);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 57  
   Dr = D_Dfd(D1,f2,d3);
-  FPRINTF(out,"->{%g}\n",Dr.x);
+  fprintf(out,"->{%g}\n",Dr.x);
   fflush(out);
   Dr.x = 0.0; clear_traces();
   {
@@ -1244,12 +1256,12 @@ void
       FFI_CALL(cif,D_Dfd,args,&Dr);
     }
   }
-  FPRINTF(out,"->{%g}\n",Dr.x);
+  fprintf(out,"->{%g}\n",Dr.x);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 58  
   Jr = J_JiJ(J1,i2,J2);
-  FPRINTF(out,"->{%ld,%ld}\n",Jr.l1,Jr.l2);
+  fprintf(out,"->{%ld,%ld}\n",Jr.l1,Jr.l2);
   fflush(out);
   Jr.l1 = Jr.l2 = 0; clear_traces();
   {
@@ -1267,13 +1279,13 @@ void
       FFI_CALL(cif,J_JiJ,args,&Jr);
     }
   }
-  FPRINTF(out,"->{%ld,%ld}\n",Jr.l1,Jr.l2);
+  fprintf(out,"->{%ld,%ld}\n",Jr.l1,Jr.l2);
   fflush(out);
 #endif
 #ifndef SKIP_EXTRA_STRUCTS
 #if (!defined(DGTEST)) || DGTEST == 59
   Tr = T_TcT(T1,' ',T2);
-  FPRINTF(out,"->{\"%c%c%c\"}\n",Tr.c[0],Tr.c[1],Tr.c[2]);
+  fprintf(out,"->{\"%c%c%c\"}\n",Tr.c[0],Tr.c[1],Tr.c[2]);
   fflush(out);
   Tr.c[0] = Tr.c[1] = Tr.c[2] = 0; clear_traces();
   {
@@ -1292,12 +1304,12 @@ void
       FFI_CALL(cif,T_TcT,args,&Tr);
     }
   }
-  FPRINTF(out,"->{\"%c%c%c\"}\n",Tr.c[0],Tr.c[1],Tr.c[2]);
+  fprintf(out,"->{\"%c%c%c\"}\n",Tr.c[0],Tr.c[1],Tr.c[2]);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 60
   Xr = X_BcdB(B1,c2,d3,B2);
-  FPRINTF(out,"->{\"%s\",'%c'}\n",Xr.c,Xr.c1);
+  fprintf(out,"->{\"%s\",'%c'}\n",Xr.c,Xr.c1);
   fflush(out);
   Xr.c[0]=Xr.c1='\0'; clear_traces();
   {
@@ -1315,7 +1327,7 @@ void
       FFI_CALL(cif,X_BcdB,args,&Xr);
     }
   }
-  FPRINTF(out,"->{\"%s\",'%c'}\n",Xr.c,Xr.c1);
+  fprintf(out,"->{\"%s\",'%c'}\n",Xr.c,Xr.c1);
   fflush(out);
 #endif
 #endif
@@ -1347,7 +1359,7 @@ void
 
 #if (!defined(DGTEST)) || DGTEST == 61  
   lr = l_l0K(K1,l9);
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
   lr = 0; clear_traces();
   {
@@ -1359,12 +1371,12 @@ void
       FFI_CALL(cif,l_l0K,args,&lr);
     }
   }
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 62  
   lr = l_l1K(l1,K1,l9);
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
   lr = 0; clear_traces();
   {
@@ -1376,12 +1388,12 @@ void
       FFI_CALL(cif,l_l1K,args,&lr);
     }
   }
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 63  
   lr = l_l2K(l1,l2,K1,l9);
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
   lr = 0; clear_traces();
   {
@@ -1393,12 +1405,12 @@ void
       FFI_CALL(cif,l_l2K,args,&lr);
     }
   }
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 64  
   lr = l_l3K(l1,l2,l3,K1,l9);
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
   lr = 0; clear_traces();
   {
@@ -1410,12 +1422,12 @@ void
       FFI_CALL(cif,l_l3K,args,&lr);
     }
   }
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 65
   lr = l_l4K(l1,l2,l3,l4,K1,l9);
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
   lr = 0; clear_traces();
   {
@@ -1427,12 +1439,12 @@ void
       FFI_CALL(cif,l_l4K,args,&lr);
     }
   }
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 66
   lr = l_l5K(l1,l2,l3,l4,l5,K1,l9);
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
   lr = 0; clear_traces();
   {
@@ -1444,12 +1456,12 @@ void
       FFI_CALL(cif,l_l5K,args,&lr);
     }
   }
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 67  
   lr = l_l6K(l1,l2,l3,l4,l5,l6,K1,l9);
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
   lr = 0; clear_traces();
   {
@@ -1461,12 +1473,12 @@ void
       FFI_CALL(cif,l_l6K,args,&lr);
     }
   }
-  FPRINTF(out,"->%ld\n",lr);
+  fprintf(out,"->%ld\n",lr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 68  
   fr = f_f17l3L(f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,l6,l7,l8,L1);
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
   fr = 0.0; clear_traces();
   {
@@ -1478,12 +1490,12 @@ void
       FFI_CALL(cif,f_f17l3L,args,&fr);
     }
   }
-  FPRINTF(out,"->%g\n",fr);
+  fprintf(out,"->%g\n",fr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 69  
   dr = d_d17l3L(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,l6,l7,l8,L1);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -1495,12 +1507,12 @@ void
       FFI_CALL(cif,d_d17l3L,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 70  
   llr = ll_l2ll(l1,l2,ll1,l9);
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
   llr = 0; clear_traces();
   {
@@ -1512,12 +1524,12 @@ void
       FFI_CALL(cif,ll_l2ll,args,&llr);
     }
   }
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 71
   llr = ll_l3ll(l1,l2,l3,ll1,l9);
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
   llr = 0; clear_traces();
   {
@@ -1529,12 +1541,12 @@ void
       FFI_CALL(cif,ll_l3ll,args,&llr);
     }
   }
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 72  
   llr = ll_l4ll(l1,l2,l3,l4,ll1,l9);
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
   llr = 0; clear_traces();
   {
@@ -1546,12 +1558,12 @@ void
       FFI_CALL(cif,ll_l4ll,args,&llr);
     }
   }
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 73  
   llr = ll_l5ll(l1,l2,l3,l4,l5,ll1,l9);
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
   llr = 0; clear_traces();
   {
@@ -1563,12 +1575,12 @@ void
       FFI_CALL(cif,ll_l5ll,args,&llr);
     }
   }
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 74  
   llr = ll_l6ll(l1,l2,l3,l4,l5,l6,ll1,l9);
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
   llr = 0; clear_traces();
   {
@@ -1580,12 +1592,12 @@ void
       FFI_CALL(cif,ll_l6ll,args,&llr);
     }
   }
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 75  
   llr = ll_l7ll(l1,l2,l3,l4,l5,l6,l7,ll1,l9);
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
   llr = 0; clear_traces();
   {
@@ -1597,12 +1609,12 @@ void
       FFI_CALL(cif,ll_l7ll,args,&llr);
     }
   }
-  FPRINTF(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
+  fprintf(out,"->0x%lx%08lx\n",(long)(llr>>32),(long)(llr&0xffffffff));
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 76  
   dr = d_l2d(l1,l2,d2,l9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -1614,12 +1626,12 @@ void
       FFI_CALL(cif,d_l2d,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 77  
   dr = d_l3d(l1,l2,l3,d2,l9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -1631,12 +1643,12 @@ void
       FFI_CALL(cif,d_l3d,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 78  
   dr = d_l4d(l1,l2,l3,l4,d2,l9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -1648,12 +1660,12 @@ void
       FFI_CALL(cif,d_l4d,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 79  
   dr = d_l5d(l1,l2,l3,l4,l5,d2,l9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -1665,12 +1677,12 @@ void
       FFI_CALL(cif,d_l5d,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 80  
   dr = d_l6d(l1,l2,l3,l4,l5,l6,d2,l9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -1682,12 +1694,12 @@ void
       FFI_CALL(cif,d_l6d,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
 #if (!defined(DGTEST)) || DGTEST == 81  
   dr = d_l7d(l1,l2,l3,l4,l5,l6,l7,d2,l9);
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
   dr = 0.0; clear_traces();
   {
@@ -1699,7 +1711,7 @@ void
       FFI_CALL(cif,d_l7d,args,&dr);
     }
   }
-  FPRINTF(out,"->%g\n",dr);
+  fprintf(out,"->%g\n",dr);
   fflush(out);
 #endif
   return;
