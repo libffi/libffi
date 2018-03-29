@@ -46,12 +46,12 @@ int fprintf(FILE *stream, const char *format, ...)
       vsprintf(&rbuf1[strlen(rbuf1)], format, args);
       break;
     case 2:
-      printf(rbuf1);
+      printf("%s", rbuf1);
       vsprintf(rbuf2, format, args);
       break;
     case 3:
       vsprintf(&rbuf2[strlen(rbuf2)], format, args);
-      printf(rbuf2);
+      printf("%s", rbuf2);
       if (strcmp (rbuf1, rbuf2)) abort();
       break;
     }
