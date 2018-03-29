@@ -3,14 +3,6 @@ sudo: required
 
 language: cpp
 
-os:
-  - linux
-compiler:
-  - gcc
-  - clang
-env:
-  - CONFIGURE_OPTIONS=--disable-shared
-  - CONFIGURE_OPTIONS=
 matrix:
   include:
     - os: osx
@@ -18,6 +10,16 @@ matrix:
     - os: linux
       compiler: gcc
       env: HOST=i386-pc-linux-gnu MEVAL='export CC="$CC -m32" && CXX="$CXX -m32"'
+    - os: linux
+      compiler: gcc
+    - os: linux
+      compiler: gcc
+      env: CONFIGURE_OPTIONS=--disable-shared
+    - os: linux
+      compiler: clang
+    - os: linux
+      compiler: clang
+      env: CONFIGURE_OPTIONS=--disable-shared
     - os: linux
       env: HOST=moxie-elf MEVAL='export PATH=/opt/moxielogic/bin:$PATH && CC=moxie-elf-gcc && CXX=moxie-elf-g++' LDFLAGS=-Tsim.ld RUNTESTFLAGS="--target_board moxie-sim" DEJAGNU="$TRAVIS_BUILD_DIR/.travis/site.exp"
 
