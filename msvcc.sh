@@ -182,6 +182,10 @@ do
       esac
       shift 1
     ;;
+    -dll)
+      args="$args -LD"
+      shift 1
+    ;;
     -W|-Wextra)
       # TODO map extra warnings
       shift 1
@@ -289,3 +293,4 @@ fi
 
 exit $result
 
+# vim: noai:ts=4:sw=4
