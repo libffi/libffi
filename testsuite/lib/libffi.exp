@@ -324,15 +324,15 @@ proc run-many-tests { testcases extra_flags } {
                 "-DABI_NUM=FFI_THISCALL -DABI_ATTR=__THISCALL__"
                 "-DABI_NUM=FFI_FASTCALL -DABI_ATTR=__FASTCALL__"
             }
-        } elseif { [istarget "x86_64-*-*"] \
-		   && [libffi_feature_test "#ifndef __ILP32__"] } {
-            set targetabis {
-                ""
-                "-DABI_NUM=FFI_WIN64 -DABI_ATTR=__MSABI__"
-            }
         }
+	# elseif { [istarget "x86_64-*-*"] \
+	#		   && [libffi_feature_test "#ifndef __ILP32__"] } {
+	#            set targetabis {
+	#                ""
+	#                "-DABI_NUM=FFI_WIN64 -DABI_ATTR=__MSABI__"
+	#            }
+	#        }
     }
-
     set common [ concat $common $extra_flags ]
     foreach test $testcases {
         set testname [file tail $test]
