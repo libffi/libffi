@@ -52,11 +52,17 @@ ml="ml"
 safeseh="-safeseh"
 output=
 libpaths=
+libversion=7
+verbose=
 
 while [ $# -gt 0 ]
 do
   case $1
   in
+    --verbose)
+      $verbose=1
+      shift 1
+    ;;
     --version)
       args="-help"
       shift 1
@@ -162,23 +168,30 @@ do
     ;;
     -L)
       p=$(cygpath -m $2)
-      linkargs="$linkargs /LIBPATH:$p"
+      linkargs="$linkargs -LIBPATH:$p"
       shift 2
     ;;
     -L*)
       p=$(cygpath -m ${1#-L})
-      linkargs="$linkargs /LIBPATH:$p"
+      linkargs="$linkargs -LIBPATH:$p"
       shift 1
     ;;
+    -link)
+      # add next argument verbatim to linker args
+      linkargs="$linkargs $2"
+      shift 2
+      ;;
     -l*)
       case $1
       in
-          -lffi)
-	      linkargs="$linkargs lib${1#-l}.a"
-	      ;;
-	  *)
-	      # linkargs="$linkargs ${1#-l}.lib"
-	      ;;
+        -lffi)
+          linkargs="$linkargs lib${1#-l}-${libversion}.lib"
+          ;;
+        *)
+          # ignore other libraries like -lm, hope they are
+          # covered by MSVCRT
+          # linkargs="$linkargs ${1#-l}.lib"
+          ;;
       esac
       shift 1
     ;;
@@ -194,6 +207,15 @@ do
     -pedantic)
       # libffi tests -pedantic with -Wall, so drop it also.
       shift 1
+    ;;
+    -warn)
+      # ignore -warn all from libtool as well.
+      if test "$2" = "all"; then
+        shift 2
+      else
+        args="$args -warn"
+        shift 1
+      fi
     ;;
     -Werror)
       args="$args -WX"
@@ -248,7 +270,7 @@ if [ -n "$linkargs" ]; then
 	linkargs="$linkargs -OPT:REF -OPT:ICF -INCREMENTAL:NO"
     fi
 
-    args="$args /link $linkargs"
+    args="$args -link $linkargs"
 fi
 
 if [ -n "$static_crt" ]; then
@@ -266,12 +288,19 @@ if [ -n "$assembly" ]; then
       outdir="."
     fi
     ppsrc="$outdir/$(basename $src|sed 's/.S$/.asm/g')"
-    echo "$cl -nologo -EP $includes $defines $src > $ppsrc"
+
+    if test -n "$verbose"; then
+      echo "$cl -nologo -EP $includes $defines $src > $ppsrc"
+    fi
+
     "$cl" -nologo -EP $includes $defines $src > $ppsrc || exit $?
     output="$(echo $output | sed 's%/F[dpa][^ ]*%%g')"
     args="-nologo $safeseh $single $output $ppsrc"
 
-    echo "$ml $args"
+    if test -n "$verbose"; then
+      echo "$ml $args"
+    fi
+
     eval "\"$ml\" $args"
     result=$?
 
@@ -279,13 +308,21 @@ if [ -n "$assembly" ]; then
     #mv *.obj $outdir
 else
     args="$md $args"
-    echo "$cl $args"
+
+    if test -n "$verbose"; then
+      echo "$cl $args"
+    fi
     # Return an error code of 1 if an invalid command line parameter is passed
-    # instead of just ignoring it.
+    # instead of just ignoring it. Any output that is not a warning or an
+    # error is filtered so this command behaves more like gcc. cl.exe prints
+    # the name of the compiled file otherwise, which breaks the dejagnu checks
+    # for excess warnings and errors.
     eval "(\"$cl\" $args 2>&1 1>&3 | \
-          awk '{print \$0} /D9002/ {error=1} END{exit error}' >&2) 3>&1"
+          awk '{print \$0} /D9002/ {error=1} END{exit error}' >&2) 3>&1 | \
+          awk '/warning|error/'"
     result=$?
 fi
 
 exit $result
 
+# vim: noai:ts=4:sw=4

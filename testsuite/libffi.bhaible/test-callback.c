@@ -25,8 +25,6 @@
 #include "alignof.h"
 #include <stdarg.h>
 
-#include "testcases.c"
-
 /* libffi testsuite local changes -------------------------------- */
 #ifdef DGTEST
 /* Redefine exit(1) as a test failure */
@@ -34,7 +32,7 @@
 int count = 0;
 char rbuf1[2048];
 char rbuf2[2048];
-int fprintf(FILE *stream, const char *format, ...)
+int _fprintf(FILE *stream, const char *format, ...)
 {
   va_list args;
   va_start(args, format);
@@ -60,8 +58,11 @@ int fprintf(FILE *stream, const char *format, ...)
 
   return 0;
 }
+#define fprintf _fprintf
 #endif
 /* --------------------------------------------------------------- */
+
+#include "testcases.c"
 
 #ifndef ABI_NUM
 #define ABI_NUM FFI_DEFAULT_ABI
