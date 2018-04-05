@@ -123,6 +123,7 @@ void
   int_tests (void)
 {
   int ir;
+  ffi_arg retvalue;
 #if (!defined(DGTEST)) || DGTEST == 2
   ir = i_v();
   fprintf(out,"->%d\n",ir);
@@ -132,7 +133,8 @@ void
     ffi_cif cif;
     FFI_PREP_CIF_NOARGS(cif,ffi_type_sint);
     {
-      FFI_CALL(cif,i_v,NULL,&ir);
+      FFI_CALL(cif,i_v,NULL,&retvalue);
+      ir = retvalue;
     }
   }
   fprintf(out,"->%d\n",ir);
@@ -150,7 +152,8 @@ void
     FFI_PREP_CIF(cif,argtypes,ffi_type_sint);
     {
       /*const*/ void* args[] = { &i1 };
-      FFI_CALL(cif,i_i,args,&ir);
+      FFI_CALL(cif,i_i,args,&retvalue);
+      ir = retvalue;
     }
   }
   fprintf(out,"->%d\n",ir);
@@ -168,7 +171,8 @@ void
     FFI_PREP_CIF(cif,argtypes,ffi_type_sint);
     {
       /*const*/ void* args[] = { &i1, &i2 };
-      FFI_CALL(cif,i_i2,args,&ir);
+      FFI_CALL(cif,i_i2,args,&retvalue);
+      ir = retvalue;
     }
   }
   fprintf(out,"->%d\n",ir);
@@ -186,7 +190,8 @@ void
     FFI_PREP_CIF(cif,argtypes,ffi_type_sint);
     {
       /*const*/ void* args[] = { &i1, &i2, &i3, &i4 };
-      FFI_CALL(cif,i_i4,args,&ir);
+      FFI_CALL(cif,i_i4,args,&retvalue);
+      ir = retvalue;
     }
   }
   fprintf(out,"->%d\n",ir);
@@ -204,7 +209,8 @@ void
     FFI_PREP_CIF(cif,argtypes,ffi_type_sint);
     {
       /*const*/ void* args[] = { &i1, &i2, &i3, &i4, &i5, &i6, &i7, &i8 };
-      FFI_CALL(cif,i_i8,args,&ir);
+      FFI_CALL(cif,i_i8,args,&retvalue);
+      ir = retvalue;
     }
   }
   fprintf(out,"->%d\n",ir);
@@ -222,7 +228,8 @@ void
     FFI_PREP_CIF(cif,argtypes,ffi_type_sint);
     {
       /*const*/ void* args[] = { &i1, &i2, &i3, &i4, &i5, &i6, &i7, &i8, &i9, &i10, &i11, &i12, &i13, &i14, &i15, &i16 };
-      FFI_CALL(cif,i_i16,args,&ir);
+      FFI_CALL(cif,i_i16,args,&retvalue);
+      ir = retvalue;
     }
   }
   fprintf(out,"->%d\n",ir);
