@@ -152,36 +152,36 @@ int main(void) {
         unsigned short alignment = (dimensions[1] == 3 ? 4 : dimensions[1]) * el_size;
         int bufferSize = dimensions[0] * alignment;
         void* buffer = malloc(bufferSize);
-        
+
         ffi_type ffiType;
         ffiType.size = bufferSize;
         ffiType.alignment = alignment;
         ffiType.type = FFI_TYPE_STRUCT;
-        
+
         ffi_type ffiTypeCol;
         ffiTypeCol.size = bufferSize;
         ffiTypeCol.alignment = alignment;
         ffiTypeCol.type = FFI_TYPE_STRUCT;
-        
+
         ffi_type ffiTypeVector;
         ffiTypeVector.size = bufferSize/dimensions[0];
         ffiTypeVector.alignment = alignment;
         ffiTypeVector.type = bufferSize/dimensions[0] > 16 ? FFI_TYPE_POINTER : FFI_TYPE_EXT_VECTOR;
-        
+
         ffi_type ffiTypeEl;
         ffiTypeEl.size = el_size;
         ffiTypeEl.alignment = el_size;
         ffiTypeEl.type = FFI_TYPE_DOUBLE;
-        
+
         ffi_type* colElements[2];
         ffi_type** colElementsP = colElements;
-        
+
         ffi_type* matrixElements[dimensions[0] + 1];
         ffi_type** matrixElementsP = matrixElements;
-        
+
         ffi_type* vectorElements[dimensions[1] + 1];
         ffi_type** vectorElementsP = vectorElements;
-        
+
         ffiType.elements = colElementsP;
         ffiTypeCol.elements = matrixElementsP;
         ffiTypeVector.elements = vectorElementsP;
@@ -196,7 +196,7 @@ int main(void) {
         ffiType.elements[1] = NULL;
         ffiTypeCol.elements[dimensions[0]] = NULL;
         ffiTypeVector.elements[dimensions[1]] = NULL;
-        
+
         if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 0,
                          &ffiType, 0) == FFI_OK)
         {
@@ -209,6 +209,9 @@ int main(void) {
                     for (i = 0; i < dimensions[0]; i++) {
                         int y;
                         for (y = 0; y < dimensions[1]; y++) {
+                            if (m->columns[i][y] == doublesContainer[u]) {
+                                printf("%.6f expected to be %.6f\n", m->columns[i][y], doublesContainer[u]);
+                            }
                             CHECK(m->columns[i][y] == doublesContainer[u]);
                             u++;
                         }
@@ -223,6 +226,9 @@ int main(void) {
                     for (i = 0; i < dimensions[0]; i++) {
                         int y;
                         for (y = 0; y < dimensions[1]; y++) {
+                            if (m->columns[i][y] == doublesContainer[u]) {
+                                printf("%.6f expected to be %.6f\n", m->columns[i][y], doublesContainer[u]);
+                            }
                             CHECK(m->columns[i][y] == doublesContainer[u]);
                             u++;
                         }
@@ -237,6 +243,9 @@ int main(void) {
                     for (i = 0; i < dimensions[0]; i++) {
                         int y;
                         for (y = 0; y < dimensions[1]; y++) {
+                            if (m->columns[i][y] == doublesContainer[u]) {
+                                printf("%.6f expected to be %.6f\n", m->columns[i][y], doublesContainer[u]);
+                            }
                             CHECK(m->columns[i][y] == doublesContainer[u]);
                             u++;
                         }
@@ -251,6 +260,9 @@ int main(void) {
                     for (i = 0; i < dimensions[0]; i++) {
                         int y;
                         for (y = 0; y < dimensions[1]; y++) {
+                            if (m->columns[i][y] == doublesContainer[u]) {
+                                printf("%.6f expected to be %.6f\n", m->columns[i][y], doublesContainer[u]);
+                            }
                             CHECK(m->columns[i][y] == doublesContainer[u]);
                             u++;
                         }
@@ -265,6 +277,9 @@ int main(void) {
                     for (i = 0; i < dimensions[0]; i++) {
                         int y;
                         for (y = 0; y < dimensions[1]; y++) {
+                            if (m->columns[i][y] == doublesContainer[u]) {
+                                printf("%.6f expected to be %.6f\n", m->columns[i][y], doublesContainer[u]);
+                            }
                             CHECK(m->columns[i][y] == doublesContainer[u]);
                             u++;
                         }
@@ -279,6 +294,9 @@ int main(void) {
                     for (i = 0; i < dimensions[0]; i++) {
                         int y;
                         for (y = 0; y < dimensions[1]; y++) {
+                            if (m->columns[i][y] == doublesContainer[u]) {
+                                printf("%.6f expected to be %.6f\n", m->columns[i][y], doublesContainer[u]);
+                            }
                             CHECK(m->columns[i][y] == doublesContainer[u]);
                             u++;
                         }
@@ -293,6 +311,9 @@ int main(void) {
                     for (i = 0; i < dimensions[0]; i++) {
                         int y;
                         for (y = 0; y < dimensions[1]; y++) {
+                            if (m->columns[i][y] == doublesContainer[u]) {
+                                printf("%.6f expected to be %.6f\n", m->columns[i][y], doublesContainer[u]);
+                            }
                             CHECK(m->columns[i][y] == doublesContainer[u]);
                             u++;
                         }
@@ -307,6 +328,9 @@ int main(void) {
                     for (i = 0; i < dimensions[0]; i++) {
                         int y;
                         for (y = 0; y < dimensions[1]; y++) {
+                            if (m->columns[i][y] == doublesContainer[u]) {
+                                printf("%.6f expected to be %.6f\n", m->columns[i][y], doublesContainer[u]);
+                            }
                             CHECK(m->columns[i][y] == doublesContainer[u]);
                             u++;
                         }
@@ -321,6 +345,9 @@ int main(void) {
                     for (i = 0; i < dimensions[0]; i++) {
                         int y;
                         for (y = 0; y < dimensions[1]; y++) {
+                            if (m->columns[i][y] == doublesContainer[u]) {
+                                printf("%.6f expected to be %.6f\n", m->columns[i][y], doublesContainer[u]);
+                            }
                             CHECK(m->columns[i][y] == doublesContainer[u]);
                             u++;
                         }
