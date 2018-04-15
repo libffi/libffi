@@ -32,11 +32,11 @@ install:
       If ($env:Platform -Match "x86") {
           $env:BUILD="x86-pc-cygwin"
           $env:HOST="x86-pc-windows"
-	  $env:ARCH_CFLAG="-m32"
+          $env:ARCH_CFLAG="-m32"
         } Else {
           $env:BUILD="x86_64-pc-cygwin"
           $env:HOST="x86_64-pc-winnt"
-	  $env:ARCH_CFLAG="-m64"
+          $env:ARCH_CFLAG="-m64"
       }
   - 'appveyor DownloadFile http://cygwin.com/setup-x86.exe -FileName setup.exe'
   - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P dejagnu >NUL'
