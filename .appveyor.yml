@@ -8,7 +8,6 @@ shallow_clone: true
 #  32- and 64-bit clang/mingw
 #  and perhaps more.
 
-image: Visual Studio 2013
 platform:
   - x64
 
@@ -18,6 +17,8 @@ environment:
     CYG_CACHE: C:/cygwin/var/cache/setup
     CYG_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
   matrix:
+    - PLATFORM: x64
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
     - PLATFORM: x64
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     - PLATFORM: x86
@@ -46,6 +47,8 @@ install:
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" if "%PLATFORM%"=="x86" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" if "%PLATFORM%"=="x64" call "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86_amd64
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2013" if "%PLATFORM%"=="x86" call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2013" if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" amd64
 
 build_script:
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; ./autogen.sh;)"
