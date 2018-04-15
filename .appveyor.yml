@@ -30,8 +30,8 @@ environment:
 install:
   - ps: >-
       If ($env:Platform -Match "x86") {
-          $env:BUILD="x86-pc-cygwin"
-          $env:HOST="x86-pc-windows"
+          $env:BUILD="i386-pc-cygwin"
+          $env:HOST="i386-pc-windows"
           $env:ARCH_CFLAG="-m32"
         } Else {
           $env:BUILD="x86_64-pc-cygwin"
