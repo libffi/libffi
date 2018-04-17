@@ -224,7 +224,8 @@ typedef enum ffi_abi {
 #endif
 } ffi_abi;
 
-#define FFI_EXTRA_CIF_FIELDS unsigned rstruct_flag
+#define FFI_EXTRA_CIF_FIELDS unsigned rstruct_flag; unsigned mips_nfixedargs
+#define FFI_TARGET_SPECIFIC_VARIADIC
 #endif /* !LIBFFI_ASM */
 
 /* ---- Definitions for closures ----------------------------------------- */
