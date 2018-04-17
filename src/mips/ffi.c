@@ -29,6 +29,7 @@
 #include <ffi.h>
 #include <ffi_common.h>
 
+#include <stdint.h>
 #include <stdlib.h>
 
 #ifdef __GNUC__
@@ -821,7 +822,7 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
 
   if ((cif->flags >> (FFI_FLAG_BITS * 2)) == FFI_TYPE_STRUCT)
     {
-      rvalue = (void *)(UINT32)ar[0];
+      rvalue = (void *)(uintptr_t)ar[0];
       argn = 1;
       seen_int = 1;
     }
@@ -998,7 +999,7 @@ ffi_closure_mips_inner_N32 (ffi_cif *cif,
 	  || arg_types[i]->type == FFI_TYPE_LONGDOUBLE)
         {
           argp = (argn >= 8 || i >= cif->mips_nfixedargs || soft_float) ? ar + argn : fpr + argn;
-          if ((arg_types[i]->type == FFI_TYPE_LONGDOUBLE) && ((unsigned)argp & (arg_types[i]->alignment-1)))
+          if ((arg_types[i]->type == FFI_TYPE_LONGDOUBLE) && ((uintptr_t)argp & (arg_types[i]->alignment-1)))
             {
               argp=(ffi_arg*)FFI_ALIGN(argp,arg_types[i]->alignment);
               argn++;
