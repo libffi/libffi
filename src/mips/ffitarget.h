@@ -229,21 +229,15 @@ typedef enum ffi_abi {
 
 /* ---- Definitions for closures ----------------------------------------- */
 
-#if defined(FFI_MIPS_O32)
 #define FFI_CLOSURES 1
 #define FFI_GO_CLOSURES 1
-#define FFI_TRAMPOLINE_SIZE 20
-#else
-/* N32/N64. */
-# define FFI_CLOSURES 1
-#define FFI_GO_CLOSURES 1
-#if _MIPS_SIM==_ABI64
-#define FFI_TRAMPOLINE_SIZE 56
-#else
-#define FFI_TRAMPOLINE_SIZE 20
-#endif
-#endif /* FFI_MIPS_O32 */
 #define FFI_NATIVE_RAW_API 0
+
+#if defined(FFI_MIPS_O32) || (_MIPS_SIM ==_ABIN32)
+# define FFI_TRAMPOLINE_SIZE 20
+#else
+# define FFI_TRAMPOLINE_SIZE 56
+#endif
 
 #endif
 
