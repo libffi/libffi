@@ -831,6 +831,8 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
 
   while (i < avn)
     {
+      if (arg_types[i]->alignment == 8 && (argn & 0x1))
+        argn++;
       if (i < 2 && !seen_int &&
 	  (arg_types[i]->type == FFI_TYPE_FLOAT ||
 	   arg_types[i]->type == FFI_TYPE_DOUBLE ||
@@ -845,8 +847,6 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
 	}
       else
 	{
-	  if (arg_types[i]->alignment == 8 && (argn & 0x1))
-	    argn++;
 	  switch (arg_types[i]->type)
 	    {
 	      case FFI_TYPE_SINT8:
