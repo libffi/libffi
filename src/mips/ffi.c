@@ -823,6 +823,7 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
     {
       rvalue = (void *)(UINT32)ar[0];
       argn = 1;
+      seen_int = 1;
     }
 
   i = 0;
