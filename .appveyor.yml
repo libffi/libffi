@@ -31,7 +31,7 @@ install:
           $env:BUILD="x86_64-w64-cygwin"
           $env:HOST="x86_64-w64-cygwin"
       }
-  - 'appveyor DownloadFile http://cygwin.com/setup-x86.exe -FileName setup.exe'
+  - 'appveyor DownloadFile https://cygwin.com/setup-x86.exe -FileName setup.exe'
   - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P dejagnu >NUL'
   - '%CYG_ROOT%/bin/bash -lc "cygcheck -dc cygwin"'
   - ps: $env:VSCOMNTOOLS=(Get-Content ("env:VS" + "$env:VSVER" + "0COMNTOOLS"))
