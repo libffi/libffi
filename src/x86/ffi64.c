@@ -678,7 +678,10 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 {
 #ifndef __ILP32__
   if (cif->abi == FFI_EFI64)
-    return ffi_call_efi64(cif, fn, rvalue, avalue);
+    {
+      ffi_call_efi64(cif, fn, rvalue, avalue);
+      return;
+    }
 #endif
   ffi_call_int (cif, fn, rvalue, avalue, NULL);
 }
@@ -695,7 +698,10 @@ ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
 {
 #ifndef __ILP32__
   if (cif->abi == FFI_EFI64)
-    ffi_call_go_efi64(cif, fn, rvalue, avalue, closure);
+    {
+      ffi_call_go_efi64(cif, fn, rvalue, avalue, closure);
+      return;
+    }
 #endif
   ffi_call_int (cif, fn, rvalue, avalue, closure);
 }
