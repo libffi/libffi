@@ -76,6 +76,7 @@
 	.text
 	.balign	16
 	.globl	ffi_call_i386
+	.private_extern ffi_call_i386
 	FFI_HIDDEN(ffi_call_i386)
 
 /* This is declared as
@@ -292,6 +293,7 @@ L(C1(UW,UWN)):								\
 
 	.balign	16
 	.globl	C(ffi_go_closure_EAX)
+	.private_extern C(ffi_go_closure_EAX)
 	FFI_HIDDEN(C(ffi_go_closure_EAX))
 C(ffi_go_closure_EAX):
 L(UW6):
@@ -312,6 +314,7 @@ ENDF(C(ffi_go_closure_EAX))
 
 	.balign	16
 	.globl	C(ffi_go_closure_ECX)
+	.private_extern C(ffi_go_closure_ECX)
 	FFI_HIDDEN(C(ffi_go_closure_ECX))
 C(ffi_go_closure_ECX):
 L(UW9):
@@ -335,6 +338,7 @@ ENDF(C(ffi_go_closure_ECX))
 
 	.balign	16
 	.globl	C(ffi_closure_i386)
+	.private_extern C(ffi_closure_i386)
 	FFI_HIDDEN(C(ffi_closure_i386))
 
 C(ffi_closure_i386):
@@ -419,6 +423,7 @@ ENDF(C(ffi_closure_i386))
 
 	.balign	16
 	.globl	C(ffi_go_closure_STDCALL)
+	.private_extern C(ffi_go_closure_STDCALL)
 	FFI_HIDDEN(C(ffi_go_closure_STDCALL))
 C(ffi_go_closure_STDCALL):
 L(UW21):
@@ -442,6 +447,7 @@ ENDF(C(ffi_go_closure_STDCALL))
 
 	.balign	16
 	.globl	C(ffi_closure_REGISTER)
+	.private_extern C(ffi_closure_REGISTER)
 	FFI_HIDDEN(C(ffi_closure_REGISTER))
 C(ffi_closure_REGISTER):
 L(UW24):
@@ -466,6 +472,7 @@ ENDF(C(ffi_closure_REGISTER))
 
 	.balign	16
 	.globl	C(ffi_closure_STDCALL)
+	.private_extern C(ffi_closure_STDCALL)
 	FFI_HIDDEN(C(ffi_closure_STDCALL))
 C(ffi_closure_STDCALL):
 L(UW27):
@@ -572,6 +579,7 @@ ENDF(C(ffi_closure_STDCALL))
 
 	.balign	16
 	.globl	C(ffi_closure_raw_SYSV)
+	.private_extern C(ffi_closure_raw_SYSV)
 	FFI_HIDDEN(C(ffi_closure_raw_SYSV))
 C(ffi_closure_raw_SYSV):
 L(UW32):
@@ -675,6 +683,7 @@ ENDF(C(ffi_closure_raw_SYSV))
 
 	.balign	16
 	.globl	C(ffi_closure_raw_THISCALL)
+	.private_extern C(ffi_closure_raw_THISCALL)
 	FFI_HIDDEN(C(ffi_closure_raw_THISCALL))
 C(ffi_closure_raw_THISCALL):
 L(UW41):

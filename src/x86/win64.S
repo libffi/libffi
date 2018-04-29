@@ -42,6 +42,7 @@
 
 	.align	8
 	.globl	C(ffi_call_win64)
+	.private_extern C(ffi_call_win64)
 
 	SEH(.seh_proc ffi_call_win64)
 C(ffi_call_win64):
@@ -169,6 +170,7 @@ E(0b, FFI_TYPE_SMALL_STRUCT_4B)
 
 	.align	8
 	.globl	C(ffi_go_closure_win64)
+	.private_extern C(ffi_go_closure_win64)
 
 	SEH(.seh_proc ffi_go_closure_win64)
 C(ffi_go_closure_win64):
@@ -188,6 +190,7 @@ C(ffi_go_closure_win64):
 
 	.align	8
 	.globl	C(ffi_closure_win64)
+	.private_extern C(ffi_closure_win64)
 
 	SEH(.seh_proc ffi_closure_win64)
 C(ffi_closure_win64):
