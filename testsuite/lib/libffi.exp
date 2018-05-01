@@ -325,7 +325,8 @@ proc run-many-tests { testcases extra_flags } {
                 "-DABI_NUM=FFI_FASTCALL -DABI_ATTR=__FASTCALL__"
             }
         } elseif { [istarget "x86_64-*-*"] \
-		   && [libffi_feature_test "#ifndef __ILP32__"] } {
+		   && [libffi_feature_test "#if !defined __ILP32__  \
+						&& !defined __i386__"] } {
             set targetabis {
                 ""
                 "-DABI_NUM=FFI_WIN64 -DABI_ATTR=__MSABI__"
