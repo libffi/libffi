@@ -317,7 +317,7 @@ proc run-many-tests { testcases extra_flags } {
 
     set targetabis { "" }
     if [string match $compiler_vendor "gnu"] {
-        if [istarget "i?86-*-*"] {
+        if [libffi_feature_test "#ifdef __i386__"] {
             set targetabis {
                 ""
                 "-DABI_NUM=FFI_STDCALL -DABI_ATTR=__STDCALL__"
