@@ -317,22 +317,23 @@ proc run-many-tests { testcases extra_flags } {
 
     set targetabis { "" }
     if [string match $compiler_vendor "gnu"] {
-        if [istarget "i?86-*-*"] {
+        if [libffi_feature_test "#ifdef __i386__"] {
             set targetabis {
                 ""
                 "-DABI_NUM=FFI_STDCALL -DABI_ATTR=__STDCALL__"
                 "-DABI_NUM=FFI_THISCALL -DABI_ATTR=__THISCALL__"
                 "-DABI_NUM=FFI_FASTCALL -DABI_ATTR=__FASTCALL__"
             }
+        } elseif { [istarget "x86_64-*-*"] \
+		   && [libffi_feature_test "#if !defined __ILP32__  \
+						&& !defined __i386__"] } {
+            set targetabis {
+                ""
+                "-DABI_NUM=FFI_WIN64 -DABI_ATTR=__MSABI__"
+            }
         }
-	# elseif { [istarget "x86_64-*-*"] \
-	#		   && [libffi_feature_test "#ifndef __ILP32__"] } {
-	#            set targetabis {
-	#                ""
-	#                "-DABI_NUM=FFI_WIN64 -DABI_ATTR=__MSABI__"
-	#            }
-	#        }
     }
+
     set common [ concat $common $extra_flags ]
     foreach test $testcases {
         set testname [file tail $test]

@@ -345,6 +345,15 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	  size_t za = FFI_ALIGN (z, FFI_SIZEOF_ARG);
 	  size_t align = FFI_SIZEOF_ARG;
 
+	  /* Issue 434: For thiscall and fastcall, if the paramter passed
+	     as 64-bit integer or struct, all following integer paramters
+	     will be passed on stack.  */
+	  if ((cabi == FFI_THISCALL || cabi == FFI_FASTCALL)
+	      && (t == FFI_TYPE_SINT64
+		  || t == FFI_TYPE_UINT64
+		  || t == FFI_TYPE_STRUCT))
+	    narg_reg = 2;
+
 	  /* Alignment rules for arguments are quite complex.  Vectors and
 	     structures with 16 byte alignment get it.  Note that long double
 	     on Darwin does have 16 byte alignment, and does not get this
@@ -474,6 +483,15 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
 	  /* See the comment in ffi_call_int.  */
 	  if (t == FFI_TYPE_STRUCT && ty->alignment >= 16)
 	    align = 16;
+
+	  /* Issue 434: For thiscall and fastcall, if the paramter passed
+	     as 64-bit integer or struct, all following integer paramters
+	     will be passed on stack.  */
+	  if ((cabi == FFI_THISCALL || cabi == FFI_FASTCALL)
+	      && (t == FFI_TYPE_SINT64
+		  || t == FFI_TYPE_UINT64
+		  || t == FFI_TYPE_STRUCT))
+	    narg_reg = 2;
 
 	  if (dir < 0)
 	    {
