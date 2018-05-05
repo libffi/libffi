@@ -17,7 +17,7 @@ class simulator_platform(Platform):
     version_min = '-miphoneos-version-min=7.0'
 
     prefix = "#ifdef __i386__\n\n"
-    suffix = "\n\n#endif\n"
+    suffix = "\n\n#endif"
     src_dir = 'x86'
     src_files = ['sysv.S', 'ffi.c', 'internal.h']
 
@@ -30,7 +30,7 @@ class simulator64_platform(Platform):
     version_min = '-miphoneos-version-min=7.0'
 
     prefix = "#ifdef __x86_64__\n\n"
-    suffix = "\n\n#endif\n"
+    suffix = "\n\n#endif"
     src_dir = 'x86'
     src_files = ['unix64.S', 'ffi64.c', 'ffiw64.c', 'win64.S', 'internal64.h', 'asmnames.h']
 
@@ -43,7 +43,7 @@ class device_platform(Platform):
     version_min = '-miphoneos-version-min=7.0'
 
     prefix = "#ifdef __arm__\n\n"
-    suffix = "\n\n#endif\n"
+    suffix = "\n\n#endif"
     src_dir = 'arm'
     src_files = ['sysv.S', 'ffi.c', 'internal.h']
 
@@ -56,7 +56,7 @@ class device64_platform(Platform):
     version_min = '-miphoneos-version-min=7.0'
 
     prefix = "#ifdef __arm64__\n\n"
-    suffix = "\n\n#endif\n"
+    suffix = "\n\n#endif"
     src_dir = 'aarch64'
     src_files = ['sysv.S', 'ffi.c', 'internal.h']
 
@@ -71,7 +71,7 @@ class desktop32_platform(Platform):
     src_files = ['sysv.S', 'ffi.c', 'internal.h']
 
     prefix = "#ifdef __i386__\n\n"
-    suffix = "\n\n#endif\n"
+    suffix = "\n\n#endif"
 
 
 class desktop64_platform(Platform):
@@ -82,7 +82,7 @@ class desktop64_platform(Platform):
     version_min = '-mmacosx-version-min=10.6'
 
     prefix = "#ifdef __x86_64__\n\n"
-    suffix = "\n\n#endif\n"
+    suffix = "\n\n#endif"
     src_dir = 'x86'
     src_files = ['unix64.S', 'ffi64.c', 'ffiw64.c', 'win64.S', 'internal64.h', 'asmnames.h']
 

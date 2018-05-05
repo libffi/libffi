@@ -54,7 +54,6 @@
 
 	.balign	8
 	.globl	C(ffi_call_unix64)
-	.private_extern C(ffi_call_unix64)
 	FFI_HIDDEN(C(ffi_call_unix64))
 
 C(ffi_call_unix64):
@@ -224,7 +223,6 @@ ENDF(C(ffi_call_unix64))
 
 	.balign	2
 	.globl	C(ffi_closure_unix64_sse)
-	.private_extern C(ffi_closure_unix64_sse)
 	FFI_HIDDEN(C(ffi_closure_unix64_sse))
 
 C(ffi_closure_unix64_sse):
@@ -248,7 +246,6 @@ ENDF(C(ffi_closure_unix64_sse))
 
 	.balign	2
 	.globl	C(ffi_closure_unix64)
-	.private_extern C(ffi_closure_unix64)
 	FFI_HIDDEN(C(ffi_closure_unix64))
 
 C(ffi_closure_unix64):
@@ -357,7 +354,6 @@ ENDF(C(ffi_closure_unix64))
 
 	.balign	2
 	.globl	C(ffi_go_closure_unix64_sse)
-	.private_extern C(ffi_go_closure_unix64_sse)
 	FFI_HIDDEN(C(ffi_go_closure_unix64_sse))
 
 C(ffi_go_closure_unix64_sse):
@@ -381,7 +377,6 @@ ENDF(C(ffi_go_closure_unix64_sse))
 
 	.balign	2
 	.globl	C(ffi_go_closure_unix64)
-	.private_extern C(ffi_go_closure_unix64)
 	FFI_HIDDEN(C(ffi_go_closure_unix64))
 
 C(ffi_go_closure_unix64):
