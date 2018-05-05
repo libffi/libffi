@@ -198,6 +198,7 @@ CNAME(ffi_call_SYSV):
 	cfi_endproc
 
 	.globl	CNAME(ffi_call_SYSV)
+	.private_extern CNAME(ffi_call_SYSV)
 #ifdef __ELF__
 	.type	CNAME(ffi_call_SYSV), #function
 	.hidden	CNAME(ffi_call_SYSV)
@@ -237,6 +238,7 @@ CNAME(ffi_closure_SYSV_V):
 	cfi_endproc
 
 	.globl	CNAME(ffi_closure_SYSV_V)
+	.private_extern CNAME(ffi_closure_SYSV_V)
 #ifdef __ELF__
 	.type	CNAME(ffi_closure_SYSV_V), #function
 	.hidden	CNAME(ffi_closure_SYSV_V)
@@ -349,6 +351,7 @@ CNAME(ffi_closure_SYSV):
 	cfi_endproc
 
 	.globl	CNAME(ffi_closure_SYSV)
+	.private_extern CNAME(ffi_closure_SYSV)
 #ifdef __ELF__
 	.type	CNAME(ffi_closure_SYSV), #function
 	.hidden	CNAME(ffi_closure_SYSV)
@@ -369,6 +372,7 @@ CNAME(ffi_closure_trampoline_table_page):
     .endr
 
     .globl CNAME(ffi_closure_trampoline_table_page)
+    .private_extern CNAME(ffi_closure_trampoline_table_page)
     #ifdef __ELF__
     	.type	CNAME(ffi_closure_trampoline_table_page), #function
     	.hidden	CNAME(ffi_closure_trampoline_table_page)
@@ -396,6 +400,7 @@ CNAME(ffi_go_closure_SYSV_V):
 	cfi_endproc
 
 	.globl	CNAME(ffi_go_closure_SYSV_V)
+	.private_extern CNAME(ffi_go_closure_SYSV_V)
 #ifdef __ELF__
 	.type	CNAME(ffi_go_closure_SYSV_V), #function
 	.hidden	CNAME(ffi_go_closure_SYSV_V)
@@ -425,6 +430,7 @@ CNAME(ffi_go_closure_SYSV):
 	cfi_endproc
 
 	.globl	CNAME(ffi_go_closure_SYSV)
+	.private_extern CNAME(ffi_go_closure_SYSV)
 #ifdef __ELF__
 	.type	CNAME(ffi_go_closure_SYSV), #function
 	.hidden	CNAME(ffi_go_closure_SYSV)
