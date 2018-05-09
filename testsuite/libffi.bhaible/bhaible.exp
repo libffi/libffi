@@ -19,6 +19,7 @@ libffi-init
 
 global srcdir subdir
 global compiler_vendor
+global has_gccbug
 
 # The conversion of this testsuite into a dejagnu compatible testsuite
 # was done in a pretty lazy fashion, and requires the use of compiler
@@ -36,6 +37,7 @@ if { [string match $compiler_vendor "microsoft"] } {
 if { ![string match $compiler_vendor "microsoft"] && ![string match $compiler_vendor "gnu"] } {
     set warning_options "-Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized";
 }
+
 
 set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/test-call.c]]
 
