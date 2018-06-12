@@ -517,6 +517,47 @@ L(SFDE5):
 L(EFDE5):
 #ifdef __APPLE__
 	.subsections_via_symbols
+	.section __LD,__compact_unwind
+
+	/* compact unwind for ffi_call_unix64 */
+	.quad    C(ffi_call_unix64)
+	.set     L1,L(UW4)-L(UW0)
+	.long    L1
+	.long    0x04000000 /* use dwarf unwind info */
+	.quad    0
+	.quad    0
+
+	/* compact unwind for ffi_closure_unix64_sse */
+	.quad    C(ffi_closure_unix64_sse)
+	.set     L2,L(UW7)-L(UW5)
+	.long    L2
+	.long    0x04000000 /* use dwarf unwind info */
+	.quad    0
+	.quad    0
+
+	/* compact unwind for ffi_closure_unix64 */
+	.quad    C(ffi_closure_unix64)
+	.set     L3,L(UW11)-L(UW8)
+	.long    L3
+	.long    0x04000000 /* use dwarf unwind info */
+	.quad    0
+	.quad    0
+
+	/* compact unwind for ffi_go_closure_unix64_sse */
+	.quad    C(ffi_go_closure_unix64_sse)
+	.set     L4,L(UW14)-L(UW12)
+	.long    L4
+	.long    0x04000000 /* use dwarf unwind info */
+	.quad    0
+	.quad    0
+
+	/* compact unwind for ffi_go_closure_unix64 */
+	.quad    C(ffi_go_closure_unix64)
+	.set     L5,L(UW17)-L(UW15)
+	.long    L5
+	.long    0x04000000 /* use dwarf unwind info */
+	.quad    0
+	.quad    0
 #endif
 
 #endif /* __x86_64__ */
