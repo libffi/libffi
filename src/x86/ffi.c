@@ -545,6 +545,7 @@ ffi_prep_closure_loc (ffi_closure* closure,
     case FFI_REGISTER:
       dest = ffi_closure_REGISTER;
       op = 0x68;  /* pushl imm */
+      break;
     default:
       return FFI_BAD_ABI;
     }
