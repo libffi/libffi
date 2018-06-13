@@ -1035,6 +1035,15 @@ L(SFDE9):
 L(EFDE9):
 #endif /* !FFI_NO_RAW_API */
 
+#ifdef _WIN32
+	.def	 @feat.00;
+	.scl	3;
+	.type	0;
+	.endef
+	.globl	@feat.00
+@feat.00 = 1
+#endif
+
 #endif /* ifndef _MSC_VER */
 #endif /* ifndef __x86_64__ */
 
