@@ -85,6 +85,7 @@
 
 #define ARM_FUNC_START(name)		\
 	.globl CNAME(name);		\
+	.private_extern CNAME(name);	\
 	FFI_HIDDEN(CNAME(name));	\
 	ARM_FUNC_START_LOCAL(name)
 
