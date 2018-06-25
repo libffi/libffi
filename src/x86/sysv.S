@@ -1046,7 +1046,7 @@ L(EFDE9):
 
 #ifdef __APPLE__
     .subsections_via_symbols
-    .section __LD,__compact_unwind
+    .section __LD,__compact_unwind,regular,debug
 
     /* compact unwind for ffi_call_i386 */
     .long    C(ffi_call_i386)

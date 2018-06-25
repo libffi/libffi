@@ -517,7 +517,7 @@ L(SFDE5):
 L(EFDE5):
 #ifdef __APPLE__
 	.subsections_via_symbols
-	.section __LD,__compact_unwind
+	.section __LD,__compact_unwind,regular,debug
 
 	/* compact unwind for ffi_call_unix64 */
 	.quad    C(ffi_call_unix64)
