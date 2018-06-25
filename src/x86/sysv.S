@@ -792,7 +792,7 @@ ENDF(C(ffi_closure_raw_THISCALL))
 
 #ifdef X86_DARWIN
 # define COMDAT(X)							\
-        .section __TEXT,__textcoal_nt,coalesced,pure_instructions;	\
+        .section __TEXT,__text,coalesced,pure_instructions;		\
         .weak_definition X;						\
         .private_extern X
 #elif defined __ELF__ && !(defined(__sun__) && defined(__svr4__))
@@ -1043,6 +1043,83 @@ L(EFDE9):
 	.globl	@feat.00
 @feat.00 = 1
 #endif
+
+#ifdef __APPLE__
+    .subsections_via_symbols
+    .section __LD,__compact_unwind,regular,debug
+
+    /* compact unwind for ffi_call_i386 */
+    .long    C(ffi_call_i386)
+    .set     L1,L(UW5)-L(UW0)
+    .long    L1
+    .long    0x04000000 /* use dwarf unwind info */
+    .long    0
+    .long    0
+
+    /* compact unwind for ffi_go_closure_EAX */
+    .long    C(ffi_go_closure_EAX)
+    .set     L2,L(UW8)-L(UW6)
+    .long    L2
+    .long    0x04000000 /* use dwarf unwind info */
+    .long    0
+    .long    0
+
+    /* compact unwind for ffi_go_closure_ECX */
+    .long    C(ffi_go_closure_ECX)
+    .set     L3,L(UW11)-L(UW9)
+    .long    L3
+    .long    0x04000000 /* use dwarf unwind info */
+    .long    0
+    .long    0
+
+    /* compact unwind for ffi_closure_i386 */
+    .long    C(ffi_closure_i386)
+    .set     L4,L(UW20)-L(UW12)
+    .long    L4
+    .long    0x04000000 /* use dwarf unwind info */
+    .long    0
+    .long    0
+
+    /* compact unwind for ffi_go_closure_STDCALL */
+    .long    C(ffi_go_closure_STDCALL)
+    .set     L5,L(UW23)-L(UW21)
+    .long    L5
+    .long    0x04000000 /* use dwarf unwind info */
+    .long    0
+    .long    0
+
+    /* compact unwind for ffi_closure_REGISTER */
+    .long    C(ffi_closure_REGISTER)
+    .set     L6,L(UW26)-L(UW24)
+    .long    L6
+    .long    0x04000000 /* use dwarf unwind info */
+    .long    0
+    .long    0
+
+    /* compact unwind for ffi_closure_STDCALL */
+    .long    C(ffi_closure_STDCALL)
+    .set     L7,L(UW31)-L(UW27)
+    .long    L7
+    .long    0x04000000 /* use dwarf unwind info */
+    .long    0
+    .long    0
+
+    /* compact unwind for ffi_closure_raw_SYSV */
+    .long    C(ffi_closure_raw_SYSV)
+    .set     L8,L(UW40)-L(UW32)
+    .long    L8
+    .long    0x04000000 /* use dwarf unwind info */
+    .long    0
+    .long    0
+
+    /* compact unwind for ffi_closure_raw_THISCALL */
+    .long    C(ffi_closure_raw_THISCALL)
+    .set     L9,L(UW52)-L(UW41)
+    .long    L9
+    .long    0x04000000 /* use dwarf unwind info */
+    .long    0
+    .long    0
+#endif /* __APPLE__ */
 
 #endif /* ifndef _MSC_VER */
 #endif /* ifndef __x86_64__ */
