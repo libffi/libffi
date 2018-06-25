@@ -792,7 +792,7 @@ ENDF(C(ffi_closure_raw_THISCALL))
 
 #ifdef X86_DARWIN
 # define COMDAT(X)							\
-        .section __TEXT,__textcoal_nt,coalesced,pure_instructions;	\
+        .section __TEXT,__text,coalesced,pure_instructions;		\
         .weak_definition X;						\
         .private_extern X
 #elif defined __ELF__ && !(defined(__sun__) && defined(__svr4__))
