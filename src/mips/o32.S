@@ -282,9 +282,11 @@ $LCFI12:
 	li	$13, 1		# FFI_O32
 	bne	$16, $13, 1f	# Skip fp save if FFI_O32_SOFT_FLOAT
 	
+#ifndef __mips_soft_float
 	# Store all possible float/double registers.
 	s.d	$f12, FA_0_0_OFF2($fp)
 	s.d	$f14, FA_1_0_OFF2($fp)
+#endif
 1:
 	# prepare arguments for ffi_closure_mips_inner_O32
 	REG_L	a0, 4($15)	 # cif 
