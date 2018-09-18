@@ -394,7 +394,7 @@ extern ffi_status
 ffi_prep_cif_machdep_efi64(ffi_cif *cif);
 #endif
 
-ffi_status
+ffi_status FFI_HIDDEN
 ffi_prep_cif_machdep (ffi_cif *cif)
 {
   int gprcount, ssecount, i, avn, ngpr, nsse;

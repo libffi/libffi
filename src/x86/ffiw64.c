@@ -48,7 +48,7 @@ struct win64_call_frame
 extern void ffi_call_win64 (void *stack, struct win64_call_frame *,
 			    void *closure) FFI_HIDDEN;
 
-ffi_status
+ffi_status FFI_HIDDEN
 EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
 {
   int flags, n;
