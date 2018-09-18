@@ -107,7 +107,7 @@ void *ffi_prep_args(char *stack, extended_cif *ecif)
       count += z;
     }
 
-  return (stack + ((count > 24) ? 24 : ALIGN_DOWN(count, 8)));
+  return (stack + ((count > 24) ? 24 : FFI_ALIGN_DOWN(count, 8)));
 }
 
 /* Perform machine dependent cif processing */
