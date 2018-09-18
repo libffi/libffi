@@ -172,7 +172,7 @@ struct ffi_trampoline_table
 
 struct ffi_trampoline_table_entry
 {
-  void *(*trampoline) ();
+  void *(*trampoline) (void);
   ffi_trampoline_table_entry *next;
 };
 
