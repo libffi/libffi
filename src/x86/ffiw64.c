@@ -33,7 +33,7 @@
 #ifdef X86_WIN64
 #define EFI64(name) name
 #else
-#define EFI64(name) name##_efi64
+#define EFI64(name) FFI_HIDDEN name##_efi64
 #endif
 
 struct win64_call_frame
