@@ -282,7 +282,7 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 
 	    /* The X86_64_SSEUP_CLASS should be always preceded by
 	       X86_64_SSE_CLASS or X86_64_SSEUP_CLASS.  */
-	    if (classes[i] == X86_64_SSEUP_CLASS
+	    if (i > 1 && classes[i] == X86_64_SSEUP_CLASS
 		&& classes[i - 1] != X86_64_SSE_CLASS
 		&& classes[i - 1] != X86_64_SSEUP_CLASS)
 	      {
@@ -293,7 +293,7 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 
 	    /*  If X86_64_X87UP_CLASS isn't preceded by X86_64_X87_CLASS,
 		everything should be passed in memory.  */
-	    if (classes[i] == X86_64_X87UP_CLASS
+	    if (i > 1 && classes[i] == X86_64_X87UP_CLASS
 		&& (classes[i - 1] != X86_64_X87_CLASS))
 	      {
 		/* The first one should never be X86_64_X87UP_CLASS.  */
