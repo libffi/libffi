@@ -61,7 +61,7 @@ unsigned int ffi_prep_args(char *stack, extended_cif *ecif)
 		argp -= z;
 
 		/* Align if necessary */
-		argp = (char *) ALIGN_DOWN(ALIGN_DOWN(argp, (*p_arg)->alignment), 4);
+		argp = (char *) FFI_ALIGN_DOWN(FFI_ALIGN_DOWN(argp, (*p_arg)->alignment), 4);
 
 		if (z < sizeof(int)) {
 			z = sizeof(int);
