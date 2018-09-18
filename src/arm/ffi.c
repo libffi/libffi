@@ -210,7 +210,7 @@ ffi_prep_args_VFP (ffi_cif *cif, int flags, void *rvalue,
 }
 
 /* Perform machine dependent cif processing */
-ffi_status
+ffi_status FFI_HIDDEN
 ffi_prep_cif_machdep (ffi_cif *cif)
 {
   int flags = 0, cabi = cif->abi;
@@ -301,7 +301,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 }
 
 /* Perform machine dependent cif processing for variadic calls */
-ffi_status
+ffi_status FFI_HIDDEN
 ffi_prep_cif_machdep_var (ffi_cif * cif,
 			  unsigned int nfixedargs, unsigned int ntotalargs)
 {
