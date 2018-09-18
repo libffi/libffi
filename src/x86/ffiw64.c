@@ -25,6 +25,7 @@
    DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
+#ifdef __x86_64__
 #include <ffi.h>
 #include <ffi_common.h>
 #include <stdlib.h>
@@ -306,3 +307,5 @@ ffi_closure_win64_inner(ffi_cif *cif,
   fun (cif, rvalue, avalue, user_data);
   return flags;
 }
+
+#endif /* __x86_64__ */

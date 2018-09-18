@@ -28,6 +28,7 @@
    DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
+#ifdef __arm__
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_common.h>
@@ -817,3 +818,5 @@ layout_vfp_args (ffi_cif * cif)
 	break;
     }
 }
+
+#endif /* __arm__ */

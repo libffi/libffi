@@ -1,3 +1,4 @@
+#ifdef __x86_64__
 #define LIBFFI_ASM
 #include <fficonfig.h>
 #include <ffi.h>
@@ -229,6 +230,7 @@ C(ffi_closure_win64):
 
 	cfi_endproc
 	SEH(.seh_endproc)
+#endif /* __x86_64__ */
 
 #if defined __ELF__ && defined __linux__
 	.section	.note.GNU-stack,"",@progbits

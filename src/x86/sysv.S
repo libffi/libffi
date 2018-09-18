@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
-#ifndef __x86_64__
+#ifdef __i386__
 #ifndef _MSC_VER
 
 #define LIBFFI_ASM	
@@ -1122,7 +1122,7 @@ L(EFDE9):
 #endif /* __APPLE__ */
 
 #endif /* ifndef _MSC_VER */
-#endif /* ifndef __x86_64__ */
+#endif /* ifdef __i386__ */
 
 #if defined __ELF__ && defined __linux__
 	.section	.note.GNU-stack,"",@progbits
