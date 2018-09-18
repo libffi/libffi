@@ -454,7 +454,7 @@ allocate_int_to_reg_or_stack (struct call_context *context,
   return allocate_to_stack (state, stack, size, size);
 }
 
-ffi_status
+ffi_status FFI_HIDDEN
 ffi_prep_cif_machdep (ffi_cif *cif)
 {
   ffi_type *rtype = cif->rtype;
@@ -539,9 +539,9 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 
 #if defined (__APPLE__)
 /* Perform Apple-specific cif processing for variadic calls */
-ffi_status ffi_prep_cif_machdep_var(ffi_cif *cif,
-				    unsigned int nfixedargs,
-				    unsigned int ntotalargs)
+ffi_status FFI_HIDDEN
+ffi_prep_cif_machdep_var(ffi_cif *cif, unsigned int nfixedargs,
+			 unsigned int ntotalargs)
 {
   ffi_status status = ffi_prep_cif_machdep (cif);
   cif->aarch64_nfixedargs = nfixedargs;
