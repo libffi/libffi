@@ -794,7 +794,7 @@ ENDF(C(ffi_closure_raw_THISCALL))
 # define COMDAT(X)							\
         .section __TEXT,__text,coalesced,pure_instructions;		\
         .weak_definition X;						\
-        .private_extern X
+        FFI_HIDDEN(X)
 #elif defined __ELF__ && !(defined(__sun__) && defined(__svr4__))
 # define COMDAT(X)							\
 	.section .text.X,"axG",@progbits,X,comdat;			\
