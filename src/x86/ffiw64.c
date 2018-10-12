@@ -187,7 +187,10 @@ EFI64(ffi_call_go)(ffi_cif *cif, void (*fn)(void), void *rvalue,
 
 
 extern void ffi_closure_win64(void) FFI_HIDDEN;
+
+#ifdef FFI_GO_CLOSURES
 extern void ffi_go_closure_win64(void) FFI_HIDDEN;
+#endif
 
 ffi_status
 EFI64(ffi_prep_closure_loc)(ffi_closure* closure,
@@ -227,6 +230,7 @@ EFI64(ffi_prep_closure_loc)(ffi_closure* closure,
   return FFI_OK;
 }
 
+#ifdef FFI_GO_CLOSURES
 ffi_status
 EFI64(ffi_prep_go_closure)(ffi_go_closure* closure, ffi_cif* cif,
 		     void (*fun)(ffi_cif*, void*, void**, void*))
@@ -246,6 +250,7 @@ EFI64(ffi_prep_go_closure)(ffi_go_closure* closure, ffi_cif* cif,
 
   return FFI_OK;
 }
+#endif
 
 struct win64_closure_frame
 {
