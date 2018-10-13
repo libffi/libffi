@@ -580,11 +580,9 @@ ffi_prep_args64 (extended_cif *ecif, unsigned long *const stack)
 		      fparg_count++;
 		    }
 		  while (--elnum != 0);
-		  if ((next_arg.p & 3) != 0)
-		    {
-		      if (++next_arg.f == gpr_end.f)
-			next_arg.f = rest.f;
-		    }
+		  if ((next_arg.p & 7) != 0)
+                    if (++next_arg.f == gpr_end.f)
+                      next_arg.f = rest.f;
 		}
 	      else
 		do
