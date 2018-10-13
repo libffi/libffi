@@ -552,7 +552,11 @@ ffi_prep_args64 (extended_cif *ecif, unsigned long *const stack)
 	      if (align > 16)
 		align = 16;
 	      if (align > 1)
-		next_arg.p = FFI_ALIGN (next_arg.p, align);
+                {
+                  next_arg.p = FFI_ALIGN (next_arg.p, align);
+                  if (next_arg.ul == gpr_end.ul)
+                    next_arg.ul = rest.ul;
+                }
 	    }
 	  elt = discover_homogeneous_aggregate (*ptr, &elnum);
 	  if (elt)
