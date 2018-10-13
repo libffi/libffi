@@ -101,8 +101,8 @@ ffi_call_LINUX64:
 	ld	%r2, 8(%r29)
 # endif
 	/* Now do the call.  */
-	/* Set up cr1 with bits 4-7 of the flags.  */
-	mtcrf	0x40, %r31
+	/* Set up cr1 with bits 3-7 of the flags.  */
+	mtcrf	0xc0, %r31
 
 	/* Get the address to call into CTR.  */
 	mtctr	%r12
@@ -137,6 +137,34 @@ ffi_call_LINUX64:
 	lfd	%f13, (13*8)(%r29)
 2:
 
+	/* Load all the vector registers.  */
+	bf-	3, 3f
+	addi	%r29, %r29, -16
+	lvx	%v13, 0, %r29
+	addi	%r29, %r29, -16
+	lvx	%v12, 0, %r29
+	addi	%r29, %r29, -16
+	lvx	%v11, 0, %r29
+	addi	%r29, %r29, -16
+	lvx	%v10, 0, %r29
+	addi	%r29, %r29, -16
+	lvx	%v9,  0, %r29
+	addi	%r29, %r29, -16
+	lvx	%v8,  0, %r29
+	addi	%r29, %r29, -16
+	lvx	%v7,  0, %r29
+	addi	%r29, %r29, -16
+	lvx	%v6,  0, %r29
+	addi	%r29, %r29, -16
+	lvx	%v5,  0, %r29
+	addi	%r29, %r29, -16
+	lvx	%v4,  0, %r29
+	addi	%r29, %r29, -16
+	lvx	%v3,  0, %r29
+	addi	%r29, %r29, -16
+	lvx	%v2,  0, %r29
+3:
+
 	/* Make the call.  */
 	ld	%r11, 8(%r28)
 	bctrl
@@ -154,6 +182,7 @@ ffi_call_LINUX64:
 	bt	31, .Lstruct_return_value
 	bt	30, .Ldone_return_value
 	bt	29, .Lfp_return_value
+	bt	28, .Lvec_return_value
 	std	%r3, 0(%r30)
 	/* Fall through...  */
 
@@ -169,6 +198,10 @@ ffi_call_LINUX64:
 	ld	%r31, -8(%r1)
 	blr
 
+.Lvec_return_value:
+	stvx	%v2, 0, %r30
+	b	.Ldone_return_value
+
 .Lfp_return_value:
 	.cfi_def_cfa_register 28
 	mtcrf	0x02, %r31 /* cr6  */
@@ -182,7 +215,7 @@ ffi_call_LINUX64:
 	b	.Ldone_return_value
 
 .Lstruct_return_value:
-	bf	29, .Lsmall_struct
+	bf	29, .Lvec_homog_or_small_struct
 	mtcrf	0x02, %r31 /* cr6  */
 	bf	27, .Lfloat_homog_return_value
 	stfd	%f1, 0(%r30)
@@ -204,6 +237,25 @@ ffi_call_LINUX64:
 	stfs	%f6, 20(%r30)
 	stfs	%f7, 24(%r30)
 	stfs	%f8, 28(%r30)
+	b	.Ldone_return_value
+
+.Lvec_homog_or_small_struct:
+	bf	28, .Lsmall_struct
+	stvx	%v2, 0, %r30
+	addi	%r30, %r30, 16
+	stvx	%v3, 0, %r30
+	addi	%r30, %r30, 16
+	stvx	%v4, 0, %r30
+	addi	%r30, %r30, 16
+	stvx	%v5, 0, %r30
+	addi	%r30, %r30, 16
+	stvx	%v6, 0, %r30
+	addi	%r30, %r30, 16
+	stvx	%v7, 0, %r30
+	addi	%r30, %r30, 16
+	stvx	%v8, 0, %r30
+	addi	%r30, %r30, 16
+	stvx	%v9, 0, %r30
 	b	.Ldone_return_value
 
 .Lsmall_struct:
