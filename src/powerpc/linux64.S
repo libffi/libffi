@@ -107,32 +107,34 @@ ffi_call_LINUX64:
 	/* Get the address to call into CTR.  */
 	mtctr	%r12
 	/* Load all those argument registers.  */
-	ld	%r3, -32-(8*8)(%r28)
-	ld	%r4, -32-(7*8)(%r28)
-	ld	%r5, -32-(6*8)(%r28)
-	ld	%r6, -32-(5*8)(%r28)
+	addi	%r29, %r28, -32-(8*8)
+	ld	%r3,  (0*8)(%r29)
+	ld	%r4,  (1*8)(%r29)
+	ld	%r5,  (2*8)(%r29)
+	ld	%r6,  (3*8)(%r29)
 	bf-	5, 1f
-	ld	%r7, -32-(4*8)(%r28)
-	ld	%r8, -32-(3*8)(%r28)
-	ld	%r9, -32-(2*8)(%r28)
-	ld	%r10, -32-(1*8)(%r28)
+	ld	%r7,  (4*8)(%r29)
+	ld	%r8,  (5*8)(%r29)
+	ld	%r9,  (6*8)(%r29)
+	ld	%r10, (7*8)(%r29)
 1:
 
 	/* Load all the FP registers.  */
 	bf-	6, 2f
-	lfd	%f1, -32-(21*8)(%r28)
-	lfd	%f2, -32-(20*8)(%r28)
-	lfd	%f3, -32-(19*8)(%r28)
-	lfd	%f4, -32-(18*8)(%r28)
-	lfd	%f5, -32-(17*8)(%r28)
-	lfd	%f6, -32-(16*8)(%r28)
-	lfd	%f7, -32-(15*8)(%r28)
-	lfd	%f8, -32-(14*8)(%r28)
-	lfd	%f9, -32-(13*8)(%r28)
-	lfd	%f10, -32-(12*8)(%r28)
-	lfd	%f11, -32-(11*8)(%r28)
-	lfd	%f12, -32-(10*8)(%r28)
-	lfd	%f13, -32-(9*8)(%r28)
+	addi	%r29, %r29, -(14*8)
+	lfd	%f1,  ( 1*8)(%r29)
+	lfd	%f2,  ( 2*8)(%r29)
+	lfd	%f3,  ( 3*8)(%r29)
+	lfd	%f4,  ( 4*8)(%r29)
+	lfd	%f5,  ( 5*8)(%r29)
+	lfd	%f6,  ( 6*8)(%r29)
+	lfd	%f7,  ( 7*8)(%r29)
+	lfd	%f8,  ( 8*8)(%r29)
+	lfd	%f9,  ( 9*8)(%r29)
+	lfd	%f10, (10*8)(%r29)
+	lfd	%f11, (11*8)(%r29)
+	lfd	%f12, (12*8)(%r29)
+	lfd	%f13, (13*8)(%r29)
 2:
 
 	/* Make the call.  */
@@ -169,10 +171,10 @@ ffi_call_LINUX64:
 
 .Lfp_return_value:
 	.cfi_def_cfa_register 28
-	bf	28, .Lfloat_return_value
-	stfd	%f1, 0(%r30)
 	mtcrf	0x02, %r31 /* cr6  */
-	bf	27, .Ldone_return_value
+	bf	27, .Lfloat_return_value
+	stfd	%f1, 0(%r30)
+	bf	26, .Ldone_return_value
 	stfd	%f2, 8(%r30)
 	b	.Ldone_return_value
 .Lfloat_return_value:
@@ -181,7 +183,8 @@ ffi_call_LINUX64:
 
 .Lstruct_return_value:
 	bf	29, .Lsmall_struct
-	bf	28, .Lfloat_homog_return_value
+	mtcrf	0x02, %r31 /* cr6  */
+	bf	27, .Lfloat_homog_return_value
 	stfd	%f1, 0(%r30)
 	stfd	%f2, 8(%r30)
 	stfd	%f3, 16(%r30)

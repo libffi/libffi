@@ -31,22 +31,22 @@
 enum {
   /* The assembly depends on these exact flags.  */
   /* These go in cr7 */
-  FLAG_RETURNS_SMST	= 1 << (31-31), /* Used for FFI_SYSV small structs.  */
+  FLAG_RETURNS_SMST     = 1 << (31-31), /* Used for FFI_SYSV small structs.  */
   FLAG_RETURNS_NOTHING  = 1 << (31-30),
   FLAG_RETURNS_FP       = 1 << (31-29),
-  FLAG_RETURNS_64BITS   = 1 << (31-28),
 
-  /* This goes in cr6 */
-  FLAG_RETURNS_128BITS  = 1 << (31-27),
+  /* These go in cr6 */
+  FLAG_RETURNS_64BITS   = 1 << (31-27),
+  FLAG_RETURNS_128BITS  = 1 << (31-26),
 
-  FLAG_COMPAT		= 1 << (31- 8), /* Not used by assembly */
+  FLAG_COMPAT           = 1 << (31- 8), /* Not used by assembly */
 
   /* These go in cr1 */
   FLAG_ARG_NEEDS_COPY   = 1 << (31- 7), /* Used by sysv code */
   FLAG_ARG_NEEDS_PSAVE  = FLAG_ARG_NEEDS_COPY, /* Used by linux64 code */
   FLAG_FP_ARGUMENTS     = 1 << (31- 6), /* cr1.eq; specified by ABI */
   FLAG_4_GPR_ARGUMENTS  = 1 << (31- 5),
-  FLAG_RETVAL_REFERENCE = 1 << (31- 4)
+  FLAG_RETVAL_REFERENCE = 1 << (31- 4),
 };
 
 typedef union
