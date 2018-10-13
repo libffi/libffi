@@ -121,8 +121,9 @@ ffi_call_int (ffi_cif *cif,
 # endif
 	/* The SYSV ABI returns a structure of up to 8 bytes in size
 	   left-padded in r3/r4, and the ELFv2 ABI similarly returns a
-	   structure of up to 8 bytes in size left-padded in r3.  */
-	if (rsize <= 8)
+	   structure of up to 8 bytes in size left-padded in r3. But
+	   note that a structure of a single float is not paddded.  */
+	if (rsize <= 8 && (cif->flags & FLAG_RETURNS_FP) == 0)
 	  memcpy (rvalue, (char *) smst_buffer + 8 - rsize, rsize);
 	else
 #endif
