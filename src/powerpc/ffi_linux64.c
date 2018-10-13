@@ -492,7 +492,9 @@ ffi_prep_args64 (extended_cif *ecif, unsigned long *const stack)
 	  /* Fall through.  */
 #endif
 	case FFI_TYPE_DOUBLE:
+#if _CALL_ELF != 2
 	do_double:
+#endif
 	  double_tmp = **p_argv.d;
 	  if (fparg_count < NUM_FPR_ARG_REGISTERS64 && i < nfixedargs)
 	    {
@@ -511,7 +513,9 @@ ffi_prep_args64 (extended_cif *ecif, unsigned long *const stack)
 	  break;
 
 	case FFI_TYPE_FLOAT:
+#if _CALL_ELF != 2
 	do_float:
+#endif
 	  double_tmp = **p_argv.f;
 	  if (fparg_count < NUM_FPR_ARG_REGISTERS64 && i < nfixedargs)
 	    {
@@ -915,7 +919,9 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
 	  /* Fall through.  */
 #endif
 	case FFI_TYPE_DOUBLE:
+#if _CALL_ELF != 2
 	do_double:
+#endif
 	  /* On the outgoing stack all values are aligned to 8 */
 	  /* there are 13 64bit floating point registers */
 
@@ -930,7 +936,9 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
 	  break;
 
 	case FFI_TYPE_FLOAT:
+#if _CALL_ELF != 2
 	do_float:
+#endif
 	  if (pfr < end_pfr && i < nfixedargs)
 	    {
 	      /* Float values are stored as doubles in the
