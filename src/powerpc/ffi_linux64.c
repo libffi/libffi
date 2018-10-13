@@ -391,7 +391,7 @@ ffi_prep_args64 (extended_cif *ecif, unsigned long *const stack)
   valp rest;
   valp next_arg;
 
-  /* 'fpr_base' points at the space for fpr3, and grows upwards as
+  /* 'fpr_base' points at the space for f1, and grows upwards as
      we use FPR registers.  */
   valp fpr_base;
   unsigned int fparg_count;
