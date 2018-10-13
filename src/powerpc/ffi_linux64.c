@@ -63,10 +63,30 @@ ffi_prep_types_linux64 (ffi_abi abi)
 
 
 static unsigned int
-discover_homogeneous_aggregate (const ffi_type *t, unsigned int *elnum)
+discover_homogeneous_aggregate (ffi_abi abi,
+                                const ffi_type *t,
+                                unsigned int *elnum)
 {
   switch (t->type)
     {
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+    case FFI_TYPE_LONGDOUBLE:
+      /* 64-bit long doubles are equivalent to doubles. */
+      if ((abi & FFI_LINUX_LONG_DOUBLE_128) == 0)
+        {
+          *elnum = 1;
+          return FFI_TYPE_DOUBLE;
+        }
+      /* IBM extended precision values use unaligned pairs
+         of FPRs, but according to the ABI must be considered
+         distinct from doubles. They are also limited to a
+         maximum of four members in a homogeneous aggregate. */
+      else
+        {
+          *elnum = 2;
+          return FFI_TYPE_LONGDOUBLE;
+        }
+#endif
     case FFI_TYPE_FLOAT:
     case FFI_TYPE_DOUBLE:
       *elnum = 1;
@@ -79,7 +99,7 @@ discover_homogeneous_aggregate (const ffi_type *t, unsigned int *elnum)
 	while (*el)
 	  {
 	    unsigned int el_elt, el_elnum = 0;
-	    el_elt = discover_homogeneous_aggregate (*el, &el_elnum);
+	    el_elt = discover_homogeneous_aggregate (abi, *el, &el_elnum);
 	    if (el_elt == 0
 		|| (base_elt && base_elt != el_elt))
 	      return 0;
@@ -112,7 +132,7 @@ ffi_prep_cif_linux64_core (ffi_cif *cif)
   unsigned bytes;
   unsigned i, fparg_count = 0, intarg_count = 0;
   unsigned flags = cif->flags;
-  unsigned int elt, elnum;
+  unsigned elt, elnum, rtype;
 
 #if FFI_TYPE_LONGDOUBLE == FFI_TYPE_DOUBLE
   /* If compiled without long double support..  */
@@ -138,7 +158,11 @@ ffi_prep_cif_linux64_core (ffi_cif *cif)
 #endif
 
   /* Return value handling.  */
-  switch (cif->rtype->type)
+  rtype = cif->rtype->type;
+#if _CALL_ELF == 2
+homogeneous:
+#endif
+  switch (rtype)
     {
 #if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
     case FFI_TYPE_LONGDOUBLE:
@@ -164,19 +188,18 @@ ffi_prep_cif_linux64_core (ffi_cif *cif)
 
     case FFI_TYPE_STRUCT:
 #if _CALL_ELF == 2
-      elt = discover_homogeneous_aggregate (cif->rtype, &elnum);
+      elt = discover_homogeneous_aggregate (cif->abi, cif->rtype, &elnum);
       if (elt)
-	{
-	  if (elt == FFI_TYPE_DOUBLE)
-	    flags |= FLAG_RETURNS_64BITS;
-	  flags |= FLAG_RETURNS_FP | FLAG_RETURNS_SMST;
-	  break;
-	}
+        {
+          flags |= FLAG_RETURNS_SMST;
+          rtype = elt;
+          goto homogeneous;
+        }
       if (cif->rtype->size <= 16)
-	{
-	  flags |= FLAG_RETURNS_SMST;
-	  break;
-	}
+        {
+          flags |= FLAG_RETURNS_SMST;
+          break;
+        }
 #endif
       intarg_count++;
       flags |= FLAG_RETVAL_REFERENCE;
@@ -224,7 +247,7 @@ ffi_prep_cif_linux64_core (ffi_cif *cif)
 		intarg_count = FFI_ALIGN (intarg_count, align);
 	    }
 	  intarg_count += ((*ptr)->size + 7) / 8;
-	  elt = discover_homogeneous_aggregate (*ptr, &elnum);
+	  elt = discover_homogeneous_aggregate (cif->abi, *ptr, &elnum);
 	  if (elt)
 	    {
 	      fparg_count += elnum;
@@ -558,7 +581,7 @@ ffi_prep_args64 (extended_cif *ecif, unsigned long *const stack)
                     next_arg.ul = rest.ul;
                 }
 	    }
-	  elt = discover_homogeneous_aggregate (*ptr, &elnum);
+	  elt = discover_homogeneous_aggregate (ecif->cif->abi, *ptr, &elnum);
 	  if (elt)
 	    {
 #if _CALL_ELF == 2
@@ -819,7 +842,7 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
 	      if (align > 1)
 		pst = (unsigned long *) FFI_ALIGN ((size_t) pst, align);
 	    }
-	  elt = discover_homogeneous_aggregate (arg_types[i], &elnum);
+	  elt = discover_homogeneous_aggregate (cif->abi, arg_types[i], &elnum);
 	  if (elt)
 	    {
 #if _CALL_ELF == 2
