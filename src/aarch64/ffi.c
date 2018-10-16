@@ -27,6 +27,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #include <ffi_common.h>
 #include "internal.h"
 
+#ifdef AARCH64_WIN64
+#include <windows.h> /* FlushInstructionCache */
+#endif
+
 /* Force FFI_TYPE_LONGDOUBLE to be different than FFI_TYPE_DOUBLE;
    all further uses in this file will refer to the 128-bit type.  */
 #if FFI_TYPE_DOUBLE != FFI_TYPE_LONGDOUBLE
@@ -74,6 +78,8 @@ ffi_clear_cache (void *start, void *end)
   sys_icache_invalidate (start, (char *)end - (char *)start);
 #elif defined (__GNUC__)
   __builtin___clear_cache (start, end);
+#elif defined (AARCH64_WIN64)
+  FlushInstructionCache(GetCurrentProcess(), start, (char*)end - (char*)start);
 #else
 #error "Missing builtin to flush instruction cache"
 #endif
@@ -315,6 +321,9 @@ extend_integer_type (void *source, int type)
     }
 }
 
+#if defined(_MSC_VER)
+void extend_hfa_type (void *dest, void *src, int h);
+#else
 static void
 extend_hfa_type (void *dest, void *src, int h)
 {
@@ -368,7 +377,11 @@ extend_hfa_type (void *dest, void *src, int h)
     : "r"(f * 12), "r"(dest), "r"(src)
     : "memory", "v16", "v17", "v18", "v19");
 }
+#endif
 
+#if defined(_MSC_VER)
+void* compress_hfa_type (void *dest, void *reg, int h);
+#else
 static void *
 compress_hfa_type (void *dest, void *reg, int h)
 {
@@ -437,6 +450,7 @@ compress_hfa_type (void *dest, void *reg, int h)
     }
   return dest;
 }
+#endif
 
 /* Either allocate an appropriate register for the argument type, or if
    none are available, allocate a stack slot and return a pointer
@@ -588,8 +602,8 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
   /* Allocate consectutive stack for everything we'll need.  */
   context = alloca (sizeof(struct call_context) + stack_bytes + 32 + rsize);
   stack = context + 1;
-  frame = stack + stack_bytes;
-  rvalue = (rsize ? frame + 32 : orig_rvalue);
+  frame = (void*)((uintptr_t)stack + (uintptr_t)stack_bytes);
+  rvalue = (rsize ? (void*)((uintptr_t)frame + 32) : orig_rvalue);
 
   arg_init (&state);
   for (i = 0, nargs = cif->nargs; i < nargs; i++)

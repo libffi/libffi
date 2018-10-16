@@ -78,7 +78,7 @@ noinst_HEADERS = \
 	src/dlmalloc.c
 
 EXTRA_libffi_la_SOURCES = \
-	src/aarch64/ffi.c src/aarch64/sysv.S				\
+	src/aarch64/ffi.c src/aarch64/sysv.S src/aarch64/win64_armasm.S	\
 	src/alpha/ffi.c src/alpha/osf.S					\
 	src/arc/ffi.c src/arc/arcompact.S				\
 	src/arm/ffi.c src/arm/sysv.S					\

@@ -80,6 +80,11 @@ do
       safeseh=
       shift 1
     ;;
+    -maarch64)
+      ml="armasm64"
+      safeseh=
+      shift 1
+    ;;
     -clang-cl)
       cl="clang-cl"
       shift 1
@@ -294,6 +299,10 @@ if [ -n "$assembly" ]; then
     fi
 
     "$cl" -nologo -EP $includes $defines $src > $ppsrc || exit $?
+    if test "$ml" = "armasm64"; then
+      # armasm64 doesn't require -c
+      single=""
+    fi
     output="$(echo $output | sed 's%/F[dpa][^ ]*%%g')"
     args="-nologo $safeseh $single $output $ppsrc"
 
