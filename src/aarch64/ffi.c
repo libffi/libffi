@@ -350,10 +350,10 @@ extend_hfa_type (void *dest, void *src, int h)
 "	b	1f\n"
 "	nop\n"
 "	ldp	q16, q17, [%3]\n"	/* Q4 */
-"	ldp	q18, q19, [%3, #16]\n"
+"	ldp	q18, q19, [%3, #32]\n"
 "	b	4f\n"
 "	ldp	q16, q17, [%3]\n"	/* Q3 */
-"	ldr	q18, [%3, #16]\n"
+"	ldr	q18, [%3, #32]\n"
 "	b	3f\n"
 "	ldp	q16, q17, [%3]\n"	/* Q2 */
 "	b	2f\n"
