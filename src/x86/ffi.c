@@ -177,7 +177,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       bytes = FFI_ALIGN (bytes, t->alignment);
       bytes += FFI_ALIGN (t->size, FFI_SIZEOF_ARG);
     }
-  cif->bytes = FFI_ALIGN (bytes, 16);
+  cif->bytes = FFI_ALIGN (bytes, FFI_SIZEOF_ARG);
 
   return FFI_OK;
 }

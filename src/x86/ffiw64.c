@@ -101,7 +101,7 @@ EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
   n += (flags == FFI_TYPE_STRUCT);
   if (n < 4)
     n = 4;
-  cif->bytes = n * 8;
+  cif->bytes = n * FFI_SIZEOF_ARG;
 
   return FFI_OK;
 }
