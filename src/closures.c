@@ -921,6 +921,13 @@ ffi_closure_alloc (size_t size, void **code)
   return ptr;
 }
 
+void *
+ffi_data_to_code_pointer (void *data)
+{
+  msegmentptr seg = segment_holding (gm, data);
+  return add_segment_exec_offset (data, seg);
+}
+
 /* Release a chunk of memory allocated with ffi_closure_alloc.  If
    FFI_CLOSURE_FREE_CODE is nonzero, the given address can be the
    writable or the executable address given.  Otherwise, only the
@@ -958,6 +965,12 @@ void
 ffi_closure_free (void *ptr)
 {
   free (ptr);
+}
+
+void *
+ffi_data_to_code_pointer (void *data)
+{
+  return data;
 }
 
 # endif /* ! FFI_MMAP_EXEC_WRIT */

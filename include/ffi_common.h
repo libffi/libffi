@@ -99,6 +99,10 @@ ffi_status ffi_prep_cif_core(ffi_cif *cif,
 			     ffi_type *rtype,
 			     ffi_type **atypes);
 
+/* Translate a data pointer to a code pointer.  Needed for closures on
+   some targets.  */
+void *ffi_data_to_code_pointer (void *data) FFI_HIDDEN;
+
 /* Extended cif, used in callback from assembly routine */
 typedef struct
 {

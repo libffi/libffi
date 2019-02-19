@@ -773,6 +773,10 @@ ffi_prep_closure_loc (ffi_closure *closure,
   *(UINT64 *)(tramp + 16) = (uintptr_t)start;
 
   ffi_clear_cache(tramp, tramp + FFI_TRAMPOLINE_SIZE);
+
+  /* Also flush the cache for code mapping.  */
+  unsigned char *tramp_code = ffi_data_to_code_pointer (tramp);
+  ffi_clear_cache (tramp_code, tramp_code + FFI_TRAMPOLINE_SIZE);
 #endif
 
   closure->cif = cif;
