@@ -74,12 +74,6 @@ case "${host}" in
 	fi
 	if test "${ax_cv_c_compiler_vendor}" = "microsoft"; then
 	  MSVC=1
-	  if test $ac_cv_sizeof_size_t = 4; then
-	    # libffi does not support microsoft tools for 32-bit windows
-	    # hosts.  Try porting src/x86/sysv.S to intel assembly
-	    # format.
-	    UNSUPPORTED=1
-          fi
 	fi
 	# All mingw/cygwin/win32 builds require -no-undefined for sharedlib.
 	# We must also check with_cross_host to decide if this is a native
@@ -265,7 +259,11 @@ case "${TARGET}" in
 	SOURCES="ffi.c ffi_sysv.c sysv.S ppc_closure.S"
 	;;
   X86 | X86_DARWIN | X86_FREEBSD | X86_WIN32)
-	SOURCES="ffi.c sysv.S"
+	if test "$MSVC" = 1; then
+		SOURCES="ffi.c sysv_intel.S"
+	else
+		SOURCES="ffi.c sysv.S"
+	fi
 	;;
   X86_64)
 	if test x"$TARGET_X32" = xyes; then

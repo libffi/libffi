@@ -177,7 +177,12 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       bytes = FFI_ALIGN (bytes, t->alignment);
       bytes += FFI_ALIGN (t->size, FFI_SIZEOF_ARG);
     }
+#if defined(_MSC_VER) && defined(_M_IX86)
+  // stack is not 16-bit aligned on Windows
+  cif->bytes = bytes;
+#else
   cif->bytes = FFI_ALIGN (bytes, 16);
+#endif
 
   return FFI_OK;
 }
