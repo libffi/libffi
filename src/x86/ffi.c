@@ -29,7 +29,7 @@
    DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
-#ifndef __x86_64__
+#ifdef __i386__
 #include <ffi.h>
 #include <ffi_common.h>
 #include <stdint.h>
@@ -756,4 +756,4 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *avalue)
   ffi_call_i386 (frame, stack);
 }
 #endif /* !FFI_NO_RAW_API */
-#endif /* !__x86_64__ */
+#endif /* __i386__ */

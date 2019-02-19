@@ -282,7 +282,7 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 
 	    /* The X86_64_SSEUP_CLASS should be always preceded by
 	       X86_64_SSE_CLASS or X86_64_SSEUP_CLASS.  */
-	    if (classes[i] == X86_64_SSEUP_CLASS
+	    if (i > 1 && classes[i] == X86_64_SSEUP_CLASS
 		&& classes[i - 1] != X86_64_SSE_CLASS
 		&& classes[i - 1] != X86_64_SSEUP_CLASS)
 	      {
@@ -293,7 +293,7 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 
 	    /*  If X86_64_X87UP_CLASS isn't preceded by X86_64_X87_CLASS,
 		everything should be passed in memory.  */
-	    if (classes[i] == X86_64_X87UP_CLASS
+	    if (i > 1 && classes[i] == X86_64_X87UP_CLASS
 		&& (classes[i - 1] != X86_64_X87_CLASS))
 	      {
 		/* The first one should never be X86_64_X87UP_CLASS.  */
@@ -394,7 +394,7 @@ extern ffi_status
 ffi_prep_cif_machdep_efi64(ffi_cif *cif);
 #endif
 
-ffi_status
+ffi_status FFI_HIDDEN
 ffi_prep_cif_machdep (ffi_cif *cif)
 {
   int gprcount, ssecount, i, avn, ngpr, nsse;

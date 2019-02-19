@@ -283,11 +283,13 @@ FFI_API size_t ffi_raw_size (ffi_cif *cif);
    packing, even on 64-bit machines.  I.e. on 64-bit machines longs
    and doubles are followed by an empty 64-bit word.  */
 
+#if !FFI_NATIVE_RAW_API
 FFI_API
 void ffi_java_raw_call (ffi_cif *cif,
 			void (*fn)(void),
 			void *rvalue,
 			ffi_java_raw *avalue);
+#endif
 
 FFI_API
 void ffi_java_ptrarray_to_raw (ffi_cif *cif, void **args, ffi_java_raw *raw);
@@ -414,6 +416,7 @@ ffi_prep_raw_closure_loc (ffi_raw_closure*,
 			  void *user_data,
 			  void *codeloc);
 
+#if !FFI_NATIVE_RAW_API
 FFI_API ffi_status
 ffi_prep_java_raw_closure (ffi_java_raw_closure*,
 		           ffi_cif *cif,
@@ -426,6 +429,7 @@ ffi_prep_java_raw_closure_loc (ffi_java_raw_closure*,
 			       void (*fun)(ffi_cif*,void*,ffi_java_raw*,void*),
 			       void *user_data,
 			       void *codeloc);
+#endif
 
 #endif /* FFI_CLOSURES */
 
