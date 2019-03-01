@@ -152,10 +152,10 @@ It's also possible to build libffi on Windows platforms with
 Microsoft's Visual C++ compiler.  In this case, use the msvcc.sh
 wrapper script during configuration like so:
 
-    path/to/configure CC=path/to/msvcc.sh CXX=path/to/msvcc.sh LD=link CPP="cl -nologo -EP"
+    path/to/configure CC=path/to/msvcc.sh CXX=path/to/msvcc.sh LD=link CPP="cl -nologo -EP" --host i686-pc-cygwin
 
-For 64-bit Windows builds, use ``CC="path/to/msvcc.sh -m64"`` and
-``CXX="path/to/msvcc.sh -m64"``.  You may also need to specify
+For 64-bit Windows builds, use ``CC="path/to/msvcc.sh -m64" `` and
+``CXX="path/to/msvcc.sh -m64"`` and ``--host=x86_64-w64-cygwin``.  You may also need to specify
 ``--build`` appropriately.
 
 It is also possible to build libffi on Windows platforms with the LLVM
