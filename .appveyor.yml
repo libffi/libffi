@@ -11,6 +11,7 @@ shallow_clone: true
 image: Visual Studio 2013
 platform:
   - x64
+  - arm
 
 environment:
   global:
@@ -26,6 +27,10 @@ install:
           $env:VCVARS_PLATFORM="x86"
           $env:BUILD="x86-pc-cygwin"
           $env:HOST="x86-pc-windows"
+        } ElseIf ($env:Platform -Match "arm")
+          $env:VCVARS_PLATFORM="x86_arm"
+          $env:BUILD="arm-pc-cygwin"
+          $env:HOST="i686-pc-cygwin"
         } Else {
           $env:VCVARS_PLATFORM="amd64"
           $env:BUILD="x86_64-w64-cygwin"

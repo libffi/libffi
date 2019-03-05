@@ -56,6 +56,7 @@ tested:
 | ARC             | Linux            | GCC                     |
 | ARM             | Linux            | GCC                     |
 | ARM             | iOS              | GCC                     |
+| ARM             | Windows          | MSVC                    |
 | AVR32           | Linux            | GCC                     |
 | Blackfin        | uClinux          | GCC                     |
 | HPPA            | HPUX             | GCC                     |

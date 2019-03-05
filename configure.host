@@ -23,6 +23,11 @@ case "${host}" in
 	SOURCES="ffi.c arcompact.S"
 	;;
 
+  arm*-*-cygwin* | arm*-*-mingw* | arm*-*-win* )
+	TARGET=ARM_WIN32; TARGETDIR=arm
+	MSVC=1
+	;;
+
   arm*-*-*)
 	TARGET=ARM; TARGETDIR=arm
 	SOURCES="ffi.c sysv.S"
@@ -242,6 +247,9 @@ esac
 
 # ... but some of the cases above share configury.
 case "${TARGET}" in
+  ARM_WIN32)
+	SOURCES="ffi.c sysv_msvc_arm32.S"
+	;;
   MIPS)
 	SOURCES="ffi.c o32.S n32.S"
 	;;

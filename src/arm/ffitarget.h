@@ -43,7 +43,7 @@ typedef enum ffi_abi {
   FFI_SYSV,
   FFI_VFP,
   FFI_LAST_ABI,
-#ifdef __ARM_PCS_VFP
+#if defined(__ARM_PCS_VFP) || defined(_M_ARM)
   FFI_DEFAULT_ABI = FFI_VFP,
 #else
   FFI_DEFAULT_ABI = FFI_SYSV,
@@ -75,7 +75,12 @@ typedef enum ffi_abi {
 #endif
 
 #else
+#ifdef _MSC_VER
+#define FFI_TRAMPOLINE_SIZE 16
+#define FFI_TRAMPOLINE_CLOSURE_FUNCTION 12
+#else
 #define FFI_TRAMPOLINE_SIZE 12
+#endif
 #define FFI_TRAMPOLINE_CLOSURE_OFFSET FFI_TRAMPOLINE_SIZE
 #endif
 

@@ -28,13 +28,18 @@
    DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
-#ifdef __arm__
+#if defined(__arm__) || defined(_M_ARM)
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_common.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "internal.h"
+
+#if defined(_MSC_VER) && defined(_M_ARM)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
@@ -43,7 +48,11 @@
 #endif
 
 #else
+#ifndef _M_ARM
 extern unsigned int ffi_arm_trampoline[2] FFI_HIDDEN;
+#else
+extern unsigned int ffi_arm_trampoline[3] FFI_HIDDEN;
+#endif
 #endif
 
 /* Forward declares. */
@@ -89,9 +98,19 @@ ffi_put_arg (ffi_type *ty, void *src, void *dst)
     case FFI_TYPE_SINT32:
     case FFI_TYPE_UINT32:
     case FFI_TYPE_POINTER:
+#ifndef _MSC_VER
     case FFI_TYPE_FLOAT:
+#endif
       *(UINT32 *)dst = *(UINT32 *)src;
       break;
+
+#ifdef _MSC_VER
+    // casting a float* to a UINT32* doesn't work on Windows
+    case FFI_TYPE_FLOAT:
+        *(uintptr_t *)dst = 0;
+        *(float *)dst = *(float *)src;
+        break;
+#endif
 
     case FFI_TYPE_SINT64:
     case FFI_TYPE_UINT64:
@@ -572,15 +591,28 @@ ffi_prep_closure_loc (ffi_closure * closure,
   config[0] = closure;
   config[1] = closure_func;
 #else
-  memcpy (closure->tramp, ffi_arm_trampoline, 8);
+
+#ifndef _M_ARM
+  memcpy(closure->tramp, ffi_arm_trampoline, 8);
+#else
+  // cast away function type so MSVC doesn't set the lower bit of the function pointer
+  memcpy(closure->tramp, (void*)((uintptr_t)ffi_arm_trampoline & 0xFFFFFFFE), FFI_TRAMPOLINE_CLOSURE_OFFSET);
+#endif
+
 #if defined (__QNX__)
   msync(closure->tramp, 8, 0x1000000);	/* clear data map */
   msync(codeloc, 8, 0x1000000);	/* clear insn map */
+#elif defined(_MSC_VER)
+  FlushInstructionCache(GetCurrentProcess(), closure->tramp, FFI_TRAMPOLINE_SIZE);
 #else
   __clear_cache(closure->tramp, closure->tramp + 8);	/* clear data map */
   __clear_cache(codeloc, codeloc + 8);			/* clear insn map */
 #endif
+#ifdef _M_ARM
+  *(void(**)(void))(closure->tramp + FFI_TRAMPOLINE_CLOSURE_FUNCTION) = closure_func;
+#else
   *(void (**)(void))(closure->tramp + 8) = closure_func;
+#endif
 #endif
 
   closure->cif = cif;
@@ -782,7 +814,7 @@ place_vfp_arg (ffi_cif *cif, int h)
 	}
       /* Found regs to allocate. */
       cif->vfp_used |= new_used;
-      cif->vfp_args[cif->vfp_nargs++] = reg;
+      cif->vfp_args[cif->vfp_nargs++] = (signed char)reg;
 
       /* Update vfp_reg_free. */
       if (cif->vfp_used & (1 << cif->vfp_reg_free))
@@ -804,7 +836,7 @@ place_vfp_arg (ffi_cif *cif, int h)
 static void
 layout_vfp_args (ffi_cif * cif)
 {
-  int i;
+  unsigned int i;
   /* Init VFP fields */
   cif->vfp_used = 0;
   cif->vfp_nargs = 0;
@@ -819,4 +851,4 @@ layout_vfp_args (ffi_cif * cif)
     }
 }
 
-#endif /* __arm__ */
+#endif /* __arm__ or _M_ARM */
