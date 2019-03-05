@@ -27,7 +27,7 @@ install:
           $env:VCVARS_PLATFORM="x86"
           $env:BUILD="x86-pc-cygwin"
           $env:HOST="x86-pc-windows"
-        } ElseIf ($env:Platform -Match "arm")
+        } ElseIf ($env:Platform -Match "arm") {
           $env:VCVARS_PLATFORM="x86_arm"
           $env:BUILD="arm-pc-cygwin"
           $env:HOST="i686-pc-cygwin"
