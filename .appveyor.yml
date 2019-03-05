@@ -27,10 +27,12 @@ install:
           $env:VCVARS_PLATFORM="x86"
           $env:BUILD="i686-pc-cygwin"
           $env:HOST="i686-pc-cygwin"
+          $env:M64=""
         } Else {
           $env:VCVARS_PLATFORM="amd64"
           $env:BUILD="x86_64-w64-cygwin"
           $env:HOST="x86_64-w64-cygwin"
+          $env:M64="-m64"
       }
   - 'appveyor DownloadFile https://cygwin.com/setup-x86.exe -FileName setup.exe'
   - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P dejagnu >NUL'
@@ -41,7 +43,7 @@ install:
 
 build_script:
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; ./autogen.sh;)"
-  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; ./configure CC='/cygdrive/c/projects/libffi/msvcc.sh -m64' CXX='/cygdrive/c/projects/libffi/msvcc.sh -m64' LD='link' CPP='cl -nologo -EP' CXXCPP='cl -nologo -EP' CPPFLAGS='-DFFI_BUILDING_DLL' AR='/cygdrive/c/projects/libffi/.travis/ar-lib lib' NM='dumpbin -symbols' STRIP=':' --build=$BUILD --host=$HOST;)"
+  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; ./configure CC='/cygdrive/c/projects/libffi/msvcc.sh $M64' CXX='/cygdrive/c/projects/libffi/msvcc.sh $M64' LD='link' CPP='cl -nologo -EP' CXXCPP='cl -nologo -EP' CPPFLAGS='-DFFI_BUILDING_DLL' AR='/cygdrive/c/projects/libffi/.travis/ar-lib lib' NM='dumpbin -symbols' STRIP=':' --build=$BUILD --host=$HOST;)"
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; cp src/x86/ffitarget.h include; make; find .;)"
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; cp `find . -name 'libffi-?.dll'` $HOST/testsuite/; make check; cat `find ./ -name libffi.log`)"
 
