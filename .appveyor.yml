@@ -30,7 +30,7 @@ install:
           $env:HOST="i686-pc-cygwin"
           $env:ASSEMBLER=""
           $env:SRC_ARCHITECTURE="x86"
-        } ElseIf ($env:Platform -Match "arm")
+        } ElseIf ($env:Platform -Match "arm") {
           $env:VCVARS_PLATFORM="x86_arm"
           $env:BUILD="arm-pc-cygwin"
           $env:HOST="i686-pc-cygwin"
