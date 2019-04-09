@@ -19,7 +19,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 
-#ifdef __arm64__
+#if defined(__aarch64__) || defined(__arm64__)
 #define LIBFFI_ASM
 #include <fficonfig.h>
 #include <ffi.h>
