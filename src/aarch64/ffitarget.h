@@ -32,6 +32,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #define FFI_SIZEOF_JAVA_RAW  4
 typedef unsigned long long ffi_arg;
 typedef signed long long ffi_sarg;
+#elif defined(_M_ARM64)
+#define FFI_SIZEOF_ARG 8
+typedef unsigned long long ffi_arg;
+typedef signed long long ffi_sarg;
 #else
 typedef unsigned long ffi_arg;
 typedef signed long ffi_sarg;
@@ -70,12 +74,15 @@ typedef enum ffi_abi
 #if defined (__APPLE__)
 #define FFI_TARGET_SPECIFIC_VARIADIC
 #define FFI_EXTRA_CIF_FIELDS unsigned aarch64_nfixedargs
-#else
-/* iOS reserves x18 for the system.  Disable Go closures until
+#elif !defined(_M_ARM64)
+/* iOS and Windows reserve x18 for the system.  Disable Go closures until
    a new static chain is chosen.  */
 #define FFI_GO_CLOSURES 1
 #endif
 
+#ifndef _M_ARM64
+/* No complex type on Windows */
 #define FFI_TARGET_HAS_COMPLEX_TYPE
+#endif
 
 #endif
