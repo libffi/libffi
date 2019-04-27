@@ -25,7 +25,7 @@
    DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
-#ifdef __x86_64__
+#if defined(__x86_64__) || defined(_M_AMD64)
 #include <ffi.h>
 #include <ffi_common.h>
 #include <stdlib.h>

@@ -40,7 +40,7 @@ install:
           $env:VCVARS_PLATFORM="amd64"
           $env:BUILD="x86_64-w64-cygwin"
           $env:HOST="x86_64-w64-cygwin"
-          $env:ASSEMBLER="/cygdrive/c/projects/libffi/msvcc.sh -m64"
+          $env:MSVCC="/cygdrive/c/projects/libffi/msvcc.sh -m64"
           $env:SRC_ARCHITECTURE="x86"
       }
   - 'appveyor DownloadFile https://cygwin.com/setup-x86.exe -FileName setup.exe'
