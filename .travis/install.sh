@@ -8,7 +8,7 @@ if [[ $TRAVIS_OS_NAME != 'linux' ]]; then
   brew install libtool dejagnu;
 else
   sudo apt-get update
-  sudo apt-get install dejagnu texinfo
+  sudo apt-get install dejagnu texinfo sharutils
   case "$HOST" in
     i386-pc-linux-gnu)
 	sudo apt-get install gcc-multilib g++-multilib

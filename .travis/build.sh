@@ -10,7 +10,16 @@ function build_linux()
     make
     make dist
     make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
-    cat */testsuite/libffi.log
+
+    gzip -c -9 */testsuite/libffi.log > libffi.log.gz
+    echo ================================================================
+    echo The logs are too long for travis to handle, so we compress and
+    echo uuencode them.  Download, decode and uncompress if you need to
+    echo read them.
+    echo ================================================================
+    uuencode libffi.log.gz -
+    echo ================================================================
+    echo ================================================================
 }
 
 function build_ios()

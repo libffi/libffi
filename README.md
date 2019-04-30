@@ -57,6 +57,7 @@ tested:
 | ARC             | Linux            | GCC                     |
 | ARM             | Linux            | GCC                     |
 | ARM             | iOS              | GCC                     |
+| ARM             | Windows          | MSVC                    |
 | AVR32           | Linux            | GCC                     |
 | Blackfin        | uClinux          | GCC                     |
 | HPPA            | HPUX             | GCC                     |
@@ -200,10 +201,12 @@ See the git log for details at http://github.com/libffi/libffi.
         Add RISC-V support.
         New API in support of GO closures.
         Default to Microsoft's 64 bit long double ABI with Visual C++.
+
         GNU compiler uses 80 bits (128 in memory) FFI_GNUW64 ABI.
-	    Many new tests cases and bug fixes.
+	      Many new tests cases and bug fixes.
         Add windows on arm64 (WOA) support.
-      
+        Add Windows 32-bit arm support.
+        
     3.2.1 Nov-12-14
         Build fix for non-iOS AArch64 targets.
     
