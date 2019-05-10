@@ -13,6 +13,7 @@ platform:
   - x64
   - x86
   - arm
+  - arm64
 
 environment:
   global:
@@ -36,6 +37,12 @@ install:
           $env:HOST="arm-w32-cygwin"
           $env:MSVCC="/cygdrive/c/projects/libffi/msvcc.sh -marm"
           $env:SRC_ARCHITECTURE="arm"
+        } ElseIf ($env:Platform -Match "arm64") {
+          $env:VCVARS_PLATFORM="x86_arm64"
+          $env:BUILD="i686-pc-cygwin"
+          $env:HOST="aarch64-w64-cygwin"
+          $env:MSVCC="/cygdrive/c/projects/libffi/msvcc.sh -marm64"
+          $env:SRC_ARCHITECTURE="aarch64"
         } Else {
           $env:VCVARS_PLATFORM="amd64"
           $env:BUILD="x86_64-w64-cygwin"

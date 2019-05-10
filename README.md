@@ -205,7 +205,8 @@ See the git log for details at http://github.com/libffi/libffi.
         Many new tests cases and bug fixes.
         Add windows on arm64 (WOA) support.
         Add Windows 32-bit arm support.
-        
+        Add Windows 64-bit arm support.
+
     3.2.1 Nov-12-14
         Build fix for non-iOS AArch64 targets.
     
