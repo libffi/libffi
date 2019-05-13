@@ -49,8 +49,8 @@ extern "C" {
 #endif
 
 /* Specify which architecture libffi is configured for. */
-#ifndef AARCH64
-#define AARCH64
+#ifndef ARM_WIN64
+#define ARM_WIN64
 #endif
 
 /* ---- System configuration information --------------------------------- */
@@ -197,7 +197,7 @@ FFI_EXTERN ffi_type ffi_type_float;
 FFI_EXTERN ffi_type ffi_type_double;
 FFI_EXTERN ffi_type ffi_type_pointer;
 
-#ifndef _M_ARM64 
+#if 0
 FFI_EXTERN ffi_type ffi_type_longdouble;
 #else
 #define ffi_type_longdouble ffi_type_double
@@ -206,7 +206,7 @@ FFI_EXTERN ffi_type ffi_type_longdouble;
 #ifdef FFI_TARGET_HAS_COMPLEX_TYPE
 FFI_EXTERN ffi_type ffi_type_complex_float;
 FFI_EXTERN ffi_type ffi_type_complex_double;
-#if 1
+#if 0
 FFI_EXTERN ffi_type ffi_type_complex_longdouble;
 #else
 #define ffi_type_complex_longdouble ffi_type_complex_double
@@ -227,7 +227,9 @@ typedef struct {
   ffi_type *rtype;
   unsigned bytes;
   unsigned flags;
+#ifdef _M_ARM64
   unsigned isVariadic;
+#endif
 #ifdef FFI_EXTRA_CIF_FIELDS
   FFI_EXTRA_CIF_FIELDS;
 #endif
@@ -284,11 +286,13 @@ FFI_API size_t ffi_raw_size (ffi_cif *cif);
    packing, even on 64-bit machines.  I.e. on 64-bit machines longs
    and doubles are followed by an empty 64-bit word.  */
 
+#if !FFI_NATIVE_RAW_API
 FFI_API
 void ffi_java_raw_call (ffi_cif *cif,
 			void (*fn)(void),
 			void *rvalue,
 			ffi_java_raw *avalue);
+#endif
 
 FFI_API
 void ffi_java_ptrarray_to_raw (ffi_cif *cif, void **args, ffi_java_raw *raw);
@@ -415,6 +419,7 @@ ffi_prep_raw_closure_loc (ffi_raw_closure*,
 			  void *user_data,
 			  void *codeloc);
 
+#if !FFI_NATIVE_RAW_API
 FFI_API ffi_status
 ffi_prep_java_raw_closure (ffi_java_raw_closure*,
 		           ffi_cif *cif,
@@ -427,6 +432,7 @@ ffi_prep_java_raw_closure_loc (ffi_java_raw_closure*,
 			       void (*fun)(ffi_cif*,void*,ffi_java_raw*,void*),
 			       void *user_data,
 			       void *codeloc);
+#endif
 
 #endif /* FFI_CLOSURES */
 
@@ -485,7 +491,7 @@ ffi_status ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type,
 #define FFI_TYPE_INT        1
 #define FFI_TYPE_FLOAT      2    
 #define FFI_TYPE_DOUBLE     3
-#ifndef _M_ARM64
+#if 0
 #define FFI_TYPE_LONGDOUBLE 4
 #else
 #define FFI_TYPE_LONGDOUBLE FFI_TYPE_DOUBLE
@@ -501,9 +507,9 @@ ffi_status ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type,
 #define FFI_TYPE_STRUCT     13
 #define FFI_TYPE_POINTER    14
 #define FFI_TYPE_COMPLEX    15
-/* This should always refer to the last type code (for sanity checks).  */
-#define FFI_TYPE_LAST   FFI_TYPE_COMPLEX
 
+/* This should always refer to the last type code (for sanity checks).  */
+#define FFI_TYPE_LAST       FFI_TYPE_COMPLEX
 
 #ifdef __cplusplus
 }

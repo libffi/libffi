@@ -7,7 +7,7 @@
 # Most of the time we can define all the variables all at once...
 case "${host}" in
   aarch64*-*-cygwin* | aarch64*-*-mingw* | aarch64*-*-win* )
-	TARGET=ARM_WIN64; TARGETDIR=arm
+	TARGET=ARM_WIN64; TARGETDIR=aarch64
 	MSVC=1
 	;;
 

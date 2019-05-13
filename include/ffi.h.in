@@ -227,6 +227,9 @@ typedef struct {
   ffi_type *rtype;
   unsigned bytes;
   unsigned flags;
+#ifdef _M_ARM64
+  unsigned isVariadic;
+#endif
 #ifdef FFI_EXTRA_CIF_FIELDS
   FFI_EXTRA_CIF_FIELDS;
 #endif
