@@ -808,7 +808,13 @@ ffi_prep_closure_loc (ffi_closure *closure,
   ffi_clear_cache(tramp, tramp + FFI_TRAMPOLINE_SIZE);
 
   /* Also flush the cache for code mapping.  */
+  #ifdef _M_ARM64
+  // Not using dlmalloc.c for Windows ARM64 builds
+  // so calling ffi_data_to_code_pointer() isn't necessary
+  unsigned char *tramp_code = tramp;
+  #else
   unsigned char *tramp_code = ffi_data_to_code_pointer (tramp);
+  #endif
   ffi_clear_cache (tramp_code, tramp_code + FFI_TRAMPOLINE_SIZE);
 #endif
 
