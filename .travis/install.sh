@@ -15,6 +15,7 @@ else
 	;;
     moxie-elf)
 	echo 'deb http://repos.moxielogic.org:7114/MoxieLogic moxiedev main' | sudo tee -a /etc/apt/sources.list
+	sudo apt-get clean # clear the cache
 	sudo apt-get update ## -qq
 	# debug...
 	curl http://repos.moxielogic.org:7114/MoxieLogic/dists/moxiedev/main/binary-amd64/Packages
