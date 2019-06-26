@@ -6,6 +6,11 @@
 # THIS TABLE IS SORTED.  KEEP IT THAT WAY.
 # Most of the time we can define all the variables all at once...
 case "${host}" in
+  aarch64*-*-cygwin* | aarch64*-*-mingw* | aarch64*-*-win* )
+	TARGET=ARM_WIN64; TARGETDIR=aarch64
+	MSVC=1
+	;;
+
   aarch64*-*-*)
 	TARGET=AARCH64; TARGETDIR=aarch64
 	SOURCES="ffi.c sysv.S"
@@ -249,6 +254,9 @@ esac
 case "${TARGET}" in
   ARM_WIN32)
 	SOURCES="ffi.c sysv_msvc_arm32.S"
+	;;
+  ARM_WIN64)
+	SOURCES="ffi.c win64_armasm.S"
 	;;
   MIPS)
 	SOURCES="ffi.c o32.S n32.S"
