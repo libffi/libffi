@@ -19,7 +19,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 
-#if defined(__aarch64__) || defined(__arm64__)
+#if defined(__aarch64__) || defined(__arm64__)|| defined (_M_ARM64)
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -27,6 +27,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #include <ffi.h>
 #include <ffi_common.h>
 #include "internal.h"
+#ifdef _M_ARM64
+#include <windows.h> /* FlushInstructionCache */
+#endif
 
 /* Force FFI_TYPE_LONGDOUBLE to be different than FFI_TYPE_DOUBLE;
    all further uses in this file will refer to the 128-bit type.  */
@@ -75,6 +78,8 @@ ffi_clear_cache (void *start, void *end)
   sys_icache_invalidate (start, (char *)end - (char *)start);
 #elif defined (__GNUC__)
   __builtin___clear_cache (start, end);
+#elif defined (_M_ARM64)
+  FlushInstructionCache(GetCurrentProcess(), start, (char*)end - (char*)start);
 #else
 #error "Missing builtin to flush instruction cache"
 #endif
@@ -316,6 +321,9 @@ extend_integer_type (void *source, int type)
     }
 }
 
+#if defined(_MSC_VER)
+void extend_hfa_type (void *dest, void *src, int h);
+#else
 static void
 extend_hfa_type (void *dest, void *src, int h)
 {
@@ -369,7 +377,11 @@ extend_hfa_type (void *dest, void *src, int h)
     : "r"(f * 12), "r"(dest), "r"(src)
     : "memory", "v16", "v17", "v18", "v19");
 }
+#endif
 
+#if defined(_MSC_VER)
+void* compress_hfa_type (void *dest, void *src, int h);
+#else
 static void *
 compress_hfa_type (void *dest, void *reg, int h)
 {
@@ -438,6 +450,7 @@ compress_hfa_type (void *dest, void *reg, int h)
     }
   return dest;
 }
+#endif
 
 /* Either allocate an appropriate register for the argument type, or if
    none are available, allocate a stack slot and return a pointer
@@ -589,8 +602,8 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
   /* Allocate consectutive stack for everything we'll need.  */
   context = alloca (sizeof(struct call_context) + stack_bytes + 32 + rsize);
   stack = context + 1;
-  frame = stack + stack_bytes;
-  rvalue = (rsize ? frame + 32 : orig_rvalue);
+  frame = (void*)((uintptr_t)stack + (uintptr_t)stack_bytes);
+  rvalue = (rsize ? (void*)((uintptr_t)frame + 32) : orig_rvalue);
 
   arg_init (&state);
   for (i = 0, nargs = cif->nargs; i < nargs; i++)
@@ -652,6 +665,22 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 	    if (h)
 	      {
 		int elems = 4 - (h & 3);
+#ifdef _M_ARM64 /* for handling armasm calling convention */
+                if (cif->isVariadic)
+                  {
+                    if (state.ngrn + elems <= N_X_ARG_REG)
+                      {
+                        dest = &context->x[state.ngrn];
+                        state.ngrn += elems;
+                        extend_hfa_type(dest, a, h);
+                        break;
+                      }
+                    state.nsrn = N_X_ARG_REG;
+                    dest = allocate_to_stack(&state, stack, ty->alignment, s);
+                  }
+                else
+                  {
+#endif /* for handling armasm calling convention */
 	        if (state.nsrn + elems <= N_V_ARG_REG)
 		  {
 		    dest = &context->v[state.nsrn];
@@ -661,6 +690,9 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 		  }
 		state.nsrn = N_V_ARG_REG;
 		dest = allocate_to_stack (&state, stack, ty->alignment, s);
+#ifdef _M_ARM64 /* for handling armasm calling convention */
+	      }
+#endif /* for handling armasm calling convention */
 	      }
 	    else if (s > 16)
 	      {
@@ -682,7 +714,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 		       X registers, then the argument is copied into
 		       consecutive X registers.  */
 		    dest = &context->x[state.ngrn];
-		    state.ngrn += n;
+                    state.ngrn += (unsigned int)n;
 		  }
 		else
 		  {
@@ -876,55 +908,78 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
 	  if (h)
 	    {
 	      n = 4 - (h & 3);
-	      if (state.nsrn + n <= N_V_ARG_REG)
-		{
-		  void *reg = &context->v[state.nsrn];
-		  state.nsrn += n;
+#ifdef _M_ARM64  /* for handling armasm calling convention */
+              if (cif->isVariadic)
+                {
+                  if (state.ngrn + n <= N_X_ARG_REG)
+                    {
+                      void *reg = &context->x[state.ngrn];
+                      state.ngrn += (unsigned int)n;
+    
+                      /* Eeek! We need a pointer to the structure, however the
+                       homogeneous float elements are being passed in individual
+                       registers, therefore for float and double the structure
+                       is not represented as a contiguous sequence of bytes in
+                       our saved register context.  We don't need the original
+                       contents of the register storage, so we reformat the
+                       structure into the same memory.  */
+                      avalue[i] = compress_hfa_type(reg, reg, h);
+                    }
+                  else
+                    {
+                      state.ngrn = N_X_ARG_REG;
+                      state.nsrn = N_V_ARG_REG;
+                      avalue[i] = allocate_to_stack(&state, stack,
+                             ty->alignment, s);
+                    }
+                }
+              else
+                {
+#endif  /* for handling armasm calling convention */
+                  if (state.nsrn + n <= N_V_ARG_REG)
+                    {
+                      void *reg = &context->v[state.nsrn];
+                      state.nsrn += (unsigned int)n;
+                      avalue[i] = compress_hfa_type(reg, reg, h);
+                    }
+                  else
+                    {
+                      state.nsrn = N_V_ARG_REG;
+                      avalue[i] = allocate_to_stack(&state, stack,
+                                                   ty->alignment, s);
+                    }
+#ifdef _M_ARM64  /* for handling armasm calling convention */    
+                }
+#endif  /* for handling armasm calling convention */
+            }
+          else if (s > 16)
+            {
+              /* Replace Composite type of size greater than 16 with a
+                  pointer.  */
+              avalue[i] = *(void **)
+              allocate_int_to_reg_or_stack (context, &state, stack,
+                                         sizeof (void *));
+            }
+          else
+            {
+              n = (s + 7) / 8;
+              if (state.ngrn + n <= N_X_ARG_REG)
+                {
+                  avalue[i] = &context->x[state.ngrn];
+                  state.ngrn += (unsigned int)n;
+                }
+              else
+                {
+                  state.ngrn = N_X_ARG_REG;
+                  avalue[i] = allocate_to_stack(&state, stack,
+                                           ty->alignment, s);
+                }
+            }
+          break;
 
-		  /* Eeek! We need a pointer to the structure, however the
-		     homogeneous float elements are being passed in individual
-		     registers, therefore for float and double the structure
-		     is not represented as a contiguous sequence of bytes in
-		     our saved register context.  We don't need the original
-		     contents of the register storage, so we reformat the
-		     structure into the same memory.  */
-		  avalue[i] = compress_hfa_type (reg, reg, h);
-		}
-	      else
-		{
-		  state.nsrn = N_V_ARG_REG;
-		  avalue[i] = allocate_to_stack (&state, stack,
-						 ty->alignment, s);
-		}
-	    }
-	  else if (s > 16)
-	    {
-	      /* Replace Composite type of size greater than 16 with a
-		 pointer.  */
-	      avalue[i] = *(void **)
-		allocate_int_to_reg_or_stack (context, &state, stack,
-					      sizeof (void *));
-	    }
-	  else
-	    {
-	      n = (s + 7) / 8;
-	      if (state.ngrn + n <= N_X_ARG_REG)
-		{
-		  avalue[i] = &context->x[state.ngrn];
-		  state.ngrn += n;
-		}
-	      else
-		{
-		  state.ngrn = N_X_ARG_REG;
-		  avalue[i] = allocate_to_stack (&state, stack,
-						 ty->alignment, s);
-		}
-	    }
-	  break;
-
-	default:
-	  abort();
-	}
+        default:
+          abort();
+      }
 
 #if defined (__APPLE__)
       if (i + 1 == cif->aarch64_nfixedargs)
@@ -945,4 +1000,4 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
   return flags;
 }
 
-#endif /* __arm64__ */
+#endif /* (__aarch64__) || defined(__arm64__)|| defined (_M_ARM64)*/
