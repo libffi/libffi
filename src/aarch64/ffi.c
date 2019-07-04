@@ -809,7 +809,8 @@ ffi_prep_closure_loc (ffi_closure *closure,
 
   /* Also flush the cache for code mapping.  */
   unsigned char *tramp_code = ffi_data_to_code_pointer (tramp);
-  ffi_clear_cache (tramp_code, tramp_code + FFI_TRAMPOLINE_SIZE);
+  if (tramp_code != NULL)
+    ffi_clear_cache (tramp_code, tramp_code + FFI_TRAMPOLINE_SIZE);
 #endif
 
   closure->cif = cif;
