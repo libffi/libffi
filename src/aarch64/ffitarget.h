@@ -69,6 +69,10 @@ typedef enum ffi_abi
 #define FFI_TRAMPOLINE_CLOSURE_OFFSET FFI_TRAMPOLINE_SIZE
 #endif
 
+#ifdef _M_ARM64
+#define FFI_EXTRA_CIF_FIELDS unsigned is_variadic
+#endif
+
 /* ---- Internal ---- */
 
 #if defined (__APPLE__)
