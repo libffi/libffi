@@ -666,7 +666,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 	      {
 		int elems = 4 - (h & 3);
 #ifdef _M_ARM64 /* for handling armasm calling convention */
-                if (cif->isVariadic)
+                if (cif->is_variadic)
                   {
                     if (state.ngrn + elems <= N_X_ARG_REG)
                       {
@@ -808,7 +808,13 @@ ffi_prep_closure_loc (ffi_closure *closure,
   ffi_clear_cache(tramp, tramp + FFI_TRAMPOLINE_SIZE);
 
   /* Also flush the cache for code mapping.  */
+#ifdef _M_ARM64
+  // Not using dlmalloc.c for Windows ARM64 builds
+  // so calling ffi_data_to_code_pointer() isn't necessary
+  unsigned char *tramp_code = tramp;
+  #else
   unsigned char *tramp_code = ffi_data_to_code_pointer (tramp);
+  #endif
   ffi_clear_cache (tramp_code, tramp_code + FFI_TRAMPOLINE_SIZE);
 #endif
 
@@ -909,7 +915,7 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
 	    {
 	      n = 4 - (h & 3);
 #ifdef _M_ARM64  /* for handling armasm calling convention */
-              if (cif->isVariadic)
+              if (cif->is_variadic)
                 {
                   if (state.ngrn + n <= N_X_ARG_REG)
                     {
@@ -948,7 +954,7 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
                       avalue[i] = allocate_to_stack(&state, stack,
                                                    ty->alignment, s);
                     }
-#ifdef _M_ARM64  /* for handling armasm calling convention */    
+#ifdef _M_ARM64  /* for handling armasm calling convention */
                 }
 #endif  /* for handling armasm calling convention */
             }

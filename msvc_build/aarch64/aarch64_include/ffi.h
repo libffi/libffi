@@ -197,7 +197,7 @@ FFI_EXTERN ffi_type ffi_type_float;
 FFI_EXTERN ffi_type ffi_type_double;
 FFI_EXTERN ffi_type ffi_type_pointer;
 
-#ifndef _M_ARM64 
+#ifndef _M_ARM64
 FFI_EXTERN ffi_type ffi_type_longdouble;
 #else
 #define ffi_type_longdouble ffi_type_double
@@ -227,7 +227,6 @@ typedef struct {
   ffi_type *rtype;
   unsigned bytes;
   unsigned flags;
-  unsigned isVariadic;
 #ifdef FFI_EXTRA_CIF_FIELDS
   FFI_EXTRA_CIF_FIELDS;
 #endif

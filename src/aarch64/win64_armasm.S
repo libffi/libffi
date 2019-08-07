@@ -57,12 +57,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
    x5 closure
 */
 
-	NESTED_ENTRY ffi_call_SYSV
-	/* Use a stack frame allocated by our caller. */
-	PROLOG_NOP	stp	x29, x30, [x1, #32]
-    /* For unwind information, Windows has to store fp and lr  */
+	NESTED_ENTRY ffi_call_SYSV_fake
+
+	/* For unwind information, Windows has to store fp and lr  */
 	PROLOG_SAVE_REG_PAIR	x29, x30, #-32!
-	
+
+	ALTERNATE_ENTRY ffi_call_SYSV
+	/* Use a stack frame allocated by our caller. */
+	stp	x29, x30, [x1]
 	mov	x29, x1
 	mov	sp, x0
 
@@ -97,8 +99,8 @@ ffi_call_SYSV_L1
 
 	/* Partially deconstruct the stack frame. */
 	mov     sp, x29 
-	ldp     x29, x30, [x29, #32]
-	
+	ldp     x29, x30, [x29]
+
 	/* Save the return value as directed.  */
 	adr	x5, ffi_call_SYSV_return
 	and	w4, w4, #AARCH64_RET_MASK
@@ -177,7 +179,7 @@ ffi_call_SYSV_return
 	nop
 	
 	
-	NESTED_END ffi_call_SYSV	
+	NESTED_END ffi_call_SYSV_fake
 	
 
 /* ffi_closure_SYSV
