@@ -791,9 +791,9 @@ dlmmap_locked (void *start, size_t length, int prot, int flags, off_t offset)
 	}
       if (ftruncate (execfd, offset) != 0)
       {
-	      /* fix me:As of now logging mechanism not implemented & Its ftruncate hanled in 
-	       * ffi close time.In feature will take care these errors and provide right
-	       * changes*/
+        /* Fixme : Error logs can be added here. Returning an error for
+         * ftruncte() will not add any advantage as it is being
+         * validating in the error case. */
       }
 
       return MFAIL;
@@ -809,9 +809,9 @@ dlmmap_locked (void *start, size_t length, int prot, int flags, off_t offset)
       munmap (ptr, length);
       if (ftruncate (execfd, offset) != 0)
       {
-	      /* fix me:As of now logging mechanism not implemented & Its ftruncate hanled in 
-	       * ffi close time.In feature will take care these errors and provide right
-	       * changes*/
+        /* Fixme : Error logs can be added here. Returning an error for
+         * ftruncte() will not add any advantage as it is being
+         * validating in the error case. */
       }
       return start;
     }
