@@ -789,7 +789,13 @@ dlmmap_locked (void *start, size_t length, int prot, int flags, off_t offset)
 	  close (execfd);
 	  goto retry_open;
 	}
-      ftruncate (execfd, offset);
+      if (ftruncate (execfd, offset) != 0)
+      {
+        /* Fixme : Error logs can be added here. Returning an error for
+         * ftruncte() will not add any advantage as it is being
+         * validating in the error case. */
+      }
+
       return MFAIL;
     }
   else if (!offset
@@ -801,7 +807,12 @@ dlmmap_locked (void *start, size_t length, int prot, int flags, off_t offset)
   if (start == MFAIL)
     {
       munmap (ptr, length);
-      ftruncate (execfd, offset);
+      if (ftruncate (execfd, offset) != 0)
+      {
+        /* Fixme : Error logs can be added here. Returning an error for
+         * ftruncte() will not add any advantage as it is being
+         * validating in the error case. */
+      }
       return start;
     }
 
