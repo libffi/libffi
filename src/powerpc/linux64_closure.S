@@ -143,7 +143,7 @@ ffi_closure_LINUX64:
 	stfd	%f12, -104+(11*8)(%r1)
 	stfd	%f13, -104+(12*8)(%r1)
 
-	# load up the pointer to the saved fpr registers */
+	# load up the pointer to the saved fpr registers
 	addi	%r8, %r1, -104
 
 	# load up the pointer to the result storage
