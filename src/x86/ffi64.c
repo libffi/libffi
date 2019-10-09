@@ -451,9 +451,11 @@ ffi_prep_cif_machdep (ffi_cif *cif)
     case FFI_TYPE_DOUBLE:
       flags = UNIX64_RET_XMM64;
       break;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
     case FFI_TYPE_LONGDOUBLE:
       flags = UNIX64_RET_X87;
       break;
+#endif
     case FFI_TYPE_STRUCT:
       n = examine_argument (cif->rtype, classes, 1, &ngpr, &nsse);
       if (n == 0)
