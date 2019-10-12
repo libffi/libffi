@@ -11,6 +11,8 @@ function build_linux()
     make dist
     make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
 
+    cppcheck --quiet --error-exitcode=1 .
+
     gzip -c -9 */testsuite/libffi.log > libffi.log.gz
     echo ================================================================
     echo The logs are too long for travis to handle, so we compress and
