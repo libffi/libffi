@@ -25,8 +25,7 @@ function build_linux()
 
 function build_foreign_linux()
 {
-    ls -l /usr/bin/qemu-arm-static
-    docker run --rm -t -i -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static -v `pwd`:/opt --rm -ti arm32v7/debian:stretch-slim /opt/.travis/build-in-container.sh
+    docker run --rm -t -i -v /usr/bin/qemu-$1-static:/usr/bin/qemu-$1-static -v `pwd`:/opt --rm -ti $2 /opt/.travis/build-in-container.sh
 }
 
 function build_ios()
@@ -45,8 +44,10 @@ case "$HOST" in
 	build_ios
 	;;
     arm32v7-linux-gnu)
-        build_foreign_linux
+        build_foreign_linux arm arm32v7/debian:stretch-slim
 	;;
+    s390x-linux-gnu)
+	build_foreign_linux s390x s390x/ubuntu
     *)
 	build_linux
 	;;

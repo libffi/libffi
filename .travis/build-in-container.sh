@@ -6,7 +6,7 @@
 cd /opt
 
 apt-get update
-apt-get install -y gcc dejagnu make texinfo sharutils gzip
+apt-get install -y gcc dejagnu make texinfo sharutils gzip git
 ./configure 
 make
 make dist
