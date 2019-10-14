@@ -494,6 +494,7 @@ proc run-many-tests { testcases extra_flags } {
         } else { 
           set optimizations { "-O0" "-O2" "-O2 -fomit-frame-pointer" }
         }
+      }
       default {
         # Assume we are using the vendor compiler.
         set common ""
