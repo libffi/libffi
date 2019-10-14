@@ -482,7 +482,7 @@ proc run-many-tests { testcases extra_flags } {
       "clang" {
         set common "-W -Wall"
         if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
-          set optimizations { "$env(LIBFFI_TEST_OPTIMIZATION)" }
+          set optimizations { $env(LIBFFI_TEST_OPTIMIZATION) }
         } else { 
           set optimizations { "-O0" "-O2" }
         }
@@ -490,7 +490,7 @@ proc run-many-tests { testcases extra_flags } {
       "gnu" {
         set common "-W -Wall -Wno-psabi"
         if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
-          set optimizations { "$env(LIBFFI_TEST_OPTIMIZATION)" }
+          set optimizations { $env(LIBFFI_TEST_OPTIMIZATION) }
         } else { 
           set optimizations { "-O0" "-O2" "-O2 -fomit-frame-pointer" }
         }
@@ -499,7 +499,7 @@ proc run-many-tests { testcases extra_flags } {
         # Assume we are using the vendor compiler.
         set common ""
         if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
-          set optimizations { "$env(LIBFFI_TEST_OPTIMIZATION)" }
+          set optimizations { $env(LIBFFI_TEST_OPTIMIZATION) }
         } else { 
           set optimizations { "" }
         }
