@@ -25,7 +25,7 @@ function build_linux()
 
 function build_foreign_linux()
 {
-    docker run --rm -t -i -v `pwd`:/opt --rm -ti -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 /opt/.travis/build-in-container.sh
+    docker run --rm -t -i -v `pwd`:/opt --rm -ti -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.travis/build-in-container.sh
 }
 
 function build_ios()
