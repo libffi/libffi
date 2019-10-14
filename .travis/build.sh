@@ -22,6 +22,11 @@ function build_linux()
     echo ================================================================
 }
 
+function build_foreign_linux()
+{
+    docker run --rm -t -i -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static -v `pwd`:/opt --rm -ti arm32v7/debian:stretch-slim /opt/.travis/build-in-container.sh
+}
+
 function build_ios()
 {
     which python
@@ -36,6 +41,9 @@ function build_ios()
 case "$HOST" in
     arm-apple-darwin*)
 	build_ios
+	;;
+    arm32v7-linux-gnu)
+        build_foreign_linux
 	;;
     *)
 	build_linux
