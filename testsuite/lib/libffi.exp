@@ -493,6 +493,14 @@ proc run-many-tests { testcases extra_flags } {
       }
     }
 
+    # Override optimizations if provided by LIBFFI_TEST_OPTIMIZATION
+    # environment variable.
+    if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
+      set optimizations { "$env(LIBFFI_TEST_OPTIMIZATION)" }
+    }
+
+    info exists env(LD_LIBRARY_PATH)
+
     set targetabis { "" }
     if [string match $compiler_vendor "gnu"] {
         if [libffi_feature_test "#ifdef __i386__"] {
