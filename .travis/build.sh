@@ -2,6 +2,7 @@
 
 # exit this script if any commmand fails
 # set -e
+set -x
 
 function build_linux()
 {
@@ -24,6 +25,7 @@ function build_linux()
 
 function build_foreign_linux()
 {
+    ls -l /usr/bin/qemu-arm-static
     docker run --rm -t -i -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static -v `pwd`:/opt --rm -ti arm32v7/debian:stretch-slim /opt/.travis/build-in-container.sh
 }
 
