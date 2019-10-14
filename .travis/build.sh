@@ -48,6 +48,7 @@ case "$HOST" in
 	;;
     s390x-linux-gnu)
 	build_foreign_linux s390x s390x/ubuntu
+	;;
     *)
 	build_linux
 	;;
