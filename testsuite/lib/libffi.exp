@@ -477,26 +477,32 @@ proc libffi-dg-runtest { testcases default-extra-flags } {
 proc run-many-tests { testcases extra_flags } {
     global compiler_vendor
     global has_gccbug
+    global env
     switch $compiler_vendor {
       "clang" {
-	set common "-W -Wall"
-	set optimizations { "-O0" "-O2" }
+        set common "-W -Wall"
+        if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
+          set optimizations { "$env(LIBFFI_TEST_OPTIMIZATION)" }
+        } else { 
+          set optimizations { "-O0" "-O2" }
+        }
       }
       "gnu" {
         set common "-W -Wall -Wno-psabi"
-        set optimizations { "-O0" "-O2" "-O2 -fomit-frame-pointer" }
-      }
+        if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
+          set optimizations { "$env(LIBFFI_TEST_OPTIMIZATION)" }
+        } else { 
+          set optimizations { "-O0" "-O2" "-O2 -fomit-frame-pointer" }
+        }
       default {
         # Assume we are using the vendor compiler.
         set common ""
-        set optimizations { "" }
+        if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
+          set optimizations { "$env(LIBFFI_TEST_OPTIMIZATION)" }
+        } else { 
+          set optimizations { "" }
+        }
       }
-    }
-
-    # Override optimizations if provided by LIBFFI_TEST_OPTIMIZATION
-    # environment variable.
-    if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
-      set optimizations { "$env(LIBFFI_TEST_OPTIMIZATION)" }
     }
 
     info exists env(LD_LIBRARY_PATH)
