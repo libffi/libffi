@@ -6,8 +6,7 @@
 cd /opt
 
 apt-get update
-apt-get install gcc automake autoconf libtool dejagnu texinfo sharutils gzip
-
+apt-get install -y gcc automake autoconf libtool dejagnu texinfo sharutils gzip
 ./autogen.sh
 ./configure 
 make
