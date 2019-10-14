@@ -44,7 +44,10 @@ case "$HOST" in
 	build_ios
 	;;
     arm32v7-linux-gnu)
-        build_foreign_linux arm moxielogic/arm32-ci-build-container:latest
+        build_foreign_linux arm moxielogic/arm32-ci-build-container:latest 
+	;;
+    aarch64-linux-gnu)
+        build_foreign_linux arm moxielogic/aarch64-ci-build-container:latest 
 	;;
     s390x-linux-gnu)
 	build_foreign_linux s390x s390x/ubuntu
