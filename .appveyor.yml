@@ -1,6 +1,6 @@
 shallow_clone: true
 
-# We're currently only testing 64-bit libffi built with Microsoft's
+# We're currently only testing libffi built with Microsoft's
 # tools.
 # This matrix should be expanded to include at least:
 #  32- and 64-bit gcc/cygwin
@@ -64,8 +64,3 @@ build_script:
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; ./configure CC='%MSVCC%' CXX='%MSVCC%' LD='link' CPP='cl -nologo -EP' CXXCPP='cl -nologo -EP' CPPFLAGS='-DFFI_BUILDING_DLL' AR='/cygdrive/c/projects/libffi/.travis/ar-lib lib' NM='dumpbin -symbols' STRIP=':' --build=$BUILD --host=$HOST;)"
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; cp src/%SRC_ARCHITECTURE%/ffitarget.h include; make; find .;)"
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; cp `find . -name 'libffi-?.dll'` $HOST/testsuite/; make check; cat `find ./ -name libffi.log`)"
-
-# FIXME: "make check" currently fails.  It just looks like msvcc needs
-# to learn about -L and -l options.  If you add "make check; cat `find
-# ./ -name libffi.log" to the end of that build command you'll see
-# what I mean.
