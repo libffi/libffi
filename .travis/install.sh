@@ -11,7 +11,7 @@ else
     sudo apt-get update
     case $HOST in
 	arm32v7-linux-gnu)
-	    sudo apt-get install qemu-user /usr/bin/qemu-arm-static;
+	    sudo apt-get install qemu-user-static
 	    ;;
 	i386-pc-linux-gnu)
 	    sudo apt-get install gcc-multilib g++-multilib;
