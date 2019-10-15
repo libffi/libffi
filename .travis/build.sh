@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# exit this script if any commmand fails
-# set -e
-set -x
-
 function build_linux()
 {
     ./autogen.sh
@@ -11,6 +7,7 @@ function build_linux()
     make
     make dist
     make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
+    EXITCODE=$?
 
     gzip -c -9 */testsuite/libffi.log > libffi.log.gz
     echo ================================================================
@@ -21,11 +18,14 @@ function build_linux()
     uuencode libffi.log.gz -
     echo ================================================================
     echo ================================================================
+
+    exit $EXITCODE
 }
 
 function build_foreign_linux()
 {
     docker run --rm -t -i -v `pwd`:/opt --rm -ti -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.travis/build-in-container.sh
+    exit $?
 }
 
 function build_ios()
@@ -35,7 +35,7 @@ function build_ios()
     ./generate-darwin-source-and-headers.py
     xcodebuild -showsdks
     xcodebuild -project libffi.xcodeproj -target "libffi-iOS" -configuration Release -sdk iphoneos10.3
-    find ./ 
+    exit $?
 }
 
 ./autogen.sh

@@ -1,14 +1,12 @@
 #!/bin/bash
 
-# exit this script if any commmand fails
-# set -e
-
 cd /opt
 
 ./configure 
 make
 make dist
 make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
+EXITCODE=$?
 gzip -c -9 */testsuite/libffi.log > libffi.log.gz
 echo ================================================================
 echo The logs are too long for travis to handle, so we compress and
@@ -18,3 +16,5 @@ echo ================================================================
 uuencode libffi.log.gz -
 echo ================================================================
 echo ================================================================
+exit $EXITCODE
+
