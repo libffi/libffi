@@ -8,6 +8,12 @@ matrix:
     - os: osx
       env: HOST=arm-apple-darwin
     - os: linux
+      env: HOST=ppc64le-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O0"
+    - os: linux
+      env: HOST=ppc64le-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O2"
+    - os: linux
+      env: HOST=ppc64le-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O2 -fomit-frame-pointer"
+    - os: linux
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O0"
     - os: linux
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O2"

@@ -49,6 +49,9 @@ case "$HOST" in
     aarch64-linux-gnu)
         build_foreign_linux aarch64 moxielogic/aarch64-ci-build-container:latest 
 	;;
+    ppc64le-linux-gnu)
+        build_foreign_linux ppc64le moxielogic/ppc64le-ci-build-container:latest 
+	;;
     s390x-linux-gnu)
 	build_foreign_linux s390x s390x/ubuntu
 	;;
