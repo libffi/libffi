@@ -18,7 +18,7 @@ function build_linux()
     uuencode libffi.log.gz -
     echo ================================================================
     echo ================================================================
-
+    cat */testsuite/libffi.log
     exit $EXITCODE
 }
 
