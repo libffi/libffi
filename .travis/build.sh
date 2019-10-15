@@ -34,7 +34,7 @@ function build_ios()
 # export PYTHON_BIN=/usr/local/bin/python
     ./generate-darwin-source-and-headers.py
     xcodebuild -showsdks
-    xcodebuild -project libffi.xcodeproj -target "libffi-iOS" -configuration Release -sdk iphoneos10.3
+    xcodebuild -project libffi.xcodeproj -target "libffi-iOS" -configuration Release -sdk iphoneos11.4
     exit $?
 }
 
