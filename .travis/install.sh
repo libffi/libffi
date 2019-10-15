@@ -2,7 +2,7 @@
 set -x
 
 if [[ $TRAVIS_OS_NAME != 'linux' ]]; then
-    brew update
+    brew update > brew-update.log 2>&1
     # fix an issue with libtool on travis by reinstalling it
     brew uninstall libtool;
     brew install libtool dejagnu;

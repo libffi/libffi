@@ -268,7 +268,7 @@ proc libffi-dg-test { prog do_what extra_tool_flags } {
 
 proc libffi-dg-prune { target_triplet text } {
     # We get this with some qemu emulated systems (eg. ppc64le-linux-gnu)
-    regsub -all "/bin/stty: 'standard input': unable to perform all requested operations" $text "" text
+    regsub -all "(^|\n)\[^\n\]*unable to perform all requested operations" $text "" text
 }
 
 proc libffi-init { args } {
