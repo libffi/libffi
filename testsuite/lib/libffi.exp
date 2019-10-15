@@ -269,6 +269,7 @@ proc libffi-dg-test { prog do_what extra_tool_flags } {
 proc libffi-dg-prune { target_triplet text } {
     # We get this with some qemu emulated systems (eg. ppc64le-linux-gnu)
     regsub -all "(^|\n)\[^\n\]*unable to perform all requested operations" $text "" text
+    return $text
 }
 
 proc libffi-init { args } {
