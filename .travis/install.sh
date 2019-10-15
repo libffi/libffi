@@ -19,7 +19,7 @@ else
 	moxie-elf)
 	    echo 'deb https://repos.moxielogic.org:7114/MoxieLogic moxiedev main' | sudo tee -a /etc/apt/sources.list
 	    sudo apt-get update
-	    sudo apt-get install -y --allow-unauthenticated moxielogic-moxie-elf-gcc moxielogic-moxie-elf-gcc-c++ moxielogic-moxie-elf-gcc-libstdc++ moxielogic-moxie-elf-gdb-s
+	    sudo apt-get install -y --allow-unauthenticated moxielogic-moxie-elf-gcc moxielogic-moxie-elf-gcc-c++ moxielogic-moxie-elf-gcc-libstdc++ moxielogic-moxie-elf-gdb-sim
 	    ;;
 	i686-w64-mingw32)
 	    sudo apt-get install gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine;
