@@ -45,7 +45,7 @@ case "$HOST" in
 	build_ios
 	;;
     arm32v7-linux-gnu)
-        build_foreign_linux arm moxielogic/arm32-ci-build-container:latest 
+        build_foreign_linux arm moxielogic/arm32v7-ci-build-container:latest 
 	;;
     aarch64-linux-gnu)
         build_foreign_linux aarch64 moxielogic/aarch64-ci-build-container:latest 
