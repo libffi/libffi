@@ -266,6 +266,12 @@ proc libffi-dg-test { prog do_what extra_tool_flags } {
     return [libffi-dg-test-1 target_compile $prog $do_what $extra_tool_flags]
 }
 
+proc libffi-dg-prune { target_triplet text } {
+    # We get this with some qemu emulated systems (eg. ppc64le-linux-gnu)
+    regsub -all "(^|\n)\[^\n\]*unable to perform all requested operations" $text "" text
+    return $text
+}
+
 proc libffi-init { args } {
     global gluefile wrap_flags;
     global srcdir
@@ -477,21 +483,36 @@ proc libffi-dg-runtest { testcases default-extra-flags } {
 proc run-many-tests { testcases extra_flags } {
     global compiler_vendor
     global has_gccbug
+    global env
     switch $compiler_vendor {
       "clang" {
-	set common "-W -Wall"
-	set optimizations { "-O0" "-O2" }
+        set common "-W -Wall"
+        if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
+	  set optimizations [ list $env(LIBFFI_TEST_OPTIMIZATION) ]
+        } else { 
+          set optimizations { "-O0" "-O2" }
+        }
       }
       "gnu" {
         set common "-W -Wall -Wno-psabi"
-        set optimizations { "-O0" "-O2" "-O2 -fomit-frame-pointer" }
+        if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
+	  set optimizations [ list $env(LIBFFI_TEST_OPTIMIZATION) ]
+        } else { 
+          set optimizations { "-O0" "-O2" "-O2 -fomit-frame-pointer" }
+        }
       }
       default {
         # Assume we are using the vendor compiler.
         set common ""
-        set optimizations { "" }
+        if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
+	  set optimizations [ list $env(LIBFFI_TEST_OPTIMIZATION) ]
+        } else { 
+          set optimizations { "" }
+        }
       }
     }
+
+    info exists env(LD_LIBRARY_PATH)
 
     set targetabis { "" }
     if [string match $compiler_vendor "gnu"] {
