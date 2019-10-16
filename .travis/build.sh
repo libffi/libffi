@@ -13,12 +13,13 @@ function build_linux()
     echo ================================================================
     echo The logs are too long for travis to handle, so we compress and
     echo uuencode them.  Download, decode and uncompress if you need to
-    echo read them.
+    echo read them.  For example, if you select and save this text
+    echo as libffi.uu, run: 'cat libffi.uu | uudecode | gzip -d | less'.
     echo ================================================================
     uuencode libffi.log.gz -
     echo ================================================================
     echo ================================================================
-    cat */testsuite/libffi.log
+
     exit $EXITCODE
 }
 
