@@ -519,9 +519,9 @@ proc run-many-tests { testcases extra_flags } {
         if [libffi_feature_test "#ifdef __i386__"] {
             set targetabis {
                 ""
-                "-DABI_NUM=FFI_STDCALL -DABI_ATTR=__STDCALL__"
-                "-DABI_NUM=FFI_THISCALL -DABI_ATTR=__THISCALL__"
-                "-DABI_NUM=FFI_FASTCALL -DABI_ATTR=__FASTCALL__"
+#                "-DABI_NUM=FFI_STDCALL -DABI_ATTR=__STDCALL__"
+#                "-DABI_NUM=FFI_THISCALL -DABI_ATTR=__THISCALL__"
+#                "-DABI_NUM=FFI_FASTCALL -DABI_ATTR=__FASTCALL__"
             }
         } elseif { [istarget "x86_64-*-*"] \
 		   && [libffi_feature_test "#if !defined __ILP32__  \
