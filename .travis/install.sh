@@ -22,7 +22,7 @@ else
 	    sudo apt-get install -y --allow-unauthenticated moxielogic-moxie-elf-gcc moxielogic-moxie-elf-gcc-c++ moxielogic-moxie-elf-gcc-libstdc++ moxielogic-moxie-elf-gdb-sim
 	    ;;
 	i686-w64-mingw32)
-	    sudo apt-get install gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine;
+	    sudo apt-get install gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine libsm6:i386;
 	    ;;
     esac
     case $HOST in
