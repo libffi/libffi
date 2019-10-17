@@ -23,6 +23,7 @@ else
 	    ;;
 	i686-w64-mingw32)
 	    sudo apt-get install gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine libsm6:i386;
+	    rm -rf testsuite/libffi.bhaible testsuite/libffi.go testsuite/libffi.complex testsuite/libffi.call/[e-z]*
 	    ;;
     esac
     case $HOST in
