@@ -114,4 +114,6 @@ libffi.go/aa-direct.c libffi.go/ffitest.h libffi.go/go.exp		\
 libffi.go/static-chain.h libffi.bhaible/bhaible.exp			\
 libffi.bhaible/test-call.c libffi.bhaible/alignof.h			\
 libffi.bhaible/testcases.c libffi.bhaible/test-callback.c		\
-libffi.bhaible/Makefile libffi.bhaible/README config/default.exp  
+libffi.bhaible/Makefile libffi.bhaible/README config/default.exp \
+libffi.call/simd_float_matrices.c \
+libffi.call/simd_double_matrices.c 

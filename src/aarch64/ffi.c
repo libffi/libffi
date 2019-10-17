@@ -87,6 +87,12 @@ ffi_clear_cache (void *start, void *end)
 
 #endif
 
+static int intlog2(int n) {
+    int targetlevel = 0;
+    while (n >>= 1) ++targetlevel;
+    return targetlevel;
+}
+
 /* A subroutine of is_vfp_type.  Given a structure type, return the type code
    of the first non-structure element.  Recurse for structure elements.
    Return -1 if the structure is in fact empty, i.e. no nested elements.  */
@@ -101,7 +107,7 @@ is_hfa0 (const ffi_type *ty)
     for (i = 0; elements[i]; ++i)
       {
         ret = elements[i]->type;
-        if (ret == FFI_TYPE_STRUCT || ret == FFI_TYPE_COMPLEX)
+        if (ret == FFI_TYPE_STRUCT || ret == FFI_TYPE_COMPLEX || ret == FFI_TYPE_EXT_VECTOR)
           {
             ret = is_hfa0 (elements[i]);
             if (ret < 0)
@@ -111,6 +117,30 @@ is_hfa0 (const ffi_type *ty)
       }
 
   return ret;
+}
+
+static size_t is_simd(const ffi_type *ty) // return 0 if no SIMD elements
+{
+    if (ty->type == FFI_TYPE_EXT_VECTOR || ty->type == FFI_TYPE_COMPLEX) {
+        return ty->size;
+    }
+    ffi_type **elements = ty->elements;
+    int i;
+    
+    if (elements != NULL)
+    {
+        for (i = 0; elements[i]; ++i)
+        {
+            int element_type = elements[i]->type;
+            if (element_type == FFI_TYPE_STRUCT || element_type == FFI_TYPE_COMPLEX || element_type == FFI_TYPE_EXT_VECTOR)
+            {
+                return is_simd(elements[i]);
+            }
+        }
+    }
+    
+    return 0;
+    
 }
 
 /* A subroutine of is_vfp_type.  Given a structure type, return true if all
@@ -126,7 +156,7 @@ is_hfa1 (const ffi_type *ty, int candidate)
     for (i = 0; elements[i]; ++i)
       {
         int t = elements[i]->type;
-        if (t == FFI_TYPE_STRUCT || t == FFI_TYPE_COMPLEX)
+        if (t == FFI_TYPE_STRUCT || t == FFI_TYPE_COMPLEX || t == FFI_TYPE_EXT_VECTOR)
           {
             if (!is_hfa1 (elements[i], candidate))
               return 0;
@@ -151,7 +181,7 @@ is_vfp_type (const ffi_type *ty)
 {
   ffi_type **elements;
   int candidate, i;
-  size_t size, ele_count;
+  size_t size, ele_count, simd_size;
 
   /* Quickest tests first.  */
   candidate = ty->type;
@@ -176,6 +206,7 @@ is_vfp_type (const ffi_type *ty)
 	}
       return 0;
     case FFI_TYPE_STRUCT:
+    case FFI_TYPE_EXT_VECTOR:
       break;
     }
 
@@ -187,7 +218,9 @@ is_vfp_type (const ffi_type *ty)
   /* Find the type of the first non-structure member.  */
   elements = ty->elements;
   candidate = elements[0]->type;
-  if (candidate == FFI_TYPE_STRUCT || candidate == FFI_TYPE_COMPLEX)
+  /* Find the size of the SIMD member, if any. */
+  simd_size = is_simd(ty);
+  if (candidate == FFI_TYPE_STRUCT || candidate == FFI_TYPE_COMPLEX || candidate == FFI_TYPE_EXT_VECTOR)
     {
       for (i = 0; ; ++i)
         {
@@ -219,14 +252,14 @@ is_vfp_type (const ffi_type *ty)
     default:
       return 0;
     }
-  if (ele_count > 4)
+  if ((ele_count > 4 && !simd_size) || (ele_count > 16 && simd_size))
     return 0;
 
   /* Finally, make sure that all scalar elements are the same type.  */
   for (i = 0; elements[i]; ++i)
     {
       int t = elements[i]->type;
-      if (t == FFI_TYPE_STRUCT || t == FFI_TYPE_COMPLEX)
+      if (t == FFI_TYPE_STRUCT || t == FFI_TYPE_COMPLEX || t == FFI_TYPE_EXT_VECTOR)
         {
           if (!is_hfa1 (elements[i], candidate))
             return 0;
@@ -236,8 +269,16 @@ is_vfp_type (const ffi_type *ty)
     }
 
   /* All tests succeeded.  Encode the result.  */
- done:
-  return candidate * 4 + (4 - (int)ele_count);
+    if (simd_size) {
+        size_t regSize = simd_size;
+        
+        int num_registers = (int) size / regSize + (size % regSize ? 1 : 0);
+        int first_level_element_type = FFI_TYPE_FLOAT + intlog2((int)regSize) - 2;
+        return (int) (first_level_element_type * 4 + (4 - num_registers));
+    }
+   
+  done:
+    return candidate * 4 + (4 - (int)ele_count);
 }
 
 /* Representation of the procedure call argument marshalling
@@ -511,6 +552,7 @@ ffi_prep_cif_machdep (ffi_cif *cif)
     case FFI_TYPE_DOUBLE:
     case FFI_TYPE_LONGDOUBLE:
     case FFI_TYPE_STRUCT:
+    case FFI_TYPE_EXT_VECTOR:
     case FFI_TYPE_COMPLEX:
       flags = is_vfp_type (rtype);
       if (flags == 0)
@@ -657,6 +699,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 	case FFI_TYPE_DOUBLE:
 	case FFI_TYPE_LONGDOUBLE:
 	case FFI_TYPE_STRUCT:
+    case FFI_TYPE_EXT_VECTOR:
 	case FFI_TYPE_COMPLEX:
 	  {
 	    void *dest;
@@ -909,6 +952,7 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
 	case FFI_TYPE_DOUBLE:
 	case FFI_TYPE_LONGDOUBLE:
 	case FFI_TYPE_STRUCT:
+    case FFI_TYPE_EXT_VECTOR:
 	case FFI_TYPE_COMPLEX:
 	  h = is_vfp_type (ty);
 	  if (h)
