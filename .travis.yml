@@ -6,7 +6,7 @@ language: cpp
 matrix:
   include:
     - os: windowns
-      env: HOST=i686-w64-mingw32 MEVAL='export CC="i686-w64-mingw32-gcc-win32" && CXX="i686-w64-mingw32-g++-win32"' LIBFFI_TEST_OPTIMIZATION=-O2
+      env: HOST=i686-w64-mingw32 MEVAL='export CC="i686-w64-mingw32-gcc-win32" && CXX="i686-w64-mingw32-g++-win32"' LIBFFI_TEST_OPTIMIZATION=-O2 RUNTESTFLAGS="--target_board wine-sim" DEJAGNU="$TRAVIS_BUILD_DIR/.travis/site.exp"
 
 before_install:
   - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
