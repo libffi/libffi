@@ -1,4 +1,4 @@
-# Copyright (C) 2008, 2010, 2018  Anthony Green
+# Copyright (C) 2008, 2010, 2018, 2019  Anthony Green
 
 # Make sure we look in the right place for the board description files.
 if ![info exists boards_dir] {
@@ -13,6 +13,9 @@ global target_list
 case "$target_triplet" in {
     { "moxie-elf" } {
 	set target_list "moxie-sim"
+    }
+    { "i686-w64-mingw32" } {
+	set target_list "wine-sim"
     }
 }
 
