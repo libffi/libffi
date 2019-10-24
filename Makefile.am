@@ -155,3 +155,4 @@ AM_CCASFLAGS = $(AM_CPPFLAGS)
 
 dist-hook:
 	if [ -d $(top_srcdir)/.git ] ; then (cd $(top_srcdir); git log --no-decorate) ; else echo 'See git log for history.' ; fi > $(distdir)/ChangeLog
+	s=`awk '/was released on/{ print NR; exit}' $(top_srcdir)/README.md`; tail -n +$$(($$s-1)) $(top_srcdir)/README.md > $(distdir)/README.md
