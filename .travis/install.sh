@@ -20,8 +20,6 @@ else
 	  echo 'deb https://repos.moxielogic.org:7114/MoxieLogic moxiedev main' | sudo tee -a /etc/apt/sources.list
 	  sudo apt-get clean # clear the cache
 	  sudo apt-get update ## -qq
-	  # debug...
-	  curl https://repos.moxielogic.org:7114/MoxieLogic/dists/moxiedev/main/binary-amd64/Packages
 	  sudo apt-get update
 	  sudo apt-get install -y --allow-unauthenticated moxielogic-moxie-elf-gcc moxielogic-moxie-elf-gcc-c++ moxielogic-moxie-elf-gcc-libstdc++ moxielogic-moxie-elf-gdb-sim
 	  ;;
