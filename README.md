@@ -4,7 +4,7 @@ Status
 [![Build Status](https://travis-ci.org/libffi/libffi.svg?branch=master)](https://travis-ci.org/libffi/libffi)
 [![Build status](https://ci.appveyor.com/api/projects/status/8lko9vagbx4w2kxq?svg=true)](https://ci.appveyor.com/project/atgreen/libffi)
 
-libffi-3.3-rc0 was released on April 2, 2018.  Check the libffi web
+libffi-3.3-rc1 was released on October 24, 2019.  Check the libffi web
 page for updates: <URL:http://sourceware.org/libffi/>.
 
 
