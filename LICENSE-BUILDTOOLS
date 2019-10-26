@@ -1,10 +1,11 @@
 The libffi source distribution contains certain code that is not part
 of libffi, and is only used as tooling to assist with the building and
 testing of libffi.  This includes the msvcc.sh script used to wrap the
-Microsoft compiler with GNU compatible command-line options, and the
-libffi test code distributed in the testsuite/libffi.bhaible
-directory.  This code is distributed with libffi for the purpose of
-convenience only, and libffi is in no way derived from this code.
+Microsoft compiler with GNU compatible command-line options,
+make_sunver.pl, and the libffi test code distributed in the
+testsuite/libffi.bhaible directory.  This code is distributed with
+libffi for the purpose of convenience only, and libffi is in no way
+derived from this code.
 
 msvcc.sh an testsuite/libffi.bhaible are both distributed under the
 terms of the GNU GPL version 2, as below.
