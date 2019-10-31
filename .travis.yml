@@ -21,6 +21,8 @@ matrix:
     - os: linux
       env: HOST=aarch64-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O2 -fomit-frame-pointer"
     - os: linux
+      env: HOST=powerpc64le-unknown-linux-gnu
+    - os: linux
       compiler: gcc
       env: HOST=i386-pc-linux-gnu MEVAL='export CC="$CC -m32" && CXX="$CXX -m32"'
     - os: linux

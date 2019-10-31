@@ -1,5 +1,10 @@
 #!/bin/bash
 
+function build_cfarm()
+{
+    curl -u ${CFARM_AUTH} https://cfarm-test-libffi-libffi.apps.home.labdroid.net/test?host=${HOST}\&commit=${TRAVIS_COMMIT}
+}
+
 function build_linux()
 {
     ./autogen.sh
@@ -50,8 +55,8 @@ case "$HOST" in
     aarch64-linux-gnu)
         build_foreign_linux aarch64 moxielogic/aarch64-ci-build-container:latest 
 	;;
-    ppc64le-linux-gnu)
-        build_foreign_linux ppc64le moxielogic/ppc64le-ci-build-container:latest 
+    powerpc64le-unknown-linux-gnu)
+        build_cfarm
 	;;
     s390x-linux-gnu)
 	build_foreign_linux s390x s390x/ubuntu
