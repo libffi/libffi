@@ -55,7 +55,7 @@ case "$HOST" in
     aarch64-linux-gnu)
         build_foreign_linux aarch64 moxielogic/aarch64-ci-build-container:latest 
 	;;
-    powerpc64le-unknown-linux-gnu)
+    powerpc64le-unknown-linux-gnu | sparc64-linux-gnu)
         build_cfarm
 	;;
     s390x-linux-gnu)

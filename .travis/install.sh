@@ -10,7 +10,7 @@ else
   sudo apt-get clean # clear the cache
   sudo apt-get update
   case $HOST in
-      powerpc64le-unknown-linux-gnu)
+      powerpc64le-unknown-linux-gnu | sparc64-linux-gnu)
           ;;	  
       arm32v7-linux-gnu | aarch64-linux-gnu | s390x-linux-gnu)
 	  sudo apt-get install qemu-user-static

@@ -23,6 +23,8 @@ matrix:
     - os: linux
       env: HOST=powerpc64le-unknown-linux-gnu
     - os: linux
+      env: HOST=sparc64-linux-gnu
+    - os: linux
       compiler: gcc
       env: HOST=i386-pc-linux-gnu MEVAL='export CC="$CC -m32" && CXX="$CXX -m32"'
     - os: linux
