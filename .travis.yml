@@ -23,6 +23,8 @@ matrix:
     - os: linux
       env: HOST=powerpc64le-unknown-linux-gnu
     - os: linux
+      env: HOST=misp64el-linux-gnu
+    - os: linux
       env: HOST=sparc64-linux-gnu
     - os: linux
       compiler: gcc
