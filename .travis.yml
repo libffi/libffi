@@ -15,6 +15,8 @@ matrix:
     - os: linux
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O2 -fomit-frame-pointer"
     - os: linux
+      env: HOST=sparc64-linux-gnu
+    - os: linux
       env: HOST=aarch64-linux-gnu
     - os: linux
       env: HOST=powerpc64le-unknown-linux-gnu
@@ -44,4 +46,4 @@ install:
 
 script:
   - if ! test x"$MEVAL" = x; then eval ${MEVAL}; fi
-  - ./.travis/build.sh
+  - travis_wait 45 ./.travis/build.sh
