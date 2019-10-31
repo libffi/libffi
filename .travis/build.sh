@@ -53,11 +53,7 @@ case "$HOST" in
 	./autogen.sh
         build_foreign_linux arm moxielogic/arm32v7-ci-build-container:latest 
 	;;
-    aarch64-linux-gnu)
-	./autogen.sh
-        build_foreign_linux aarch64 moxielogic/aarch64-ci-build-container:latest 
-	;;
-    powerpc64le-unknown-linux-gnu | mips64el-linux-gnu | sparc64-linux-gnu)
+    aarch64-linux-gnu| powerpc64le-unknown-linux-gnu | mips64el-linux-gnu | sparc64-linux-gnu)
         build_cfarm
 	;;
     s390x-linux-gnu)
