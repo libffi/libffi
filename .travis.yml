@@ -46,4 +46,5 @@ install:
 
 script:
   - if ! test x"$MEVAL" = x; then eval ${MEVAL}; fi
-  - travis_wait 45 ./.travis/build.sh
+  - travis_wait 45 sleep infinity &
+  - ./.travis/build.sh
