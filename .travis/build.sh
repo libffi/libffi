@@ -56,10 +56,6 @@ case "$HOST" in
     aarch64-linux-gnu| powerpc64le-unknown-linux-gnu | mips64el-linux-gnu | sparc64-linux-gnu)
         build_cfarm
 	;;
-    s390x-linux-gnu)
-	./autogen.sh
-	build_foreign_linux s390x s390x/ubuntu
-	;;
     *)
 	./autogen.sh
 	build_linux

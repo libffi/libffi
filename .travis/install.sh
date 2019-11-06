@@ -12,11 +12,14 @@ else
   case $HOST in
       aarch64-linux-gnu | powerpc64le-unknown-linux-gnu | mips64el-linux-gnu | sparc64-linux-gnu)
           ;;	  
-      arm32v7-linux-gnu | s390x-linux-gnu)
+      arm32v7-linux-gnu )
 	  sudo apt-get install qemu-user-static
 	  ;;
       hppa-linux-gnu )
-	  sudo apt-get install qemu-user-static g++-8-hppa-linux-gnu
+	  sudo apt-get install -y qemu-user-static g++-7-hppa-linux-gnu
+	  ;;
+      s390x-linux-gnu )
+	  sudo apt-get install -y qemu-user-static g++-7-s390x-linux-gnu
 	  ;;
       i386-pc-linux-gnu)
 	  sudo apt-get install gcc-multilib g++-multilib;
