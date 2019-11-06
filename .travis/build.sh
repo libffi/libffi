@@ -36,7 +36,7 @@ function build_foreign_linux()
 
 function build_cross_linux()
 {
-    docker run --rm -t -i -v `pwd`:/opt -e HOST="${HOST}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" moxielogic/cross-ci-build-container:latest bash -c /opt/.travis/build-in-container.sh
+    docker run --rm -t -i -v `pwd`:/opt -e HOST="${HOST}" -e CC="${HOST}-gcc-8" -e CXX="${HOST}-g++-8" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" moxielogic/cross-ci-build-container:latest bash -c /opt/.travis/build-in-container.sh
     exit $?
 }
 
