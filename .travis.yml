@@ -12,10 +12,6 @@ matrix:
     - os: linux
       env: HOST=s390x-linux-gnu MEVAL='export CC="s390x-linux-gnu-gcc-8" && CXX="s390x-linux-gnu-g++-8"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/s390x-linux-gnu
     - os: linux
-      env: HOST=hppa-linux-gnu MEVAL='export CC="hppa-linux-gnu-gcc-5" && CXX="hppa-linux-gnu-g++-5"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/hppa-linux-gnu
-    - os: linux
-      env: HOST=s390x-linux-gnu MEVAL='export CC="s390x-linux-gnu-gcc-5" && CXX="s390x-linux-gnu-g++-5"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/s390x-linux-gnu
-    - os: linux
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O0"
     - os: linux
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O2"
