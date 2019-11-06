@@ -15,6 +15,9 @@ else
       arm32v7-linux-gnu | s390x-linux-gnu)
 	  sudo apt-get install qemu-user-static
 	  ;;
+      hppa-linux-gnu )
+	  sudo apt-get install qemu-user-static g++-8-hppa-linux-gnu
+	  ;;
       i386-pc-linux-gnu)
 	  sudo apt-get install gcc-multilib g++-multilib;
 	  ;;
