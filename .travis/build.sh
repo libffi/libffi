@@ -63,6 +63,7 @@ case "$HOST" in
         build_cfarm
 	;;
     sh4-linux-gnu | s390x-linux-gnu )
+	./autogen.sh
 	build_cross_linux
 	;;
     *)
