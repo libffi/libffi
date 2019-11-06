@@ -2,7 +2,13 @@
 
 cd /opt
 
-./configure 
+export QEMU_LD_PREFIX=/usr/${HOST}
+
+if ! test "x$HOST" == "x"; then
+    ./configure --host=${HOST} --disable-shared;
+else
+    ./configure
+fi
 make
 make dist
 make check RUNTESTFLAGS="-a $RUNTESTFLAGS"

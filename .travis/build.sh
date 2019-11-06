@@ -34,6 +34,12 @@ function build_foreign_linux()
     exit $?
 }
 
+function build_cross_linux()
+{
+    docker run --rm -t -i -v `pwd`:/opt --rm -ti -e HOST="${HOST}" LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.travis/build-in-container.sh
+    exit $?
+}
+
 function build_ios()
 {
     which python
@@ -55,6 +61,9 @@ case "$HOST" in
 	;;
     aarch64-linux-gnu| powerpc64le-unknown-linux-gnu | mips64el-linux-gnu | sparc64-linux-gnu)
         build_cfarm
+	;;
+    sh4-linux-gnu | s390x-linux-gnu )
+	build_cross_linux
 	;;
     *)
 	./autogen.sh

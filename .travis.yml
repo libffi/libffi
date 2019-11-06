@@ -8,6 +8,10 @@ matrix:
     - os: osx
       env: HOST=arm-apple-darwin
     - os: linux
+      env: HOST=sh4-linux-gnu MEVAL='export CC="sh4-linux-gnu-gcc-8" && CXX="sh4-linux-gnu-g++-8"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/sh4-linux-gnu
+    - os: linux
+      env: HOST=s390x-linux-gnu MEVAL='export CC="s390x-linux-gnu-gcc-8" && CXX="s390x-linux-gnu-g++-8"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/s390x-linux-gnu
+    - os: linux
       env: HOST=hppa-linux-gnu MEVAL='export CC="hppa-linux-gnu-gcc-5" && CXX="hppa-linux-gnu-g++-5"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/hppa-linux-gnu
     - os: linux
       env: HOST=s390x-linux-gnu MEVAL='export CC="s390x-linux-gnu-gcc-5" && CXX="s390x-linux-gnu-g++-5"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/s390x-linux-gnu
