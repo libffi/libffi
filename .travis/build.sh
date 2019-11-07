@@ -1,9 +1,22 @@
 #!/bin/bash
 
+set -x
+
 if [ -z ${QEMU_CPU+x} ]; then
     export SET_QEMU_CPU=
 else
     export SET_QEMU_CPU=-e QEMU_CPU=${QEMU_CPU}
+fi
+
+# Default to podman where available, docker otherwise.
+# Override by setting the DOCKER environment variable.
+if test -z "$DOCKER"; then
+  which podman > /dev/null 2>&1
+  if [ $? != 0 ]; then
+    export DOCKER=docker
+  else
+    export DOCKER=podman
+  fi
 fi
 
 function build_cfarm()
@@ -36,13 +49,13 @@ function build_linux()
 
 function build_foreign_linux()
 {
-    docker run --rm -t -i -v `pwd`:/opt ${SET_QEMU_CPU} -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.travis/build-in-container.sh
+    ${DOCKER} run --rm -t -i -v `pwd`:/opt ${SET_QEMU_CPU} -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.travis/build-in-container.sh
     exit $?
 }
 
 function build_cross_linux()
 {
-    docker run --rm -t -i -v `pwd`:/opt ${SET_QEMU_CPU} -e HOST="${HOST}" -e CC="${HOST}-gcc-8" -e CXX="${HOST}-g++-8" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" moxielogic/cross-ci-build-container:latest bash -c /opt/.travis/build-in-container.sh
+    ${DOCKER} run --rm -t -i -v `pwd`:/opt ${SET_QEMU_CPU} -e HOST="${HOST}" -e CC="${HOST}-gcc-8" -e CXX="${HOST}-g++-8" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" moxielogic/cross-ci-build-container:latest bash -c /opt/.travis/build-in-container.sh
     exit $?
 }
 
