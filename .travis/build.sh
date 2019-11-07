@@ -83,7 +83,7 @@ case "$HOST" in
 	;;
     m68k-linux-gnu )
 	./autogen.sh
-	GCC_OPTIONS=-mcpu=5208 build_cross_linux
+	GCC_OPTIONS=-mcpu=547x build_cross_linux
 	;;
     alpha-linux-gnu | sh4-linux-gnu | s390x-linux-gnu )
 	./autogen.sh
