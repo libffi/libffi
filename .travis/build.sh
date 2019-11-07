@@ -5,7 +5,7 @@ set -x
 if [ -z ${QEMU_CPU+x} ]; then
     export SET_QEMU_CPU=
 else
-    export SET_QEMU_CPU=-e QEMU_CPU=${QEMU_CPU}
+    export SET_QEMU_CPU="-e QEMU_CPU=${QEMU_CPU}"
 fi
 
 # Default to podman where available, docker otherwise.
