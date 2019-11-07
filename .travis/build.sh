@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ -z ${QEMU_CPU+x} ]; then
+    export SET_QEMU_CPU=
+else
+    export SET_QEMU_CPU=-e QEMU_CPU=${QEMU_CPU}
+fi
+
 function build_cfarm()
 {
     curl -u ${CFARM_AUTH} https://cfarm-test-libffi-libffi.apps.home.labdroid.net/test?host=${HOST}\&commit=${TRAVIS_COMMIT}
@@ -30,13 +36,13 @@ function build_linux()
 
 function build_foreign_linux()
 {
-    docker run --rm -t -i -v `pwd`:/opt -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.travis/build-in-container.sh
+    docker run --rm -t -i -v `pwd`:/opt ${SET_QEMU_CPU} -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.travis/build-in-container.sh
     exit $?
 }
 
 function build_cross_linux()
 {
-    docker run --rm -t -i -v `pwd`:/opt -e HOST="${HOST}" -e CC="${HOST}-gcc-8" -e CXX="${HOST}-g++-8" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" moxielogic/cross-ci-build-container:latest bash -c /opt/.travis/build-in-container.sh
+    docker run --rm -t -i -v `pwd`:/opt ${SET_QEMU_CPU} -e HOST="${HOST}" -e CC="${HOST}-gcc-8" -e CXX="${HOST}-g++-8" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" moxielogic/cross-ci-build-container:latest bash -c /opt/.travis/build-in-container.sh
     exit $?
 }
 
