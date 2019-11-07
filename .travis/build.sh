@@ -55,7 +55,7 @@ function build_foreign_linux()
 
 function build_cross_linux()
 {
-    ${DOCKER} run --rm -t -i -v `pwd`:/opt ${SET_QEMU_CPU} -e HOST="${HOST}" -e CC="${HOST}-gcc-8" -e CXX="${HOST}-g++-8" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" moxielogic/cross-ci-build-container:latest bash -c /opt/.travis/build-in-container.sh
+    ${DOCKER} run --rm -t -i -v `pwd`:/opt ${SET_QEMU_CPU} -e HOST="${HOST}" -e CC="${HOST}-gcc-8 ${GCC_OPTIONS}" -e CXX="${HOST}-g++-8 ${GCC_OPTIONS}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" moxielogic/cross-ci-build-container:latest bash -c /opt/.travis/build-in-container.sh
     exit $?
 }
 
@@ -81,7 +81,11 @@ case "$HOST" in
     aarch64-linux-gnu| powerpc64le-unknown-linux-gnu | mips64el-linux-gnu | sparc64-linux-gnu)
         build_cfarm
 	;;
-    alpha-linux-gnu | m68k-linux-gnu | sh4-linux-gnu | s390x-linux-gnu )
+    m68k-linux-gnu )
+	./autogen.sh
+	GCC_OPTIONS=-mcpu=5208 build_cross_linux
+	;;
+    alpha-linux-gnu | sh4-linux-gnu | s390x-linux-gnu )
 	./autogen.sh
 	build_cross_linux
 	;;
