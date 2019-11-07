@@ -18,7 +18,7 @@ matrix:
     - os: linux
       env: HOST=m68k-linux-gnu MEVAL='export CC="m68k-linux-gnu-gcc-8 -mcpu=547x" && CXX="m68k-linux-gnu-g++-8 -mcpu=547x"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/m68k-linux-gnu QEMU_CPU=cfv4e
     - os: linux
-      env: HOST=s390x-linux-gnu MEVAL='export CC="s390x-linux-gnu-gcc-8" && CXX="s390x-linux-gnu-g++-8' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/s390x-linux-gnu QEMU_CPU=max
+      env: HOST=s390x-linux-gnu MEVAL='export CC="s390x-linux-gnu-gcc-8" && CXX="s390x-linux-gnu-g++-8"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/s390x-linux-gnu QEMU_CPU=max
     - os: linux
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O0"
     - os: linux
