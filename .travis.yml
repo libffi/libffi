@@ -12,7 +12,7 @@ matrix:
     - os: linux
       env: HOST=alpha-linux-gnu MEVAL='export CC="alpha-linux-gnu-gcc-8" && CXX="alpha-linux-gnu-g++-8"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/alpha-linux-gnu
     - os: linux
-      env: HOST=m68k-linux-gnu MEVAL='export CC="m68k-linux-gnu-gcc-8" && CXX="m68k-linux-gnu-g++-8"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/m68k-linux-gnu QEMU_CPU=m68020
+      env: HOST=m68k-linux-gnu MEVAL='export CC="m68k-linux-gnu-gcc-8" && CXX="m68k-linux-gnu-g++-8"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/m68k-linux-gnu QEMU_CPU=help
     - os: linux
       env: HOST=s390x-linux-gnu MEVAL='export CC="s390x-linux-gnu-gcc-8" && CXX="s390x-linux-gnu-g++-8"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/s390x-linux-gnu
     - os: linux
