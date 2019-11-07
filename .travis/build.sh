@@ -62,7 +62,7 @@ case "$HOST" in
     aarch64-linux-gnu| powerpc64le-unknown-linux-gnu | mips64el-linux-gnu | sparc64-linux-gnu)
         build_cfarm
 	;;
-    sh4-linux-gnu | s390x-linux-gnu )
+    alpha-linux-gnu | m68k-linux-gnu | sh4-linux-gnu | s390x-linux-gnu )
 	./autogen.sh
 	build_cross_linux
 	;;
