@@ -16,6 +16,8 @@
 # along with DejaGnu; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+load_lib "standard.exp"
+
 # This is a list of toolchains that are supported on this board.
 set_board_info target_install {i686-w64-mingw32}
 
