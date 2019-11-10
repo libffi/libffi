@@ -63,9 +63,19 @@ function build_ios()
 {
     which python
 # export PYTHON_BIN=/usr/local/bin/python
-    ./generate-darwin-source-and-headers.py
+    ./generate-darwin-source-and-headers.py --only-ios
     xcodebuild -showsdks
     xcodebuild -project libffi.xcodeproj -target "libffi-iOS" -configuration Release -sdk iphoneos11.4
+    exit $?
+}
+
+function build_macosx()
+{
+    which python
+# export PYTHON_BIN=/usr/local/bin/python
+    ./generate-darwin-source-and-headers.py --only-osx
+    xcodebuild -showsdks
+    xcodebuild -project libffi.xcodeproj -target "libffi-Mac" -configuration Release -sdk macosx10.13
     exit $?
 }
 
@@ -73,6 +83,10 @@ case "$HOST" in
     arm-apple-darwin*)
 	./autogen.sh
 	build_ios
+	;;
+    x86_64-apple-darwin*)
+	./autogen.sh
+	build_macosx
 	;;
     arm32v7-linux-gnu)
 	./autogen.sh
