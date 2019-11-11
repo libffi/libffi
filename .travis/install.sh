@@ -22,8 +22,8 @@ else
 	    sudo apt-get install -y --allow-unauthenticated moxielogic-moxie-elf-gcc moxielogic-moxie-elf-gcc-c++ moxielogic-moxie-elf-gcc-libstdc++ moxielogic-moxie-elf-gdb-sim
 	    ;;
 	i686-w64-mingw32)
-	    sudo apt-get install gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine libsm6:i386;
-	    rm -rf testsuite/libffi.bhaible testsuite/libffi.go testsuite/libffi.complex testsuite/libffi.call/[e-z]*.c
+	    sudo apt-get install gcc-mingw-w64-i686 g++-mingw-w64-i686 binutils-mingw-w64-i686 wine libsm6:i386;
+	    ;; rm -rf testsuite/libffi.bhaible testsuite/libffi.go testsuite/libffi.complex testsuite/libffi.call/[e-z]*.c
 	    ;;
     esac
     case $HOST in
