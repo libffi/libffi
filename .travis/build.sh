@@ -6,7 +6,7 @@ function build_linux()
     ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
     make
     make dist
-    make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
+    WINEDEBUG=-all make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
     EXITCODE=$?
 
     gzip -c -9 */testsuite/libffi.log > libffi.log.gz

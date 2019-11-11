@@ -23,8 +23,8 @@ set_board_info target_install {i686-w64-mingw32}
 # of routines needed by the tool to communicate with the board.
 load_generic_config "sim"
 
-set_board_info sim "wineconsole"
-set_board_info simflags "--backend=curses"
+set_board_info sim "wineconsole --backend=curses"
+# set_board_info simflags "--backend=curses"
 set_board_info is_simulator 1
 
 # No multilib options needed by default.
