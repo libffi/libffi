@@ -41,6 +41,10 @@ function build_linux()
 function build_foreign_linux()
 {
     ${DOCKER} run --rm -t -i -v `pwd`:/opt ${SET_QEMU_CPU} -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.travis/build-in-container.sh
+
+    ./rlgl l https://rl.gl
+    ID=$(./rlgl start)
+    ./rlgl e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
     exit $?
 }
 
