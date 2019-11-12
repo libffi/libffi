@@ -21,7 +21,12 @@ fi
 
 function build_cfarm()
 {
-    curl -u ${CFARM_AUTH} https://cfarm-test-libffi-libffi.apps.home.labdroid.net/test?host=${HOST}\&commit=${TRAVIS_COMMIT}
+    curl -u ${CFARM_AUTH} https://cfarm-test-libffi-libffi.apps.home.labdroid.net/test?host=${HOST}\&commit=${TRAVIS_COMMIT} | tee libffi.log
+
+    ./rlgl l https://rl.gl
+    ID=$(./rlgl start)
+    ./rlgl e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git libffi.log
+    exit $?
 }
 
 function build_linux()
