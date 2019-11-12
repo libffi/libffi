@@ -14,7 +14,7 @@ export QEMU_LD_PREFIX=/usr/${HOST}
 make
 make dist
 make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
-EXITCODE=$?
+
 gzip -c -9 */testsuite/libffi.log > libffi.log.gz
 echo ================================================================
 echo The logs are too long for travis to handle, so we compress and
@@ -24,5 +24,8 @@ echo ================================================================
 uuencode libffi.log.gz -
 echo ================================================================
 echo ================================================================
-exit $EXITCODE
+
+ID=$(./rlgl start)
+./rlgl e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
+exit $?
 
