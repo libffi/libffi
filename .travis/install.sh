@@ -12,8 +12,6 @@ else
     # Download and extract the client
     wget -qO - http://rl.gl/cli/rlgl-linux-amd64.tgz | \
 	tar --strip-components=2 -xvzf - ./rlgl/rlgl
-    # Log into the server
-    ./rlgl login https://rl.gl
 
     sudo apt-get clean # clear the cache
     sudo apt-get update
