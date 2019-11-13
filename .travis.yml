@@ -9,8 +9,9 @@ language: cpp
 
 matrix:
   include:
-    - os: osx
-      env: HOST=aarch64-apple-darwin13
+# This configuration is still using the native x86 toolchain?
+#    - os: osx
+#      env: HOST=aarch64-apple-darwin13
     - os: osx
       env: HOST=x86_64-apple-darwin10
     - os: linux
@@ -29,13 +30,14 @@ matrix:
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O2"
     - os: linux
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O2 -fomit-frame-pointer"
+    - os: linux
+      env: HOST=aarch64-linux-gnu
 # The sparc64 linux system in the GCC compile farm is non-responsive.
 #    - os: linux
 #      env: HOST=sparc64-linux-gnu
-    - os: linux
-      env: HOST=aarch64-linux-gnu
-    - os: linux
-      env: HOST=powerpc64le-unknown-linux-gnu
+# Having problems getting logs for this one...
+#    - os: linux
+#      env: HOST=powerpc64le-unknown-linux-gnu
 # The mips64 linux system in the GCC compile farm is not allowing logins
 #    - os: linux
 #      env: HOST=mips64el-linux-gnu
