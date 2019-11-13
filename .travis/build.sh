@@ -26,7 +26,7 @@ function build_cfarm()
     echo $(tail build.log | grep '^==LOGFILE==')
     echo $(tail build.log | grep '^==LOGFILE==' | cut -b13-)
     echo :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    curl -u ${CFARM_AUTH} "$(tail build.log | grep '^== LOGFILE ==' | cut -b13-)" > libffi.log
+    curl -u ${CFARM_AUTH} "$(tail build.log | grep '^==LOGFILE==' | cut -b13-)" > libffi.log
 
     ./rlgl l https://rl.gl
     ID=$(./rlgl start)

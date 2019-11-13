@@ -36,8 +36,9 @@ matrix:
       env: HOST=aarch64-linux-gnu
     - os: linux
       env: HOST=powerpc64le-unknown-linux-gnu
-    - os: linux
-      env: HOST=mips64el-linux-gnu
+# The mips64 linux system in the GCC compile farm is not allowing logins
+#    - os: linux
+#      env: HOST=mips64el-linux-gnu
     - os: linux
       compiler: gcc
       env: HOST=i386-pc-linux-gnu MEVAL='export CC="$CC -m32" && CXX="$CXX -m32"'
