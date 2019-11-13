@@ -24,7 +24,7 @@ function build_cfarm()
     curl -u ${CFARM_AUTH} https://cfarm-test-libffi-libffi.apps.home.labdroid.net/test?host=${HOST}\&commit=${TRAVIS_COMMIT} | tee build.log
     echo :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     echo $(grep '==LOGFILE==' build.log)
-    echo $(grep '==LOGFILE==' build.log | cut -b15-)
+    echo $(grep '==LOGFILE==' build.log | cut -b13-)
     echo :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     curl -u ${CFARM_AUTH} "$(grep '== LOGFILE ==' build.log | cut -b15-)" > libffi.log
 
