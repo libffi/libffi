@@ -6,10 +6,14 @@ if [[ $TRAVIS_OS_NAME != 'linux' ]]; then
     # fix an issue with libtool on travis by reinstalling it
     brew uninstall libtool;
     brew install libtool dejagnu;
+
+    # Download and extract the rlgl client
+    wget -qO - https://rl.gl/cli/rlgl-darwin-amd64.tgz | \
+	tar --strip-components=2 -xvzf - ./rlgl/rlgl
+
 else
 
-    # Configure the rlgl cli.
-    # Download and extract the client
+    # Download and extract the rlgl client
     wget -qO - http://rl.gl/cli/rlgl-linux-amd64.tgz | \
 	tar --strip-components=2 -xvzf - ./rlgl/rlgl
 
