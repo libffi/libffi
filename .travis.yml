@@ -14,8 +14,9 @@ matrix:
 #      env: HOST=aarch64-apple-darwin13
     - os: osx
       env: HOST=x86_64-apple-darwin10
-    - os: linux
-      env: HOST=x86_64-w64-mingw32 MEVAL='export CC="x86_64-w64-mingw32-gcc" && CXX="x86_64-w64-mingw32-g++" RUNTESTFLAGS="--target_board wine-sim" DEJAGNU="$TRAVIS_BUILD_DIR/.travis/site.exp" CONFIGURE_OPTIONS=--disable-shared LIBFFI_TEST_OPTIMIZATION="-O2"
+# This currently exceeds the 50min timeout on travis-ci      
+#    - os: linux
+#      env: HOST=x86_64-w64-mingw32 MEVAL='export CC="x86_64-w64-mingw32-gcc" && CXX="x86_64-w64-mingw32-g++" RUNTESTFLAGS="--target_board wine-sim" DEJAGNU="$TRAVIS_BUILD_DIR/.travis/site.exp" CONFIGURE_OPTIONS=--disable-shared LIBFFI_TEST_OPTIMIZATION="-O2"
     - os: linux
       env: HOST=sh4-linux-gnu CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/sh4-linux-gnu
     - os: linux
