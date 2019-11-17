@@ -85,8 +85,9 @@ ffi_call_int (ffi_cif *cif,
      can write r3 and r4 to memory without worrying about struct size.
    
      For ELFv2 ABI, use a bounce buffer for homogeneous structs too,
-     for similar reasons.  */
-  unsigned long smst_buffer[8];
+     for similar reasons. This bounce buffer must be aligned to 16
+     bytes for use with homogeneous structs of vectors (float128).  */
+  float128 smst_buffer[8];
   extended_cif ecif;
 
   ecif.cif = cif;
