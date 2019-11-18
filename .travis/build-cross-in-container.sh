@@ -12,6 +12,6 @@ ls -l /usr/local/bin
 ./configure --host=${HOST}
 make
 make dist
-make check RUNTESTFLAGS="-v -v -v -v -a $RUNTESTFLAGS" || true
+make check RUNTESTFLAGS="-a $RUNTESTFLAGS" || true
 
 
