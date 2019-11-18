@@ -122,6 +122,10 @@ case "$HOST" in
 	./autogen.sh
 	build_cross
 	;;
+    or1k-elf )
+	./autogen.sh
+	build_cross
+	;;
     m68k-linux-gnu )
 	./autogen.sh
 	GCC_OPTIONS=-mcpu=547x build_cross_linux
