@@ -70,7 +70,7 @@ function build_cross_linux()
 
 function build_cross()
 {
-    ${DOCKER} run --rm -t -i -v `pwd`:/opt -e HOST="${HOST}" -e CC="${HOST}-gcc ${GCC_OPTIONS}" -e CXX="${HOST}-g++ ${GCC_OPTIONS}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" moxielogic/libffi-ci-${HOST}:latest bash -c /opt/.travis/build-cross-in-container.sh
+    ${DOCKER} run --rm -t -i -v `pwd`:/opt -e HOST="${HOST}" -e CC="${HOST}-gcc ${GCC_OPTIONS}" -e CXX="${HOST}-g++ ${GCC_OPTIONS}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" docker.io/moxielogic/libffi-ci-${HOST} bash -c /opt/.travis/build-cross-in-container.sh
 
     ./rlgl l https://rl.gl
     ID=$(./rlgl start)
