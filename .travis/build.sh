@@ -68,6 +68,16 @@ function build_cross_linux()
     exit $?
 }
 
+function build_cross()
+{
+    ${DOCKER} run --rm -t -i -v `pwd`:/opt -e HOST="${HOST}" -e CC="${HOST}-gcc ${GCC_OPTIONS}" -e CXX="${HOST}-g++ ${GCC_OPTIONS}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" moxielogic/libffi-ci-${HOST}:latest bash -c /opt/.travis/build-cross-in-container.sh
+
+    ./rlgl l https://rl.gl
+    ID=$(./rlgl start)
+    ./rlgl e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
+    exit $?
+}
+
 function build_ios()
 {
     which python
@@ -103,6 +113,14 @@ case "$HOST" in
 	;;
     aarch64-linux-gnu| powerpc64le-unknown-linux-gnu | mips64el-linux-gnu | sparc64-linux-gnu)
         build_cfarm
+	;;
+    bfin-elf )
+	./autogen.sh
+	GCC_OPTIONS=-msim build_cross
+	;;
+    m32r-elf )
+	./autogen.sh
+	build_cross
 	;;
     m68k-linux-gnu )
 	./autogen.sh

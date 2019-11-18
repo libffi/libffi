@@ -9,6 +9,9 @@ language: cpp
 
 matrix:
   include:
+    - os: linux
+      env: HOST=m32r-elf RUNTESTFLAGS="--target_board m32r-sim" DEJAGNU="$TRAVIS_BUI    - os: linux
+      env: HOST=bfin-elf RUNTESTFLAGS="--target_board bfin-sim" DEJAGNU="$TRAVIS_BUILD_DIR/.travis/site.exp"
 # This configuration is still using the native x86 toolchain?
 #    - os: osx
 #      env: HOST=aarch64-apple-darwin13
