@@ -71,7 +71,7 @@ function build_cross_linux()
 function build_cross()
 {
     ${DOCKER} pull quay.io/moxielogic/libffi-ci-${HOST} 
-    ${DOCKER} run --rm -t -i -v `pwd`:/opt -e HOST="${HOST}" -e CC="${HOST}-gcc ${GCC_OPTIONS}" -e CXX="${HOST}-g++ ${GCC_OPTIONS}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" quay.io/moxielogic/libffi-ci-${HOST} bash -c /opt/.travis/build-cross-in-container.sh
+    ${DOCKER} run --rm -t -i -v `pwd`:/opt -e HOST="${HOST}" -e CC="${HOST}-gcc ${GCC_OPTIONS}" -e CXX="${HOST}-g++ ${GCC_OPTIONS}" -e DEJAGNU="${DEJAGNU}" -e RUNTESTFLAGS="${RUNTESTFLAGS}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" quay.io/moxielogic/libffi-ci-${HOST} bash -c /opt/.travis/build-cross-in-container.sh
 
     ./rlgl l https://rl.gl
     ID=$(./rlgl start)
