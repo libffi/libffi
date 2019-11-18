@@ -2,6 +2,11 @@
 
 cd /opt
 
+set -x
+echo $PATH
+export PATH=/usr/local/bin:$PATH
+echo $PATH
+
 ./configure --host=${HOST}
 make
 make dist
