@@ -20,5 +20,8 @@ case "$target_triplet" in {
     { "moxie-elf" } {
 	set target_list "moxie-sim"
     }
+    { "or1k-elf" } {
+	set target_list "or1k-sim"
+    }
 }
 
