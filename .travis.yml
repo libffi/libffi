@@ -10,11 +10,11 @@ language: cpp
 matrix:
   include:
     - os: linux
-      env: HOST=or1k-elf RUNTESTFLAGS="--target_board or1k-sim" DEJAGNU="$TRAVIS_BUILD_DIR/.travis/site.exp"
+      env: HOST=or1k-elf RUNTESTFLAGS="--target_board or1k-sim" DEJAGNU="/opt/.travis/site.exp"
     - os: linux
-      env: HOST=m32r-elf RUNTESTFLAGS="--target_board m32r-sim" DEJAGNU="$TRAVIS_BUILD_DIR/.travis/site.exp"
+      env: HOST=m32r-elf RUNTESTFLAGS="--target_board m32r-sim" DEJAGNU="/opt/.travis/site.exp"
     - os: linux
-      env: HOST=bfin-elf RUNTESTFLAGS="--target_board bfin-sim" DEJAGNU="$TRAVIS_BUILD_DIR/.travis/site.exp"
+      env: HOST=bfin-elf RUNTESTFLAGS="--target_board bfin-sim" DEJAGNU="/opt/.travis/site.exp"
 # This configuration is still using the native x86 toolchain?
 #    - os: osx
 #      env: HOST=aarch64-apple-darwin13
