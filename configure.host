@@ -178,7 +178,7 @@ case "${host}" in
 	SOURCES="ffi.c sysv.S"
 	;;
 
-  or1k*-linux*)
+  or1k*-*-*)
 	TARGET=OR1K; TARGETDIR=or1k
 	SOURCES="ffi.c sysv.S"
 	;;
