@@ -14,8 +14,7 @@ if BUILD_DOCS
 SUBDIRS += doc
 endif
 
-EXTRA_DIST = LICENSE ChangeLog.v1 ChangeLog.libgcj			\
-	ChangeLog.libffi ChangeLog.libffi-3.1				\
+EXTRA_DIST = LICENSE ChangeLog.old					\
 	m4/libtool.m4 m4/lt~obsolete.m4					\
 	 m4/ltoptions.m4 m4/ltsugar.m4 m4/ltversion.m4			\
 	 m4/ltversion.m4 src/debug.c msvcc.sh				\
