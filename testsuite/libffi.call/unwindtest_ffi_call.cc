@@ -4,7 +4,7 @@
    PR:		none.
    Originator:	Andreas Tobler <andreast@gcc.gnu.org> 20061213  */
 
-/* { dg-do run { xfail moxie*-*-* or1k-*-* } } */
+/* { dg-do run { xfail moxie*-*-* or1k-unknown-elf } } */
 
 #include "ffitest.h"
 
