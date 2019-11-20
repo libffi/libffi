@@ -32,9 +32,20 @@ if { [string match $compiler_vendor "microsoft"] } {
     set additional_options "";
 }
 
-set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/*.{c,cc}]]
+set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/*.c]]
 
 run-many-tests $tlist $additional_options
+
+set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/*.cc]]
+
+# No C++ for or1k
+if { [istarget "or1k-*-*"] } {
+    foreach test $tlist {
+        unsupported "$test"
+    }
+} else {
+    run-many-tests $tlist $additional_options
+}
 
 dg-finish
 
