@@ -200,12 +200,12 @@ See the git log for details at http://github.com/libffi/libffi.
     3.3 TBD
         Add RISC-V support.
         New API in support of GO closures.
-	Add IEEE754 binary128 long double support for 64-bit Power
+        Add IEEE754 binary128 long double support for 64-bit Power
         Default to Microsoft's 64 bit long double ABI with Visual C++.
         GNU compiler uses 80 bits (128 in memory) FFI_GNUW64 ABI.
         Add Windows on ARM64 (WOA) support.
         Add Windows 32-bit ARM support.
-	Raw java (gcj) API deprecated.
+        Raw java (gcj) API deprecated.
         Many new tests cases and bug fixes.
         
     3.2.1 Nov-12-14
