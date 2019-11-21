@@ -423,7 +423,9 @@ developers:
 
     aarch64             Marcus Shawcroft, James Greenhalgh
     alpha               Richard Henderson
+    arc                 Hackers at Synopsis
     arm                 Raffaele Sena
+    avr32               Bradley Smith
     blackfin            Alexandre Keunecke I. de Mendonca
     cris                Simon Posnjak, Hans-Peter Nilsson
     frv                 Anthony Green
@@ -431,6 +433,7 @@ developers:
     m32r                Kazuhiro Inaoka
     m68k                Andreas Schwab
     m88k                Miod Vallat
+    metag               Hackers at Imagination Technologies
     microblaze          Nathan Rossi
     mips                Anthony Green, Casey Marshall
     mips64              David Daney
@@ -441,6 +444,7 @@ developers:
     powerpc             Geoffrey Keating, Andreas Tobler,
                         David Edelsohn, John Hornkvist
     powerpc64           Jakub Jelinek
+    riscv               Michael Knyszek, Andrew Waterman, Stef O'Rear
     s390                Gerhard Tonn, Ulrich Weigand
     sh                  Kaz Kojima
     sh64                Kaz Kojima
