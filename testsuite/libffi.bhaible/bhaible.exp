@@ -19,7 +19,6 @@ libffi-init
 
 global srcdir subdir
 global compiler_vendor
-global has_gccbug
 
 # The conversion of this testsuite into a dejagnu compatible testsuite
 # was done in a pretty lazy fashion, and requires the use of compiler
