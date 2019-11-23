@@ -4,7 +4,7 @@ Status
 [![Build Status](https://travis-ci.org/libffi/libffi.svg?branch=master)](https://travis-ci.org/libffi/libffi)
 [![Build status](https://ci.appveyor.com/api/projects/status/8lko9vagbx4w2kxq?svg=true)](https://ci.appveyor.com/project/atgreen/libffi)
 
-libffi-3.3-rc3 was released on November 9, 2019.  Check the libffi web
+libffi-3.3 was released on November 23, 2019.  Check the libffi web
 page for updates: <URL:http://sourceware.org/libffi/>.
 
 
@@ -197,7 +197,7 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
-    3.3 TBD
+    3.3 Nov-23-19
         Add RISC-V support.
         New API in support of GO closures.
         Add IEEE754 binary128 long double support for 64-bit Power
@@ -206,6 +206,7 @@ See the git log for details at http://github.com/libffi/libffi.
         Add Windows on ARM64 (WOA) support.
         Add Windows 32-bit ARM support.
         Raw java (gcj) API deprecated.
+	Add pre-built PDF documentation to source distribution.
         Many new tests cases and bug fixes.
         
     3.2.1 Nov-12-14
