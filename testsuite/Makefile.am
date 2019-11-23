@@ -18,7 +18,7 @@ libffi.call/align_mixed.c libffi.call/ffitest.h libffi.call/struct4.c \
 libffi.call/return_ldl.c libffi.call/float3.c libffi.call/return_sl.c \
 libffi.call/return_dbl1.c libffi.call/err_bad_typedef.c \
 libffi.call/return_ll1.c libffi.call/return_dbl2.c \
-libffi.call/negint.c libffi.call/nested_struct3.c \
+libffi.call/negint.c libffi.closures/nested_struct3.c \
 libffi.call/struct2.c libffi.call/struct3.c libffi.call/return_fl.c \
 libffi.call/offsets.c libffi.call/struct7.c libffi.call/va_struct3.c \
 libffi.call/float1.c libffi.call/uninitialized.c libffi.call/many2.c \
