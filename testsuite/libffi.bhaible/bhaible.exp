@@ -47,7 +47,13 @@ for {set i 1} {$i < 82} {incr i} {
 set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/test-callback.c]]
 
 for {set i 1} {$i < 81} {incr i} {
-    run-many-tests $tlist [format "-DDGTEST=%d %s" $i $warning_options]
+    if { [libffi_feature_test "#if FFI_CLOSURES"] } {
+        run-many-tests $tlist [format "-DDGTEST=%d %s" $i $warning_options]
+    } else {
+        foreach test $tlist {
+            unsupported [format "%s -DDGTEST=%d %s" $test $i $warning_options]
+        }
+    }
 }
 
 dg-finish

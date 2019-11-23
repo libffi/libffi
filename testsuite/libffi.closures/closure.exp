@@ -43,6 +43,22 @@ if { [libffi_feature_test "#if FFI_CLOSURES"] } {
     }
 }
 
+set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/*.cc]]
+
+# No C++ for or1k
+if { [istarget "or1k-*-*"] } {
+    foreach test $tlist {
+        unsupported "$test"
+    }
+} else {
+    if { [libffi_feature_test "#if FFI_CLOSURES"] } {
+        run-many-tests $tlist  $additional_options
+    } else {
+        foreach test $tlist {
+	    unsupported "$test"
+    }
+}
+
 dg-finish
 
 # Local Variables:
