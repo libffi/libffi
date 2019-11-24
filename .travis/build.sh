@@ -8,15 +8,7 @@ else
     export SET_QEMU_CPU="-e QEMU_CPU=${QEMU_CPU}"
 fi
 
-# Default to podman where available, docker otherwise.
-# Override by setting the DOCKER environment variable.
-if test -z "$DOCKER"; then
-  if command -v podman > /dev/null; then
-    export DOCKER=docker
-  else
-    export DOCKER=podman
-  fi
-fi
+export DOCKER=docker
 
 function build_cfarm()
 {
