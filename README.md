@@ -101,7 +101,6 @@ tested:
 | X86             | Interix          | GCC                     |
 | X86             | kFreeBSD         | GCC                     |
 | X86             | Linux            | GCC                     |
-| X86             | Mac OSX          | GCC                     |
 | X86             | OpenBSD          | GCC                     |
 | X86             | OS/2             | GCC                     |
 | X86             | Solaris          | GCC                     |
