@@ -206,8 +206,8 @@ See the git log for details at http://github.com/libffi/libffi.
         Add Windows on ARM64 (WOA) support.
         Add Windows 32-bit ARM support.
         Raw java (gcj) API deprecated.
-	Add pre-built PDF documentation to source distribution.
-        Many new tests cases and bug fixes.
+        Add pre-built PDF documentation to source distribution.
+        Many new test cases and bug fixes.
         
     3.2.1 Nov-12-14
         Build fix for non-iOS AArch64 targets.
