@@ -14,6 +14,10 @@ if [[ $TRAVIS_OS_NAME != 'linux' ]]; then
 else
     # Download and extract the rlgl client
     case $HOST in
+	aarch64-linux-gnu)
+	    wget -qO - https://rl.gl/cli/rlgl-linux-arm.tgz | \
+		tar --strip-components=2 -xvzf - ./rlgl/rlgl;
+	    ;;
 	ppc64le-linux-gnu)
 	    wget -qO - https://rl.gl/cli/rlgl-linux-ppc64le.tgz | \
 		tar --strip-components=2 -xvzf - ./rlgl/rlgl;
@@ -31,7 +35,7 @@ else
     sudo apt-get clean # clear the cache
     sudo apt-get update
     case $HOST in
-	aarch64-linux-gnu | mips64el-linux-gnu | sparc64-linux-gnu)
+	mips64el-linux-gnu | sparc64-linux-gnu)
         ;;	  
 	alpha-linux-gnu | arm32v7-linux-gnu | m68k-linux-gnu | sh4-linux-gnu)
 	    sudo apt-get install qemu-user-static
@@ -57,7 +61,7 @@ else
 	    ;;
     esac
     case $HOST in
-	arm32v7-linux-gnu | aarch64-linux-gnu)
+	arm32v7-linux-gnu)
         # don't install host tools
         ;;
 	*)

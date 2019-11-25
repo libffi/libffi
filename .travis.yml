@@ -35,6 +35,9 @@ matrix:
       arch: ppc64le
       env: HOST=ppc64le-linux-gnu
     - os: linux
+      arch: arm64
+      env: HOST=aarch64-linux-gnu
+    - os: linux
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O0"
     - os: linux
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O2"
@@ -43,8 +46,6 @@ matrix:
 # The sparc64 linux system in the GCC compile farm is non-responsive.
 #    - os: linux
 #      env: HOST=sparc64-linux-gnu
-#    - os: linux
-#      env: HOST=aarch64-linux-gnu
 # The mips64 linux system in the GCC compile farm is not allowing logins
 #    - os: linux
 #      env: HOST=mips64el-linux-gnu
