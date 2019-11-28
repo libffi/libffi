@@ -190,6 +190,9 @@ case "${host}" in
   powerpc-*-amigaos*)
 	TARGET=POWERPC; TARGETDIR=powerpc
 	;;
+  powerpc-*-eabi*)
+	TARGET=POWERPC; TARGETDIR=powerpc
+	;;
   powerpc-*-beos*)
 	TARGET=POWERPC; TARGETDIR=powerpc
 	;;
