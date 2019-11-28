@@ -28,7 +28,7 @@ function build_cfarm()
 function build_linux()
 {
     ./autogen.sh
-    ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS}
+    ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS} || cat */config.log
     make
     make dist
     make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
@@ -115,6 +115,10 @@ case "$HOST" in
 	build_cross
 	;;
     or1k-elf )
+	./autogen.sh
+	build_cross
+	;;
+    powerpc-eabisim )
 	./autogen.sh
 	build_cross
 	;;

@@ -10,6 +10,8 @@ language: cpp
 matrix:
   include:
     - os: linux
+      env: HOST=powerpc-eabisim RUNTESTFLAGS="--target_board powerpc-eabisim" DEJAGNU="/opt/.travis/site.exp"
+    - os: linux
       env: HOST=or1k-elf RUNTESTFLAGS="--target_board or1k-sim" DEJAGNU="/opt/.travis/site.exp"
     - os: linux
       env: HOST=m32r-elf RUNTESTFLAGS="--target_board m32r-sim" DEJAGNU="/opt/.travis/site.exp"
