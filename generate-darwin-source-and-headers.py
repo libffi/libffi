@@ -173,7 +173,6 @@ def generate_source_and_headers(generate_osx=True, generate_ios=True):
         copy_src_platform_files(device_platform)
         copy_src_platform_files(device64_platform)
     if generate_osx:
-#        copy_src_platform_files(desktop32_platform)
         copy_src_platform_files(desktop64_platform)
 
     platform_headers = collections.defaultdict(set)
@@ -184,7 +183,6 @@ def generate_source_and_headers(generate_osx=True, generate_ios=True):
         build_target(device_platform, platform_headers)
         build_target(device64_platform, platform_headers)
     if generate_osx:
-#        build_target(desktop32_platform, platform_headers)
         build_target(desktop64_platform, platform_headers)
 
     mkdir_p('darwin_common/include')

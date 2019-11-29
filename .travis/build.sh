@@ -87,6 +87,7 @@ function build_macosx()
     ./generate-darwin-source-and-headers.py --only-osx
     xcodebuild -showsdks
     xcodebuild -project libffi.xcodeproj -target "libffi-Mac" -configuration Release -sdk macosx10.13
+    echo "Finished build"
     exit $?
 }
 
