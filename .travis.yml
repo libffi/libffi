@@ -25,7 +25,7 @@ env:
 matrix:
   include:
     - os: linux
-      env: HOST=arm-linux-androideabi RUNTESTFLAGS="--target_board android-adb DEJAGNU="/opt/.travis/site.exp"
+      env: HOST=arm-linux-androideabi RUNTESTFLAGS="-v -v -v --target_board android-adb" DEJAGNU="/opt/.travis/site.exp"
 
 before_install:
   # Set up JDK 8 for Android SDK - Java is universally needed: codacy, unit tests, emulators
