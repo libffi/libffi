@@ -62,7 +62,11 @@ typedef _Float128 float128;
 #elif defined(__FLOAT128__)
 typedef __float128 float128;
 #else
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+typedef __int128 float128;
+#else
 typedef char float128[16] __attribute__((aligned(16)));
+#endif
 #endif
 
 void FFI_HIDDEN ffi_closure_SYSV (void);
