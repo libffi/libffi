@@ -6,10 +6,11 @@ language: android
 matrix:
   include:
     - os: linux
-      env: HOST=arm8-android RUNTESTFLAGS="--target_board android DEJAGNU="/opt/.travis/site.exp"
+      env: HOST=arm-eabi RUNTESTFLAGS="--target_board android DEJAGNU="/opt/.travis/site.exp"
 
 before_install:
   - android list sdk --no-ui --all --extended
+  - find /usr/local/android-sdk/tools/bin -type f
   - if test x"$MEVAL" != x; then eval ${MEVAL}; fi
 
 install:
