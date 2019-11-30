@@ -1,0 +1,155 @@
+# Copyright (C) 2009 Free Software Foundation, Inc.
+#
+# This file is part of DejaGnu.
+#
+# DejaGnu is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# DejaGnu is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with DejaGnu; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+#
+# Get serial number in case of multiple devices
+#
+proc adb_serial {} {
+    set serial "[getenv ADB_SERIAL]"
+    if { $serial == "" } {
+      return ""
+    } else {
+      return "-s $serial"
+    }
+}
+
+#
+# Connect to hostname using adb
+#
+proc adb_open { hostname } {
+    global spawn_id
+
+    set tries 0
+    set result -1
+
+    if [board_info ${hostname} exists shell_prompt] {
+	set shell_prompt [board_info ${hostname} shell_prompt]
+    } else {
+	set shell_prompt "# "
+    }
+
+    if [board_info $hostname exists fileid] {
+	unset board_info($hostname,fileid)
+    }
+
+    spawn adb [adb_serial] shell
+    if { $spawn_id < 0 } {
+	perror "invalid spawn id from adb"
+	return -1
+    }
+
+    send "\r\n"
+    while { $tries <= 3 } {
+	expect {
+	    -re ".*$shell_prompt.*$" {
+		verbose "Got prompt\n"
+		set result 0
+		break
+	    }
+	    timeout {
+		warning "adb shell: timed out trying to connect."
+	    }
+	    eof {
+		perror "adb shell: got EOF while trying to connect."
+		break
+	    }
+	}
+	incr tries
+    }
+
+    if { $result < 0 } {
+	#	perror "adb shell: couldn't connect after $tries tries."
+	close -i $spawn_id
+	set spawn_id -1
+    } else {
+	set board_info($hostname,fileid) $spawn_id
+    }
+
+    return $spawn_id
+}
+
+#
+# Download $srcfile to $destfile on $desthost.
+#
+
+proc adb_download {desthost srcfile destfile} {
+    set status [catch "exec adb [adb_serial] shell rm $destfile |& cat" output]
+    set status [catch "exec adb [adb_serial] push $srcfile $destfile |& cat" output]
+    if { $status == 0 } {
+	verbose "Copied $srcfile to $destfile" 2
+	return $destfile
+    } else {
+	verbose "Download to target failed, $output."
+	return ""
+    }
+}
+
+proc adb_upload {desthost srcfile destfile} {
+    set status [catch "exec adb [adb_serial] pull $srcfile $destfile" output]
+    if { $status == 0 } {
+	verbose "Copied $srcfile to $destfile" 2
+	return $destfile
+    } else {
+	verbose "Upload from $desthost failed, $output."
+	return ""
+    }
+}
+
+#
+# Execute "$cmd $args[0]" on $boardname.
+#
+proc adb_exec { boardname cmd args } {
+    if { [llength $args] > 0 } {
+	set pargs [lindex $args 0]
+	if { [llength $args] > 1 } {
+	    set inp [lindex $args 1]
+	} else {
+	    set inp ""
+	}
+    } else {
+	set pargs ""
+	set inp ""
+    }
+
+    verbose "Executing $boardname:$cmd $pargs < $inp"
+
+    # If CMD sends any output to stderr, exec will think it failed.  More often
+    # than not that will be true, but it doesn't catch the case where there is
+    # no output but the exit code is non-zero.
+    if { $inp == "" } {
+	set inp "/dev/null"
+    }
+
+    set status [catch "exec cat $inp | adb [adb_serial] shell \( $cmd $pargs \) \\; echo XYZ\\\$\\\{\?\\\}ZYX |& cat" output]
+    # `status' doesn't mean much here other than adb worked ok.
+    # What we want is whether $cmd ran ok.
+    if { $status != 0 } {
+	regsub "XYZ(\[0-9\]*)ZYX\n?" $output "" output
+	return [list -1 "adb to $boardname failed for $cmd, $output"]
+    }
+    regexp "XYZ(\[0-9\]*)ZYX" $output junk status
+    verbose "adb_exec: status:$status text:$output" 4
+    if { $status == "" } {
+	return [list -1 "Couldn't parse adb output, $output."]
+    }
+    regsub "XYZ(\[0-9\]*)ZYX\n?" $output "" output
+    # Delete one trailing \n because that is what `exec' will do and we want
+    # to behave identical to it.
+    regsub "\n$" $output "" output
+    return [list [expr $status != 0] $output]
+}

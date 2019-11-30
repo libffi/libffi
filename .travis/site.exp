@@ -23,5 +23,8 @@ case "$target_triplet" in {
     { "or1k-elf" } {
 	set target_list "or1k-sim"
     }
+    { "aarch64-linux-android" } {
+	set target_list "android-adb"
+    }
 }
 
