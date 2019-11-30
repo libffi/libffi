@@ -12,12 +12,12 @@ env:
 matrix:
   include:
     - os: linux
-      env: HOST=arm-eabi RUNTESTFLAGS="--target_board android DEJAGNU="/opt/.travis/site.exp"
+      env: HOST=arm-linux-androideabi RUNTESTFLAGS="--target_board android DEJAGNU="/opt/.travis/site.exp"
 
 before_install:
-  - wget -q https://dl.google.com/android/repository/android-ndk-r20b-linux-x86_64.zip -O android-sdk-tools.zip
+  - wget -q https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip -O android-sdk-tools.zip
+#  - wget -q https://dl.google.com/android/repository/android-ndk-r20b-linux-x86_64.zip -O android-sdk-tools.zip
   - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
-  - find ${ANDROID_HOME} -type f
   - rm android-sdk-tools.zip
   - mkdir ~/.android
   - echo 'count=0' > ~/.android/repositories.cfg
@@ -27,6 +27,7 @@ before_install:
   - echo y | sdkmanager --no_https "build-tools;28.0.3" >/dev/null
   - echo y | sdkmanager --no_https "platforms;android-28" >/dev/null
   - find ${ANDROID_HOME} -type f
+
 
 install:
   - travis_wait 30 ./.travis/install.sh
