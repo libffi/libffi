@@ -1,5 +1,6 @@
 ---
 sudo: required
+dist: bionic
 
 language: c
 
@@ -8,6 +9,8 @@ env:
     - ANDROID_HOME=${HOME}/android-sdk
     - TOOLS=${ANDROID_HOME}/tools
     - PATH=${ANDROID_HOME}:${ANDROID_HOME}/emulator:${TOOLS}:${TOOLS}/bin:${ANDROID_HOME}/platform-tools:${PATH}
+    - GRAVIS="https://raw.githubusercontent.com/DanySK/Gravis-CI/master/"
+    - JDK="1.8"
 
 matrix:
   include:
@@ -15,6 +18,11 @@ matrix:
       env: HOST=arm-linux-androideabi RUNTESTFLAGS="--target_board android DEJAGNU="/opt/.travis/site.exp"
 
 before_install:
+  # Set up JDK 8 for Android SDK - Java is universally needed: codacy, unit tests, emulators
+  - curl "${GRAVIS}.install-jdk-travis.sh" --output ~/.install-jdk-travis.sh
+  - export TARGET_JDK="${JDK}"
+  - JDK="1.8"
+  - source ~/.install-jdk-travis.sh
   - wget -q https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip -O android-sdk-tools.zip
 #  - wget -q https://dl.google.com/android/repository/android-ndk-r20b-linux-x86_64.zip -O android-sdk-tools.zip
   - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
