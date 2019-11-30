@@ -45,7 +45,6 @@ before_install:
   - echo y | sdkmanager --no_https "platforms;android-28" >/dev/null
   - echo y | sdkmanager --no_https "ndk;20.1.5948944" >/dev/null
   - echo y | sdkmanager --no_https --list
-  - find ${ANDROID_HOME} -type f
 
 install:
   - travis_wait 30 ./.travis/install.sh
