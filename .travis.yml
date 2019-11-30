@@ -56,7 +56,7 @@ script:
   - ./autogen.sh
   - ./configure --host aarch64-linux-android
   - make
-  - ls -l $(ANDROID_HOME)/emulator
+  - ls -l ${ANDROID_HOME}/emulator
   - emulator-headless -avd testlibffi -no-skin -no-audio -no-window &
   - sleep 30 # FIXME
   - make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
