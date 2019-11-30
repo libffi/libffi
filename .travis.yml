@@ -11,6 +11,16 @@ env:
     - PATH=${ANDROID_HOME}:${ANDROID_HOME}/emulator:${TOOLS}:${TOOLS}/bin:${ANDROID_HOME}/platform-tools:${PATH}
     - GRAVIS="https://raw.githubusercontent.com/DanySK/Gravis-CI/master/"
     - JDK="1.8"
+    - HOST_TAG=linux-x86_64
+    - NDK=${ANDROID_HOME}/ndk/20.1.5948944
+    - TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/$HOST_TAG
+    - AR=$TOOLCHAIN/bin/aarch64-linux-android-ar
+    - AS=$TOOLCHAIN/bin/aarch64-linux-android-as
+    - CC=$TOOLCHAIN/bin/aarch64-linux-android21-clang
+    - CXX=$TOOLCHAIN/bin/aarch64-linux-android21-clang++
+    - LD=$TOOLCHAIN/bin/aarch64-linux-android-ld
+    - RANLIB=$TOOLCHAIN/bin/aarch64-linux-android-ranlib
+    - STRIP=$TOOLCHAIN/bin/aarch64-linux-android-strip
 
 matrix:
   include:
@@ -24,7 +34,6 @@ before_install:
   - JDK="1.8"
   - source ~/.install-jdk-travis.sh
   - wget -q https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip -O android-sdk-tools.zip
-#  - wget -q https://dl.google.com/android/repository/android-ndk-r20b-linux-x86_64.zip -O android-sdk-tools.zip
   - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
   - rm android-sdk-tools.zip
   - mkdir ~/.android
@@ -38,11 +47,11 @@ before_install:
   - echo y | sdkmanager --no_https --list
   - find ${ANDROID_HOME} -type f
 
-
 install:
   - travis_wait 30 ./.travis/install.sh
 
 script:
-  - if ! test x"$MEVAL" = x; then eval ${MEVAL}; fi
   - travis_wait 115 sleep infinity &
-  - ./.travis/build.sh
+  - ./configure --host aarch64-linux-android
+  - make
+  - make check
