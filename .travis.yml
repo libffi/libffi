@@ -46,7 +46,7 @@ before_install:
   - echo y | sdkmanager --no_https "ndk;20.1.5948944" >/dev/null
   - echo y | sdkmanager --no_https --list
   - sdkmanager "system-images;android-24;default;arm64-v8a"
-  - echo n | avdmanager create avd --name test -k "system-images;android-24;default;arm64-v8a"
+  - echo n | avdmanager create avd --name testlibffi -k "system-images;android-24;default;arm64-v8a"
 
 install:
   - travis_wait 30 ./.travis/install.sh
@@ -56,6 +56,6 @@ script:
   - ./autogen.sh
   - ./configure --host aarch64-linux-android
   - make
-  - emulator -avd testemulator -no-skin -no-audio -no-window &
-  - android-wait-for-emulator
+  - emulator -avd testlibffi -no-skin -no-audio -no-window &
+  - sleep 30 # FIXME
   - make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
