@@ -16,6 +16,7 @@ before_install:
   - wget -q https://dl.google.com/android/repository/android-ndk-r20b-linux-x86_64.zip -O android-sdk-tools.zip
   - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
   - rm android-sdk-tools.zip
+  - mkdir ~/.android
   - echo 'count=0' > ~/.android/repositories.cfg
   - yes | sdkmanager --licenses >/dev/null
   - echo y | sdkmanager --no_https "platform-tools" >/dev/null
