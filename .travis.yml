@@ -25,7 +25,7 @@ env:
 matrix:
   include:
     - os: linux
-      env: HOST=arm-linux-androideabi RUNTESTFLAGS="--target_board android DEJAGNU="/opt/.travis/site.exp"
+      env: HOST=arm-linux-androideabi RUNTESTFLAGS="--target_board android-adb DEJAGNU="/opt/.travis/site.exp"
 
 before_install:
   # Set up JDK 8 for Android SDK - Java is universally needed: codacy, unit tests, emulators
@@ -45,6 +45,8 @@ before_install:
   - echo y | sdkmanager --no_https "platforms;android-28" >/dev/null
   - echo y | sdkmanager --no_https "ndk;20.1.5948944" >/dev/null
   - echo y | sdkmanager --no_https --list
+  - sdkmanager "system-images;android-24;default;arm64-v8a"
+  - echo n | avdmanager create avd --name test -k "system-images;android-24;default;arm64-v8a"
 
 install:
   - travis_wait 30 ./.travis/install.sh
@@ -54,4 +56,6 @@ script:
   - ./autogen.sh
   - ./configure --host aarch64-linux-android
   - make
-  - RUNTESTFLAGS="--target_board android-adb" DEJAGNU="$TRAVIS_BUILD_DIR/.travis/site.exp" make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
+  - emulator -avd testemulator -no-skin -no-audio -no-window &
+  - android-wait-for-emulator
+  - make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
