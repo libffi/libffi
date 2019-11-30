@@ -48,6 +48,7 @@ before_install:
   - echo y | sdkmanager --no_https --list
   - sdkmanager "system-images;android-24;default;arm64-v8a"
   - echo n | avdmanager create avd --name testlibffi -k "system-images;android-24;default;arm64-v8a"
+  - find /home/travis/.android/avd | xargs ls -l
   - ls -l /home/travis/.android/avd/testlibffi.avd/snapshots/default_boot/ram.img
   - sudo chgrp libvirt /home/travis/.android/avd/testlibffi.avd/snapshots/default_boot/ram.img
   - chmod 766 /home/travis/.android/avd/testlibffi.avd/snapshots/default_boot/ram.img
