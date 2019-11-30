@@ -6,6 +6,8 @@ language: c
 env:
   global:
     - ANDROID_HOME=${HOME}/android-sdk
+    - TOOLS=${ANDROID_HOME}/tools
+    - PATH=${ANDROID_HOME}:${ANDROID_HOME}/emulator:${TOOLS}:${TOOLS}/bin:${ANDROID_HOME}/platform-tools:${PATH}
 
 matrix:
   include:
