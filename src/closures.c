@@ -127,6 +127,7 @@ ffi_closure_free (void *ptr)
 /* Windows systems may have Data Execution Protection (DEP) enabled, 
    which requires the use of VirtualMalloc/VirtualFree to alloc/free
    executable memory. */
+#  undef FFI_MMAP_EXEC_WRIT
 #  define FFI_MMAP_EXEC_WRIT 1
 # endif
 #endif

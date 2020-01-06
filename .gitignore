@@ -14,7 +14,7 @@ configure
 depcomp
 doc/libffi.info
 *~
-fficonfig.h.in
+/fficonfig.h.in
 fficonfig.h
 include/ffi.h
 include/ffitarget.h
@@ -36,3 +36,4 @@ build_*/
 darwin_*/
 src/arm/trampoline.S
 **/texinfo.tex
+build/
