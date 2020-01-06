@@ -19,7 +19,7 @@ function build_cfarm()
     echo :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     curl -u ${CFARM_AUTH} "$(tail build.log | grep '^==LOGFILE==' | cut -b13-)" > libffi.log
 
-    ./rlgl l --key=$RLGL_KEY https://rl.gl
+    ./rlgl l --key=${RLGL_KEY} https://rl.gl
     ID=$(./rlgl start)
     ./rlgl e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git libffi.log
     exit $?
@@ -33,7 +33,7 @@ function build_linux()
     make dist
     make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
 
-    ./rlgl l --key=$RLGL_KEY https://rl.gl
+    ./rlgl l --key=${RLGL_KEY} https://rl.gl
     ID=$(./rlgl start)
     ./rlgl e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
     exit $?
@@ -43,7 +43,7 @@ function build_foreign_linux()
 {
     ${DOCKER} run --rm -t -i -v $(pwd):/opt ${SET_QEMU_CPU} -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.travis/build-in-container.sh
 
-    ./rlgl l --key=$RLGL_KEY https://rl.gl
+    ./rlgl l --key=${RLGL_KEY} https://rl.gl
     ID=$(./rlgl start)
     ./rlgl e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
     exit $?
@@ -53,7 +53,7 @@ function build_cross_linux()
 {
     ${DOCKER} run --rm -t -i -v $(pwd):/opt ${SET_QEMU_CPU} -e HOST="${HOST}" -e CC="${HOST}-gcc-8 ${GCC_OPTIONS}" -e CXX="${HOST}-g++-8 ${GCC_OPTIONS}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" moxielogic/cross-ci-build-container:latest bash -c /opt/.travis/build-in-container.sh
 
-    ./rlgl l --key=$RLGL_KEY https://rl.gl
+    ./rlgl l --key=${RLGL_KEY} https://rl.gl
     ID=$(./rlgl start)
     ./rlgl e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
     exit $?
@@ -64,7 +64,7 @@ function build_cross()
     ${DOCKER} pull quay.io/moxielogic/libffi-ci-${HOST} 
     ${DOCKER} run --rm -t -i -v $(pwd):/opt -e HOST="${HOST}" -e CC="${HOST}-gcc ${GCC_OPTIONS}" -e CXX="${HOST}-g++ ${GCC_OPTIONS}" -e TRAVIS_BUILD_DIR=/opt -e DEJAGNU="${DEJAGNU}" -e RUNTESTFLAGS="${RUNTESTFLAGS}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" quay.io/moxielogic/libffi-ci-${HOST} bash -c /opt/.travis/build-cross-in-container.sh
 
-    ./rlgl l --key=$RLGL_KEY https://rl.gl
+    ./rlgl l --key=${RLGL_KEY} https://rl.gl
     ID=$(./rlgl start)
     ./rlgl e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
     exit $?
