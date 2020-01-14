@@ -61,6 +61,7 @@ tested:
 | AVR32           | Linux            | GCC                     |
 | Blackfin        | uClinux          | GCC                     |
 | HPPA            | HPUX             | GCC                     |
+| KVX             | Linux            | GCC                     |
 | IA-64           | Linux            | GCC                     |
 | M68K            | FreeMiNT         | GCC                     |
 | M68K            | Linux            | GCC                     |
