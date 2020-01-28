@@ -192,7 +192,7 @@ C(ffi_go_closure_win64) proc
 	align	8
 	
 PUBLIC C(ffi_closure_win64)
-C(ffi_closure_win64) PROC FRAME
+C(ffi_closure_win64) PROC
 	cfi_startproc
 	/* Save all integer arguments into the incoming reg stack space.  */
 	mov qword ptr [rsp + 8], rcx; movq	%rcx, 8(%rsp)
