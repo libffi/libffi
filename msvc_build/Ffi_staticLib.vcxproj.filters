@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx;S</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\aarch64">
+      <UniqueIdentifier>{b2a874e4-38b0-488d-a394-76c74558a3fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\aarch32">
+      <UniqueIdentifier>{fea0a6dd-3d74-4acc-8eb4-4b5e8ac0a50a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\x86">
+      <UniqueIdentifier>{c736e70d-6a1f-4a74-b8f3-6ba975e066d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\x86_64">
+      <UniqueIdentifier>{53583b44-1dd2-40a0-809b-25233d308f54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\aarch64">
+      <UniqueIdentifier>{4308a5e5-a66f-4033-a3ae-1900a6867b48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\aarch32">
+      <UniqueIdentifier>{0ac4f6ef-5046-47ba-8f5d-d486affe8536}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\x86">
+      <UniqueIdentifier>{f1a54499-962b-459e-be6a-8bcedf0f1897}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\x86_64">
+      <UniqueIdentifier>{07a5d46c-f3e8-470e-bdc5-ab6a9d4c9152}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\ffi_cfi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ffi_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fficonfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ffi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\aarch64\internal.h">
+      <Filter>Header Files\aarch64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\aarch64\ffitarget.h">
+      <Filter>Header Files\aarch64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\arm\ffitarget.h">
+      <Filter>Header Files\aarch32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\arm\internal.h">
+      <Filter>Header Files\aarch32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\x86\ffitarget.h">
+      <Filter>Header Files\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\x86\internal.h">
+      <Filter>Header Files\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\x86\internal64.h">
+      <Filter>Header Files\x86_64</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\types.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\prep_cif.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dlmalloc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\closures.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\aarch64\ffi.c">
+      <Filter>Source Files\aarch64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\arm\ffi.c">
+      <Filter>Source Files\aarch32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\x86\ffiw64.c">
+      <Filter>Header Files\x86_64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\x86\ffi.c">
+      <Filter>Source Files\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\x86\ffi64.c">
+      <Filter>Source Files\x86_64</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\src\aarch64\win64_armasm.S">
+      <Filter>Source Files\aarch64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\arm\sysv_msvc_arm32.S">
+      <Filter>Source Files\aarch32</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\x86\sysv_intel.S">
+      <Filter>Source Files\x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\x86\win64_intel.S">
+      <Filter>Source Files\x86_64</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>
