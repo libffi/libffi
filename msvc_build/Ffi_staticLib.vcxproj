@@ -725,12 +725,14 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\x86\ffitarget.h">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Win32' and '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="..\src\x86\ffi.c">
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClInclude Include="..\src\x86\ffitarget.h">
-      <ExcludedFromBuild Condition="'$(Platform)'!='Win32'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="..\src\x86\internal.h">
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32'">true</ExcludedFromBuild>
     </ClInclude>
@@ -739,9 +741,6 @@
     <ClCompile Include="..\src\x86\ffi64.c">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClInclude Include="..\src\x86\ffitarget.h">
-      <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClCompile Include="..\src\x86\ffiw64.c">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClCompile>
