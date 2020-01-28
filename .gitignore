@@ -390,3 +390,5 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/msvc_build/out
+/msvc_build/tmp
