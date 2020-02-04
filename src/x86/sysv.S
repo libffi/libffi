@@ -92,6 +92,7 @@
 ffi_call_i386:
 L(UW0):
 	# cfi_startproc
+	_CET_ENDBR
 #if !HAVE_FASTCALL
 	movl	4(%esp), %ecx
 	movl	8(%esp), %edx
@@ -133,7 +134,7 @@ L(pc1):
 	leal	L(store_table)(,%ecx, 8), %ebx
 #endif
 	movl	16(%ebp), %ecx		/* load result address */
-	jmp	*%ebx
+	_CET_NOTRACK jmp *%ebx
 
 	.balign	8
 L(store_table):
@@ -256,7 +257,7 @@ ENDF(ffi_call_i386)
 	andl	$X86_RET_TYPE_MASK, %eax;				\
 	leal	L(C1(load_table,N))(, %eax, 8), %edx;			\
 	movl	closure_CF(%esp), %eax;		/* optimiztic load */	\
-	jmp	*%edx
+	_CET_NOTRACK jmp *%edx
 
 #ifdef __PIC__
 # if defined X86_DARWIN || defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE
@@ -267,7 +268,7 @@ ENDF(ffi_call_i386)
 L(C1(pc,N)):								\
 	leal	L(C1(load_table,N))-L(C1(pc,N))(%edx, %eax, 8), %edx;	\
 	movl	closure_CF(%esp), %eax;		/* optimiztic load */	\
-	jmp	*%edx
+	_CET_NOTRACK jmp *%edx
 # else
 #  define FFI_CLOSURE_CALL_INNER_SAVE_EBX
 #  undef FFI_CLOSURE_CALL_INNER
@@ -286,7 +287,7 @@ L(C1(UW,UWN)):								\
 L(C1(UW,UWN)):								\
 	/* cfi_restore(%ebx); */					\
 	movl	closure_CF(%esp), %eax;		/* optimiztic load */	\
-	jmp	*%edx
+	_CET_NOTRACK jmp *%edx
 # endif /* DARWIN || HIDDEN */
 #endif /* __PIC__ */
 
@@ -296,6 +297,7 @@ L(C1(UW,UWN)):								\
 C(ffi_go_closure_EAX):
 L(UW6):
 	# cfi_startproc
+	_CET_ENDBR
 	subl	$closure_FS, %esp
 L(UW7):
 	# cfi_def_cfa_offset(closure_FS + 4)
@@ -316,6 +318,7 @@ ENDF(C(ffi_go_closure_EAX))
 C(ffi_go_closure_ECX):
 L(UW9):
 	# cfi_startproc
+	_CET_ENDBR
 	subl	$closure_FS, %esp
 L(UW10):
 	# cfi_def_cfa_offset(closure_FS + 4)
@@ -340,6 +343,7 @@ ENDF(C(ffi_go_closure_ECX))
 C(ffi_closure_i386):
 L(UW12):
 	# cfi_startproc
+	_CET_ENDBR
 	subl	$closure_FS, %esp
 L(UW13):
 	# cfi_def_cfa_offset(closure_FS + 4)
@@ -423,6 +427,7 @@ ENDF(C(ffi_closure_i386))
 C(ffi_go_closure_STDCALL):
 L(UW21):
 	# cfi_startproc
+	_CET_ENDBR
 	subl	$closure_FS, %esp
 L(UW22):
 	# cfi_def_cfa_offset(closure_FS + 4)
@@ -448,6 +453,7 @@ L(UW24):
 	# cfi_startproc
 	# cfi_def_cfa(%esp, 8)
 	# cfi_offset(%eip, -8)
+	_CET_ENDBR
 	subl	$closure_FS-4, %esp
 L(UW25):
 	# cfi_def_cfa_offset(closure_FS + 4)
@@ -470,6 +476,7 @@ ENDF(C(ffi_closure_REGISTER))
 C(ffi_closure_STDCALL):
 L(UW27):
 	# cfi_startproc
+	_CET_ENDBR
 	subl	$closure_FS, %esp
 L(UW28):
 	# cfi_def_cfa_offset(closure_FS + 4)
@@ -576,6 +583,7 @@ ENDF(C(ffi_closure_STDCALL))
 C(ffi_closure_raw_SYSV):
 L(UW32):
 	# cfi_startproc
+	_CET_ENDBR
 	subl	$raw_closure_S_FS, %esp
 L(UW33):
 	# cfi_def_cfa_offset(raw_closure_S_FS + 4)
@@ -679,6 +687,7 @@ ENDF(C(ffi_closure_raw_SYSV))
 C(ffi_closure_raw_THISCALL):
 L(UW41):
 	# cfi_startproc
+	_CET_ENDBR
 	/* Rearrange the stack such that %ecx is the first argument.
 	   This means moving the return address.  */
 	popl	%edx

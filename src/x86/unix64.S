@@ -42,7 +42,11 @@
 #if defined(__clang__) || defined(__APPLE__) || (defined (__sun__) && defined(__svr4__))
 # define E(BASE, X)	.balign 8
 #else
-# define E(BASE, X)	.balign 8; .org BASE + X * 8
+# ifdef __CET__
+#  define E(BASE, X)	.balign 8; .org BASE + X * 16
+# else
+#  define E(BASE, X)	.balign 8; .org BASE + X * 8
+# endif
 #endif
 
 /* ffi_call_unix64 (void *args, unsigned long bytes, unsigned flags,
@@ -58,6 +62,7 @@
 
 C(ffi_call_unix64):
 L(UW0):
+	_CET_ENDBR
 	movq	(%rsp), %r10		/* Load return address.  */
 	leaq	(%rdi, %rsi), %rax	/* Find local stack base.  */
 	movq	%rdx, (%rax)		/* Save flags.  */
@@ -116,6 +121,11 @@ L(UW2):
 	movzbl	%cl, %r10d
 	leaq	L(store_table)(%rip), %r11
 	ja	L(sa)
+#ifdef __CET__
+	/* NB: Originally, each slot is 8 byte.  4 bytes of ENDBR64 +
+	   4 bytes NOP padding double slot size to 16 bytes.  */
+	addl	%r10d, %r10d
+#endif
 	leaq	(%r11, %r10, 8), %r10
 
 	/* Prep for the structure cases: scratch area in redzone.  */
@@ -125,57 +135,73 @@ L(UW2):
 	.balign	8
 L(store_table):
 E(L(store_table), UNIX64_RET_VOID)
+	_CET_ENDBR
 	ret
 E(L(store_table), UNIX64_RET_UINT8)
+	_CET_ENDBR
 	movzbl	%al, %eax
 	movq	%rax, (%rdi)
 	ret
 E(L(store_table), UNIX64_RET_UINT16)
+	_CET_ENDBR
 	movzwl	%ax, %eax
 	movq	%rax, (%rdi)
 	ret
 E(L(store_table), UNIX64_RET_UINT32)
+	_CET_ENDBR
 	movl	%eax, %eax
 	movq	%rax, (%rdi)
 	ret
 E(L(store_table), UNIX64_RET_SINT8)
+	_CET_ENDBR
 	movsbq	%al, %rax
 	movq	%rax, (%rdi)
 	ret
 E(L(store_table), UNIX64_RET_SINT16)
+	_CET_ENDBR
 	movswq	%ax, %rax
 	movq	%rax, (%rdi)
 	ret
 E(L(store_table), UNIX64_RET_SINT32)
+	_CET_ENDBR
 	cltq
 	movq	%rax, (%rdi)
 	ret
 E(L(store_table), UNIX64_RET_INT64)
+	_CET_ENDBR
 	movq	%rax, (%rdi)
 	ret
 E(L(store_table), UNIX64_RET_XMM32)
+	_CET_ENDBR
 	movd	%xmm0, (%rdi)
 	ret
 E(L(store_table), UNIX64_RET_XMM64)
+	_CET_ENDBR
 	movq	%xmm0, (%rdi)
 	ret
 E(L(store_table), UNIX64_RET_X87)
+	_CET_ENDBR
 	fstpt	(%rdi)
 	ret
 E(L(store_table), UNIX64_RET_X87_2)
+	_CET_ENDBR
 	fstpt	(%rdi)
 	fstpt	16(%rdi)
 	ret
 E(L(store_table), UNIX64_RET_ST_XMM0_RAX)
+	_CET_ENDBR
 	movq	%rax, 8(%rsi)
 	jmp	L(s3)
 E(L(store_table), UNIX64_RET_ST_RAX_XMM0)
+	_CET_ENDBR
 	movq	%xmm0, 8(%rsi)
 	jmp	L(s2)
 E(L(store_table), UNIX64_RET_ST_XMM0_XMM1)
+	_CET_ENDBR
 	movq	%xmm1, 8(%rsi)
 	jmp	L(s3)
 E(L(store_table), UNIX64_RET_ST_RAX_RDX)
+	_CET_ENDBR
 	movq	%rdx, 8(%rsi)
 L(s2):
 	movq	%rax, (%rsi)
@@ -227,6 +253,7 @@ ENDF(C(ffi_call_unix64))
 
 C(ffi_closure_unix64_sse):
 L(UW5):
+	_CET_ENDBR
 	subq	$ffi_closure_FS, %rsp
 L(UW6):
 	/* cfi_adjust_cfa_offset(ffi_closure_FS) */
@@ -250,6 +277,7 @@ ENDF(C(ffi_closure_unix64_sse))
 
 C(ffi_closure_unix64):
 L(UW8):
+	_CET_ENDBR
 	subq	$ffi_closure_FS, %rsp
 L(UW9):
 	/* cfi_adjust_cfa_offset(ffi_closure_FS) */
@@ -286,6 +314,11 @@ L(UW10):
 	movzbl	%al, %r10d
 	leaq	L(load_table)(%rip), %r11
 	ja	L(la)
+#ifdef __CET__
+	/* NB: Originally, each slot is 8 byte.  4 bytes of ENDBR64 +
+	   4 bytes NOP padding double slot size to 16 bytes.  */
+	addl	%r10d, %r10d
+#endif
 	leaq	(%r11, %r10, 8), %r10
 	leaq	ffi_closure_RED_RVALUE(%rsp), %rsi
 	jmp	*%r10
@@ -293,51 +326,67 @@ L(UW10):
 	.balign	8
 L(load_table):
 E(L(load_table), UNIX64_RET_VOID)
+	_CET_ENDBR
 	ret
 E(L(load_table), UNIX64_RET_UINT8)
+	_CET_ENDBR
 	movzbl	(%rsi), %eax
 	ret
 E(L(load_table), UNIX64_RET_UINT16)
+	_CET_ENDBR
 	movzwl	(%rsi), %eax
 	ret
 E(L(load_table), UNIX64_RET_UINT32)
+	_CET_ENDBR
 	movl	(%rsi), %eax
 	ret
 E(L(load_table), UNIX64_RET_SINT8)
+	_CET_ENDBR
 	movsbl	(%rsi), %eax
 	ret
 E(L(load_table), UNIX64_RET_SINT16)
+	_CET_ENDBR
 	movswl	(%rsi), %eax
 	ret
 E(L(load_table), UNIX64_RET_SINT32)
+	_CET_ENDBR
 	movl	(%rsi), %eax
 	ret
 E(L(load_table), UNIX64_RET_INT64)
+	_CET_ENDBR
 	movq	(%rsi), %rax
 	ret
 E(L(load_table), UNIX64_RET_XMM32)
+	_CET_ENDBR
 	movd	(%rsi), %xmm0
 	ret
 E(L(load_table), UNIX64_RET_XMM64)
+	_CET_ENDBR
 	movq	(%rsi), %xmm0
 	ret
 E(L(load_table), UNIX64_RET_X87)
+	_CET_ENDBR
 	fldt	(%rsi)
 	ret
 E(L(load_table), UNIX64_RET_X87_2)
+	_CET_ENDBR
 	fldt	16(%rsi)
 	fldt	(%rsi)
 	ret
 E(L(load_table), UNIX64_RET_ST_XMM0_RAX)
+	_CET_ENDBR
 	movq	8(%rsi), %rax
 	jmp	L(l3)
 E(L(load_table), UNIX64_RET_ST_RAX_XMM0)
+	_CET_ENDBR
 	movq	8(%rsi), %xmm0
 	jmp	L(l2)
 E(L(load_table), UNIX64_RET_ST_XMM0_XMM1)
+	_CET_ENDBR
 	movq	8(%rsi), %xmm1
 	jmp	L(l3)
 E(L(load_table), UNIX64_RET_ST_RAX_RDX)
+	_CET_ENDBR
 	movq	8(%rsi), %rdx
 L(l2):
 	movq	(%rsi), %rax
@@ -358,6 +407,7 @@ ENDF(C(ffi_closure_unix64))
 
 C(ffi_go_closure_unix64_sse):
 L(UW12):
+	_CET_ENDBR
 	subq	$ffi_closure_FS, %rsp
 L(UW13):
 	/* cfi_adjust_cfa_offset(ffi_closure_FS) */
@@ -381,6 +431,7 @@ ENDF(C(ffi_go_closure_unix64_sse))
 
 C(ffi_go_closure_unix64):
 L(UW15):
+	_CET_ENDBR
 	subq	$ffi_closure_FS, %rsp
 L(UW16):
 	/* cfi_adjust_cfa_offset(ffi_closure_FS) */
@@ -424,7 +475,12 @@ EHFrame0:
 #endif
 
 /* Simplify advancing between labels.  Assume DW_CFA_advance_loc1 fits.  */
-#define ADV(N, P)	.byte 2, L(N)-L(P)
+#ifdef __CET__
+/* Use DW_CFA_advance_loc2 when IBT is enabled.  */
+# define ADV(N, P)	.byte 3; .2byte L(N)-L(P)
+#else
+# define ADV(N, P)	.byte 2, L(N)-L(P)
+#endif
 
 	.balign 8
 L(CIE):
