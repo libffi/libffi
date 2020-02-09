@@ -51,11 +51,11 @@ extern "C" {
 /* ---- System configuration information --------------------------------- */
 
 #if defined(_M_ARM64)
-#include "..\aarch64\ffitarget.h"
+#include "..\..\src\aarch64\ffitarget.h"
 #elif defined(_M_ARM)
-#include "..\arm\ffitarget.h"
+#include "..\..\src\arm\ffitarget.h"
 #else
-#include "..\x86\ffitarget.h"
+#include "..\..\src\x86\ffitarget.h"
 #endif
 
 #ifndef LIBFFI_ASM
