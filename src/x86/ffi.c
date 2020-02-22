@@ -566,7 +566,7 @@ ffi_prep_closure_loc (ffi_closure* closure,
 
   /* jmp dest */
   tramp[9] = 0xe9;
-  *(unsigned *)(tramp + 10) = (unsigned)dest - ((unsigned)codeloc + 10);
+  *(unsigned *)(tramp + 10) = (unsigned)dest - ((unsigned)codeloc + 14);
 
   closure->cif = cif;
   closure->fun = fun;
