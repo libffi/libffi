@@ -4,7 +4,7 @@ Status
 [![Build Status](https://travis-ci.org/libffi/libffi.svg?branch=master)](https://travis-ci.org/libffi/libffi)
 [![Build status](https://ci.appveyor.com/api/projects/status/8lko9vagbx4w2kxq?svg=true)](https://ci.appveyor.com/project/atgreen/libffi)
 
-libffi-3.3 was released on November 23, 2019.  Check the libffi web
+libffi-3.4 was released on TBD.  Check the libffi web
 page for updates: <URL:http://sourceware.org/libffi/>.
 
 
@@ -195,6 +195,11 @@ History
 =======
 
 See the git log for details at http://github.com/libffi/libffi.
+
+    3.4 TBD
+        Add support for Intel Control-flow Enforcement Technology (CET).
+	Fix 32-bit PPC regression.
+	Fix MIPS soft-float problem.
 
     3.3 Nov-23-19
         Add RISC-V support.
