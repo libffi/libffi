@@ -557,13 +557,16 @@ ffi_prep_closure_loc (ffi_closure* closure,
       return FFI_BAD_ABI;
     }
 
+  /* endbr32.  */
+  *(UINT32 *) tramp = 0xfb1e0ff3;
+
   /* movl or pushl immediate.  */
-  tramp[0] = op;
-  *(void **)(tramp + 1) = codeloc;
+  tramp[4] = op;
+  *(void **)(tramp + 5) = codeloc;
 
   /* jmp dest */
-  tramp[5] = 0xe9;
-  *(unsigned *)(tramp + 6) = (unsigned)dest - ((unsigned)codeloc + 10);
+  tramp[9] = 0xe9;
+  *(unsigned *)(tramp + 10) = (unsigned)dest - ((unsigned)codeloc + 10);
 
   closure->cif = cif;
   closure->fun = fun;
