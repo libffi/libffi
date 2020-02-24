@@ -921,7 +921,7 @@ ffi_closure_alloc (size_t size, void **code)
   if (!code)
     return NULL;
 
-  ptr = dlmalloc (size);
+  ptr = FFI_CLOSURE_PTR (dlmalloc (size));
 
   if (ptr)
     {
@@ -961,7 +961,7 @@ ffi_closure_free (void *ptr)
     ptr = sub_segment_exec_offset (ptr, seg);
 #endif
 
-  dlfree (ptr);
+  dlfree (FFI_RESTORE_PTR (ptr));
 }
 
 # else /* ! FFI_MMAP_EXEC_WRIT */
@@ -977,13 +977,13 @@ ffi_closure_alloc (size_t size, void **code)
   if (!code)
     return NULL;
 
-  return *code = malloc (size);
+  return *code = FFI_CLOSURE_PTR (malloc (size));
 }
 
 void
 ffi_closure_free (void *ptr)
 {
-  free (ptr);
+  free (FFI_RESTORE_PTR (ptr));
 }
 
 void *

@@ -330,6 +330,14 @@ typedef struct {
 FFI_API void *ffi_closure_alloc (size_t size, void **code);
 FFI_API void ffi_closure_free (void *);
 
+#if defined(PA_LINUX) || defined(PA_HPUX)
+#define FFI_CLOSURE_PTR(X) ((void *)((unsigned int)(X) | 2))
+#define FFI_RESTORE_PTR(X) ((void *)((unsigned int)(X) & ~3))
+#else
+#define FFI_CLOSURE_PTR(X) (X)
+#define FFI_RESTORE_PTR(X) (X)
+#endif
+
 FFI_API ffi_status
 ffi_prep_closure (ffi_closure*,
 		  ffi_cif *,
