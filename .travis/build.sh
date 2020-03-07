@@ -2,6 +2,11 @@
 
 set -x
 
+if [ -z "$RLGL_KEY" ]; then
+    echo "ERROR: RLGL_KEY is not set!";
+    exit 1;
+fi
+
 if [ -z ${QEMU_CPU+x} ]; then
     export SET_QEMU_CPU=
 else
