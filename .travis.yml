@@ -76,4 +76,4 @@ install:
 script:
   - if ! test x"$MEVAL" = x; then eval ${MEVAL}; fi
   - travis_wait 115 sleep infinity &
-  - export RLGL_KEY=${RLGL_KEY}; ./.travis/build.sh
+  - ./.travis/build.sh
