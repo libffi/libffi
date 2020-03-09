@@ -148,6 +148,9 @@ ffi_closure_free (void *ptr)
 
 #include <mach/mach.h>
 #include <pthread.h>
+#ifdef HAVE_PTRAUTH
+#include <ptrauth.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -301,6 +304,9 @@ ffi_closure_alloc (size_t size, void **code)
 
   /* Initialize the return values */
   *code = entry->trampoline;
+#ifdef HAVE_PTRAUTH
+  *code = ptrauth_sign_unauthenticated (*code, ptrauth_key_asia, 0);
+#endif
   closure->trampoline_table = table;
   closure->trampoline_table_entry = entry;
 
