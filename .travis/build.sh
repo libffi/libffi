@@ -2,6 +2,10 @@
 
 set -x
 
+# This is a policy bound API key.  It can only be used with
+# https://github.com/libffi/rlgl-policy.git.
+RLGL_KEY=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI
+
 if [ -z ${QEMU_CPU+x} ]; then
     export SET_QEMU_CPU=
 else
