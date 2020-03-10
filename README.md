@@ -198,6 +198,7 @@ See the git log for details at http://github.com/libffi/libffi.
 
     3.4 TBD
         Add support for Intel Control-flow Enforcement Technology (CET).
+	Add support for ARM Pointer Authentication (PA).
 	Fix 32-bit PPC regression.
 	Fix MIPS soft-float problem.
 
