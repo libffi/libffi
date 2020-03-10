@@ -176,6 +176,28 @@ case "$TARGET" in
     ;;
 esac
 
+AC_CACHE_CHECK([whether compiler supports pointer authentication],
+   libffi_cv_as_ptrauth, [
+   libffi_cv_as_ptrauth=unknown
+   AC_TRY_COMPILE(,[
+#ifdef __clang__
+# if __has_feature(ptrauth_calls)
+#  define HAVE_PTRAUTH 1
+# endif
+#endif
+
+#ifndef HAVE_PTRAUTH
+# error Pointer authentication not supported
+#endif
+		   ],
+		   [libffi_cv_as_ptrauth=yes],
+		   [libffi_cv_as_ptrauth=no])
+])
+if test "x$libffi_cv_as_ptrauth" = xyes; then
+    AC_DEFINE(HAVE_PTRAUTH, 1,
+	      [Define if your compiler supports pointer authentication.])
+fi
+
 # On PaX enable kernels that have MPROTECT enable we can't use PROT_EXEC.
 AC_ARG_ENABLE(pax_emutramp,
   [  --enable-pax_emutramp       enable pax emulated trampolines, for we can't use PROT_EXEC],

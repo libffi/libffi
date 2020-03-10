@@ -62,6 +62,9 @@ struct call_context
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
 #ifdef __MACH__
+#ifdef HAVE_PTRAUTH
+#include <ptrauth.h>
+#endif
 #include <mach/vm_param.h>
 #endif
 
@@ -789,6 +792,9 @@ ffi_prep_closure_loc (ffi_closure *closure,
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 #ifdef __MACH__
+#ifdef HAVE_PTRAUTH
+  codeloc = ptrauth_strip (codeloc, ptrauth_key_asia);
+#endif
   void **config = (void **)((uint8_t *)codeloc - PAGE_MAX_SIZE);
   config[0] = closure;
   config[1] = start;

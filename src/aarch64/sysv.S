@@ -58,6 +58,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #define PTR_SIZE	8
 #endif
 
+#if FFI_EXEC_TRAMPOLINE_TABLE && defined(__MACH__) && defined(HAVE_PTRAUTH)
+# define BR(r)  braaz r
+# define BLR(r) blraaz r
+#else
+# define BR(r)  br r
+# define BLR(r) blr r
+#endif
+
 	.text
 	.align 4
 
@@ -111,7 +119,7 @@ CNAME(ffi_call_SYSV):
 	/* Deallocate the context, leaving the stacked arguments.  */
 	add	sp, sp, #CALL_CONTEXT_SIZE
 
-	blr     x9			/* call fn */
+	BLR(x9)				/* call fn */
 
 	ldp	x3, x4, [x29, #16]	/* reload rvalue and flags */
 
@@ -271,6 +279,9 @@ CNAME(ffi_closure_SYSV):
 	bl      CNAME(ffi_closure_SYSV_inner)
 
 	/* Load the return value as directed.  */
+#if FFI_EXEC_TRAMPOLINE_TABLE && defined(__MACH__) && defined(HAVE_PTRAUTH)
+	autiza	x1
+#endif
 	adr	x1, 0f
 	and	w0, w0, #AARCH64_RET_MASK
 	add	x1, x1, x0, lsl #3
@@ -365,7 +376,7 @@ CNAME(ffi_closure_trampoline_table_page):
     .rept PAGE_MAX_SIZE / FFI_TRAMPOLINE_SIZE
     adr x16, -PAGE_MAX_SIZE
     ldp x17, x16, [x16]
-    br x16
+    BR(x16)
 	nop		/* each entry in the trampoline config page is 2*sizeof(void*) so the trampoline itself cannot be smaller that 16 bytes */
     .endr
 
