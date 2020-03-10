@@ -48,14 +48,15 @@
 extern "C" {
 #endif
 
-/* Specify which architecture libffi is configured for. */
-#ifndef AARCH64
-#define AARCH64
-#endif
-
 /* ---- System configuration information --------------------------------- */
 
-#include <ffitarget.h>
+#if defined(_M_ARM64)
+#include "..\..\src\aarch64\ffitarget.h"
+#elif defined(_M_ARM)
+#include "..\..\src\arm\ffitarget.h"
+#else
+#include "..\..\src\x86\ffitarget.h"
+#endif
 
 #ifndef LIBFFI_ASM
 
@@ -484,7 +485,7 @@ ffi_status ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type,
 #define FFI_TYPE_INT        1
 #define FFI_TYPE_FLOAT      2    
 #define FFI_TYPE_DOUBLE     3
-#ifndef _M_ARM64
+#ifndef _MSC_VER
 #define FFI_TYPE_LONGDOUBLE 4
 #else
 #define FFI_TYPE_LONGDOUBLE FFI_TYPE_DOUBLE

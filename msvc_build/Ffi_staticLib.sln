@@ -1,0 +1,67 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libffi", "Ffi_staticLib.vcxproj", "{115502C0-BE05-4767-BF19-5C87D805FAD6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		dynamic-Debug|ARM = dynamic-Debug|ARM
+		dynamic-Debug|ARM64 = dynamic-Debug|ARM64
+		dynamic-Debug|Win32 = dynamic-Debug|Win32
+		dynamic-Debug|x64 = dynamic-Debug|x64
+		dynamic-Release|ARM = dynamic-Release|ARM
+		dynamic-Release|ARM64 = dynamic-Release|ARM64
+		dynamic-Release|Win32 = dynamic-Release|Win32
+		dynamic-Release|x64 = dynamic-Release|x64
+		static-Debug|ARM = static-Debug|ARM
+		static-Debug|ARM64 = static-Debug|ARM64
+		static-Debug|Win32 = static-Debug|Win32
+		static-Debug|x64 = static-Debug|x64
+		static-Release|ARM = static-Release|ARM
+		static-Release|ARM64 = static-Release|ARM64
+		static-Release|Win32 = static-Release|Win32
+		static-Release|x64 = static-Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Debug|ARM.ActiveCfg = dynamic-Debug|ARM
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Debug|ARM.Build.0 = dynamic-Debug|ARM
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Debug|ARM64.ActiveCfg = dynamic-Debug|ARM64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Debug|ARM64.Build.0 = dynamic-Debug|ARM64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Debug|Win32.ActiveCfg = dynamic-Debug|Win32
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Debug|Win32.Build.0 = dynamic-Debug|Win32
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Debug|x64.ActiveCfg = dynamic-Debug|x64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Debug|x64.Build.0 = dynamic-Debug|x64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Release|ARM.ActiveCfg = dynamic-Release|ARM
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Release|ARM.Build.0 = dynamic-Release|ARM
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Release|ARM64.ActiveCfg = dynamic-Release|ARM64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Release|ARM64.Build.0 = dynamic-Release|ARM64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Release|Win32.ActiveCfg = dynamic-Release|Win32
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Release|Win32.Build.0 = dynamic-Release|Win32
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Release|x64.ActiveCfg = dynamic-Release|x64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.dynamic-Release|x64.Build.0 = dynamic-Release|x64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Debug|ARM.ActiveCfg = static-Debug|ARM
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Debug|ARM.Build.0 = static-Debug|ARM
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Debug|ARM64.ActiveCfg = static-Debug|ARM64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Debug|ARM64.Build.0 = static-Debug|ARM64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Debug|Win32.ActiveCfg = static-Debug|Win32
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Debug|Win32.Build.0 = static-Debug|Win32
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Debug|x64.ActiveCfg = static-Debug|x64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Debug|x64.Build.0 = static-Debug|x64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Release|ARM.ActiveCfg = static-Release|ARM
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Release|ARM.Build.0 = static-Release|ARM
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Release|ARM64.ActiveCfg = static-Release|ARM64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Release|ARM64.Build.0 = static-Release|ARM64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Release|Win32.ActiveCfg = static-Release|Win32
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Release|Win32.Build.0 = static-Release|Win32
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Release|x64.ActiveCfg = static-Release|x64
+		{115502C0-BE05-4767-BF19-5C87D805FAD6}.static-Release|x64.Build.0 = static-Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {241C54C7-20DD-4897-9376-E6B6D1B43BD5}
+	EndGlobalSection
+EndGlobal
