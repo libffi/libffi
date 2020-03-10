@@ -262,17 +262,11 @@ fi
 if test "x$GCC" = "xyes"; then
   AC_CACHE_CHECK([whether .eh_frame section should be read-only],
       libffi_cv_ro_eh_frame, [
-  	libffi_cv_ro_eh_frame=no
+  	libffi_cv_ro_eh_frame=yes
   	echo 'extern void foo (void); void bar (void) { foo (); foo (); }' > conftest.c
   	if $CC $CFLAGS -c -fpic -fexceptions -o conftest.o conftest.c > /dev/null 2>&1; then
-	    objdump -h conftest.o > conftest.dump 2>&1
-	    libffi_eh_frame_line=`grep -n eh_frame conftest.dump | cut -d: -f 1`
-	    if test "x$libffi_eh_frame_line" != "x"; then
-	        libffi_test_line=`expr $libffi_eh_frame_line + 1`p
-	        sed -n $libffi_test_line conftest.dump > conftest.line
-	        if grep READONLY conftest.line > /dev/null; then
-	            libffi_cv_ro_eh_frame=yes
-	        fi
+	    if readelf -WS conftest.o | grep -q -n 'eh_frame .* WA'; then
+	        libffi_cv_ro_eh_frame=no
 	    fi
   	fi
   	rm -f conftest.*
