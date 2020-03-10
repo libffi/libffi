@@ -40,6 +40,10 @@ matrix:
       arch: arm64
       env: HOST=aarch64-linux-gnu
     - os: linux
+      arch: arm64
+      env: HOST=aarch64-linux-gnu
+      compiler: clang
+    - os: linux
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O0"
     - os: linux
       env: HOST=arm32v7-linux-gnu LIBFFI_TEST_OPTIMIZATION="-O2"
