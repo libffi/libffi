@@ -60,6 +60,7 @@ tested:
 | ARM             | Windows          | MSVC                    |
 | AVR32           | Linux            | GCC                     |
 | Blackfin        | uClinux          | GCC                     |
+| CSKY            | Linux            | GCC                     |
 | HPPA            | HPUX             | GCC                     |
 | IA-64           | Linux            | GCC                     |
 | M68K            | FreeMiNT         | GCC                     |
@@ -197,6 +198,7 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     3.4 TBD
+        Add support for CSKY processor.
         Add support for Intel Control-flow Enforcement Technology (CET).
 	Add support for ARM Pointer Authentication (PA).
 	Fix 32-bit PPC regression.
@@ -434,6 +436,7 @@ developers:
     avr32               Bradley Smith
     blackfin            Alexandre Keunecke I. de Mendonca
     cris                Simon Posnjak, Hans-Peter Nilsson
+    csky		Zhang Wenmeng, Ma Jun
     frv                 Anthony Green
     ia64                Hans Boehm
     m32r                Kazuhiro Inaoka

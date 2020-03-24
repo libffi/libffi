@@ -52,6 +52,7 @@ noinst_HEADERS = \
 	src/avr32/ffitarget.h						\
 	src/bfin/ffitarget.h						\
 	src/cris/ffitarget.h						\
+	src/csky/ffitarget.h						\
 	src/frv/ffitarget.h						\
 	src/ia64/ffitarget.h src/ia64/ia64_flags.h			\
 	src/m32r/ffitarget.h						\
@@ -102,7 +103,8 @@ EXTRA_libffi_la_SOURCES = src/aarch64/ffi.c src/aarch64/sysv.S \
 	src/vax/ffi.c src/vax/elfbsd.S src/x86/ffi.c src/x86/sysv.S \
 	src/x86/ffiw64.c src/x86/win64.S src/x86/ffi64.c \
 	src/x86/unix64.S src/x86/sysv_intel.S src/x86/win64_intel.S \
-	src/xtensa/ffi.c src/xtensa/sysv.S
+	src/xtensa/ffi.c src/xtensa/sysv.S src/csky/ffi.c src/csky/sysv.S
+
 
 TARGET_OBJ = @TARGET_OBJ@
 libffi_la_LIBADD = $(TARGET_OBJ)
