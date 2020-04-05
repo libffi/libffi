@@ -249,6 +249,9 @@ ARM_FUNC_END(ffi_go_closure_SYSV)
 ARM_FUNC_START(ffi_closure_SYSV)
 	UNWIND(.fnstart)
 	cfi_startproc
+#ifdef _WIN32
+	ldmfd	sp!, {r0, ip}			@ restore fp (r0 is used for stack alignment)
+#endif
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
 
@@ -301,6 +304,9 @@ ARM_FUNC_END(ffi_go_closure_VFP)
 ARM_FUNC_START(ffi_closure_VFP)
 	UNWIND(.fnstart)
 	cfi_startproc
+#ifdef _WIN32
+	ldmfd	sp!, {r0, ip}			@ restore fp (r0 is used for stack alignment)
+#endif
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
 
@@ -457,6 +463,15 @@ ARM_FUNC_START(ffi_closure_trampoline_table_page)
 .endr
 ARM_FUNC_END(ffi_closure_trampoline_table_page)
 #endif
+
+#elif defined(_WIN32)
+
+ARM_FUNC_START(ffi_arm_trampoline)
+0:	adr	ip, 0b
+	stmdb	sp!, {r0, ip}
+	ldr	pc, 1f
+1:	.long	0
+ARM_FUNC_END(ffi_arm_trampoline)
 
 #else
 
