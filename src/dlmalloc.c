@@ -2371,7 +2371,7 @@ static size_t traverse_and_check(mstate m);
 
 #else /* GNUC */
 #if  USE_BUILTIN_FFS
-#define compute_bit2idx(X, I) I = ffs(X)-1
+#define compute_bit2idx(X, I) I = __builtin_ffs(X)-1
 
 #else /* USE_BUILTIN_FFS */
 #define compute_bit2idx(X, I)\
