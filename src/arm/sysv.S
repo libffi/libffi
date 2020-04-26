@@ -129,11 +129,11 @@ ARM_FUNC_START(ffi_call_VFP)
 
 	cmp	r3, #3			@ load only d0 if possible
 #ifdef __clang__
-	vldrle d0, [sp]
-	vldmgt sp, {d0-d7}
+	vldrle d0, [r0]
+	vldmgt r0, {d0-d7}
 #else
-	ldcle	p11, cr0, [r0]		@ vldrle d0, [sp]
-	ldcgt	p11, cr0, [r0], {16}	@ vldmgt sp, {d0-d7}
+	ldcle	p11, cr0, [r0]		@ vldrle d0, [r0]
+	ldcgt	p11, cr0, [r0], {16}	@ vldmgt r0, {d0-d7}
 #endif
 	add	r0, r0, #64		@ discard the vfp register args
 	/* FALLTHRU */
