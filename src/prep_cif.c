@@ -129,7 +129,7 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
   cif->rtype = rtype;
 
   cif->flags = 0;
-#ifdef _M_ARM64
+#if (defined(_M_ARM64) || defined(__aarch64__)) && defined(_WIN32)
   cif->is_variadic = isvariadic;
 #endif
 #if HAVE_LONG_DOUBLE_VARIANT

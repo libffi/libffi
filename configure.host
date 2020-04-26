@@ -8,7 +8,9 @@
 case "${host}" in
   aarch64*-*-cygwin* | aarch64*-*-mingw* | aarch64*-*-win* )
 	TARGET=ARM_WIN64; TARGETDIR=aarch64
-	MSVC=1
+	if test "${ax_cv_c_compiler_vendor}" = "microsoft"; then
+	  MSVC=1
+	fi
 	;;
 
   aarch64*-*-*)
@@ -259,7 +261,11 @@ case "${TARGET}" in
 	SOURCES="ffi.c sysv_msvc_arm32.S"
 	;;
   ARM_WIN64)
-	SOURCES="ffi.c win64_armasm.S"
+	if test "$MSVC" = 1; then
+		SOURCES="ffi.c win64_armasm.S"
+	else
+		SOURCES="ffi.c sysv.S"
+	fi
 	;;
   MIPS)
 	SOURCES="ffi.c o32.S n32.S"
