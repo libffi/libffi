@@ -256,12 +256,12 @@ do
       shift 2
     ;;
     *.S)
-      src=$1
+      src=$(cygpath -m $1)
       assembly="true"
       shift 1
     ;;
     *.c)
-      args="$args $1"
+      args="$args $(cygpath -m $1)"
       shift 1
     ;;
     *)
