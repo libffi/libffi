@@ -173,7 +173,6 @@ struct ffi_trampoline_table
 {
   /* contiguous writable and executable pages */
   vm_address_t config_page;
-  vm_address_t trampoline_page;
 
   /* free list tracking */
   uint16_t free_count;
@@ -217,7 +216,13 @@ ffi_trampoline_table_alloc (void)
 
   /* Remap the trampoline table on top of the placeholder page */
   trampoline_page = config_page + PAGE_MAX_SIZE;
+
+#ifdef HAVE_PTRAUTH
+  trampoline_page_template = (vm_address_t)(uintptr_t)ptrauth_auth_data((void *)&ffi_closure_trampoline_table_page, ptrauth_key_function_pointer, 0);
+#else
   trampoline_page_template = (vm_address_t)&ffi_closure_trampoline_table_page;
+#endif
+
 #ifdef __arm__
   /* ffi_closure_trampoline_table_page can be thumb-biased on some ARM archs */
   trampoline_page_template &= ~1UL;
@@ -225,7 +230,7 @@ ffi_trampoline_table_alloc (void)
   kt = vm_remap (mach_task_self (), &trampoline_page, PAGE_MAX_SIZE, 0x0,
 		 VM_FLAGS_OVERWRITE, mach_task_self (), trampoline_page_template,
 		 FALSE, &cur_prot, &max_prot, VM_INHERIT_SHARE);
-  if (kt != KERN_SUCCESS)
+  if (kt != KERN_SUCCESS || !(cur_prot & VM_PROT_EXECUTE))
     {
       vm_deallocate (mach_task_self (), config_page, PAGE_MAX_SIZE * 2);
       return NULL;
@@ -235,7 +240,6 @@ ffi_trampoline_table_alloc (void)
   table = calloc (1, sizeof (ffi_trampoline_table));
   table->free_count = FFI_TRAMPOLINE_COUNT;
   table->config_page = config_page;
-  table->trampoline_page = trampoline_page;
 
   /* Create and initialize the free list */
   table->free_list_pool =
@@ -245,7 +249,10 @@ ffi_trampoline_table_alloc (void)
     {
       ffi_trampoline_table_entry *entry = &table->free_list_pool[i];
       entry->trampoline =
-	(void *) (table->trampoline_page + (i * FFI_TRAMPOLINE_SIZE));
+	(void *) (trampoline_page + (i * FFI_TRAMPOLINE_SIZE));
+#ifdef HAVE_PTRAUTH
+      entry->trampoline = ptrauth_sign_unauthenticated(entry->trampoline, ptrauth_key_function_pointer, 0);
+#endif
 
       if (i < table->free_count - 1)
 	entry->next = &table->free_list_pool[i + 1];
@@ -314,9 +321,6 @@ ffi_closure_alloc (size_t size, void **code)
 
   /* Initialize the return values */
   *code = entry->trampoline;
-#ifdef HAVE_PTRAUTH
-  *code = ptrauth_sign_unauthenticated (*code, ptrauth_key_asia, 0);
-#endif
   closure->trampoline_table = table;
   closure->trampoline_table_entry = entry;
 
