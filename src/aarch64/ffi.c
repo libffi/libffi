@@ -813,7 +813,11 @@ ffi_prep_closure_loc (ffi_closure *closure,
 #ifdef HAVE_PTRAUTH
   codeloc = ptrauth_auth_data(codeloc, ptrauth_key_function_pointer, 0);
 #endif
+#ifdef FFI_TRAMPOLINE_WHOLE_DYLIB
+  void **config = (void **)((uint8_t *)codeloc - 2*PAGE_MAX_SIZE);
+#else
   void **config = (void **)((uint8_t *)codeloc - PAGE_MAX_SIZE);
+#endif
   config[0] = closure;
   config[1] = start;
 #endif
@@ -863,6 +867,22 @@ out:
 
   return FFI_OK;
 }
+
+ffi_closure *
+ffi_find_closure_for_code(void *codeloc)
+{
+#if FFI_EXEC_TRAMPOLINE_TABLE
+#  ifdef FFI_TRAMPOLINE_WHOLE_DYLIB
+    void **config = (void **)((uint8_t *)codeloc - 2*PAGE_MAX_SIZE);
+#  else
+    void **config = (void **)((uint8_t *)codeloc - PAGE_MAX_SIZE);
+#  endif
+    return config[0];
+#else
+    return (ffi_closure*)codeloc;
+#endif
+}
+
 
 #ifdef FFI_GO_CLOSURES
 extern void ffi_go_closure_SYSV (void) FFI_HIDDEN;
