@@ -24,6 +24,11 @@ load_lib libgloss.exp
 load_gcc_lib target-libpath.exp
 load_gcc_lib wrapper.exp
 
+proc check_effective_target_gccbug { } {
+    global has_gccbug
+    return $has_gccbug
+}
+
 # Return 1 if the target matches the effective target 'arg', 0 otherwise.
 # This can be used with any check_* proc that takes no argument and
 # returns only 1 or 0.  It could be used with check_* procs that take
@@ -477,6 +482,7 @@ proc libffi-dg-runtest { testcases default-extra-flags } {
 
 proc run-many-tests { testcases extra_flags } {
     global compiler_vendor
+    global has_gccbug
     global env
     switch $compiler_vendor {
       "clang" {
@@ -538,8 +544,22 @@ proc run-many-tests { testcases extra_flags } {
         foreach opt $optimizations {
             foreach abi $abis {
                 set options [concat $common $opt $abi]
-                verbose "Testing $testname, $options" 1
-                dg-test $test $options ""
+		set has_gccbug false;
+		if { [string match $compiler_vendor "gnu"] \
+			 && [string match "*MSABI*" $abi] \
+			 && ( ( [string match "*DGTEST=57 *" $common] \
+				    && [string match "*call.c*" $testname] ) \
+				  || ( [string match "*DGTEST=54 *" $common] \
+					   && [string match "*callback*" $testname] ) \
+				  || [string match "*DGTEST=55 *" $common] \
+				  || [string match "*DGTEST=56 *" $common] ) } then {
+		    if [libffi_feature_test "#if (__GNUC__ < 9) || ((__GNUC__ == 9) && (__GNUC_MINOR__ < 3))"] {
+			set has_gccbug true;
+		    }
+		}
+		verbose "Testing $testname, $options" 1
+		verbose "has_gccbug = $has_gccbug" 1
+		dg-test $test $options ""
             }
         }
     }

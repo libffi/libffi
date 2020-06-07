@@ -4,7 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
+  the Free Software Foundation; either version 3 of the License, or
   (at your option) any later version.
 
   This program is distributed in the hope that it will be useful,
@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-/* { dg-do run } */
+/* { dg-do run { xfail gccbug } } */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1220,7 +1220,7 @@ void
   }
   fprintf(out,"->{%g}\n",Fr.x);
   fflush(out);
-#endif
+#endif  
 #if (!defined(DGTEST)) || DGTEST == 56  
   Dr = D_fDd(f1,D2,d3);
   fprintf(out,"->{%g}\n",Dr.x);
@@ -1243,7 +1243,7 @@ void
   }
   fprintf(out,"->{%g}\n",Dr.x);
   fflush(out);
-#endif
+#endif  
 #if (!defined(DGTEST)) || DGTEST == 57  
   Dr = D_Dfd(D1,f2,d3);
   fprintf(out,"->{%g}\n",Dr.x);
