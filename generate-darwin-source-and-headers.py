@@ -186,7 +186,7 @@ def generate_source_and_headers(generate_osx=True, generate_ios=True):
         build_target(desktop64_platform, platform_headers)
 
     mkdir_p('darwin_common/include')
-    for header_name, tag_tuples in platform_headers.iteritems():
+    for header_name, tag_tuples in platform_headers.items():
         basename, suffix = os.path.splitext(header_name)
         with open(os.path.join('darwin_common/include', header_name), 'w') as header:
             for tag_tuple in tag_tuples:
