@@ -44,6 +44,12 @@ if FFI_DEBUG
 libffi_la_SOURCES += src/debug.c
 endif
 
+if FFI_FUZZING
+bin_PROGRAMS = ffi_strlen_fuzzer ffi_strlen2_fuzzer
+ffi_strlen_fuzzer_SOURCES = src/fuzz/ffi_strlen_fuzzer.cpp
+ffi_strlen2_fuzzer_SOURCES = src/fuzz/ffi_strlen2_fuzzer.cpp
+endif
+
 noinst_HEADERS = \
 	src/aarch64/ffitarget.h src/aarch64/internal.h			\
 	src/alpha/ffitarget.h src/alpha/internal.h			\

@@ -18,6 +18,13 @@ AX_ENABLE_BUILDDIR
 
 AM_INIT_AUTOMAKE
 
+dnl If CXX is Clang, add these flags to avoid compilation error.
+if test "$CXX" = "clang++"; then
+  AC_MSG_CHECKING([whether clang works])
+  CFLAGS=-Qunused-arguments
+  CXXFLAGS=-Qunused-arguments
+fi
+
 # The same as in boehm-gc and libstdc++. Have to borrow it from there.
 # We must force CC to /not/ be precious variables; otherwise
 # the wrong, non-multilib-adjusted value will be used in multilibs.
@@ -344,6 +351,16 @@ AC_ARG_ENABLE(debug,
     AC_DEFINE(FFI_DEBUG, 1, [Define this if you want extra debugging.])
   fi)
 AM_CONDITIONAL(FFI_DEBUG, test "$enable_debug" = "yes")
+
+AC_ARG_ENABLE(fuzzing,
+[  --enable-fuzzing          fuzzing],
+  if test "$enable_fuzzing" = "yes"; then
+    AC_DEFINE(FFI_FUZZING, 1, [Define this if you want fuzzing.])
+    dnl Switch to a clang++ compiler and add fuzzing related flags.
+    CFLAGS="$CFLAGS -fno-strict-aliasing"
+    CXXFLAGS="$CXXFLAGS -fno-strict-aliasing -std=c++14 -g -fsanitize=fuzzer"
+  fi)
+AM_CONDITIONAL(FFI_FUZZING, test "$enable_fuzzing" = "yes")
 
 AC_ARG_ENABLE(structs,
 [  --disable-structs       omit code for struct support],
