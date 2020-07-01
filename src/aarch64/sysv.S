@@ -377,7 +377,7 @@ CNAME(ffi_closure_trampoline_table_page):
     adr x16, -PAGE_MAX_SIZE
     ldp x17, x16, [x16]
     BR(x16)
-	nop		/* each entry in the trampoline config page is 2*sizeof(void*) so the trampoline itself cannot be smaller that 16 bytes */
+	nop		/* each entry in the trampoline config page is 2*sizeof(void*) so the trampoline itself cannot be smaller than 16 bytes */
     .endr
 
     .globl CNAME(ffi_closure_trampoline_table_page)
