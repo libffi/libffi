@@ -30,9 +30,9 @@ matrix:
       env: HOST=alpha-linux-gnu CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/alpha-linux-gnu
     - os: linux
       env: HOST=m68k-linux-gnu MEVAL='export CC="m68k-linux-gnu-gcc-8 -mcpu=547x" && CXX="m68k-linux-gnu-g++-8 -mcpu=547x"' CONFIGURE_OPTIONS=--disable-shared QEMU_LD_PREFIX=/usr/m68k-linux-gnu QEMU_CPU=cfv4e
-    - os: linux
-      arch: s390x
-      env: HOST=s390x-linux-gnu
+#   - os: linux
+#     arch: s390x
+#     env: HOST=s390x-linux-gnu
     - os: linux
       arch: ppc64le
       env: HOST=ppc64le-linux-gnu
