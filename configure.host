@@ -179,7 +179,7 @@ case "${host}" in
   mips-sgi-irix5.* | mips-sgi-irix6.* | mips*-*-rtems*)
 	TARGET=MIPS; TARGETDIR=mips
 	;;
-  mips*-*linux* | mips*-*-openbsd*)
+  mips*-*linux* | mips*-*-openbsd* | mips*-*-freebsd*)
 	# Support 128-bit long double for NewABI.
 	HAVE_LONG_DOUBLE='defined(__mips64)'
 	TARGET=MIPS; TARGETDIR=mips
@@ -217,6 +217,10 @@ case "${host}" in
   powerpc-*-freebsd* | powerpc-*-openbsd* | powerpc-*-netbsd*)
 	TARGET=POWERPC_FREEBSD; TARGETDIR=powerpc
 	HAVE_LONG_DOUBLE_VARIANT=1
+	;;
+  powerpcspe-*-freebsd*)
+	TARGET=POWERPC_FREEBSD; TARGETDIR=powerpc
+	CFLAGS="$CFLAGS -D__NO_FPRS__"
 	;;
   powerpc64-*-freebsd*)
 	TARGET=POWERPC; TARGETDIR=powerpc
