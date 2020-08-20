@@ -107,8 +107,10 @@ E(0b, FFI_TYPE_FLOAT)
 E(0b, FFI_TYPE_DOUBLE)
 	movsd qword ptr[r8], xmm0; movsd	%xmm0, (%r8)
 	epilogue
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
 E(0b, FFI_TYPE_LONGDOUBLE)
 	call	PLT(C(abort))
+#endif
 E(0b, FFI_TYPE_UINT8)
 	movzx eax, al ;movzbl	%al, %eax
 	mov qword ptr[r8], rax; movq	%rax, (%r8)
