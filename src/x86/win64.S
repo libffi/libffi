@@ -30,7 +30,7 @@
 #if defined(__clang__) || defined(__APPLE__) || (defined (__sun__) && defined(__svr4__))
 # define E(BASE, X)	.balign 8
 #else
-# define E(BASE, X)	.balign 8; .org BASE + X * 8
+# define E(BASE, X)	.balign 8; .org BASE + (X) * 8
 #endif
 
 	.text
@@ -108,7 +108,8 @@ E(0b, FFI_TYPE_FLOAT)
 E(0b, FFI_TYPE_DOUBLE)
 	movsd	%xmm0, (%r8)
 	epilogue
-E(0b, FFI_TYPE_LONGDOUBLE)
+// FFI_TYPE_LONGDOUBLE may be FFI_TYPE_DOUBLE but we need a different value here.
+E(0b, FFI_TYPE_DOUBLE + 1)
 	call	PLT(C(abort))
 E(0b, FFI_TYPE_UINT8)
 	movzbl	%al, %eax
