@@ -56,8 +56,8 @@
 
 /* Handle win32 fastcall name mangling.  */
 #ifdef X86_WIN32
-# define ffi_call_i386		@ffi_call_i386@8
-# define ffi_closure_inner	@ffi_closure_inner@8
+# define ffi_call_i386		"@ffi_call_i386@8"
+# define ffi_closure_inner	"@ffi_closure_inner@8"
 #else
 # define ffi_call_i386		C(ffi_call_i386)
 # define ffi_closure_inner	C(ffi_closure_inner)
