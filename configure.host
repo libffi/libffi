@@ -222,7 +222,7 @@ case "${host}" in
 	TARGET=POWERPC_FREEBSD; TARGETDIR=powerpc
 	CFLAGS="$CFLAGS -D__NO_FPRS__"
 	;;
-  powerpc64-*-freebsd*)
+  powerpc64-*-freebsd* | powerpc64le-*-freebsd*)
 	TARGET=POWERPC; TARGETDIR=powerpc
 	;;
   powerpc*-*-rtems*)
