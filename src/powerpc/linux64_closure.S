@@ -27,6 +27,7 @@
 #define LIBFFI_ASM
 #include <fficonfig.h>
 #include <ffi.h>
+#include <powerpc/asm.h>
 
 	.file	"linux64_closure.S"
 
@@ -190,7 +191,7 @@ ffi_closure_LINUX64:
 
 	# make the call
 # if defined _CALL_LINUX || _CALL_ELF == 2
-	bl ffi_closure_helper_LINUX64
+	bl NOTOC(ffi_closure_helper_LINUX64)
 # else
 	bl .ffi_closure_helper_LINUX64
 # endif

@@ -123,3 +123,9 @@
 
 /* Local labels stripped out by the linker.  */
 #define L(x) .L##x
+
+#ifdef HAVE_AS_PPC_PCREL
+# define NOTOC(X) X@notoc
+#else
+# define NOTOC(X) X
+#endif

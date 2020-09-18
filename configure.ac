@@ -174,6 +174,23 @@ case "$TARGET" in
 		  [Define if the compiler uses zarch features.])
     fi
     ;;
+
+  POWERPC*)
+    AC_CACHE_CHECK([assembler supports pc related relocs],
+	libffi_cv_as_ppc_pcrel, [
+	libffi_cv_as_ppc_pcrel=no
+	echo '.text; foo: bl bar@notoc; .data; .long foo-.; .text' > conftest.s
+	if $CC $CFLAGS -c conftest.s > /dev/null 2>&1; then
+	    libffi_cv_as_ppc_pcrel=yes
+	fi
+	])
+    if test "x$libffi_cv_as_ppc_pcrel" = xyes; then
+	AC_DEFINE(HAVE_AS_PPC_PCREL, 1,
+		  [Define if your assembler supports PC relative relocs.])
+    fi
+    ;;
+
+
 esac
 
 AC_CACHE_CHECK([whether compiler supports pointer authentication],
