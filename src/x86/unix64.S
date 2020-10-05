@@ -84,7 +84,6 @@ L(UW1):
 
 	movq	%rdi, %r10		/* Save a copy of the register area. */
 	movq	%r8, %r11		/* Save a copy of the target fn.  */
-	movl	%r9d, %eax		/* Set number of SSE registers.  */
 
 	/* Load up all argument registers.  */
 	movq	(%r10), %rdi
@@ -93,7 +92,7 @@ L(UW1):
 	movq	0x18(%r10), %rcx
 	movq	0x20(%r10), %r8
 	movq	0x28(%r10), %r9
-	movl	0xb0(%r10), %eax
+	movl	0xb0(%r10), %eax	/* Set number of SSE registers.  */
 	testl	%eax, %eax
 	jnz	L(load_sse)
 L(ret_from_load_sse):
