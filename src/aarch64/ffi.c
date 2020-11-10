@@ -564,6 +564,14 @@ ffi_prep_cif_machdep_var(ffi_cif *cif, unsigned int nfixedargs,
   cif->aarch64_nfixedargs = nfixedargs;
   return status;
 }
+#else
+ffi_status FFI_HIDDEN
+ffi_prep_cif_machdep_var(ffi_cif *cif, unsigned int nfixedargs, unsigned int ntotalargs)
+{
+  ffi_status status = ffi_prep_cif_machdep (cif);
+  cif->flags |= AARCH64_FLAG_VARARG;
+  return status;
+}
 #endif /* __APPLE__ */
 
 extern void ffi_call_SYSV (struct call_context *context, void *frame,
@@ -580,13 +588,19 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
   void *stack, *frame, *rvalue;
   struct arg_state state;
   size_t stack_bytes, rtype_size, rsize;
-  int i, nargs, flags;
+  int i, nargs, flags, isvariadic = 0;
   ffi_type *rtype;
 
   flags = cif->flags;
   rtype = cif->rtype;
   rtype_size = rtype->size;
   stack_bytes = cif->bytes;
+
+  if (flags & AARCH64_FLAG_VARARG)
+  {
+    isvariadic = 1;
+    flags &= ~AARCH64_FLAG_VARARG;
+  }
 
   /* If the target function returns a structure via hidden pointer,
      then we cannot allow a null rvalue.  Otherwise, mash a null
@@ -667,35 +681,31 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 	    h = is_vfp_type (ty);
 	    if (h)
 	      {
-		int elems = 4 - (h & 3);
-#ifdef _WIN32 /* for handling armasm calling convention */
-                if (cif->is_variadic)
-                  {
-                    if (state.ngrn + elems <= N_X_ARG_REG)
-                      {
-                        dest = &context->x[state.ngrn];
-                        state.ngrn += elems;
-                        extend_hfa_type(dest, a, h);
-                        break;
-                      }
-                    state.nsrn = N_X_ARG_REG;
-                    dest = allocate_to_stack(&state, stack, ty->alignment, s);
-                  }
-                else
-                  {
-#endif /* for handling armasm calling convention */
-	        if (state.nsrn + elems <= N_V_ARG_REG)
-		  {
-		    dest = &context->v[state.nsrn];
-		    state.nsrn += elems;
-		    extend_hfa_type (dest, a, h);
-		    break;
-		  }
-		state.nsrn = N_V_ARG_REG;
-		dest = allocate_to_stack (&state, stack, ty->alignment, s);
-#ifdef _WIN32 /* for handling armasm calling convention */
-	      }
-#endif /* for handling armasm calling convention */
+              int elems = 4 - (h & 3);
+              if (cif->abi == FFI_WIN64 && isvariadic)
+              {
+                if (state.ngrn + elems <= N_X_ARG_REG)
+                {
+                  dest = &context->x[state.ngrn];
+                  state.ngrn += elems;
+                  extend_hfa_type(dest, a, h);
+                  break;
+                }
+                state.nsrn = N_X_ARG_REG;
+                dest = allocate_to_stack(&state, stack, ty->alignment, s);
+              }
+              else
+              {
+                if (state.nsrn + elems <= N_V_ARG_REG)
+                {
+                  dest = &context->v[state.nsrn];
+                  state.nsrn += elems;
+                  extend_hfa_type (dest, a, h);
+                  break;
+                }
+                state.nsrn = N_V_ARG_REG;
+                dest = allocate_to_stack (&state, stack, ty->alignment, s);
+              }
 	      }
 	    else if (s > 16)
 	      {

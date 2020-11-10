@@ -45,8 +45,13 @@ typedef enum ffi_abi
   {
     FFI_FIRST_ABI = 0,
     FFI_SYSV,
+    FFI_WIN64,
     FFI_LAST_ABI,
+#if defined(_WIN32)
+    FFI_DEFAULT_ABI = FFI_WIN64
+#else
     FFI_DEFAULT_ABI = FFI_SYSV
+#endif
   } ffi_abi;
 #endif
 
@@ -72,11 +77,11 @@ typedef enum ffi_abi
 #ifdef _WIN32
 #define FFI_EXTRA_CIF_FIELDS unsigned is_variadic
 #endif
+#define FFI_TARGET_SPECIFIC_VARIADIC
 
 /* ---- Internal ---- */
 
 #if defined (__APPLE__)
-#define FFI_TARGET_SPECIFIC_VARIADIC
 #define FFI_EXTRA_CIF_FIELDS unsigned aarch64_nfixedargs
 #elif !defined(_WIN32)
 /* iOS and Windows reserve x18 for the system.  Disable Go closures until
