@@ -55,6 +55,13 @@ libpaths=
 libversion=7
 verbose=
 
+# Convert paths to Windows format if cygpath is available.
+if command -v cygpath >/dev/null; then
+  pathconv='cygpath -m'
+else
+  pathconv='echo'
+fi
+
 while [ $# -gt 0 ]
 do
   case $1
@@ -65,6 +72,10 @@ do
     ;;
     --version)
       args="-help"
+      shift 1
+    ;;
+    --pathconv=*)
+      pathconv="$(echo $1|sed 's/--pathconv=//g')"
       shift 1
     ;;
     -fexceptions)
@@ -165,24 +176,24 @@ do
       shift 1
     ;;
     -I)
-      p=$(cygpath -m $2)
+      p=$($pathconv $2)
       args="$args -I$p"
       includes="$includes -I$p"
       shift 2
     ;;
     -I*)
-      p=$(cygpath -m ${1#-I})
+      p=$($pathconv ${1#-I})
       args="$args -I$p"
       includes="$includes -I$p"
       shift 1
     ;;
     -L)
-      p=$(cygpath -m $2)
+      p=$($pathconv $2)
       linkargs="$linkargs -LIBPATH:$p"
       shift 2
     ;;
     -L*)
-      p=$(cygpath -m ${1#-L})
+      p=$($pathconv ${1#-L})
       linkargs="$linkargs -LIBPATH:$p"
       shift 1
     ;;
@@ -256,12 +267,12 @@ do
       shift 2
     ;;
     *.S)
-      src=$1
+      src=$($pathconv $1)
       assembly="true"
       shift 1
     ;;
     *.c)
-      args="$args $1"
+      args="$args $($pathconv $1)"
       shift 1
     ;;
     *)
