@@ -310,7 +310,10 @@ typedef struct {
   void *trampoline_table;
   void *trampoline_table_entry;
 #else
-  char tramp[FFI_TRAMPOLINE_SIZE];
+  union {
+    char tramp[FFI_TRAMPOLINE_SIZE];
+    void *ftramp;
+  };
 #endif
   ffi_cif   *cif;
   void     (*fun)(ffi_cif*,void*,void**,void*);
@@ -456,6 +459,14 @@ FFI_API void ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
 		  void **avalue, void *closure);
 
 #endif /* FFI_GO_CLOSURES */
+
+/* ---- Static Trampoline Definitions -------------------------------------- */
+
+FFI_API int ffi_tramp_is_supported(void);
+FFI_API void *ffi_tramp_alloc (int flags);
+FFI_API int ffi_tramp_set_parms (void *tramp, void *data, void *code);
+FFI_API void *ffi_tramp_get_addr (void *tramp);
+FFI_API void ffi_tramp_free (void *tramp);
 
 /* ---- Public interface definition -------------------------------------- */
 

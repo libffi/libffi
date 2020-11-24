@@ -360,6 +360,13 @@ AC_ARG_ENABLE(raw-api,
     AC_DEFINE(FFI_NO_RAW_API, 1, [Define this if you do not want support for the raw API.])
   fi)
 
+AC_ARG_ENABLE(static-tramp,
+[  --enable-static-tramp        use statically defined trampolines],
+  if test "$enable_static_tramp" = "yes"; then
+    AC_DEFINE(FFI_EXEC_STATIC_TRAMP, 1,
+      [Define this if you want to use statically defined trampolines.])
+  fi)
+
 AC_ARG_ENABLE(purify-safety,
 [  --enable-purify-safety  purify-safe mode],
   if test "$enable_purify_safety" = "yes"; then

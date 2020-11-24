@@ -103,6 +103,10 @@ ffi_status ffi_prep_cif_core(ffi_cif *cif,
    some targets.  */
 void *ffi_data_to_code_pointer (void *data) FFI_HIDDEN;
 
+/* The arch code calls this to set the code and data parameters for a
+   closure's static trampoline, if any. */
+int ffi_closure_tramp_set_parms (void *closure, void *code);
+
 /* Extended cif, used in callback from assembly routine */
 typedef struct
 {
