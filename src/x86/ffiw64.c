@@ -185,7 +185,6 @@ EFI64(ffi_call_go)(ffi_cif *cif, void (*fn)(void), void *rvalue,
   ffi_call_int (cif, fn, rvalue, avalue, closure);
 }
 
-
 extern void ffi_closure_win64(void) FFI_HIDDEN;
 
 #ifdef FFI_GO_CLOSURES
@@ -220,8 +219,11 @@ EFI64(ffi_prep_closure_loc)(ffi_closure* closure,
       return FFI_BAD_ABI;
     }
 
-  memcpy (tramp, trampoline, sizeof(trampoline));
-  *(UINT64 *)(tramp + sizeof (trampoline)) = (uintptr_t)ffi_closure_win64;
+  if (!ffi_closure_tramp_set_parms (closure, ffi_closure_win64))
+    {
+      memcpy (tramp, trampoline, sizeof(trampoline));
+      *(UINT64 *)(tramp + sizeof (trampoline)) = (uintptr_t)ffi_closure_win64;
+    }
 
   closure->cif = cif;
   closure->fun = fun;

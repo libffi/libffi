@@ -559,6 +559,9 @@ ffi_prep_closure_loc (ffi_closure* closure,
       return FFI_BAD_ABI;
     }
 
+  if (ffi_closure_tramp_set_parms (closure, dest))
+    goto out;
+
   /* endbr32.  */
   *(UINT32 *) tramp = 0xfb1e0ff3;
 
@@ -570,6 +573,7 @@ ffi_prep_closure_loc (ffi_closure* closure,
   tramp[9] = 0xe9;
   *(unsigned *)(tramp + 10) = (unsigned)dest - ((unsigned)codeloc + 14);
 
+out:
   closure->cif = cif;
   closure->fun = fun;
   closure->user_data = user_data;
@@ -767,4 +771,17 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *avalue)
   ffi_call_i386 (frame, stack);
 }
 #endif /* !FFI_NO_RAW_API */
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+void *
+ffi_tramp_arch (size_t *tramp_size, size_t *map_size)
+{
+  extern void *trampoline_code_table;
+
+  *tramp_size = X86_TRAMP_SIZE;
+  *map_size = X86_TRAMP_MAP_SIZE;
+  return &trampoline_code_table;
+}
+#endif
+
 #endif /* __i386__ */

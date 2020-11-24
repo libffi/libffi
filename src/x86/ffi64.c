@@ -756,8 +756,11 @@ ffi_prep_closure_loc (ffi_closure* closure,
   else
     dest = ffi_closure_unix64;
 
-  memcpy (tramp, trampoline, sizeof(trampoline));
-  *(UINT64 *)(tramp + sizeof (trampoline)) = (uintptr_t)dest;
+  if (!ffi_closure_tramp_set_parms (closure, dest))
+    {
+      memcpy (tramp, trampoline, sizeof(trampoline));
+      *(UINT64 *)(tramp + sizeof (trampoline)) = (uintptr_t)dest;
+    }
 
   closure->cif = cif;
   closure->fun = fun;
@@ -891,5 +894,17 @@ ffi_prep_go_closure (ffi_go_closure* closure, ffi_cif* cif,
 }
 
 #endif /* FFI_GO_CLOSURES */
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+void *
+ffi_tramp_arch (size_t *tramp_size, size_t *map_size)
+{
+  extern void *trampoline_code_table;
+
+  *tramp_size = UNIX64_TRAMP_SIZE;
+  *map_size = UNIX64_TRAMP_MAP_SIZE;
+  return &trampoline_code_table;
+}
+#endif
 
 #endif /* __x86_64__ */

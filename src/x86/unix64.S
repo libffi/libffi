@@ -253,6 +253,10 @@ ENDF(C(ffi_call_unix64))
 C(ffi_closure_unix64_sse):
 L(UW5):
 	_CET_ENDBR
+#ifdef FFI_EXEC_STATIC_TRAMP
+	movq	8(%rsp), %r10
+	addq	$16, %rsp
+#endif
 	subq	$ffi_closure_FS, %rsp
 L(UW6):
 	/* cfi_adjust_cfa_offset(ffi_closure_FS) */
@@ -277,6 +281,10 @@ ENDF(C(ffi_closure_unix64_sse))
 C(ffi_closure_unix64):
 L(UW8):
 	_CET_ENDBR
+#ifdef FFI_EXEC_STATIC_TRAMP
+	movq	8(%rsp), %r10
+	addq	$16, %rsp
+#endif
 	subq	$ffi_closure_FS, %rsp
 L(UW9):
 	/* cfi_adjust_cfa_offset(ffi_closure_FS) */
@@ -455,6 +463,46 @@ L(sse_entry2):
 
 L(UW17):
 ENDF(C(ffi_go_closure_unix64))
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+/*
+ * The trampoline uses register r10. It saves the original value of r10 on
+ * the stack.
+ *
+ * The trampoline has two parameters - target code to jump to and data for
+ * the target code. The trampoline extracts the parameters from its parameter
+ * block (see tramp_table_map()). The trampoline saves the data address on
+ * the stack. Finally, it jumps to the target code.
+ *
+ * The target code can choose to:
+ *
+ * - restore the value of r10
+ * - load the data address in a register
+ * - restore the stack pointer to what it was when the trampoline was invoked.
+ */
+	.align	UNIX64_TRAMP_MAP_SIZE
+	.globl	trampoline_code_table
+	FFI_HIDDEN(C(trampoline_code_table))
+
+C(trampoline_code_table):
+	.rept	UNIX64_TRAMP_MAP_SIZE / UNIX64_TRAMP_SIZE
+	endbr64
+	subq	$16, %rsp		/* Make space on the stack */
+	movq	%r10, (%rsp)		/* Save %r10 on stack */
+	movq	4077(%rip), %r10	/* Copy data into %r10 */
+	movq	%r10, 8(%rsp)		/* Save data on stack */
+	movq	4073(%rip), %r10	/* Copy code into %r10 */
+	jmp	*%r10			/* Jump to code */
+	nop				/* Pad to 8 byte boundary */
+	nop
+	nop
+	nop
+	nop
+	nop
+	.endr
+ENDF(C(trampoline_code_table))
+	.align	UNIX64_TRAMP_MAP_SIZE
+#endif /* FFI_EXEC_STATIC_TRAMP */
 
 /* Sadly, OSX cctools-as doesn't understand .cfi directives at all.  */
 

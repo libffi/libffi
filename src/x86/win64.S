@@ -200,6 +200,10 @@ C(ffi_go_closure_win64):
 C(ffi_closure_win64):
 	cfi_startproc
 	_CET_ENDBR
+#ifdef FFI_EXEC_STATIC_TRAMP
+	movq	8(%rsp), %r10
+	addq	$16, %rsp
+#endif
 	/* Save all integer arguments into the incoming reg stack space.  */
 	movq	%rcx, 8(%rsp)
 	movq	%rdx, 16(%rsp)
