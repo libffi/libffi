@@ -227,6 +227,10 @@ ARM_FUNC_END(ffi_go_closure_SYSV)
 ARM_FUNC_START(ffi_closure_SYSV)
 	UNWIND(.fnstart)
 	cfi_startproc
+#if defined(FFI_EXEC_STATIC_TRAMP)
+	ldr	ip, [sp, #4]
+	add	sp, sp, 8
+#endif
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
 
@@ -274,6 +278,10 @@ ARM_FUNC_END(ffi_go_closure_VFP)
 ARM_FUNC_START(ffi_closure_VFP)
 	UNWIND(.fnstart)
 	cfi_startproc
+#if defined(FFI_EXEC_STATIC_TRAMP)
+	ldr	ip, [sp, #4]
+	add	sp, sp, 8
+#endif
 	stmdb	sp!, {r0-r3}			@ save argument regs
 	cfi_adjust_cfa_offset(16)
 
@@ -353,6 +361,35 @@ E(ARM_TYPE_STRUCT)
 	ldm	sp, {sp,pc}
 	cfi_endproc
 ARM_FUNC_END(ffi_closure_ret)
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+/*
+ * The trampoline uses register ip (r12). It saves the original value of ip
+ * on the stack.
+ *
+ * The trampoline has two parameters - target code to jump to and data for
+ * the target code. The trampoline extracts the parameters from its parameter
+ * block (see tramp_table_map()). The trampoline saves the data address on
+ * the stack. Finally, it jumps to the target code.
+ *
+ * The target code can choose to:
+ *
+ * - restore the value of ip
+ * - load the data address in a register
+ * - restore the stack pointer to what it was when the trampoline was invoked.
+ */
+	.align	ARM_TRAMP_MAP_SHIFT
+ARM_FUNC_START(trampoline_code_table)
+	.rept	ARM_TRAMP_MAP_SIZE / ARM_TRAMP_SIZE
+	sub	sp, sp, #8		/* Make space on the stack */
+	str	ip, [sp]		/* Save ip on stack */
+	ldr	ip, [pc, #4080]		/* Copy data into ip */
+	str	ip, [sp, #4]		/* Save data on stack */
+	ldr	pc, [pc, #4076]		/* Copy code into PC */
+	.endr
+ARM_FUNC_END(trampoline_code_table)
+	.align	ARM_TRAMP_MAP_SHIFT
+#endif /* FFI_EXEC_STATIC_TRAMP */
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 

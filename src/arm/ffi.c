@@ -612,6 +612,9 @@ ffi_prep_closure_loc (ffi_closure * closure,
   config[1] = closure_func;
 #else
 
+  if (ffi_closure_tramp_set_parms (closure, closure_func))
+    goto out;
+
 #ifndef _M_ARM
   memcpy(closure->tramp, ffi_arm_trampoline, 8);
 #else
@@ -633,6 +636,7 @@ ffi_prep_closure_loc (ffi_closure * closure,
 #else
   *(void (**)(void))(closure->tramp + 8) = closure_func;
 #endif
+out:
 #endif
 
   closure->cif = cif;
@@ -872,5 +876,17 @@ layout_vfp_args (ffi_cif * cif)
 	break;
     }
 }
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+void *
+ffi_tramp_arch (size_t *tramp_size, size_t *map_size)
+{
+  extern void *trampoline_code_table;
+
+  *tramp_size = ARM_TRAMP_SIZE;
+  *map_size = ARM_TRAMP_MAP_SIZE;
+  return &trampoline_code_table;
+}
+#endif
 
 #endif /* __arm__ or _M_ARM */
