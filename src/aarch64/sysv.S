@@ -232,6 +232,10 @@ CNAME(ffi_call_SYSV):
 	.align 4
 CNAME(ffi_closure_SYSV_V):
 	cfi_startproc
+#if defined(FFI_EXEC_STATIC_TRAMP)
+	ldr	x17, [sp, #8]
+	add	sp, sp, #16
+#endif
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
 	cfi_rel_offset (x29, 0)
@@ -255,6 +259,10 @@ CNAME(ffi_closure_SYSV_V):
 	.align	4
 	cfi_startproc
 CNAME(ffi_closure_SYSV):
+#if defined(FFI_EXEC_STATIC_TRAMP)
+	ldr	x17, [sp, #8]
+	add	sp, sp, #16
+#endif
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
 	cfi_rel_offset (x29, 0)
@@ -366,6 +374,44 @@ CNAME(ffi_closure_SYSV):
 	.type	CNAME(ffi_closure_SYSV), #function
 	.size	CNAME(ffi_closure_SYSV), . - CNAME(ffi_closure_SYSV)
 #endif
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+/*
+ * The trampoline uses register x17. It saves the original value of x17 on
+ * the stack.
+ *
+ * The trampoline has two parameters - target code to jump to and data for
+ * the target code. The trampoline extracts the parameters from its parameter
+ * block (see tramp_table_map()). The trampoline saves the data address on
+ * the stack. Finally, it jumps to the target code.
+ *
+ * The target code can choose to:
+ *
+ * - restore the value of x17
+ * - load the data address in a register
+ * - restore the stack pointer to what it was when the trampoline was invoked.
+ */
+	.align	AARCH64_TRAMP_MAP_SHIFT
+CNAME(trampoline_code_table):
+	.rept	AARCH64_TRAMP_MAP_SIZE / AARCH64_TRAMP_SIZE
+	sub	sp, sp, #16		/* Make space on the stack */
+	str	x17, [sp]		/* Save x17 on stack */
+	adr	x17, #16376		/* Get data address */
+	ldr	x17, [x17]		/* Copy data into x17 */
+	str	x17, [sp, #8]		/* Save data on stack */
+	adr	x17, #16372		/* Get code address */
+	ldr	x17, [x17]		/* Load code address into x17 */
+	br	x17			/* Jump to code */
+	.endr
+
+	.globl CNAME(trampoline_code_table)
+	FFI_HIDDEN(CNAME(trampoline_code_table))
+#ifdef __ELF__
+	.type	CNAME(trampoline_code_table), #function
+	.size	CNAME(trampoline_code_table), . - CNAME(trampoline_code_table)
+#endif
+	.align	AARCH64_TRAMP_MAP_SHIFT
+#endif /* FFI_EXEC_STATIC_TRAMP */
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
