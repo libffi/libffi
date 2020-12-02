@@ -45,6 +45,9 @@
 
 #include <stddef.h>
 #include <unistd.h>
+#ifdef  HAVE_SYS_MEMFD_H
+#include <sys/memfd.h>
+#endif
 
 static const size_t overhead =
   (sizeof(max_align_t) > sizeof(void *) + sizeof(size_t)) ?
@@ -544,6 +547,17 @@ static int execfd = -1;
 /* The amount of space already allocated from the temporary file.  */
 static size_t execsize = 0;
 
+#ifdef HAVE_MEMFD_CREATE
+/* Open a temporary file name, and immediately unlink it.  */
+static int
+open_temp_exec_file_memfd (const char *name)
+{
+  int fd;
+  fd = memfd_create (name, MFD_CLOEXEC);
+  return fd;
+}
+#endif
+
 /* Open a temporary file name, and immediately unlink it.  */
 static int
 open_temp_exec_file_name (char *name, int flags)
@@ -671,6 +685,9 @@ static struct
   const char *arg;
   int repeat;
 } open_temp_exec_file_opts[] = {
+#ifdef HAVE_MEMFD_CREATE
+  { open_temp_exec_file_memfd, "libffi", 0 },
+#endif
   { open_temp_exec_file_env, "TMPDIR", 0 },
   { open_temp_exec_file_dir, "/tmp", 0 },
   { open_temp_exec_file_dir, "/var/tmp", 0 },

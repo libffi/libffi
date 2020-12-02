@@ -63,6 +63,9 @@ EOF
 
 AM_MAINTAINER_MODE
 
+AC_CHECK_HEADERS(sys/memfd.h)
+AC_CHECK_FUNCS([memfd_create])
+
 AC_CHECK_HEADERS(sys/mman.h)
 AC_CHECK_FUNCS([mmap mkostemp])
 AC_FUNC_MMAP_BLACKLIST
