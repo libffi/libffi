@@ -64,7 +64,7 @@ EOF
 AM_MAINTAINER_MODE
 
 AC_CHECK_HEADERS(sys/mman.h)
-AC_CHECK_FUNCS([mmap mkostemp])
+AC_CHECK_FUNCS([mmap mkostemp mkstemp])
 AC_FUNC_MMAP_BLACKLIST
 
 dnl The -no-testsuite modules omit the test subdir.
@@ -219,7 +219,7 @@ case "$target" in
                  [Cannot use PROT_EXEC on this target, so, we revert to
                    alternative means])
      ;;
-     *-apple-* | *-*-freebsd* | *-*-kfreebsd* | *-*-openbsd* | *-pc-solaris* | *-linux-android*)
+     *-apple-* | *-*-freebsd* | *-*-kfreebsd* | *-*-openbsd* | *-*-netbsd* | *-pc-solaris* | *-linux-android*)
        AC_DEFINE(FFI_MMAP_EXEC_WRIT, 1,
                  [Cannot use malloc on this target, so, we revert to
                    alternative means])
@@ -359,6 +359,13 @@ AC_ARG_ENABLE(raw-api,
   if test "$enable_raw_api" = "no"; then
     AC_DEFINE(FFI_NO_RAW_API, 1, [Define this if you do not want support for the raw API.])
   fi)
+
+case "$target" in
+     *-linux* | *-freebsd* | *-netbsd* | *-openbsd*)
+       AC_DEFINE(FFI_EXEC_STATIC_TRAMP, 1,
+                 [Define this if you want statically defined trampolines])
+     ;;
+esac
 
 AC_ARG_ENABLE(purify-safety,
 [  --enable-purify-safety  purify-safe mode],
