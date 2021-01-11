@@ -781,7 +781,9 @@ ffi_call_go (ffi_cif *cif, void (*fn) (void), void *rvalue,
 /* Build a trampoline.  */
 
 extern void ffi_closure_SYSV (void) FFI_HIDDEN;
+extern void ffi_closure_SYSV_alt (void) FFI_HIDDEN;
 extern void ffi_closure_SYSV_V (void) FFI_HIDDEN;
+extern void ffi_closure_SYSV_V_alt (void) FFI_HIDDEN;
 
 ffi_status
 ffi_prep_closure_loc (ffi_closure *closure,
@@ -794,11 +796,18 @@ ffi_prep_closure_loc (ffi_closure *closure,
     return FFI_BAD_ABI;
 
   void (*start)(void);
+  void (*start_alt)(void);
   
   if (cif->flags & AARCH64_FLAG_ARG_V)
-    start = ffi_closure_SYSV_V;
+    {
+      start = ffi_closure_SYSV_V;
+      start_alt = ffi_closure_SYSV_V_alt;
+    }
   else
-    start = ffi_closure_SYSV;
+    {
+      start = ffi_closure_SYSV;
+      start_alt = ffi_closure_SYSV_alt;
+    }
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 #ifdef __MACH__
@@ -816,7 +825,15 @@ ffi_prep_closure_loc (ffi_closure *closure,
     0x00, 0x02, 0x1f, 0xd6	/* br	x16		*/
   };
   char *tramp = closure->tramp;
-  
+
+  if (ffi_tramp_is_present(closure))
+    {
+      /* Initialize the static trampoline's parameters. */
+      ffi_tramp_set_parms (closure->ftramp, start_alt, closure);
+      goto out;
+    }
+
+  /* Initialize the dynamic trampoline. */
   memcpy (tramp, trampoline, sizeof(trampoline));
   
   *(UINT64 *)(tramp + 16) = (uintptr_t)start;
@@ -832,6 +849,7 @@ ffi_prep_closure_loc (ffi_closure *closure,
   unsigned char *tramp_code = ffi_data_to_code_pointer (tramp);
   #endif
   ffi_clear_cache (tramp_code, tramp_code + FFI_TRAMPOLINE_SIZE);
+out:
 #endif
 
   closure->cif = cif;
@@ -1021,5 +1039,17 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
 
   return flags;
 }
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+void *
+ffi_tramp_arch (size_t *tramp_size, size_t *map_size)
+{
+  extern void *trampoline_code_table;
+
+  *tramp_size = AARCH64_TRAMP_SIZE;
+  *map_size = AARCH64_TRAMP_MAP_SIZE;
+  return &trampoline_code_table;
+}
+#endif
 
 #endif /* (__aarch64__) || defined(__arm64__)|| defined (_M_ARM64)*/
