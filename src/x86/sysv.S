@@ -93,6 +93,7 @@ ffi_call_i386:
 L(UW0):
 	# cfi_startproc
 	_CET_ENDBR
+L(endbr):
 #if !HAVE_FASTCALL
 	movl	4(%esp), %ecx
 	movl	8(%esp), %edx
@@ -422,6 +423,16 @@ L(UW20):
 ENDF(C(ffi_closure_i386))
 
 	.balign	16
+	.globl	C(ffi_closure_i386_alt)
+	FFI_HIDDEN(C(ffi_closure_i386_alt))
+C(ffi_closure_i386_alt):
+	_CET_ENDBR
+	movl	4(%esp), %eax
+	add	$8, %esp
+	jmp	C(ffi_closure_i386)
+ENDF(C(ffi_closure_i386_alt))
+
+	.balign	16
 	.globl	C(ffi_go_closure_STDCALL)
 	FFI_HIDDEN(C(ffi_go_closure_STDCALL))
 C(ffi_go_closure_STDCALL):
@@ -465,6 +476,16 @@ L(UW25):
 L(UW26):
 	# cfi_endproc
 ENDF(C(ffi_closure_REGISTER))
+
+	.balign	16
+	.globl	C(ffi_closure_REGISTER_alt)
+	FFI_HIDDEN(C(ffi_closure_REGISTER_alt))
+C(ffi_closure_REGISTER_alt):
+	_CET_ENDBR
+	movl	(%esp), %eax
+	add	$4, %esp
+	jmp	C(ffi_closure_REGISTER)
+ENDF(C(ffi_closure_REGISTER_alt))
 
 /* For STDCALL (and others), we need to pop N bytes of arguments off
    the stack following the closure.  The amount needing to be popped
@@ -572,6 +593,93 @@ E(L(load_table3), X86_RET_UNUSED15)
 L(UW31):
 	# cfi_endproc
 ENDF(C(ffi_closure_STDCALL))
+
+	.balign	16
+	.globl	C(ffi_closure_STDCALL_alt)
+	FFI_HIDDEN(C(ffi_closure_STDCALL_alt))
+C(ffi_closure_STDCALL_alt):
+	_CET_ENDBR
+	movl	4(%esp), %eax
+	add	$8, %esp
+	jmp	C(ffi_closure_STDCALL)
+ENDF(C(ffi_closure_STDCALL_alt))
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+/*
+ * Below is the definition of the trampoline code table. Each element in
+ * the code table is a trampoline.
+ *
+ * Because we jump to the trampoline, we place a _CET_ENDBR at the
+ * beginning of the trampoline to mark it as a valid branch target. This is
+ * part of the the Intel CET (Control Flow Enforcement Technology).
+ *
+ * If CET is present, _CET_ENDBR is defined as the endbr32 instruction. Else,
+ * _CET_ENDBR is defined empty. Consequently, the size of the trampoline and
+ * the PC-relative offsets in the trampoline code also differ. So, two versions
+ * of the code table have been defined - one with the endbr32 instruction and
+ * one without. ffi_tramp_arch() figures out which version of the code table
+ * should be used by looking at ffi_cet_present (defined at the end of this
+ * file).
+ */
+/*
+ * The trampoline uses register eax.  It saves the original value of eax on
+ * the stack.
+ *
+ * The trampoline has two parameters - target code to jump to and data for
+ * the target code. The trampoline extracts the parameters from its parameter
+ * block (see tramp_table_map()). The trampoline saves the data address on
+ * the stack. Finally, it jumps to the target code.
+ *
+ * The target code can choose to:
+ *
+ * - restore the value of eax
+ * - load the data address in a register
+ * - restore the stack pointer to what it was when the trampoline was invoked.
+ */
+	.align	X86_TRAMP_MAP_SIZE
+	.globl	C(trampoline_code_table_cet)
+	FFI_HIDDEN(C(trampoline_code_table_cet))
+C(trampoline_code_table_cet):
+	.rept	X86_TRAMP_MAP_SIZE / X86_TRAMP_SIZE_CET
+	_CET_ENDBR
+	sub	$8, %esp
+	movl	%eax, (%esp)		/* Save %eax on stack */
+	call	1f			/* Get next PC into %eax */
+	movl	4081(%eax), %eax	/* Copy data into %eax */
+	movl	%eax, 4(%esp)		/* Save data on stack */
+	call	1f			/* Get next PC into %eax */
+	movl	4070(%eax), %eax	/* Copy data into %eax */
+	jmp	*%eax			/* Jump to code */
+1:
+	mov	(%esp), %eax
+	ret
+	nop				/* Pad to 4 byte boundary */
+	nop
+	.endr
+ENDF(C(trampoline_code_table_cet))
+
+	.align	X86_TRAMP_MAP_SIZE
+	.globl	C(trampoline_code_table)
+	FFI_HIDDEN(C(trampoline_code_table))
+C(trampoline_code_table):
+	.rept	X86_TRAMP_MAP_SIZE / X86_TRAMP_SIZE
+	sub	$8, %esp
+	movl	%eax, (%esp)		/* Save %eax on stack */
+	call	1f			/* Get next PC into %eax */
+	movl	4085(%eax), %eax	/* Copy data into %eax */
+	movl	%eax, 4(%esp)		/* Save data on stack */
+	call	1f			/* Get next PC into %eax */
+	movl	4074(%eax), %eax	/* Copy data into %eax */
+	jmp	*%eax			/* Jump to code */
+1:
+	mov	(%esp), %eax
+	ret
+	nop				/* Pad to 4 byte boundary */
+	nop
+	.endr
+ENDF(C(trampoline_code_table))
+	.align	X86_TRAMP_MAP_SIZE
+#endif /* FFI_EXEC_STATIC_TRAMP */
 
 #if !FFI_NO_RAW_API
 
@@ -1131,6 +1239,14 @@ L(EFDE9):
 #endif /* __APPLE__ */
 
 #endif /* ifndef _MSC_VER */
+
+	.section .rodata
+	.align 8
+	.globl ffi_cet_present
+ffi_cet_present:
+	.set	L10,L(endbr)-L(UW0)
+	.int	L10
+
 #endif /* ifdef __i386__ */
 
 #if defined __ELF__ && defined __linux__
