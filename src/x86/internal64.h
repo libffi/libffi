@@ -20,3 +20,14 @@
 #define UNIX64_FLAG_RET_IN_MEM	(1 << 10)
 #define UNIX64_FLAG_XMM_ARGS	(1 << 11)
 #define UNIX64_SIZE_SHIFT	12
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+/*
+ * For the trampoline code table mapping, a mapping size of 4K (base page size)
+ * is chosen.
+ */
+#define UNIX64_TRAMP_MAP_SHIFT	12
+#define UNIX64_TRAMP_MAP_SIZE	(1 << UNIX64_TRAMP_MAP_SHIFT)
+#define UNIX64_TRAMP_SIZE_CET	40
+#define UNIX64_TRAMP_SIZE	32
+#endif

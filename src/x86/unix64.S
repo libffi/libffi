@@ -63,6 +63,7 @@
 C(ffi_call_unix64):
 L(UW0):
 	_CET_ENDBR
+L(endbr):
 	movq	(%rsp), %r10		/* Load return address.  */
 	leaq	(%rdi, %rsi), %rax	/* Find local stack base.  */
 	movq	%rdx, (%rax)		/* Save flags.  */
@@ -271,6 +272,17 @@ L(UW7):
 ENDF(C(ffi_closure_unix64_sse))
 
 	.balign	2
+	.globl	C(ffi_closure_unix64_sse_alt)
+	FFI_HIDDEN(C(ffi_closure_unix64_sse_alt))
+
+C(ffi_closure_unix64_sse_alt):
+	_CET_ENDBR
+	movq	8(%rsp), %r10
+	addq	$16, %rsp
+	jmp	C(ffi_closure_unix64_sse)
+ENDF(C(ffi_closure_unix64_sse_alt))
+
+	.balign	2
 	.globl	C(ffi_closure_unix64)
 	FFI_HIDDEN(C(ffi_closure_unix64))
 
@@ -400,6 +412,17 @@ L(la):	call	PLT(C(abort))
 L(UW11):
 ENDF(C(ffi_closure_unix64))
 
+	.balign	8
+	.globl	C(ffi_closure_unix64_alt)
+	FFI_HIDDEN(C(ffi_closure_unix64_alt))
+
+C(ffi_closure_unix64_alt):
+	_CET_ENDBR
+	movq	8(%rsp), %r10
+	addq	$16, %rsp
+	jmp	C(ffi_closure_unix64)
+	ENDF(C(ffi_closure_unix64_alt))
+
 	.balign	2
 	.globl	C(ffi_go_closure_unix64_sse)
 	FFI_HIDDEN(C(ffi_go_closure_unix64_sse))
@@ -455,6 +478,80 @@ L(sse_entry2):
 
 L(UW17):
 ENDF(C(ffi_go_closure_unix64))
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+/*
+ * Below is the definition of the trampoline code table. Each element in
+ * the code table is a trampoline.
+ *
+ * Because we jump to the trampoline, we place a _CET_ENDBR at the
+ * beginning of the trampoline to mark it as a valid branch target. This is
+ * part of the the Intel CET (Control Flow Enforcement Technology).
+ *
+ * If CET is present, _CET_ENDBR is defined as the endbr32 instruction. Else,
+ * _CET_ENDBR is defined empty. Consequently, the size of the trampoline and
+ * the PC-relative offsets in the trampoline code also differ. So, two versions
+ * of the code table have been defined - one with the endbr32 instruction and
+ * one without. ffi_tramp_arch() figures out which version of the code table
+ * should be used by looking at ffi_cet_present (defined at the end of this
+ * file).
+ */
+/*
+ * The trampoline uses register r10. It saves the original value of r10 on
+ * the stack.
+ *
+ * The trampoline has two parameters - target code to jump to and data for
+ * the target code. The trampoline extracts the parameters from its parameter
+ * block (see tramp_table_map()). The trampoline saves the data address on
+ * the stack. Finally, it jumps to the target code.
+ *
+ * The target code can choose to:
+ *
+ * - restore the value of r10
+ * - load the data address in a register
+ * - restore the stack pointer to what it was when the trampoline was invoked.
+ */
+
+	.align	UNIX64_TRAMP_MAP_SIZE
+	.globl	trampoline_code_table_cet
+	FFI_HIDDEN(C(trampoline_code_table_cet))
+
+C(trampoline_code_table_cet):
+	.rept	UNIX64_TRAMP_MAP_SIZE / UNIX64_TRAMP_SIZE_CET
+	_CET_ENDBR
+	subq	$16, %rsp		/* Make space on the stack */
+	movq	%r10, (%rsp)		/* Save %r10 on stack */
+	movq	4077(%rip), %r10	/* Copy data into %r10 */
+	movq	%r10, 8(%rsp)		/* Save data on stack */
+	movq	4073(%rip), %r10	/* Copy code into %r10 */
+	jmp	*%r10			/* Jump to code */
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	.endr
+ENDF(C(trampoline_code_table_cet))
+
+	.align	UNIX64_TRAMP_MAP_SIZE
+	.globl	trampoline_code_table
+	FFI_HIDDEN(C(trampoline_code_table))
+
+C(trampoline_code_table):
+	.rept	UNIX64_TRAMP_MAP_SIZE / UNIX64_TRAMP_SIZE
+	subq	$16, %rsp		/* Make space on the stack */
+	movq	%r10, (%rsp)		/* Save %r10 on stack */
+	movq	4081(%rip), %r10	/* Copy data into %r10 */
+	movq	%r10, 8(%rsp)		/* Save data on stack */
+	movq	4077(%rip), %r10	/* Copy code into %r10 */
+	jmp	*%r10			/* Jump to code */
+	nop
+	nop
+	.endr
+ENDF(C(trampoline_code_table))
+	.align	UNIX64_TRAMP_MAP_SIZE
+#endif /* FFI_EXEC_STATIC_TRAMP */
 
 /* Sadly, OSX cctools-as doesn't understand .cfi directives at all.  */
 
@@ -614,6 +711,13 @@ L(EFDE5):
 	.quad    0
 	.quad    0
 #endif
+
+	.section .rodata
+	.align 8
+	.globl ffi_cet_present
+ffi_cet_present:
+	.set	L6,L(endbr)-L(UW0)
+	.int	L6
 
 #endif /* __x86_64__ */
 #if defined __ELF__ && defined __linux__
