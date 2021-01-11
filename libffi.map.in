@@ -74,3 +74,12 @@ LIBFFI_GO_CLOSURE_8.0 {
 	ffi_prep_go_closure;
 } LIBFFI_CLOSURE_8.0;
 #endif
+
+LIBFFI_STATIC_TRAMP_8.0 {
+  global:
+	ffi_tramp_is_supported;
+	ffi_tramp_alloc;
+	ffi_tramp_set_parms;
+	ffi_tramp_get_addr;
+	ffi_tramp_free;
+} LIBFFI_BASE_8.0;
