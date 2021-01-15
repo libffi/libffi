@@ -830,6 +830,14 @@ dlmmap_locked (void *start, size_t length, int prot, int flags, off_t offset)
   return start;
 }
 
+int	dummy = 0;
+
+static int
+dummy_check(void)
+{
+  return dummy;
+}
+
 /* Map in a writable and executable chunk of memory if possible.
    Failing that, fall back to dlmmap_locked.  */
 static void *
@@ -842,6 +850,12 @@ dlmmap (void *start, size_t length, int prot,
 	  && prot == (PROT_READ | PROT_WRITE)
 	  && flags == (MAP_PRIVATE | MAP_ANONYMOUS)
 	  && fd == -1 && offset == 0);
+
+  if (execfd == -1 && dummy_check ())
+    {
+      ptr = mmap (start, length, prot & ~PROT_EXEC, flags, fd, offset);
+      return ptr;
+    }
 
   if (execfd == -1 && is_emutramp_enabled ())
     {
