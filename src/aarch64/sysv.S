@@ -213,6 +213,8 @@ CNAME(ffi_call_SYSV):
 	.size CNAME(ffi_call_SYSV), .-CNAME(ffi_call_SYSV)
 #endif
 
+#if FFI_CLOSURES
+
 /* ffi_closure_SYSV
 
    Closure invocation glue. This is the low level code invoked directly by
@@ -513,6 +515,7 @@ CNAME(ffi_go_closure_SYSV):
 	.size	CNAME(ffi_go_closure_SYSV), . - CNAME(ffi_go_closure_SYSV)
 #endif
 #endif /* FFI_GO_CLOSURES */
+#endif /* FFI_CLOSURES */
 #endif /* __arm64__ */
 
 #if defined __ELF__ && defined __linux__

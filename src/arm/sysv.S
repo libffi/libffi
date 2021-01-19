@@ -208,6 +208,7 @@ E(ARM_TYPE_STRUCT)
 	UNWIND(.fnend)
 ARM_FUNC_END(ffi_call_SYSV)
 
+#if FFI_CLOSURES
 
 /*
 	int ffi_closure_inner_* (cif, fun, user_data, frame)
@@ -400,6 +401,8 @@ ARM_FUNC_START(trampoline_code_table)
 ARM_FUNC_END(trampoline_code_table)
 	.align	ARM_TRAMP_MAP_SHIFT
 #endif /* FFI_EXEC_STATIC_TRAMP */
+
+#endif /* FFI_CLOSURES */
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
