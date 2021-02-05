@@ -93,7 +93,6 @@ ffi_call_i386:
 L(UW0):
 	# cfi_startproc
 	_CET_ENDBR
-L(endbr):
 #if !HAVE_FASTCALL
 	movl	4(%esp), %ecx
 	movl	8(%esp), %edx
@@ -423,17 +422,6 @@ L(UW20):
 ENDF(C(ffi_closure_i386))
 
 	.balign	16
-	.globl	C(ffi_closure_i386_alt)
-	FFI_HIDDEN(C(ffi_closure_i386_alt))
-C(ffi_closure_i386_alt):
-	/* See the comments above trampoline_code_table. */
-	_CET_ENDBR
-	movl	4(%esp), %eax			/* Load closure in eax */
-	add	$8, %esp			/* Restore the stack */
-	jmp	C(ffi_closure_i386)
-ENDF(C(ffi_closure_i386_alt))
-
-	.balign	16
 	.globl	C(ffi_go_closure_STDCALL)
 	FFI_HIDDEN(C(ffi_go_closure_STDCALL))
 C(ffi_go_closure_STDCALL):
@@ -477,17 +465,6 @@ L(UW25):
 L(UW26):
 	# cfi_endproc
 ENDF(C(ffi_closure_REGISTER))
-
-	.balign	16
-	.globl	C(ffi_closure_REGISTER_alt)
-	FFI_HIDDEN(C(ffi_closure_REGISTER_alt))
-C(ffi_closure_REGISTER_alt):
-	/* See the comments above trampoline_code_table. */
-	_CET_ENDBR
-	movl	(%esp), %eax			/* Restore eax */
-	add	$4, %esp			/* Leave closure on stack */
-	jmp	C(ffi_closure_REGISTER)
-ENDF(C(ffi_closure_REGISTER_alt))
 
 /* For STDCALL (and others), we need to pop N bytes of arguments off
    the stack following the closure.  The amount needing to be popped
@@ -596,6 +573,29 @@ L(UW31):
 	# cfi_endproc
 ENDF(C(ffi_closure_STDCALL))
 
+#if defined(FFI_EXEC_STATIC_TRAMP)
+	.balign	16
+	.globl	C(ffi_closure_i386_alt)
+	FFI_HIDDEN(C(ffi_closure_i386_alt))
+C(ffi_closure_i386_alt):
+	/* See the comments above trampoline_code_table. */
+	_CET_ENDBR
+	movl	4(%esp), %eax			/* Load closure in eax */
+	add	$8, %esp			/* Restore the stack */
+	jmp	C(ffi_closure_i386)
+ENDF(C(ffi_closure_i386_alt))
+
+	.balign	16
+	.globl	C(ffi_closure_REGISTER_alt)
+	FFI_HIDDEN(C(ffi_closure_REGISTER_alt))
+C(ffi_closure_REGISTER_alt):
+	/* See the comments above trampoline_code_table. */
+	_CET_ENDBR
+	movl	(%esp), %eax			/* Restore eax */
+	add	$4, %esp			/* Leave closure on stack */
+	jmp	C(ffi_closure_REGISTER)
+ENDF(C(ffi_closure_REGISTER_alt))
+
 	.balign	16
 	.globl	C(ffi_closure_STDCALL_alt)
 	FFI_HIDDEN(C(ffi_closure_STDCALL_alt))
@@ -607,7 +607,6 @@ C(ffi_closure_STDCALL_alt):
 	jmp	C(ffi_closure_STDCALL)
 ENDF(C(ffi_closure_STDCALL_alt))
 
-#if defined(FFI_EXEC_STATIC_TRAMP)
 /*
  * Below is the definition of the trampoline code table. Each element in
  * the code table is a trampoline.

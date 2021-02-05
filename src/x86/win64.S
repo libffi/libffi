@@ -235,6 +235,7 @@ C(ffi_closure_win64):
 	cfi_endproc
 	SEH(.seh_endproc)
 
+#if defined(FFI_EXEC_STATIC_TRAMP)
 	.align	8
 	.globl	C(ffi_closure_win64_alt)
 	FFI_HIDDEN(C(ffi_closure_win64_alt))
@@ -246,6 +247,7 @@ C(ffi_closure_win64_alt):
 	addq	$16, %rsp
 	jmp	C(ffi_closure_win64)
 	SEH(.seh_endproc)
+#endif
 #endif /* __x86_64__ */
 
 #if defined __ELF__ && defined __linux__

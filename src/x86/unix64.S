@@ -63,7 +63,6 @@
 C(ffi_call_unix64):
 L(UW0):
 	_CET_ENDBR
-L(endbr):
 	movq	(%rsp), %r10		/* Load return address.  */
 	leaq	(%rdi, %rsi), %rax	/* Find local stack base.  */
 	movq	%rdx, (%rax)		/* Save flags.  */
@@ -272,18 +271,6 @@ L(UW7):
 ENDF(C(ffi_closure_unix64_sse))
 
 	.balign	2
-	.globl	C(ffi_closure_unix64_sse_alt)
-	FFI_HIDDEN(C(ffi_closure_unix64_sse_alt))
-
-C(ffi_closure_unix64_sse_alt):
-	/* See the comments above trampoline_code_table. */
-	_CET_ENDBR
-	movq	8(%rsp), %r10			/* Load closure in r10 */
-	addq	$16, %rsp			/* Restore the stack */
-	jmp	C(ffi_closure_unix64_sse)
-ENDF(C(ffi_closure_unix64_sse_alt))
-
-	.balign	2
 	.globl	C(ffi_closure_unix64)
 	FFI_HIDDEN(C(ffi_closure_unix64))
 
@@ -413,18 +400,6 @@ L(la):	call	PLT(C(abort))
 L(UW11):
 ENDF(C(ffi_closure_unix64))
 
-	.balign	8
-	.globl	C(ffi_closure_unix64_alt)
-	FFI_HIDDEN(C(ffi_closure_unix64_alt))
-
-C(ffi_closure_unix64_alt):
-	/* See the comments above trampoline_code_table. */
-	_CET_ENDBR
-	movq	8(%rsp), %r10			/* Load closure in r10 */
-	addq	$16, %rsp			/* Restore the stack */
-	jmp	C(ffi_closure_unix64)
-	ENDF(C(ffi_closure_unix64_alt))
-
 	.balign	2
 	.globl	C(ffi_go_closure_unix64_sse)
 	FFI_HIDDEN(C(ffi_go_closure_unix64_sse))
@@ -482,6 +457,30 @@ L(UW17):
 ENDF(C(ffi_go_closure_unix64))
 
 #if defined(FFI_EXEC_STATIC_TRAMP)
+	.balign	8
+	.globl	C(ffi_closure_unix64_sse_alt)
+	FFI_HIDDEN(C(ffi_closure_unix64_sse_alt))
+
+C(ffi_closure_unix64_sse_alt):
+	/* See the comments above trampoline_code_table. */
+	_CET_ENDBR
+	movq	8(%rsp), %r10			/* Load closure in r10 */
+	addq	$16, %rsp			/* Restore the stack */
+	jmp	C(ffi_closure_unix64_sse)
+ENDF(C(ffi_closure_unix64_sse_alt))
+
+	.balign	8
+	.globl	C(ffi_closure_unix64_alt)
+	FFI_HIDDEN(C(ffi_closure_unix64_alt))
+
+C(ffi_closure_unix64_alt):
+	/* See the comments above trampoline_code_table. */
+	_CET_ENDBR
+	movq	8(%rsp), %r10			/* Load closure in r10 */
+	addq	$16, %rsp			/* Restore the stack */
+	jmp	C(ffi_closure_unix64)
+	ENDF(C(ffi_closure_unix64_alt))
+
 /*
  * Below is the definition of the trampoline code table. Each element in
  * the code table is a trampoline.

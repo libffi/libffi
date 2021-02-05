@@ -252,20 +252,6 @@ CNAME(ffi_closure_SYSV_V):
 	.size	CNAME(ffi_closure_SYSV_V), . - CNAME(ffi_closure_SYSV_V)
 #endif
 
-	.align 4
-CNAME(ffi_closure_SYSV_V_alt):
-	/* See the comments above trampoline_code_table. */
-	ldr	x17, [sp, #8]			/* Load closure in x17 */
-	add	sp, sp, #16			/* Restore the stack */
-	b	CNAME(ffi_closure_SYSV_V)
-
-	.globl	CNAME(ffi_closure_SYSV_V_alt)
-	FFI_HIDDEN(CNAME(ffi_closure_SYSV_V_alt))
-#ifdef __ELF__
-	.type	CNAME(ffi_closure_SYSV_V_alt), #function
-	.size	CNAME(ffi_closure_SYSV_V_alt), . - CNAME(ffi_closure_SYSV_V_alt)
-#endif
-
 	.align	4
 	cfi_startproc
 CNAME(ffi_closure_SYSV):
@@ -381,6 +367,21 @@ CNAME(ffi_closure_SYSV):
 	.size	CNAME(ffi_closure_SYSV), . - CNAME(ffi_closure_SYSV)
 #endif
 
+#if defined(FFI_EXEC_STATIC_TRAMP)
+	.align 4
+CNAME(ffi_closure_SYSV_V_alt):
+	/* See the comments above trampoline_code_table. */
+	ldr	x17, [sp, #8]			/* Load closure in x17 */
+	add	sp, sp, #16			/* Restore the stack */
+	b	CNAME(ffi_closure_SYSV_V)
+
+	.globl	CNAME(ffi_closure_SYSV_V_alt)
+	FFI_HIDDEN(CNAME(ffi_closure_SYSV_V_alt))
+#ifdef __ELF__
+	.type	CNAME(ffi_closure_SYSV_V_alt), #function
+	.size	CNAME(ffi_closure_SYSV_V_alt), . - CNAME(ffi_closure_SYSV_V_alt)
+#endif
+
 	.align 4
 CNAME(ffi_closure_SYSV_alt):
 	/* See the comments above trampoline_code_table. */
@@ -395,7 +396,6 @@ CNAME(ffi_closure_SYSV_alt):
 	.size	CNAME(ffi_closure_SYSV_alt), . - CNAME(ffi_closure_SYSV_alt)
 #endif
 
-#if defined(FFI_EXEC_STATIC_TRAMP)
 /*
  * Below is the definition of the trampoline code table. Each element in
  * the code table is a trampoline.

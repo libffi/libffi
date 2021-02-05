@@ -571,9 +571,11 @@ ffi_closure_inner_VFP (ffi_cif *cif,
 }
 
 void ffi_closure_SYSV (void) FFI_HIDDEN;
-void ffi_closure_SYSV_alt (void) FFI_HIDDEN;
 void ffi_closure_VFP (void) FFI_HIDDEN;
+#if defined(FFI_EXEC_STATIC_TRAMP)
+void ffi_closure_SYSV_alt (void) FFI_HIDDEN;
 void ffi_closure_VFP_alt (void) FFI_HIDDEN;
+#endif
 
 #ifdef FFI_GO_CLOSURES
 void ffi_go_closure_SYSV (void) FFI_HIDDEN;
@@ -599,16 +601,12 @@ ffi_prep_closure_loc (ffi_closure * closure,
 		      void *user_data, void *codeloc)
 {
   void (*closure_func) (void) = ffi_closure_SYSV;
-  void (*closure_func_alt) (void) = ffi_closure_SYSV_alt;
 
   if (cif->abi == FFI_VFP)
     {
       /* We only need take the vfp path if there are vfp arguments.  */
       if (cif->vfp_used)
-	{
-	  closure_func = ffi_closure_VFP;
-	  closure_func_alt = ffi_closure_VFP_alt;
-	}
+	closure_func = ffi_closure_VFP;
     }
   else if (cif->abi != FFI_SYSV)
     return FFI_BAD_ABI;
@@ -619,12 +617,18 @@ ffi_prep_closure_loc (ffi_closure * closure,
   config[1] = closure_func;
 #else
 
+#if defined(FFI_EXEC_STATIC_TRAMP)
   if (ffi_tramp_is_present(closure))
     {
       /* Initialize the static trampoline's parameters. */
-      ffi_tramp_set_parms (closure->ftramp, closure_func_alt, closure);
+      if (closure_func == ffi_closure_SYSV)
+        closure_func = ffi_closure_SYSV_alt;
+      else
+        closure_func = ffi_closure_VFP_alt;
+      ffi_tramp_set_parms (closure->ftramp, closure_func, closure);
       goto out;
     }
+#endif
 
   /* Initialize the dynamic trampoline. */
 #ifndef _M_ARM

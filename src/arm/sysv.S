@@ -260,13 +260,6 @@ ARM_FUNC_START(ffi_closure_SYSV)
 	UNWIND(.fnend)
 ARM_FUNC_END(ffi_closure_SYSV)
 
-ARM_FUNC_START(ffi_closure_SYSV_alt)
-	/* See the comments above trampoline_code_table. */
-	ldr	ip, [sp, #4]			/* Load closure in ip */
-	add	sp, sp, 8			/* Restore the stack */
-	b	CNAME(ffi_closure_SYSV)
-ARM_FUNC_END(ffi_closure_SYSV_alt)
-
 ARM_FUNC_START(ffi_go_closure_VFP)
 	cfi_startproc
 	stmdb	sp!, {r0-r3}			@ save argument regs
@@ -317,13 +310,6 @@ ARM_FUNC_START(ffi_closure_VFP)
 	UNWIND(.fnend)
 ARM_FUNC_END(ffi_closure_VFP)
 
-ARM_FUNC_START(ffi_closure_VFP_alt)
-	/* See the comments above trampoline_code_table. */
-	ldr	ip, [sp, #4]			/* Load closure in ip */
-	add	sp, sp, 8			/* Restore the stack */
-	b	CNAME(ffi_closure_VFP)
-ARM_FUNC_END(ffi_closure_VFP_alt)
-
 /* Load values returned in registers for both closure entry points.
    Note that we use LDM with SP in the register set.  This is deprecated
    by ARM, but not yet unpredictable.  */
@@ -369,6 +355,20 @@ E(ARM_TYPE_STRUCT)
 ARM_FUNC_END(ffi_closure_ret)
 
 #if defined(FFI_EXEC_STATIC_TRAMP)
+ARM_FUNC_START(ffi_closure_SYSV_alt)
+	/* See the comments above trampoline_code_table. */
+	ldr	ip, [sp, #4]			/* Load closure in ip */
+	add	sp, sp, 8			/* Restore the stack */
+	b	CNAME(ffi_closure_SYSV)
+ARM_FUNC_END(ffi_closure_SYSV_alt)
+
+ARM_FUNC_START(ffi_closure_VFP_alt)
+	/* See the comments above trampoline_code_table. */
+	ldr	ip, [sp, #4]			/* Load closure in ip */
+	add	sp, sp, 8			/* Restore the stack */
+	b	CNAME(ffi_closure_VFP)
+ARM_FUNC_END(ffi_closure_VFP_alt)
+
 /*
  * Below is the definition of the trampoline code table. Each element in
  * the code table is a trampoline.

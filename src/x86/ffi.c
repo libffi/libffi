@@ -410,11 +410,13 @@ ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
 /** private members **/
 
 void FFI_HIDDEN ffi_closure_i386(void);
-void FFI_HIDDEN ffi_closure_i386_alt(void);
 void FFI_HIDDEN ffi_closure_STDCALL(void);
-void FFI_HIDDEN ffi_closure_STDCALL_alt(void);
 void FFI_HIDDEN ffi_closure_REGISTER(void);
+#if defined(FFI_EXEC_STATIC_TRAMP)
+void FFI_HIDDEN ffi_closure_i386_alt(void);
+void FFI_HIDDEN ffi_closure_STDCALL_alt(void);
 void FFI_HIDDEN ffi_closure_REGISTER_alt(void);
+#endif
 
 struct closure_frame
 {
@@ -541,7 +543,6 @@ ffi_prep_closure_loc (ffi_closure* closure,
 {
   char *tramp = closure->tramp;
   void (*dest)(void);
-  void (*dest_alt)(void);
   int op = 0xb8;  /* movl imm, %eax */
 
   switch (cif->abi)
@@ -551,28 +552,33 @@ ffi_prep_closure_loc (ffi_closure* closure,
     case FFI_FASTCALL:
     case FFI_MS_CDECL:
       dest = ffi_closure_i386;
-      dest_alt = ffi_closure_i386_alt;
       break;
     case FFI_STDCALL:
     case FFI_PASCAL:
       dest = ffi_closure_STDCALL;
-      dest_alt = ffi_closure_STDCALL_alt;
       break;
     case FFI_REGISTER:
       dest = ffi_closure_REGISTER;
-      dest_alt = ffi_closure_REGISTER_alt;
       op = 0x68;  /* pushl imm */
       break;
     default:
       return FFI_BAD_ABI;
     }
 
+#if defined(FFI_EXEC_STATIC_TRAMP)
   if (ffi_tramp_is_present(closure))
     {
       /* Initialize the static trampoline's parameters. */
-      ffi_tramp_set_parms (closure->ftramp, dest_alt, closure);
+      if (dest == ffi_closure_i386)
+        dest = ffi_closure_i386_alt;
+      else if (dest == ffi_closure_STDCALL)
+        dest = ffi_closure_STDCALL_alt;
+      else
+        dest = ffi_closure_REGISTER_alt;
+      ffi_tramp_set_parms (closure->ftramp, dest, closure);
       goto out;
     }
+#endif
 
   /* Initialize the dynamic trampoline. */
   /* endbr32.  */
