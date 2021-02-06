@@ -30,6 +30,7 @@
 #include <ffi_common.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <tramp.h>
 
 #ifdef X86_WIN64
 #define EFI64(name) name
@@ -187,6 +188,9 @@ EFI64(ffi_call_go)(ffi_cif *cif, void (*fn)(void), void *rvalue,
 
 
 extern void ffi_closure_win64(void) FFI_HIDDEN;
+#if defined(FFI_EXEC_STATIC_TRAMP)
+extern void ffi_closure_win64_alt(void) FFI_HIDDEN;
+#endif
 
 #ifdef FFI_GO_CLOSURES
 extern void ffi_go_closure_win64(void) FFI_HIDDEN;
@@ -220,9 +224,20 @@ EFI64(ffi_prep_closure_loc)(ffi_closure* closure,
       return FFI_BAD_ABI;
     }
 
+#if defined(FFI_EXEC_STATIC_TRAMP)
+  if (ffi_tramp_is_present(closure))
+    {
+      /* Initialize the static trampoline's parameters. */
+      ffi_tramp_set_parms (closure->ftramp, ffi_closure_win64_alt, closure);
+      goto out;
+    }
+#endif
+
+  /* Initialize the dynamic trampoline. */
   memcpy (tramp, trampoline, sizeof(trampoline));
   *(UINT64 *)(tramp + sizeof (trampoline)) = (uintptr_t)ffi_closure_win64;
 
+out:
   closure->cif = cif;
   closure->fun = fun;
   closure->user_data = user_data;
