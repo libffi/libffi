@@ -34,6 +34,7 @@
 #include <ffi_common.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <tramp.h>
 #include "internal.h"
 
 #if defined(_MSC_VER) && defined(_M_ARM)
@@ -571,6 +572,10 @@ ffi_closure_inner_VFP (ffi_cif *cif,
 
 void ffi_closure_SYSV (void) FFI_HIDDEN;
 void ffi_closure_VFP (void) FFI_HIDDEN;
+#if defined(FFI_EXEC_STATIC_TRAMP)
+void ffi_closure_SYSV_alt (void) FFI_HIDDEN;
+void ffi_closure_VFP_alt (void) FFI_HIDDEN;
+#endif
 
 #ifdef FFI_GO_CLOSURES
 void ffi_go_closure_SYSV (void) FFI_HIDDEN;
@@ -612,6 +617,20 @@ ffi_prep_closure_loc (ffi_closure * closure,
   config[1] = closure_func;
 #else
 
+#if defined(FFI_EXEC_STATIC_TRAMP)
+  if (ffi_tramp_is_present(closure))
+    {
+      /* Initialize the static trampoline's parameters. */
+      if (closure_func == ffi_closure_SYSV)
+        closure_func = ffi_closure_SYSV_alt;
+      else
+        closure_func = ffi_closure_VFP_alt;
+      ffi_tramp_set_parms (closure->ftramp, closure_func, closure);
+      goto out;
+    }
+#endif
+
+  /* Initialize the dynamic trampoline. */
 #ifndef _M_ARM
   memcpy(closure->tramp, ffi_arm_trampoline, 8);
 #else
@@ -633,6 +652,7 @@ ffi_prep_closure_loc (ffi_closure * closure,
 #else
   *(void (**)(void))(closure->tramp + 8) = closure_func;
 #endif
+out:
 #endif
 
   closure->cif = cif;
@@ -872,5 +892,17 @@ layout_vfp_args (ffi_cif * cif)
 	break;
     }
 }
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+void *
+ffi_tramp_arch (size_t *tramp_size, size_t *map_size)
+{
+  extern void *trampoline_code_table;
+
+  *tramp_size = ARM_TRAMP_SIZE;
+  *map_size = ARM_TRAMP_MAP_SIZE;
+  return &trampoline_code_table;
+}
+#endif
 
 #endif /* __arm__ or _M_ARM */
