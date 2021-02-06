@@ -364,6 +364,8 @@ AC_ARG_ENABLE(raw-api,
   fi)
 
 case "$target" in
+     *-cygwin*)
+     ;;
      *arm*-*-linux-* | aarch64*-*-linux-* | i*86-*-linux-* | x86_64-*-linux-*)
        AC_DEFINE(FFI_EXEC_STATIC_TRAMP, 1,
                  [Define this if you want statically defined trampolines])
