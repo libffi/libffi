@@ -1,0 +1,205 @@
+name: LWJGL Build
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  S3_PARAMS: --cache-control "public,must-revalidate,proxy-revalidate,max-age=0"
+
+jobs:
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    container:
+      image: centos:7
+    strategy:
+      fail-fast: false
+      matrix:
+        ARCH: [x64]
+        include:
+          - ARCH: x64
+            HOST: x86_64-pc-linux-gnu
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 3
+      - run: |
+          yum -y install epel-release
+          yum -y update
+        name: Configure yum
+      - run: |
+          yum -y install centos-release-scl
+          yum -y install devtoolset-11-gcc-c++
+          yum -y install awscli
+        name: Install build dependencies
+      - run: yum -y install autoconf automake libtool texinfo
+        name: Install libffi dependencies
+      - run: |
+          source scl_source enable devtoolset-11 || true
+          curl -L https://ftpmirror.gnu.org/autoconf/autoconf-2.71.tar.gz | tar -xz
+          (cd autoconf-2.71; ./configure; make; make install)
+        name: Install autoconf 2.71
+      - run: |
+          source scl_source enable devtoolset-11 || true
+          ./autogen.sh
+          ./configure --disable-shared --with-pic --host=${{matrix.HOST}} || cat */config.log
+        name: Configure build
+      - run: |
+          source scl_source enable devtoolset-11 || true
+          make
+        name: Build
+      - run: aws s3 cp ${{matrix.HOST}}/.libs/libffi_convenience.a s3://lwjgl-build/nightly/linux/${{matrix.ARCH}}/core/libffi.a $S3_PARAMS
+        name: Upload artifact
+
+  linux-cross:
+    name: Linux Cross
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ARCH: [arm32, arm64, mips64]
+        include:
+          - ARCH: arm32
+            PACKAGES: gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
+            GCC: arm-linux-gnueabihf-gcc
+            HOST: arm-unknown-linux-gnueabihf
+          - ARCH: arm64
+            PACKAGES: gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+            GCC: aarch64-linux-gnu-gcc
+            HOST: aarch64-unknown-linux-gnu
+          - ARCH: mips64
+            PACKAGES: gcc-mips64el-linux-gnuabi64 libc6-dev-mips64el-cross
+            GCC: mips64el-linux-gnuabi64-gcc
+            HOST: mips64el-unknown-linux-gnu
+    steps:
+      - run: |
+          apt-get -y update
+          apt-get -y install software-properties-common wget
+          apt-get -y install --reinstall ca-certificates
+          apt-get -y update
+          apt-get -y upgrade
+          wget https://apt.kitware.com/keys/kitware-archive-latest.asc
+          apt-key add kitware-archive-latest.asc
+          add-apt-repository -y 'deb https://apt.kitware.com/ubuntu/ bionic main'
+          add-apt-repository -y ppa:git-core/ppa
+          apt-get -y update
+          DEBIAN_FRONTEND=noninteractive apt-get -yq install awscli git
+        name: Upgrade git
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - run: apt-get install -yq m4 make automake libtool texinfo ${{matrix.PACKAGES}}
+        name: Install dependencies
+      - run: |
+          wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 0 -qO - https://ftpmirror.gnu.org/autoconf/autoconf-2.71.tar.gz | tar -xvzf -
+          mkdir -p ~/i
+          (cd autoconf-2.71; ./configure --prefix=$HOME/i; make; make install)
+          rm -rf autoconf-2.71
+        name: Install autoconf 2.71
+      - run: |
+          PATH=$HOME/i/bin:$PATH ./autogen.sh
+          ./configure --disable-shared --with-pic CC=${{matrix.GCC}} --host=${{matrix.HOST}} || cat */config.log
+        name: Configure build
+      - run: make
+        name: Build
+      - run: aws s3 cp ${{matrix.HOST}}/.libs/libffi_convenience.a s3://lwjgl-build/nightly/linux/${{matrix.ARCH}}/core/libffi.a $S3_PARAMS
+        name: Upload artifact
+
+  macos:
+    name: macOS
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ARCH: [x64, arm64]
+        include:
+          - ARCH: x64
+            CC:
+            CFLAGS: -mmacosx-version-min=10.9
+            LDFLAGS: -mmacosx-version-min=10.9
+            HOST: x86_64
+          - ARCH: arm64
+            CC: SDKROOT=$(xcrun -sdk macosx11.1 --show-sdk-path) MACOSX_DEPLOYMENT_TARGET=11.0
+            CFLAGS: -target aarch64-apple-darwin -arch arm64 -mmacosx-version-min=11.0
+            LDFLAGS: -target aarch64-apple-darwin -arch arm64 -mmacosx-version-min=11.0
+            HOST: aarch64
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - run: brew install automake
+        name: Install dependencies
+      - run: |
+          ./autogen.sh
+          ${{matrix.CC}} ./configure --disable-shared CC=clang CFLAGS='${{matrix.CFLAGS}}' LDFLAGS='${{matrix.LDFLAGS}}' --target ${{matrix.ARCH}}-apple-darwin20 --host=${{matrix.HOST}}-apple-darwin20 || cat */config.log
+        name: Configure build
+      - run: ${{matrix.CC}} make
+        name: Build
+      - run: aws s3 cp ${{matrix.HOST}}-apple-darwin20/.libs/libffi_convenience.a s3://lwjgl-build/nightly/macosx/${{matrix.ARCH}}/core/libffi.a $S3_PARAMS
+        name: Upload artifact
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ARCH: [x86, x64, arm64]
+        include:
+          - ARCH: x86
+            SOURCE_ARCH: x86
+            MSVC_ARCH: amd64_x86
+            MSVC_SH: msvcc.sh
+            HOST: i686-pc-cygwin
+          - ARCH: x64
+            SOURCE_ARCH: x86
+            MSVC_ARCH: amd64
+            MSVC_SH: msvcc.sh -m64
+            HOST: x86_64-pc-cygwin
+          - ARCH: arm64
+            SOURCE_ARCH: aarch64
+            MSVC_ARCH: amd64_arm64
+            MSVC_SH: msvcc.sh -marm64
+            HOST: aarch64-pc-cygwin
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - uses: egor-tensin/setup-cygwin@v3
+        with:
+          platform: x64
+          install-dir: C:\cygwin
+          packages: wget autoconf automake libtool
+        name: Install dependencies
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.MSVC_ARCH }}
+      - run: |
+          cd $(cygpath $RUNNER_WORKSPACE)/libffi
+          ./autogen.sh
+          ./configure \
+            CC="$PWD/${{matrix.MSVC_SH}}" \
+            CXX="$PWD/${{matrix.MSVC_SH}}" \
+            LD='link' \
+            CPP='cl -nologo -EP' \
+            CXXCPP='cl -nologo -EP' \
+            CPPFLAGS='-DFFI_BUILDING_DLL -DUSE_STATIC_RTL' \
+            NM='dumpbin -symbols' \
+            STRIP=':' \
+            CONFIGURE_OPTIONS=--disable-shared \
+            --host=${{matrix.HOST}} \
+            || cat */config.log
+          cp src/${{matrix.SOURCE_ARCH}}/ffitarget.h include
+          make
+        shell: C:\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+        name: Build
+      - run: aws s3 cp ${{matrix.HOST}}\.libs\libffi_convenience.lib s3://lwjgl-build/nightly/windows/${{matrix.ARCH}}/core/libffi.lib %S3_PARAMS%
+        shell: cmd
+        name: Upload artifact

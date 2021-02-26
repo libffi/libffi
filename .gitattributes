@@ -1,4 +1,4 @@
-*	text=auto
+*	-text
 
 *.sln	text eol=crlf
 *.vcxproj*	text eol=crlf
