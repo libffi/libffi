@@ -34,6 +34,7 @@
 #include <fficonfig.h>
 #include <ffi.h>
 #include <ffi_common.h>
+#include <tramp.h>
 
 #ifdef __NetBSD__
 #include <sys/param.h>
@@ -111,6 +112,12 @@ ffi_closure_free (void *ptr)
   memcpy(&codeseg, ADD_TO_POINTER(dataseg, sizeof(size_t)), sizeof(void *));
   munmap(dataseg, rounded_size);
   munmap(codeseg, rounded_size);
+}
+
+int
+ffi_tramp_is_present (__attribute__((unused)) void *ptr)
+{
+  return 0;
 }
 #else /* !NetBSD with PROT_MPROTECT */
 
@@ -860,6 +867,12 @@ dlmmap (void *start, size_t length, int prot,
 	  && flags == (MAP_PRIVATE | MAP_ANONYMOUS)
 	  && fd == -1 && offset == 0);
 
+  if (execfd == -1 && ffi_tramp_is_supported ())
+    {
+      ptr = mmap (start, length, prot & ~PROT_EXEC, flags, fd, offset);
+      return ptr;
+    }
+
   if (execfd == -1 && is_emutramp_enabled ())
     {
       ptr = mmap (start, length, prot & ~PROT_EXEC, flags, fd, offset);
@@ -939,7 +952,7 @@ segment_holding_code (mstate m, char* addr)
 void *
 ffi_closure_alloc (size_t size, void **code)
 {
-  void *ptr;
+  void *ptr, *ftramp;
 
   if (!code)
     return NULL;
@@ -951,6 +964,17 @@ ffi_closure_alloc (size_t size, void **code)
       msegmentptr seg = segment_holding (gm, ptr);
 
       *code = add_segment_exec_offset (ptr, seg);
+      if (!ffi_tramp_is_supported ())
+        return ptr;
+
+      ftramp = ffi_tramp_alloc (0);
+      if (ftramp == NULL)
+      {
+        dlfree (FFI_RESTORE_PTR (ptr));
+        return NULL;
+      }
+      *code = ffi_tramp_get_addr (ftramp);
+      ((ffi_closure *) ptr)->ftramp = ftramp;
     }
 
   return ptr;
@@ -965,7 +989,11 @@ ffi_data_to_code_pointer (void *data)
      burden of managing this memory themselves, in which case this
      we'll just return data. */
   if (seg)
-    return add_segment_exec_offset (data, seg);
+    {
+      if (!ffi_tramp_is_supported ())
+        return add_segment_exec_offset (data, seg);
+      return ffi_tramp_get_addr (((ffi_closure *) data)->ftramp);
+    }
   else
     return data;
 }
@@ -983,8 +1011,17 @@ ffi_closure_free (void *ptr)
   if (seg)
     ptr = sub_segment_exec_offset (ptr, seg);
 #endif
+  if (ffi_tramp_is_supported ())
+    ffi_tramp_free (((ffi_closure *) ptr)->ftramp);
 
   dlfree (FFI_RESTORE_PTR (ptr));
+}
+
+int
+ffi_tramp_is_present (void *ptr)
+{
+  msegmentptr seg = segment_holding (gm, ptr);
+  return seg != NULL && ffi_tramp_is_supported();
 }
 
 # else /* ! FFI_MMAP_EXEC_WRIT */
@@ -1013,6 +1050,12 @@ void *
 ffi_data_to_code_pointer (void *data)
 {
   return data;
+}
+
+int
+ffi_tramp_is_present (__attribute__((unused)) void *ptr)
+{
+  return 0;
 }
 
 # endif /* ! FFI_MMAP_EXEC_WRIT */

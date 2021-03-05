@@ -367,6 +367,76 @@ CNAME(ffi_closure_SYSV):
 	.size	CNAME(ffi_closure_SYSV), . - CNAME(ffi_closure_SYSV)
 #endif
 
+#if defined(FFI_EXEC_STATIC_TRAMP)
+	.align 4
+CNAME(ffi_closure_SYSV_V_alt):
+	/* See the comments above trampoline_code_table. */
+	ldr	x17, [sp, #8]			/* Load closure in x17 */
+	add	sp, sp, #16			/* Restore the stack */
+	b	CNAME(ffi_closure_SYSV_V)
+
+	.globl	CNAME(ffi_closure_SYSV_V_alt)
+	FFI_HIDDEN(CNAME(ffi_closure_SYSV_V_alt))
+#ifdef __ELF__
+	.type	CNAME(ffi_closure_SYSV_V_alt), #function
+	.size	CNAME(ffi_closure_SYSV_V_alt), . - CNAME(ffi_closure_SYSV_V_alt)
+#endif
+
+	.align 4
+CNAME(ffi_closure_SYSV_alt):
+	/* See the comments above trampoline_code_table. */
+	ldr	x17, [sp, #8]			/* Load closure in x17 */
+	add	sp, sp, #16			/* Restore the stack */
+	b	CNAME(ffi_closure_SYSV)
+
+	.globl	CNAME(ffi_closure_SYSV_alt)
+	FFI_HIDDEN(CNAME(ffi_closure_SYSV_alt))
+#ifdef __ELF__
+	.type	CNAME(ffi_closure_SYSV_alt), #function
+	.size	CNAME(ffi_closure_SYSV_alt), . - CNAME(ffi_closure_SYSV_alt)
+#endif
+
+/*
+ * Below is the definition of the trampoline code table. Each element in
+ * the code table is a trampoline.
+ */
+/*
+ * The trampoline uses register x17. It saves the original value of x17 on
+ * the stack.
+ *
+ * The trampoline has two parameters - target code to jump to and data for
+ * the target code. The trampoline extracts the parameters from its parameter
+ * block (see tramp_table_map()). The trampoline saves the data address on
+ * the stack. Finally, it jumps to the target code.
+ *
+ * The target code can choose to:
+ *
+ * - restore the value of x17
+ * - load the data address in a register
+ * - restore the stack pointer to what it was when the trampoline was invoked.
+ */
+	.align	AARCH64_TRAMP_MAP_SHIFT
+CNAME(trampoline_code_table):
+	.rept	AARCH64_TRAMP_MAP_SIZE / AARCH64_TRAMP_SIZE
+	sub	sp, sp, #16		/* Make space on the stack */
+	str	x17, [sp]		/* Save x17 on stack */
+	adr	x17, #16376		/* Get data address */
+	ldr	x17, [x17]		/* Copy data into x17 */
+	str	x17, [sp, #8]		/* Save data on stack */
+	adr	x17, #16372		/* Get code address */
+	ldr	x17, [x17]		/* Load code address into x17 */
+	br	x17			/* Jump to code */
+	.endr
+
+	.globl CNAME(trampoline_code_table)
+	FFI_HIDDEN(CNAME(trampoline_code_table))
+#ifdef __ELF__
+	.type	CNAME(trampoline_code_table), #function
+	.size	CNAME(trampoline_code_table), . - CNAME(trampoline_code_table)
+#endif
+	.align	AARCH64_TRAMP_MAP_SHIFT
+#endif /* FFI_EXEC_STATIC_TRAMP */
+
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
 #ifdef __MACH__

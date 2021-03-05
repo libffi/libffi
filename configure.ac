@@ -67,7 +67,7 @@ AC_CHECK_HEADERS(sys/memfd.h)
 AC_CHECK_FUNCS([memfd_create])
 
 AC_CHECK_HEADERS(sys/mman.h)
-AC_CHECK_FUNCS([mmap mkostemp])
+AC_CHECK_FUNCS([mmap mkostemp mkstemp])
 AC_FUNC_MMAP_BLACKLIST
 
 dnl The -no-testsuite modules omit the test subdir.
@@ -362,6 +362,15 @@ AC_ARG_ENABLE(raw-api,
   if test "$enable_raw_api" = "no"; then
     AC_DEFINE(FFI_NO_RAW_API, 1, [Define this if you do not want support for the raw API.])
   fi)
+
+case "$target" in
+     *-cygwin*)
+     ;;
+     *arm*-*-linux-* | aarch64*-*-linux-* | i*86-*-linux-* | x86_64-*-linux-*)
+       AC_DEFINE(FFI_EXEC_STATIC_TRAMP, 1,
+                 [Define this if you want statically defined trampolines])
+     ;;
+esac
 
 AC_ARG_ENABLE(purify-safety,
 [  --enable-purify-safety  purify-safe mode],
