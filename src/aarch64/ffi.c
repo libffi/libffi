@@ -770,6 +770,8 @@ ffi_call (ffi_cif *cif, void (*fn) (void), void *rvalue, void **avalue)
   ffi_call_int (cif, fn, rvalue, avalue, NULL);
 }
 
+#if FFI_CLOSURES
+
 #ifdef FFI_GO_CLOSURES
 void
 ffi_call_go (ffi_cif *cif, void (*fn) (void), void *rvalue,
@@ -1053,5 +1055,7 @@ ffi_tramp_arch (size_t *tramp_size, size_t *map_size)
   return &trampoline_code_table;
 }
 #endif
+
+#endif /* FFI_CLOSURES */
 
 #endif /* (__aarch64__) || defined(__arm64__)|| defined (_M_ARM64)*/

@@ -213,6 +213,8 @@ CNAME(ffi_call_SYSV):
 	.size CNAME(ffi_call_SYSV), .-CNAME(ffi_call_SYSV)
 #endif
 
+#if FFI_CLOSURES
+
 /* ffi_closure_SYSV
 
    Closure invocation glue. This is the low level code invoked directly by
@@ -271,7 +273,9 @@ CNAME(ffi_closure_SYSV):
 	/* Load ffi_closure_inner arguments.  */
 	ldp	PTR_REG(0), PTR_REG(1), [x17, #FFI_TRAMPOLINE_CLOSURE_OFFSET]	/* load cif, fn */
 	ldr	PTR_REG(2), [x17, #FFI_TRAMPOLINE_CLOSURE_OFFSET+PTR_SIZE*2]	/* load user_data */
+#ifdef FFI_GO_CLOSURES
 .Ldo_closure:
+#endif
 	add	x3, sp, #16				/* load context */
 	add	x4, sp, #ffi_closure_SYSV_FS		/* load stack */
 	add	x5, sp, #16+CALL_CONTEXT_SIZE		/* load rvalue */
@@ -513,6 +517,7 @@ CNAME(ffi_go_closure_SYSV):
 	.size	CNAME(ffi_go_closure_SYSV), . - CNAME(ffi_go_closure_SYSV)
 #endif
 #endif /* FFI_GO_CLOSURES */
+#endif /* FFI_CLOSURES */
 #endif /* __arm64__ */
 
 #if defined __ELF__ && defined __linux__
