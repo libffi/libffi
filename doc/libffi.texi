@@ -18,7 +18,7 @@
 This manual is for libffi, a portable foreign function interface
 library.
 
-Copyright @copyright{} 2008--2019 Anthony Green and Red Hat, Inc.
+Copyright @copyright{} 2008--2019, 2021 Anthony Green and Red Hat, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -176,6 +176,11 @@ variadic arguments.  It must be greater than zero.
 @var{ntotalargs} the total number of arguments, including variadic
 and fixed arguments.  @var{argtypes} must have this many elements.
 
+@code{ffi_prep_cif_var} will return @code{FFI_BAD_ARGTYPE} if any of
+the variable argument types are @code{ffi_type_float} (promote to
+@code{ffi_type_double} first), or any integer type small than an int
+(promote to an int-sized type first).
+
 Note that, different cif's must be prepped for calls to the same
 function when different numbers of arguments are passed.
 
@@ -249,26 +254,26 @@ int main()
   void *values[1];
   char *s;
   ffi_arg rc;
-  
-  /* Initialize the argument info vectors */    
+
+  /* Initialize the argument info vectors */
   args[0] = &ffi_type_pointer;
   values[0] = &s;
-  
+
   /* Initialize the cif */
-  if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, 
+  if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1,
 		       &ffi_type_sint, args) == FFI_OK)
     @{
       s = "Hello World!";
       ffi_call(&cif, puts, &rc, values);
       /* rc now holds the result of the call to puts */
-      
-      /* values holds a pointer to the function's arg, so to 
-         call puts() again all we need to do is change the 
+
+      /* values holds a pointer to the function's arg, so to
+         call puts() again all we need to do is change the
          value of s */
       s = "This is cool!";
       ffi_call(&cif, puts, &rc, values);
     @}
-  
+
   return 0;
 @}
 @end example
@@ -624,7 +629,7 @@ Here is the corresponding code to describe this struct to
       tm_type.size = tm_type.alignment = 0;
       tm_type.type = FFI_TYPE_STRUCT;
       tm_type.elements = &tm_type_elements;
-    
+
       for (i = 0; i < 9; i++)
           tm_type_elements[i] = &ffi_type_sint;
 
@@ -887,7 +892,7 @@ writable and executable addresses.
 @node Closure Example
 @section Closure Example
 
-A trivial example that creates a new @code{puts} by binding 
+A trivial example that creates a new @code{puts} by binding
 @code{fputs} with @code{stdout}.
 
 @example
