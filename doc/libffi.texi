@@ -75,23 +75,24 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 @node Introduction
 @chapter What is libffi?
 
-Compilers for high level languages generate code that follow certain
-conventions.  These conventions are necessary, in part, for separate
-compilation to work.  One such convention is the @dfn{calling
-convention}.  The calling convention is a set of assumptions made by
-the compiler about where function arguments will be found on entry to
-a function.  A calling convention also specifies where the return
-value for a function is found.  The calling convention is also
-sometimes called the @dfn{ABI} or @dfn{Application Binary Interface}.
+To expose and call functions between programs and libraries distributed
+as machine executable binaries, certain conventions are followed.  One
+such convention is the @dfn{calling convention}.  The calling convention
+is a set of assumptions made by the compiler about where function
+arguments will be found on entry to a function.  A calling convention
+also specifies where the return value for a function is found.  The
+calling convention is also sometimes called the @dfn{ABI} or
+@dfn{Application Binary Interface}.
 @cindex calling convention
 @cindex ABI
 @cindex Application Binary Interface
 
-Some programs may not know at the time of compilation what arguments
-are to be passed to a function.  For instance, an interpreter may be
-told at run-time about the number and types of arguments used to call
-a given function.  @samp{Libffi} can be used in such programs to
-provide a bridge from the interpreter program to compiled code.
+Some programs may not know at the time of compilation into a binary the
+functions called nor what arguments those functions expect.  For
+instance, an interpreter may find the number and types of arguments used
+to call a given function in the interpreted program at run-time.
+@samp{Libffi} can be used in such programs to provide a bridge from the
+interpreted program to compiled code.
 
 The @samp{libffi} library provides a portable, high level programming
 interface to various calling conventions.  This allows a programmer to
@@ -104,7 +105,7 @@ code written in one language to call code written in another language.
 The @samp{libffi} library really only provides the lowest, machine
 dependent layer of a fully featured foreign function interface.  A
 layer must exist above @samp{libffi} that handles type conversions for
-values passed between the two languages.
+the local function interface.
 @cindex FFI
 @cindex Foreign Function Interface
 
@@ -114,6 +115,7 @@ values passed between the two languages.
 
 @menu
 * The Basics::                  The basic libffi API.
+* Calling a function::          Making a call to a foreign function.
 * Simple Example::              A simple example.
 * Types::                       libffi type descriptions.
 * Multiple ABIs::               Different passing styles on one platform.
@@ -126,9 +128,11 @@ values passed between the two languages.
 @node The Basics
 @section The Basics
 
-@samp{Libffi} assumes that you have a pointer to the function you wish
-to call and that you know the number and types of arguments to pass
-it, as well as the return type of the function.
+@samp{Libffi} assumes that any function is identified by a pointer
+value. You also must know the number and types of arguments, as well as
+the return type of the function. The arguments, return type and calling
+convention are called the @dfn{function signature}.
+@cindex function signature
 
 The first thing you must do is create an @code{ffi_cif} object that
 matches the signature of the function you wish to call.  This is a
@@ -181,7 +185,9 @@ function when different numbers of arguments are passed.
 
 Also note that a call to @code{ffi_prep_cif_var} with
 @var{nfixedargs}=@var{nototalargs} is NOT equivalent to a call to
-@code{ffi_prep_cif}.
+@code{ffi_prep_cif}. A variadic function calling convention can be
+different from the calling convention of a function with fixed arguments
+even when the arguments are the same.
 
 @end defun
 
@@ -190,7 +196,11 @@ Note that the resulting @code{ffi_cif} holds pointers to all the
 must ensure that these type objects have a lifetime at least as long
 as that of the @code{ffi_cif}.
 
-To call a function using an initialized @code{ffi_cif}, use the
+
+@node Calling a function
+@section Calling a function
+
+To make a call to function using an initialized @code{ffi_cif}, use the
 @code{ffi_call} function:
 
 @findex ffi_call
@@ -249,26 +259,26 @@ int main()
   void *values[1];
   char *s;
   ffi_arg rc;
-  
-  /* Initialize the argument info vectors */    
+
+  /* Initialize the argument info vectors */
   args[0] = &ffi_type_pointer;
   values[0] = &s;
-  
+
   /* Initialize the cif */
-  if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, 
+  if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1,
 		       &ffi_type_sint, args) == FFI_OK)
     @{
       s = "Hello World!";
       ffi_call(&cif, puts, &rc, values);
       /* rc now holds the result of the call to puts */
-      
-      /* values holds a pointer to the function's arg, so to 
-         call puts() again all we need to do is change the 
+
+      /* values holds a pointer to the function's arg, so to
+         call puts() again all we need to do is change the
          value of s */
       s = "This is cool!";
       ffi_call(&cif, puts, &rc, values);
     @}
-  
+
   return 0;
 @}
 @end example
@@ -624,7 +634,7 @@ Here is the corresponding code to describe this struct to
       tm_type.size = tm_type.alignment = 0;
       tm_type.type = FFI_TYPE_STRUCT;
       tm_type.elements = &tm_type_elements;
-    
+
       for (i = 0; i < 9; i++)
           tm_type_elements[i] = &ffi_type_sint;
 
@@ -782,10 +792,12 @@ necessarily platform-specific.
 @node The Closure API
 @section The Closure API
 
-@code{libffi} also provides a way to write a generic function -- a
-function that can accept and decode any combination of arguments.
-This can be useful when writing an interpreter, or to provide wrappers
-for arbitrary functions.
+To receive function calls, you need to create new function pointer
+values at run time. You can pass these pointer values to foreign code
+for example as callback function pointers. Once the new function
+receives a call, you need to read parameters and provide the value on
+return. This way an interpreter can support a binary calling convention
+for functions defined in the interpreted language.
 
 This facility is called the @dfn{closure API}.  Closures are not
 supported on all platforms; you can check the @code{FFI_CLOSURES}
@@ -803,21 +815,23 @@ functions:
 @findex ffi_closure_alloc
 @defun void *ffi_closure_alloc (size_t @var{size}, void **@var{code})
 Allocate a chunk of memory holding @var{size} bytes.  This returns a
-pointer to the writable address, and sets *@var{code} to the
-corresponding executable address.
+pointer to the writable address. *@var{code} is set to the new function
+pointer value.
 
-@var{size} should be sufficient to hold a @code{ffi_closure} object.
+@var{size} must be sufficient to hold a @code{ffi_closure} object.
 @end defun
 
 @findex ffi_closure_free
 @defun void ffi_closure_free (void *@var{writable})
 Free memory allocated using @code{ffi_closure_alloc}.  The argument is
-the writable address that was returned.
+the writable address that was returned.  The allocated function pointer
+value can no longer be used and may be reused in subsequent
+@code{ffi_closure_alloc}.
 @end defun
 
 
 Once you have allocated the memory for a closure, you must construct a
-@code{ffi_cif} describing the function call.  Finally you can prepare
+@code{ffi_cif} for the function call signature.  Finally you can prepare
 the closure function:
 
 @findex ffi_prep_closure_loc
@@ -840,7 +854,7 @@ An arbitrary datum that is passed, uninterpreted, to your closure
 function.
 
 @item codeloc
-The executable address returned by @code{ffi_closure_alloc}.
+The function pointer value returned by @code{ffi_closure_alloc}.
 
 @item fun
 The function which will be called when the closure is invoked.  It is
@@ -887,7 +901,7 @@ writable and executable addresses.
 @node Closure Example
 @section Closure Example
 
-A trivial example that creates a new @code{puts} by binding 
+A trivial example that creates a new @code{puts} by binding
 @code{fputs} with @code{stdout}.
 
 @example
