@@ -200,8 +200,8 @@ See the git log for details at http://github.com/libffi/libffi.
 
     3.4 TBD
         Add static trampoline support for Linux on x86_64 and ARM64.
-    	Add support for Alibaba's CSKY architecture.
-    	Add support for Kalray's KVX architecture.
+        Add support for Alibaba's CSKY architecture.
+        Add support for Kalray's KVX architecture.
         Add support for Intel Control-flow Enforcement Technology (CET).
         Add support for ARM Pointer Authentication (PA).
         Fix 32-bit PPC regression.
