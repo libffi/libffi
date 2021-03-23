@@ -695,6 +695,7 @@ static struct
 #ifdef HAVE_MEMFD_CREATE
   { open_temp_exec_file_memfd, "libffi", 0 },
 #endif
+  { open_temp_exec_file_env, "LIBFFI_TMPDIR", 0 },
   { open_temp_exec_file_env, "TMPDIR", 0 },
   { open_temp_exec_file_dir, "/tmp", 0 },
   { open_temp_exec_file_dir, "/var/tmp", 0 },

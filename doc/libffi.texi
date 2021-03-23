@@ -65,6 +65,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 @menu
 * Introduction::                What is libffi?
 * Using libffi::                How to use libffi.
+* Memory Usage::                Where memory for closures comes from.
 * Missing Features::            Things libffi can't do.
 * Index::                       Index.
 @end menu
@@ -969,6 +970,55 @@ only one call to @code{ffi_prep_cif} at a time.
 Currently the only affected platform is PowerPC and the only affected
 type is @code{long double}.
 @end itemize
+
+@node Memory Usage
+@chapter Memory Usage
+
+Note that memory allocated by @code{ffi_closure_alloc} and freed by
+@code{ffi_closure_free} does not come from the same general pool of
+memory that @code{malloc} and @code{free} use.  To accomodate security
+settings, @samp{libffi} may aquire memory, for example, by mapping
+temporary files into multiple places in the address space (once to
+write out the closure, a second to execute it).  The search follows
+this list, using the first that works:
+
+@itemize @bullet
+
+@item
+A anonymous mapping (i.e. not file-backed)
+
+@item
+@code{memfd_create()}, if the kernel supports it.
+
+@item
+A file created in the directory referenced by the environment variable
+@code{LIBFFI_TMPDIR}.
+
+@item
+Likewise for the environment variable @code{TMPDIR}.
+
+@item
+A file created in @code{/tmp}.
+
+@item
+A file created in @code{/var/tmp}.
+
+@item
+A file created in @code{/dev/shm}.
+
+@item
+A file created in the user's home directory (@code{$HOME}).
+
+@item
+A file created in any directory listed in @code{/etc/mtab}.
+
+@item
+A file created in any directory listed in @code{/proc/mounts}.
+
+@end itemize
+
+If security settings prohibit using any of these for closures,
+@code{ffi_closure_alloc} will fail.
 
 @node Missing Features
 @chapter Missing Features
