@@ -206,6 +206,7 @@ See the git log for details at http://github.com/libffi/libffi.
         Add support for ARM Pointer Authentication (PA).
         Fix 32-bit PPC regression.
         Fix MIPS soft-float problem.
+        Enable tmpdir override with the $LIBFFI_TMPDIR environment variable.
         Reject float and small integer argument in ffi_prep_cif_var().
           Callers must promote these types themselves.
 
