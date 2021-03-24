@@ -15,13 +15,19 @@ platform:
   - arm
   - arm64
 
+configuration:
+  - Debug
+  - Release
+
 environment:
   global:
     CYG_ROOT: C:/cygwin
     CYG_CACHE: C:/cygwin/var/cache/setup
     CYG_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
+    VSVER: 15
   matrix:
-    - VSVER: 15
+    - SHARED_ARG: "--enable-shared --disable-static"
+    - SHARED_ARG: "--enable-static --disable-shared"
 
 install:
   - ps: >-
@@ -50,6 +56,11 @@ install:
           $env:MSVCC="/cygdrive/c/projects/libffi/msvcc.sh -m64"
           $env:SRC_ARCHITECTURE="x86"
       }
+      If ($env:Configuration -Match "Debug") {
+          $env:DEBUG_ARG="--enable-debug"
+        } Else {
+          $env:DEBUG_ARG="--disable-debug"
+      }
   - 'appveyor DownloadFile https://cygwin.com/setup-x86.exe -FileName setup.exe'
   - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P dejagnu >NUL'
   - '%CYG_ROOT%/bin/bash -lc "cygcheck -dc cygwin"'
@@ -60,7 +71,13 @@ install:
   - call "%VSCOMNTOOLS%..\..\vc\Auxiliary\Build\vcvarsall.bat" %VCVARS_PLATFORM%
 
 build_script:
-  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; ./autogen.sh;)"
-  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; ./configure CC='%MSVCC%' CXX='%MSVCC%' LD='link' CPP='cl -nologo -EP' CXXCPP='cl -nologo -EP' CPPFLAGS='-DFFI_BUILDING_DLL' AR='/cygdrive/c/projects/libffi/.travis/ar-lib lib' NM='dumpbin -symbols' STRIP=':' --build=$BUILD --host=$HOST;)"
-  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; cp src/%SRC_ARCHITECTURE%/ffitarget.h include; make; find .;)"
-  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; cp `find . -name 'libffi-?.dll'` $HOST/testsuite/; make check; cat `find ./ -name libffi.log`)"
+  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; ./autogen.sh)"
+  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; ./configure CC='%MSVCC%' CXX='%MSVCC%' LD='link' CPP='cl -nologo -EP' CXXCPP='cl -nologo -EP' CPPFLAGS='-DFFI_BUILDING_DLL' AR='/cygdrive/c/projects/libffi/.travis/ar-lib lib' NM='dumpbin -symbols' STRIP=':' --build=$BUILD --host=$HOST $DEBUG_ARG $SHARED_ARG)"
+  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; cp src/%SRC_ARCHITECTURE%/ffitarget.h include)"
+  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; make)"
+  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; cp `find . -name 'libffi-?.dll'` $HOST/testsuite/)"
+  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; make check RUNTESTFLAGS='-v -v -v -v')"
+  
+  
+on_finish:
+  - c:\cygwin\bin\sh -lc "(cd $OLDPWD; cat `find ./ -name libffi.log`)"
