@@ -538,10 +538,17 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
 
   frame->fun (cif, rvalue, avalue, frame->user_data);
 
-  if (cabi == FFI_STDCALL)
-    return flags + (cif->bytes << X86_RET_POP_SHIFT);
-  else
-    return flags;
+  switch (cabi)
+    {
+    case FFI_STDCALL:
+      return flags | (cif->bytes << X86_RET_POP_SHIFT);
+    case FFI_THISCALL:
+    case FFI_FASTCALL:
+      return flags | ((cif->bytes - (narg_reg * FFI_SIZEOF_ARG))
+          << X86_RET_POP_SHIFT);
+    default:
+      return flags;
+    }
 }
 
 ffi_status
@@ -558,12 +565,12 @@ ffi_prep_closure_loc (ffi_closure* closure,
   switch (cif->abi)
     {
     case FFI_SYSV:
-    case FFI_THISCALL:
-    case FFI_FASTCALL:
     case FFI_MS_CDECL:
       dest = ffi_closure_i386;
       break;
     case FFI_STDCALL:
+    case FFI_THISCALL:
+    case FFI_FASTCALL:
     case FFI_PASCAL:
       dest = ffi_closure_STDCALL;
       break;
