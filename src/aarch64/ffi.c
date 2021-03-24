@@ -617,11 +617,12 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
   else if (flags & AARCH64_RET_NEED_COPY)
     rsize = 16;
 
-  /* Allocate consectutive stack for everything we'll need.  */
-  context = alloca (sizeof(struct call_context) + stack_bytes + 32 + rsize);
+  /* Allocate consectutive stack for everything we'll need.
+     The frame uses 40 bytes for: lr, fp, rvalue, flags, sp */
+  context = alloca (sizeof(struct call_context) + stack_bytes + 40 + rsize);
   stack = context + 1;
   frame = (void*)((uintptr_t)stack + (uintptr_t)stack_bytes);
-  rvalue = (rsize ? (void*)((uintptr_t)frame + 32) : orig_rvalue);
+  rvalue = (rsize ? (void*)((uintptr_t)frame + 40) : orig_rvalue);
 
   arg_init (&state);
   for (i = 0, nargs = cif->nargs; i < nargs; i++)
@@ -810,7 +811,7 @@ ffi_prep_closure_loc (ffi_closure *closure,
 #if FFI_EXEC_TRAMPOLINE_TABLE
 #ifdef __MACH__
 #ifdef HAVE_PTRAUTH
-  codeloc = ptrauth_strip (codeloc, ptrauth_key_asia);
+  codeloc = ptrauth_auth_data(codeloc, ptrauth_key_function_pointer, 0);
 #endif
   void **config = (void **)((uint8_t *)codeloc - PAGE_MAX_SIZE);
   config[0] = closure;

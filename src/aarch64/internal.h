@@ -75,4 +75,26 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #define AARCH64_TRAMP_MAP_SHIFT	14
 #define AARCH64_TRAMP_MAP_SIZE	(1 << AARCH64_TRAMP_MAP_SHIFT)
 #define AARCH64_TRAMP_SIZE	32
+
+#endif
+
+/* Helpers for writing assembly compatible with arm ptr auth */
+#ifdef LIBFFI_ASM
+
+#ifdef HAVE_PTRAUTH
+#define SIGN_LR pacibsp
+#define SIGN_LR_WITH_REG(x) pacib lr, x
+#define AUTH_LR_AND_RET retab
+#define AUTH_LR_WITH_REG(x) autib lr, x
+#define BRANCH_AND_LINK_TO_REG blraaz
+#define BRANCH_TO_REG braaz
+#else
+#define SIGN_LR
+#define SIGN_LR_WITH_REG(x)
+#define AUTH_LR_AND_RET ret
+#define AUTH_LR_WITH_REG(x)
+#define BRANCH_AND_LINK_TO_REG blr
+#define BRANCH_TO_REG br
+#endif
+
 #endif
