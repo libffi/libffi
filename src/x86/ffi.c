@@ -256,6 +256,13 @@ static const struct abi_params abi_params[FFI_LAST_ABI] = {
 
 extern void FFI_DECLARE_FASTCALL ffi_call_i386(struct call_frame *, char *) FFI_HIDDEN;
 
+/* We perform some black magic here to use some of the parent's stack frame in
+ * ffi_call_i386() that breaks with the MSVC compiler with the /RTCs or /GZ
+ * flags.  Disable the 'Stack frame run time error checking' for this function
+ * so we don't hit weird exceptions in debug builds. */
+#if defined(_MSC_VER)
+#pragma runtime_checks("s", off)
+#endif
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	      void **avalue, void *closure)
@@ -391,6 +398,9 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 
   ffi_call_i386 (frame, stack);
 }
+#if defined(_MSC_VER)
+#pragma runtime_checks("s", restore)
+#endif
 
 void
 ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
