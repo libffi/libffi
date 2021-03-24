@@ -207,6 +207,7 @@ See the git log for details at http://github.com/libffi/libffi.
         Fix 32-bit PPC regression.
         Fix MIPS soft-float problem.
         Enable tmpdir override with the $LIBFFI_TMPDIR environment variable.
+        Enable compatibility with MSVC runtime stack checking.
         Reject float and small integer argument in ffi_prep_cif_var().
           Callers must promote these types themselves.
 
