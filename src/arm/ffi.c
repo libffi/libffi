@@ -52,7 +52,10 @@
 #ifndef _WIN32
 extern unsigned int ffi_arm_trampoline[2] FFI_HIDDEN;
 #else
-extern unsigned int ffi_arm_trampoline[3] FFI_HIDDEN;
+// Declare this as an array of char, instead of array of int,
+// otherwise Clang optimizes out the "& 0xFFFFFFFE" for clearing
+// the thumb bit.
+extern unsigned char ffi_arm_trampoline[12] FFI_HIDDEN;
 #endif
 #endif
 
