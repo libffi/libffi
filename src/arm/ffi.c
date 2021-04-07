@@ -37,7 +37,7 @@
 #include <tramp.h>
 #include "internal.h"
 
-#if defined(_MSC_VER) && defined(_M_ARM)
+#if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -49,10 +49,13 @@
 #endif
 
 #else
-#ifndef _M_ARM
+#ifndef _WIN32
 extern unsigned int ffi_arm_trampoline[2] FFI_HIDDEN;
 #else
-extern unsigned int ffi_arm_trampoline[3] FFI_HIDDEN;
+// Declare this as an array of char, instead of array of int,
+// otherwise Clang optimizes out the "& 0xFFFFFFFE" for clearing
+// the thumb bit.
+extern unsigned char ffi_arm_trampoline[12] FFI_HIDDEN;
 #endif
 #endif
 
@@ -104,13 +107,13 @@ ffi_put_arg (ffi_type *ty, void *src, void *dst)
     case FFI_TYPE_SINT32:
     case FFI_TYPE_UINT32:
     case FFI_TYPE_POINTER:
-#ifndef _MSC_VER
+#ifndef _WIN32
     case FFI_TYPE_FLOAT:
 #endif
       *(UINT32 *)dst = *(UINT32 *)src;
       break;
 
-#ifdef _MSC_VER
+#ifdef _WIN32
     // casting a float* to a UINT32* doesn't work on Windows
     case FFI_TYPE_FLOAT:
         *(uintptr_t *)dst = 0;
@@ -633,7 +636,7 @@ ffi_prep_closure_loc (ffi_closure * closure,
 #endif
 
   /* Initialize the dynamic trampoline. */
-#ifndef _M_ARM
+#ifndef _WIN32
   memcpy(closure->tramp, ffi_arm_trampoline, 8);
 #else
   // cast away function type so MSVC doesn't set the lower bit of the function pointer
@@ -643,13 +646,13 @@ ffi_prep_closure_loc (ffi_closure * closure,
 #if defined (__QNX__)
   msync(closure->tramp, 8, 0x1000000);	/* clear data map */
   msync(codeloc, 8, 0x1000000);	/* clear insn map */
-#elif defined(_MSC_VER)
+#elif defined(_WIN32)
   FlushInstructionCache(GetCurrentProcess(), closure->tramp, FFI_TRAMPOLINE_SIZE);
 #else
   __clear_cache(closure->tramp, closure->tramp + 8);	/* clear data map */
   __clear_cache(codeloc, codeloc + 8);			/* clear insn map */
 #endif
-#ifdef _M_ARM
+#ifdef _WIN32
   *(void(**)(void))(closure->tramp + FFI_TRAMPOLINE_CLOSURE_FUNCTION) = closure_func;
 #else
   *(void (**)(void))(closure->tramp + 8) = closure_func;
