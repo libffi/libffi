@@ -8,7 +8,7 @@ shallow_clone: true
 #  32- and 64-bit clang/mingw
 #  and perhaps more.
 
-image: Visual Studio 2017
+image: Visual Studio 2019
 platform:
   - x64
   - x86
