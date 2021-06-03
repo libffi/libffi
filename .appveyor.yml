@@ -8,7 +8,7 @@ shallow_clone: true
 #  32- and 64-bit clang/mingw
 #  and perhaps more.
 
-image: Visual Studio 2017
+image: Visual Studio 2019
 platform:
   - x64
   - x86
@@ -62,10 +62,10 @@ install:
           $env:DEBUG_ARG="--disable-debug"
       }
   - 'appveyor DownloadFile https://cygwin.com/setup-x86.exe -FileName setup.exe'
-  - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P dejagnu >NUL'
+  - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P dejagnu,automake'
   - '%CYG_ROOT%/bin/bash -lc "cygcheck -dc cygwin"'
   - echo call VsDevCmd to set VS150COMNTOOLS
-  - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsDevCmd.bat"
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
   - ps: $env:VSCOMNTOOLS=(Get-Content ("env:VS" + "$env:VSVER" + "0COMNTOOLS"))
   - echo "Using Visual Studio %VSVER%.0 at %VSCOMNTOOLS%"
   - call "%VSCOMNTOOLS%..\..\vc\Auxiliary\Build\vcvarsall.bat" %VCVARS_PLATFORM%
@@ -77,7 +77,7 @@ build_script:
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; make)"
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; cp `find . -name 'libffi-?.dll'` $HOST/testsuite/ || true)"
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; make check RUNTESTFLAGS='-v -v -v -v')"
-  
-  
+
+
 on_finish:
   - c:\cygwin\bin\sh -lc "(cd $OLDPWD; cat `find ./ -name libffi.log`)"
