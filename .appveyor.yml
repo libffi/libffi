@@ -8,7 +8,7 @@ shallow_clone: true
 #  32- and 64-bit clang/mingw
 #  and perhaps more.
 
-image: Visual Studio 2019
+image: Visual Studio 2017
 platform:
   - x64
   - x86
@@ -65,7 +65,7 @@ install:
   - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P dejagnu,automake'
   - '%CYG_ROOT%/bin/bash -lc "cygcheck -dc cygwin"'
   - echo call VsDevCmd to set VS150COMNTOOLS
-  - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsDevCmd.bat"
   - ps: $env:VSCOMNTOOLS=(Get-Content ("env:VS" + "$env:VSVER" + "0COMNTOOLS"))
   - echo "Using Visual Studio %VSVER%.0 at %VSCOMNTOOLS%"
   - call "%VSCOMNTOOLS%..\..\vc\Auxiliary\Build\vcvarsall.bat" %VCVARS_PLATFORM%
