@@ -5,7 +5,7 @@ Status
 [![Build status](https://ci.appveyor.com/api/projects/status/8lko9vagbx4w2kxq?svg=true)](https://ci.appveyor.com/project/atgreen/libffi)
 
 libffi-3.4 was released on TBD.  Check the libffi web
-page for updates: <URL:http://sourceware.org/libffi/>.
+page for updates: [http://sourceware.org/libffi/](http://sourceware.org/libffi/).
 
 
 What is libffi?
@@ -13,8 +13,8 @@ What is libffi?
 
 Compilers for high level languages generate code that follow certain
 conventions. These conventions are necessary, in part, for separate
-compilation to work. One such convention is the "calling
-convention". The "calling convention" is essentially a set of
+compilation to work. One such convention is the *"calling
+convention"*. The *"calling convention"* is essentially a set of
 assumptions made by the compiler about where function arguments will
 be found on entry to a function. A "calling convention" also specifies
 where the return value for a function is found.
@@ -30,7 +30,7 @@ interface to various calling conventions. This allows a programmer to
 call any function specified by a call interface description at run
 time.
 
-FFI stands for Foreign Function Interface.  A foreign function
+FFI stands for _Foreign Function Interface_.  A foreign function
 interface is the popular name for the interface that allows code
 written in one language to call code written in another language. The
 libffi library really only provides the lowest, machine dependent
