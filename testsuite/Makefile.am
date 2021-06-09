@@ -81,7 +81,7 @@ libffi.closures/cls_ulonglong.c libffi.closures/cls_struct_va1.c \
 libffi.closures/cls_9byte2.c libffi.closures/closure_fn5.c \
 libffi.closures/cls_5byte.c libffi.closures/cls_3float.c \
 libffi.closures/closure.exp libffi.closures/cls_schar.c \
-libffi.closures/closure_fn4.c libffi.closures/cls_uchar_va.c \
+libffi.closures/closure_fn4.c \
 libffi.closures/closure_fn0.c libffi.closures/huge_struct.c \
 libffi.closures/cls_ushort_va.c \
 libffi.closures/cls_64byte.c libffi.closures/cls_longdouble.c \
