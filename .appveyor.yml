@@ -75,8 +75,9 @@ build_script:
   - c:\cygwin64\bin\sh -lc "(cd $OLDPWD; ./configure CC='%MSVCC%' CXX='%MSVCC%' LD='link' CPP='cl -nologo -EP' CXXCPP='cl -nologo -EP' CPPFLAGS='-DFFI_BUILDING_DLL' AR='/cygdrive/c/projects/libffi/.travis/ar-lib lib' NM='dumpbin -symbols' STRIP=':' --build=$BUILD --host=$HOST $DEBUG_ARG $SHARED_ARG)"
   - c:\cygwin64\bin\sh -lc "(cd $OLDPWD; cp src/%SRC_ARCHITECTURE%/ffitarget.h include)"
   - c:\cygwin64\bin\sh -lc "(cd $OLDPWD; make)"
+  - c:\cygwin64\bin\sh -lc "(cd $OLDPWD; cp $HOST/.libs/libffi.lib $HOST/testsuite/libffi-8.lib || true)"
   - c:\cygwin64\bin\sh -lc "(cd $OLDPWD; cp `find . -name 'libffi-?.dll'` $HOST/testsuite/ || true)"
-  - c:\cygwin64\bin\sh -lc "(cd $OLDPWD; make check RUNTESTFLAGS='-v -v -v -v')"
+  - c:\cygwin64\bin\sh -lc "(cd $OLDPWD; TERM=none make check RUNTESTFLAGS='-v -v -v -v --target '$HOST  DEJAGNU=$PWD/.appveyor/site.exp SITEDIR=$PWD/.appveyor)"
 
 
 on_finish:
