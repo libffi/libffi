@@ -218,7 +218,8 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
     case FFI_TYPE_STRUCT:
       {
 	const size_t UNITS_PER_WORD = 8;
-	size_t words = (type->size + UNITS_PER_WORD - 1) / UNITS_PER_WORD;
+        size_t words = (type->size + byte_offset + UNITS_PER_WORD - 1)
+                       / UNITS_PER_WORD;
 	ffi_type **ptr;
 	unsigned int i;
 	enum x86_64_reg_class subclasses[MAX_CLASSES];
@@ -242,14 +243,15 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 	/* Merge the fields of structure.  */
 	for (ptr = type->elements; *ptr != NULL; ptr++)
 	  {
-	    size_t num;
+	    size_t num, pos;
 
 	    byte_offset = FFI_ALIGN (byte_offset, (*ptr)->alignment);
 
 	    num = classify_argument (*ptr, subclasses, byte_offset % 8);
 	    if (num == 0)
 	      return 0;
-	    for (i = 0; i < num; i++)
+            pos = byte_offset / 8;
+            for (i = 0; i < num && (i + pos) < words; i++)
 	      {
 		size_t pos = byte_offset / 8;
 		classes[i + pos] =
