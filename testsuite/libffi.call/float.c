@@ -55,5 +55,5 @@ int main (void)
 
   CHECK((int)rint == floating(si1, f, d, ld));
 
-  exit (0);
+  ;
 }

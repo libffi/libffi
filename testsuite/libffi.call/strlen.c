@@ -39,6 +39,6 @@ int main (void)
   ffi_call(&cif, FFI_FN(my_strlen), &rint, values);
   CHECK(rint == 25);
   
-  exit (0);
+  ;
 }
   
