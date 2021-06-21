@@ -37,7 +37,9 @@ ffi_prep_cif_machdep(ffi_cif *cif)
   return FFI_OK;
 }
 
-EM_JS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue), {
+#define EM_JS_WRAP(ret, name, args, body) EM_JS(ret, name, args, body)
+
+EM_JS_WRAP(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue), {
   var cif_abi = HEAPU32[cif >> 2];
   var cif_nargs = HEAPU32[(cif + 4) >> 2];
   var cif_arg_types = HEAPU32[(cif + 8) >> 2];
@@ -47,39 +49,39 @@ EM_JS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue), {
   var rtype = HEAPU16[(cif_rtype + 6 /* rtype->type*/ ) >> 1];
 
 #if WASM_BIGINT
-  if (rtype === /* FFI_TYPE_STRUCT */ 13) {
+  if (rtype === FFI_TYPE_STRUCT) {
     throw new Error('struct ret marshalling nyi');
-  } else if (rtype === /* FFI_TYPE_COMPLEX */ 15) {
+  } else if (rtype === FFI_TYPE_COMPLEX) {
     throw new Error('complex ret marshalling nyi');
   } else if (rtype < 0 || rtype > 14) {
     throw new Error('Unexpected rtype ' + rtype);
   }
 #else
   var sig;
-  if (rtype === /* FFI_TYPE_VOID */ 0) {
+  if (rtype === FFI_TYPE_VOID) {
     sig = 'v';
-  } else if (rtype === /* FFI_TYPE_INT */ 1 ||
-             rtype === /* FFI_TYPE_UINT8 */ 5 ||
-             rtype === /* FFI_TYPE_SINT8 */ 6 ||
-             rtype === /* FFI_TYPE_UINT16 */ 7 ||
-             rtype === /* FFI_TYPE_SINT16 */ 8 ||
-             rtype === /* FFI_TYPE_UINT32 */ 9 ||
-             rtype === /* FFI_TYPE_SINT32 */ 10 ||
-             rtype === /* FFI_TYPE_POINTER */ 14) {
+  } else if (rtype === FFI_TYPE_INT ||
+             rtype === FFI_TYPE_UINT8 ||
+             rtype === FFI_TYPE_SINT8 ||
+             rtype === FFI_TYPE_UINT16 ||
+             rtype === FFI_TYPE_SINT16 ||
+             rtype === FFI_TYPE_UINT32 ||
+             rtype === FFI_TYPE_SINT32 ||
+             rtype === FFI_TYPE_POINTER) {
     sig = 'i';
-  } else if (rtype === /* FFI_TYPE_FLOAT */ 2) {
+  } else if (rtype === FFI_TYPE_FLOAT) {
     sig = 'f';
-  } else if (rtype === /* FFI_TYPE_DOUBLE */ 3 ||
-             rtype === /* FFI_TYPE_LONGDOUBLE */ 4) {
+  } else if (rtype === FFI_TYPE_DOUBLE ||
+             rtype === FFI_TYPE_LONGDOUBLE) {
     sig = 'd';
-  } else if (rtype === /* FFI_TYPE_UINT64 */ 11 ||
-             rtype === /* FFI_TYPE_SINT64 */ 12) {
+  } else if (rtype === FFI_TYPE_UINT64 ||
+             rtype === FFI_TYPE_SINT64) {
     // Warning: returns a truncated 32-bit integer directly.
     // High bits are in $tempRet0
     sig = 'j';
-  } else if (rtype === /* FFI_TYPE_STRUCT */ 13) {
+  } else if (rtype === FFI_TYPE_STRUCT) {
     throw new Error('struct ret marshalling nyi');
-  } else if (rtype === /* FFI_TYPE_COMPLEX */ 15) {
+  } else if (rtype === FFI_TYPE_COMPLEX) {
     throw new Error('complex ret marshalling nyi');
   } else {
     throw new Error('Unexpected rtype ' + rtype);
@@ -92,47 +94,47 @@ EM_JS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue), {
     var arg_type = HEAPU32[(cif_arg_types >> 2) + i];
     var typ = HEAPU16[(arg_type + 6) >> 1];
 
-    if (typ === /* FFI_TYPE_INT*/ 1 || typ === /* FFI_TYPE_SINT32 */ 10) {
+    if (typ === /* FFI_TYPE_INT*/ 1 || typ === FFI_TYPE_SINT32) {
       args.push(HEAP32[ptr >> 2]);
 #if !WASM_BIGINT
       sig += 'i';
 #endif
-    } else if (typ === /* FFI_TYPE_FLOAT */ 2) {
+    } else if (typ === FFI_TYPE_FLOAT) {
       args.push(HEAPF32[ptr >> 2]);
 #if !WASM_BIGINT
       sig += 'f';
 #endif
-    } else if (typ === /* FFI_TYPE_DOUBLE */ 3 || typ === /* FFI_TYPE_LONGDOUBLE */ 4) {
+    } else if (typ === FFI_TYPE_DOUBLE || typ === FFI_TYPE_LONGDOUBLE) {
       args.push(HEAPF64[ptr >> 3]);
 #if !WASM_BIGINT
       sig += 'd'; 
 #endif
-    } else if (typ === /* FFI_TYPE_UINT8*/ 5) {
+    } else if (typ === FFI_TYPE_UINT8) {
       args.push(HEAPU8[ptr]);
 #if !WASM_BIGINT
       sig += 'i';
 #endif
-    } else if (typ === /* FFI_TYPE_SINT8 */ 6) {
+    } else if (typ === FFI_TYPE_SINT8) {
       args.push(HEAP8[ptr]);
 #if !WASM_BIGINT
       sig += 'i';
 #endif
-    } else if (typ === /* FFI_TYPE_UINT16 */ 7) {
+    } else if (typ === FFI_TYPE_UINT16) {
       args.push(HEAPU16[ptr >> 1]);
 #if !WASM_BIGINT
       sig += 'i';
 #endif
-    } else if (typ === /* FFI_TYPE_SINT16 */ 8) {
+    } else if (typ === FFI_TYPE_SINT16) {
       args.push(HEAP16[ptr >> 1]);
 #if !WASM_BIGINT
       sig += 'i';
 #endif
-    } else if (typ === /* FFI_TYPE_UINT32 */ 9 || typ === /* FFI_TYPE_POINTER */ 14) {
+    } else if (typ === FFI_TYPE_UINT32 || typ === FFI_TYPE_POINTER) {
       args.push(HEAPU32[ptr >> 2]);
 #if !WASM_BIGINT
       sig += 'i';
 #endif
-    } else if (typ === /* FFI_TYPE_UINT64 */ 11 || typ === /* FFI_TYPE_SINT64 */ 12) {
+    } else if (typ === FFI_TYPE_UINT64 || typ === FFI_TYPE_SINT64) {
 #if WASM_BIGINT
       args.push(BigInt(HEAPU32[ptr >> 2]) | (BigInt(HEAPU32[(ptr + 4) >> 2]) << BigInt(32)));
 #else
@@ -142,9 +144,9 @@ EM_JS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue), {
       args.push(HEAPU32[(ptr + 4) >> 2]);
       sig += 'j';
 #endif
-    } else if (typ === /* FFI_TYPE_STRUCT */ 13) {
+    } else if (typ === FFI_TYPE_STRUCT) {
       throw new Error('struct marshalling nyi');
-    } else if (typ === /* FFI_TYPE_COMPLEX */ 15) {
+    } else if (typ === FFI_TYPE_COMPLEX) {
       throw new Error('complex marshalling nyi');
     } else {
       throw new Error('Unexpected type ' + typ);
@@ -157,19 +159,19 @@ EM_JS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue), {
   var result = dynCall(sig, fn, args);
 #endif
 
-  if (rtype === 0) {
+  if (rtype === FFI_TYPE_VOID) {
     // void
-  } else if (rtype === 1 || rtype === 9 || rtype === 10 || rtype === 14) {
+  } else if (rtype === FFI_TYPE_INT || rtype === FFI_TYPE_UINT32 || rtype === FFI_TYPE_SINT32 || rtype === FFI_TYPE_POINTER) {
     HEAP32[rvalue >> 2] = result;
-  } else if (rtype === 2) {
+  } else if (rtype === FFI_TYPE_FLOAT) {
     HEAPF32[rvalue >> 2] = result;
-  } else if (rtype === 3 || rtype === 4) {
+  } else if (rtype === FFI_TYPE_DOUBLE || rtype === FFI_TYPE_LONGDOUBLE) {
     HEAPF64[rvalue >> 3] = result;
-  } else if (rtype === 5 || rtype === 6) {
+  } else if (rtype === FFI_TYPE_UINT8 || rtype === FFI_TYPE_SINT8) {
     HEAP8[rvalue] = result;
-  } else if (rtype === 7 || rtype === 8) {
+  } else if (rtype === FFI_TYPE_UINT16 || rtype === FFI_TYPE_SINT16) {
     HEAP16[rvalue >> 1] = result;
-  } else if (rtype === 11 || rtype === 12) {
+  } else if (rtype === FFI_TYPE_UINT64 || rtype === FFI_TYPE_SINT64) {
 #if WASM_BIGINT
     HEAP32[rvalue >> 2] = Number(result & BigInt(0xffffffff)) | 0;
     HEAP32[(rvalue + 4) >> 2] = Number(result >> BigInt(32)) | 0;
@@ -179,9 +181,9 @@ EM_JS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue), {
     HEAP32[rvalue >> 2] = result;
     HEAP32[(rvalue + 4) >> 2] = Module.getTempRet0();
 #endif
-  } else if (rtype === 13) {
+  } else if (rtype === FFI_TYPE_STRUCT) {
     throw new Error('struct ret marshalling nyi');
-  } else if (rtype === 15) {
+  } else if (rtype === FFI_TYPE_COMPLEX) {
     throw new Error('complex ret marshalling nyi');
   } else {
     throw new Error('Unexpected rtype ' + rtype);
