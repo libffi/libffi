@@ -104,11 +104,15 @@ EM_JS_WRAP(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue
 #if !WASM_BIGINT
       sig += 'f';
 #endif
-    } else if (typ === FFI_TYPE_DOUBLE || typ === FFI_TYPE_LONGDOUBLE) {
+    } else if (typ === FFI_TYPE_DOUBLE) {
       args.push(HEAPF64[ptr >> 3]);
 #if !WASM_BIGINT
       sig += 'd'; 
 #endif
+    } else if (typ === FFI_TYPE_LONGDOUBLE){
+      let HEAPU64 = new BigInt64Array(HEAP8.buffer);
+      args.push(HEAPU64[ptr >> 3]);
+      args.push(HEAPU64[(ptr >> 3) + 1]);
     } else if (typ === FFI_TYPE_UINT8) {
       args.push(HEAPU8[ptr]);
 #if !WASM_BIGINT
