@@ -36,3 +36,4 @@ build_*/
 darwin_*/
 src/arm/trampoline.S
 **/texinfo.tex
+target/
