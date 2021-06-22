@@ -24,7 +24,7 @@ while [ $# -gt 0 ]; do
 done
 
 # Common compiler flags
-export CFLAGS="-O3"
+export CFLAGS="-O3 -fPIC"
 if [ -n "$WASM_BIGINT_FLAG" ]; then
   export CFLAGS="$CFLAGS $WASM_BIGINT_FLAG -DWASM_BIGINT"
 fi
@@ -40,6 +40,6 @@ export EM_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
 export CHOST="wasm32-unknown-linux" # wasm32-unknown-emscripten
 
 autoreconf -fiv
-echo emconfigure ./configure --host=$CHOST --prefix=$TARGET --enable-static --disable-shared --disable-dependency-tracking \
+emconfigure ./configure --host=$CHOST --prefix=$TARGET --enable-static --disable-shared --disable-dependency-tracking \
   --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-structs
 make install

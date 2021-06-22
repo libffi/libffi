@@ -37,3 +37,5 @@ darwin_*/
 src/arm/trampoline.S
 **/texinfo.tex
 target/
+testsuite/libffi.call/*.wasm
+testsuite/libffi.call/*.js
