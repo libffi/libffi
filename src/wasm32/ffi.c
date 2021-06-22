@@ -37,9 +37,10 @@ ffi_prep_cif_machdep(ffi_cif *cif)
   return FFI_OK;
 }
 
-#define EM_JS_MACROS(ret, name, args, body...) EM_JS(ret, name, args, body...)
+#define EM_JS_MACROS(ret, name, args, body...) EM_JS(ret, name, args, body)
 
 #define DEREF_U16(addr, offset) HEAPU16[(addr >> 1) + offset]
+#define DEREF_I16(addr, offset) HEAPU16[(addr >> 1) + offset]
 
 #define DEREF_U32(addr, offset) HEAPU32[(addr >> 2) + offset]
 #define DEREF_I32(addr, offset) HEAP32[(addr >> 2) + offset]
@@ -49,7 +50,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 
 #define FFI_TYPE__SIZE(addr)   DEREF_U32(addr, 0)
 #define FFI_TYPE__ALIGN(addr)  DEREF_U16(addr + 4, 0)
-#define FFI_TYPE__TYPE(addr)  DEREF_U16(addr + 6, 0)
+#define FFI_TYPE__TYPEID(addr)  DEREF_U16(addr + 6, 0)
 #define FFI_TYPE__ELEMENTS(addr)  DEREF_U32(addr + 8, 0)
 
 #define PADDING(size, align) align - ((size + align - 1) % align) - 1
@@ -61,23 +62,23 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 #endif
 
 EM_JS_MACROS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue), {
+  "use strict";
   function ffi_struct_size_and_alignment(arg_type){
-    let stored_size = FFI_TYPE_SIZE(arg_type);
+    const stored_size = FFI_TYPE__SIZE(arg_type);
     if(stored_size){
-      let stored_align = FFI_TYPE_ALIGN(arg_type);
+      const stored_align = FFI_TYPE__ALIGN(arg_type);
       return [stored_size, stored_align];
     }
-    let elements = FFI_TYPE__ELEMENTS(arg_type);
-    let idx = 0;
+    const elements = FFI_TYPE__ELEMENTS(arg_type);
     let size = 0;
     let align = 1;
     for(let idx = 0; DEREF_U32(elements, idx) !== 0; idx++){
       let item_size;
-      let item_align = 0;
-      let element = DEREF_U32(elements, idx);
-      switch(FFI_TYPE__TYPE(element)) {
+      let item_align;
+      const element = DEREF_U32(elements, idx);
+      switch(FFI_TYPE__TYPEID(element)) {
         case FFI_TYPE_STRUCT:
-          let [item_size, item_align] = ffi_struct_size_and_alignment(element);
+          [item_size, item_align] = ffi_struct_size_and_alignment(element);
           break;
         case FFI_TYPE_UINT8:
         case FFI_TYPE_SINT8:
@@ -107,33 +108,51 @@ EM_JS_MACROS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **aval
           throw new Error('Unexpected rtype ' + rtype);
       }
       item_align ||= item_size;
-      FFI_TYPE_SIZE(arg_type) = item_size;
-      FFI_TYPE_ALIGN(arg_type) = item_align;
+      FFI_TYPE__SIZE(arg_type) = item_size;
+      FFI_TYPE__ALIGN(arg_type) = item_align;
       size += item_size + PADDING(size, item_align);
       align = item_align > align ? item_align : align;
     }
     return [size, align];
   }
 
-  const cif_abi = DEREF_U32(cif, 0);
-  const cif_nargs = DEREF_U32(cif, 1);
-  const cif_arg_types = DEREF_U32(cif, 2);
-  const cif_rtype = DEREF_U32(cif, 3);
+  // Unbox structs of size 0 and 1
+  function unbox_small_structs(typ){
+    let typ_id = FFI_TYPE__TYPEID(typ);
+    while(typ_id === FFI_TYPE_STRUCT){
+      let elements = FFI_TYPE__ELEMENTS(typ);
+      let first_element = DEREF_U32(elements, 0);
+      if(first_element === 0){
+        typ_id = FFI_TYPE_VOID;
+        break;
+      } else if(DEREF_U32(elements, 1) === 0){
+        typ = first_element;
+        typ_id = FFI_TYPE__TYPEID(first_element);
+      } else {
+        break;
+      }
+    }
+    return [typ, typ_id];
+  }
+
+  const abi = DEREF_U32(cif, 0);
+  const nargs = DEREF_U32(cif, 1);
+  const arg_types = DEREF_U32(cif, 2);
+  const [rtype, rtype_id] = unbox_small_structs(DEREF_U32(cif, 3));
 
   const args = [];
-  const rtype = FFI_TYPE__TYPE(cif_rtype);
 
 #if WASM_BIGINT
-  switch(rtype){
+  switch(rtype_id){
     case FFI_TYPE_COMPLEX:
       throw new Error('complex ret marshalling nyi');
   }
-  if (rtype < 0 || rtype > 14) {
-    throw new Error('Unexpected rtype ' + rtype);
+  if (rtype_id < 0 || rtype_id > 14) {
+    throw new Error('Unexpected rtype ' + rtype_id);
   }
 #else
   let sig;
-  switch(rtype) {
+  switch(rtype_id) {
     case FFI_TYPE_VOID:
       sig = 'v';
       break;
@@ -162,20 +181,23 @@ EM_JS_MACROS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **aval
     case FFI_TYPE_COMPLEX:
       throw new Error('complex ret marshalling nyi');
     default:
-      throw new Error('Unexpected rtype ' + rtype);
+      throw new Error('Unexpected rtype ' + rtype_id);
   }
 #endif
 
-  for (let i = 0; i < cif_nargs; i++) {
-    let arg_ptr = DEREF_U32(avalue, i);
+  let ret_by_arg = false;
+  if(rtype_id === FFI_TYPE_LONGDOUBLE || rtype_id === FFI_TYPE_STRUCT){
+    args.push(rvalue);
+    ret_by_arg = true;
+  }
 
-    let arg_type = DEREF_U32(cif_arg_types, i);
-    let typ = FFI_TYPE__TYPE(arg_type);
+  let structs_size = 0;
+  let struct_args = [];
+  for (let i = 0; i < nargs; i++) {
+    const arg_ptr = DEREF_U32(avalue, i);
+    const [arg_type, arg_type_id] = unbox_small_structs(DEREF_U32(arg_types, i));
 
-    let structs_size = 0;
-    let struct_args = [];
-
-    switch(typ){
+    switch(arg_type_id){
       case FFI_TYPE_INT:
       case FFI_TYPE_SINT32:
         args.push(DEREF_I32(arg_ptr, 0));
@@ -187,10 +209,10 @@ EM_JS_MACROS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **aval
         break;
       case FFI_TYPE_DOUBLE:
         args.push(DEREF_F64(arg_ptr, 0));
-        SIG(sig += 'd'); 
+        SIG(sig += 'd');
         break;
       case FFI_TYPE_LONGDOUBLE:
-        let HEAPU64 = new BigInt64Array(HEAP8.buffer);
+        const HEAPU64 = new BigInt64Array(HEAP8.buffer);
         args.push(HEAPU64[arg_ptr >> 3]);
         args.push(HEAPU64[(arg_ptr >> 3) + 1]);
         break;
@@ -228,65 +250,72 @@ EM_JS_MACROS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **aval
 #endif
         break;
       case FFI_TYPE_STRUCT:
-        let [item_size, item_align] = Module.ffi_struct_size_and_alignment(arg_type);
+        const [item_size, item_align] = ffi_struct_size_and_alignment(arg_type);
         structs_size += PADDING(structs_size, item_align);
-        struct_args.push(args.length);
+        struct_args.push(i);
         // put the offset into the struct memory now, we'll have to update this
         // when we allocate the memory
-        args.push(structs_size); 
+        args.push(structs_size);
         structs_size += item_size;
         break;
       case FFI_TYPE_COMPLEX:
         throw new Error('complex marshalling nyi');
       default:
-        throw new Error('Unexpected type ' + typ);
+        throw new Error('Unexpected type ' + arg_type_id);
     }
   }
 
+  let structs_addr;
   if(structs_size > 0){
-    let structs_addr = _malloc(structs_size);
-    for(let idx of struct_args){
+    structs_addr = _malloc(structs_size);
+    for(const idx of struct_args){
       // Update the offsets to actual pointers
-      args[idx] += structs_addr;
-      let arg_type = DEREF_U32(cif_arg_types, idx);
-      let src_ptr = DEREF_U32(avalue, i);
-      let dest_ptr = args[idx];
-      let size = FFI_TYPE_SIZE(arg_type);
-      HEAP8.subarray(dest_ptr, dest_ptr + size).set(HEAP8.slice(src_ptr, src_ptr + size));
+      args[idx + ret_by_arg] += structs_addr;
+      const arg_type = DEREF_U32(arg_types, idx);
+      const size = FFI_TYPE__SIZE(arg_type);
+      const src_ptr = DEREF_U32(avalue, idx);
+      const dest_ptr = args[idx + ret_by_arg];
+      HEAP8.subarray(dest_ptr, dest_ptr + size).set(HEAP8.subarray(src_ptr, src_ptr + size));
     }
   }
 
 #if WASM_BIGINT
-  var result = wasmTable.get(fn).apply(null, args);
+  const result = wasmTable.get(fn).apply(null, args);
 #else
-  var result = dynCall(sig, fn, args);
+  const result = dynCall(sig, fn, args);
 #endif
+  if(structs_addr){
+    _free(structs_addr);
+  }
 
-  switch(rtype){
+  if(ret_by_arg){
+    return;
+  }
+
+  switch(rtype_id){
     case FFI_TYPE_VOID:
       break;
     case FFI_TYPE_INT:
-    case FFI_TYPE_UINT32: 
-    case FFI_TYPE_SINT32: 
+    case FFI_TYPE_UINT32:
+    case FFI_TYPE_SINT32:
     case FFI_TYPE_POINTER:
       DEREF_I32(rvalue, 0) = result;
       break;
     case FFI_TYPE_FLOAT:
       DEREF_F32(rvalue, 0) = result;
       break;
-    case FFI_TYPE_DOUBLE: 
-    case FFI_TYPE_LONGDOUBLE:
+    case FFI_TYPE_DOUBLE:
       DEREF_F64(rvalue, 0) = result;
       break;
     case FFI_TYPE_UINT8:
     case FFI_TYPE_SINT8:
       HEAP8[rvalue] = result;
       break;
-    case FFI_TYPE_UINT16: 
+    case FFI_TYPE_UINT16:
     case FFI_TYPE_SINT16:
       DEREF_I16(rvalue, 0) = result;
       break;
-    case FFI_TYPE_UINT64: 
+    case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
 #if WASM_BIGINT
       DEREF_I32(rvalue, 0) = Number(result & 0xffffffffn) | 0;
@@ -296,14 +325,12 @@ EM_JS_MACROS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **aval
       // High bits are in $tempRet0
       DEREF_I32(rvalue, 0) = result;
       DEREF_I32(rvalue, 1) = Module.getTempRet0();
-#endif 
+#endif
       break;
-    case  FFI_TYPE_STRUCT:
-      throw new Error('struct ret marshalling nyi');
     case FFI_TYPE_COMPLEX:
       throw new Error('complex ret marshalling nyi');
     default:
-      throw new Error('Unexpected rtype ' + rtype);
+      throw new Error('Unexpected rtype ' + rtype_id);
   }
 });
 
