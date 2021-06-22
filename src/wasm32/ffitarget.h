@@ -51,9 +51,9 @@ typedef enum ffi_abi {
 #endif  
 } ffi_abi;
 
-#define FFI_CLOSURES 0
+#define FFI_CLOSURES 1
 #define FFI_GO_CLOSURES 0
-#define FFI_TRAMPOLINE_SIZE 24
+#define FFI_TRAMPOLINE_SIZE 4
 #define FFI_NATIVE_RAW_API 0
 
 #endif
