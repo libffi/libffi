@@ -37,16 +37,26 @@ ffi_prep_cif_machdep(ffi_cif *cif)
   return FFI_OK;
 }
 
-#define EM_JS_WRAP(ret, name, args, body) EM_JS(ret, name, args, body)
+#define EM_JS_MACROS(ret, name, args, body) EM_JS(ret, name, args, body)
 
-EM_JS_WRAP(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue), {
-  var cif_abi = HEAPU32[cif >> 2];
-  var cif_nargs = HEAPU32[(cif + 4) >> 2];
-  var cif_arg_types = HEAPU32[(cif + 8) >> 2];
-  var cif_rtype = HEAPU32[(cif + 12) >> 2];
+#define DEREF_U16(addr, offset) HEAPU16[(addr >> 1) + offset]
+
+#define DEREF_U32(addr, offset) HEAPU32[(addr >> 2) + offset]
+#define DEREF_I32(addr, offset) HEAP32[(addr >> 2) + offset]
+#define DEREF_F32(addr, offset) HEAPF32[(addr >> 2) + offset]
+
+#define DEREF_F64(addr, offset) HEAPF64[(addr >> 3) + offset]
+
+#define FFI_TYPE__TYPE(addr)  DEREF_U16(addr + 6, 0)
+
+EM_JS_MACROS(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue), {
+  var cif_abi = DEREF_U32(cif, 0);
+  var cif_nargs = DEREF_U32(cif, 1);
+  var cif_arg_types = DEREF_U32(cif, 2);
+  var cif_rtype = DEREF_U32(cif, 3);
 
   var args = [];
-  var rtype = HEAPU16[(cif_rtype + 6 /* rtype->type*/ ) >> 1];
+  var rtype = FFI_TYPE__TYPE(cif_rtype);
 
 #if WASM_BIGINT
   if (rtype === FFI_TYPE_STRUCT) {
@@ -89,23 +99,23 @@ EM_JS_WRAP(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue
 #endif
 
   for (var i = 0; i < cif_nargs; i++) {
-    var ptr = HEAPU32[(avalue >> 2) + i];
+    var ptr = DEREF_U32(avalue, i);
 
-    var arg_type = HEAPU32[(cif_arg_types >> 2) + i];
-    var typ = HEAPU16[(arg_type + 6) >> 1];
+    var arg_type = DEREF_U32(cif_arg_types, i);
+    var typ = FFI_TYPE__TYPE(arg_type);
 
-    if (typ === /* FFI_TYPE_INT*/ 1 || typ === FFI_TYPE_SINT32) {
-      args.push(HEAP32[ptr >> 2]);
+    if (typ === FFI_TYPE_INT || typ === FFI_TYPE_SINT32) {
+      args.push(DEREF_I32(ptr, 0));
 #if !WASM_BIGINT
       sig += 'i';
 #endif
     } else if (typ === FFI_TYPE_FLOAT) {
-      args.push(HEAPF32[ptr >> 2]);
+      args.push(DEREF_F32(ptr, 0));
 #if !WASM_BIGINT
       sig += 'f';
 #endif
     } else if (typ === FFI_TYPE_DOUBLE) {
-      args.push(HEAPF64[ptr >> 3]);
+      args.push(DEREF_F64(ptr, 0));
 #if !WASM_BIGINT
       sig += 'd'; 
 #endif
@@ -124,28 +134,28 @@ EM_JS_WRAP(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue
       sig += 'i';
 #endif
     } else if (typ === FFI_TYPE_UINT16) {
-      args.push(HEAPU16[ptr >> 1]);
+      args.push(DEREF_U16(ptr, 0));
 #if !WASM_BIGINT
       sig += 'i';
 #endif
     } else if (typ === FFI_TYPE_SINT16) {
-      args.push(HEAP16[ptr >> 1]);
+      args.push(DEREF_U16(ptr, 0));
 #if !WASM_BIGINT
       sig += 'i';
 #endif
     } else if (typ === FFI_TYPE_UINT32 || typ === FFI_TYPE_POINTER) {
-      args.push(HEAPU32[ptr >> 2]);
+      args.push(DEREF_U32(ptr, 0));
 #if !WASM_BIGINT
       sig += 'i';
 #endif
     } else if (typ === FFI_TYPE_UINT64 || typ === FFI_TYPE_SINT64) {
 #if WASM_BIGINT
-      args.push(BigInt(HEAPU32[ptr >> 2]) | (BigInt(HEAPU32[(ptr + 4) >> 2]) << BigInt(32)));
+      args.push(BigInt(DEREF_U32(ptr, 0)) | (BigInt(DEREF_U32(ptr, 1)) << 32n));
 #else
       // LEGALIZE_JS_FFI mode splits i64 (j) into two i32 args
       // for compatibility with JavaScript's f64-based numbers.
-      args.push(HEAPU32[ptr >> 2]);
-      args.push(HEAPU32[(ptr + 4) >> 2]);
+      args.push(DEREF_U32(ptr, 0));
+      args.push(DEREF_U32(ptr, 1));
       sig += 'j';
 #endif
     } else if (typ === FFI_TYPE_STRUCT) {
@@ -166,24 +176,24 @@ EM_JS_WRAP(void, ffi_call, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue
   if (rtype === FFI_TYPE_VOID) {
     // void
   } else if (rtype === FFI_TYPE_INT || rtype === FFI_TYPE_UINT32 || rtype === FFI_TYPE_SINT32 || rtype === FFI_TYPE_POINTER) {
-    HEAP32[rvalue >> 2] = result;
+    DEREF_I32(rvalue, 0) = result;
   } else if (rtype === FFI_TYPE_FLOAT) {
-    HEAPF32[rvalue >> 2] = result;
+    DEREF_F32(rvalue, 0) = result;
   } else if (rtype === FFI_TYPE_DOUBLE || rtype === FFI_TYPE_LONGDOUBLE) {
-    HEAPF64[rvalue >> 3] = result;
+    DEREF_F64(rvalue, 0) = result;
   } else if (rtype === FFI_TYPE_UINT8 || rtype === FFI_TYPE_SINT8) {
     HEAP8[rvalue] = result;
   } else if (rtype === FFI_TYPE_UINT16 || rtype === FFI_TYPE_SINT16) {
-    HEAP16[rvalue >> 1] = result;
+    DEREF_I16(rvalue, 0) = result;
   } else if (rtype === FFI_TYPE_UINT64 || rtype === FFI_TYPE_SINT64) {
 #if WASM_BIGINT
-    HEAP32[rvalue >> 2] = Number(result & BigInt(0xffffffff)) | 0;
-    HEAP32[(rvalue + 4) >> 2] = Number(result >> BigInt(32)) | 0;
+    DEREF_I32(rvalue, 0) = Number(result & 0xffffffffn) | 0;
+    DEREF_I32(rvalue, 1) = Number(result >> 32n) | 0;
 #else
     // Warning: returns a truncated 32-bit integer directly.
     // High bits are in $tempRet0
-    HEAP32[rvalue >> 2] = result;
-    HEAP32[(rvalue + 4) >> 2] = Module.getTempRet0();
+    DEREF_I32(rvalue, 0) = result;
+    DEREF_I32(rvalue, 1) = Module.getTempRet0();
 #endif
   } else if (rtype === FFI_TYPE_STRUCT) {
     throw new Error('struct ret marshalling nyi');
