@@ -195,7 +195,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     ret_by_arg = true;
   }
 
-  const orig_stack_ptr = ___stack_pointer.value;
+  const orig_stack_ptr = stackSave();
   let structs_addr = orig_stack_ptr;
   for (let i = 0; i < nargs; i++) {
     const arg_ptr = DEREF_U32(avalue, i);
@@ -273,7 +273,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     }
   }
 
-  ___stack_pointer.value = structs_addr;
+  stackRestore(structs_addr);
 
 #if WASM_BIGINT
   const result = wasmTable.get(fn).apply(null, args);
@@ -281,7 +281,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   const result = dynCall(sig, fn, args);
 #endif
 
-  ___stack_pointer.value = orig_stack_ptr;
+  stackRestore(orig_stack_ptr);
 
   if (ret_by_arg) {
     return;
@@ -449,7 +449,7 @@ ffi_prep_closure_loc_helper,
   }
   function trampoline(...args) {
     let size = 0;
-    const orig_stack_ptr = ___stack_pointer.value;
+    const orig_stack_ptr = stackSave();
     let cur_ptr = orig_stack_ptr;
     let ret_ptr;
     if (ret_by_arg) {
@@ -498,11 +498,11 @@ ffi_prep_closure_loc_helper,
         break;
       }
     }
-    ___stack_pointer.value = cur_ptr;
+    stackRestore(cur_ptr);
     wasmTable.get(CLOSURE__fun(closure))(
         CLOSURE__cif(closure), ret_ptr, args_ptr,
         CLOSURE__user_data(closure));
-    ___stack_pointer.value = orig_stack_ptr;
+    stackRestore(orig_stack_ptr);
     if (!ret_by_arg) {
       return DEREF_U32(ret_ptr, 0);
     }
