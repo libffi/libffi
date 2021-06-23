@@ -1,15 +1,17 @@
-CC = gcc
-CFLAGS = -O2 -Wall
-prefix =
+CC = emcc
+CPP = em++
+CFLAGS = -O2 -Wall -fPIC
+prefix = ../../target
 includedir = $(prefix)/include
 libdir = $(prefix)/lib
 CPPFLAGS = -I$(includedir)
-LDFLAGS = -L$(libdir) -Wl,-rpath,$(libdir)
+LDFLAGS=-s EXPORT_ALL=1 -s MODULARIZE=1 -s MAIN_MODULE=1 -s EXPORTED_RUNTIME_METHODS='["getTempRet0"]'
 
 all: check-call check-callback
 
 test-call: test-call.c testcases.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o test-call test-call.c -lffi
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o test-call.o -c test-call.c
+	$(CPP) $(LDFLAGS) -L$(libdir) -lffi test-call.o -o test-call.js
 
 test-callback: test-callback.c testcases.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o test-callback test-callback.c -lffi
