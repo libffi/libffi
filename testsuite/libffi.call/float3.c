@@ -70,5 +70,5 @@ int main (void)
 
   CHECK(fabs(rd - floating_2(ld, d, f)) < DBL_EPSILON);
 
-  ;
+  exit (0);
 }

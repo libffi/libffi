@@ -7,12 +7,14 @@
 /* { dg-do run } */
 
 #include "ffitest.h"
-#include <emscripten/emscripten.h>
 
-
-static int floating(long double d)
+static int floating(int a, float b, double c, long double d)
 {
-  return (int)d;
+  int i;
+
+  i = (int) ((float)a/b + ((float)c/(float)d));
+
+  return i;
 }
 
 int main (void)
@@ -27,11 +29,17 @@ int main (void)
   double d;
   long double ld;
 
-  args[0] = &ffi_type_longdouble;
-  values[0] = &ld;
+  args[0] = &ffi_type_sint;
+  values[0] = &si1;
+  args[1] = &ffi_type_float;
+  values[1] = &f;
+  args[2] = &ffi_type_double;
+  values[2] = &d;
+  args[3] = &ffi_type_longdouble;
+  values[3] = &ld;
 
   /* Initialize the cif */
-  CHECK(ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1,
+  CHECK(ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 4,
 		     &ffi_type_sint, args) == FFI_OK);
 
   si1 = 6;
@@ -39,13 +47,13 @@ int main (void)
   d = (double)1.0/(double)3.0;
   ld = 2.71828182846L;
 
-  floating (ld);
+  floating (si1, f, d, ld);
 
   ffi_call(&cif, FFI_FN(floating), &rint, values);
 
-  printf ("%d vs %d\n", (int)rint, floating (ld));
+  printf ("%d vs %d\n", (int)rint, floating (si1, f, d, ld));
 
-  CHECK((int)rint == floating(ld));
+  CHECK((int)rint == floating(si1, f, d, ld));
 
-  ;
+  exit (0);
 }

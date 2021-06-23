@@ -48,5 +48,5 @@ int main (void)
 
   CHECK(rint != 0);
 
-  ;
+  exit (0);
 }
