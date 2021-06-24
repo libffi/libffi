@@ -1,18 +1,8 @@
-#!/usr/bin/env bash
-command -v emcc >/dev/null 2>&1 || { echo >&2 "emsdk could not be found.  Aborting."; exit 1; }
-
-set -e
-
+#!/bin/bash
 SOURCE_DIR=$PWD
 
 # Working directories
 TARGET=$SOURCE_DIR/target
-mkdir -p $TARGET
-
-# Define default arguments
-
-# JS BigInt to Wasm i64 integration, disabled by default
-WASM_BIGINT_FLAG=
 
 # Parse arguments
 while [ $# -gt 0 ]; do
@@ -40,6 +30,14 @@ export EM_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
 export CHOST="wasm32-unknown-linux" # wasm32-unknown-emscripten
 
 autoreconf -fiv
-emconfigure ./configure --host=$CHOST --prefix=$TARGET --enable-static --disable-shared --disable-dependency-tracking \
-  --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-structs
-make install
+emconfigure ./configure --host=wasm32-unknown-linux --enable-static \
+  --disable-shared  --disable-builddir --disable-multi-os-directory \
+  --disable-raw-api
+make
+EMMAKEN_JUST_CONFIGURE=1 emmake make check \
+  RUNTESTFLAGS="LDFLAGS_FOR_TARGET='\
+    -s DYNCALLS \
+    -s EXPORTED_RUNTIME_METHODS='getTempRet0' \
+    -s EXPORTED_RUNTIME_METHODS='stackSave' \
+    -s EXPORTED_RUNTIME_METHODS='stackRestore' \
+    '"
