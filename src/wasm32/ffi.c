@@ -335,7 +335,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 #define CLOSURE__fun(addr) DEREF_U32(addr, 2)
 #define CLOSURE__user_data(addr) DEREF_U32(addr, 3)
 
-EM_JS_MACROS(void *, ffi_closure_alloc, (size_t size, void **code), {
+EM_JS_MACROS(void *, ffi_closure_alloc_helper, (size_t size, void **code), {
   let closure = _malloc(size);
   let func_ptr = getEmptyTableSlot();
   DEREF_U32(code, 0) = func_ptr;
@@ -343,11 +343,21 @@ EM_JS_MACROS(void *, ffi_closure_alloc, (size_t size, void **code), {
   return closure;
 })
 
-EM_JS_MACROS(void, ffi_closure_free, (void *closure), {
+void * __attribute__ ((visibility ("default")))
+ffi_closure_alloc(size_t size, void **code) {
+  return ffi_closure_alloc_helper(size, code);
+}
+
+EM_JS_MACROS(void, ffi_closure_free_helper, (void *closure), {
   let func_ptr = CLOSURE__wrapper(closure);
   removeFunction(func_ptr);
   _free(closure);
 })
+
+void __attribute__ ((visibility ("default")))
+ffi_closure_free(void *closure) {
+  return ffi_closure_free_helper(closure);
+}
 
 EM_JS_MACROS(
 ffi_status,
