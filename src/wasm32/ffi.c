@@ -149,6 +149,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   const args = [];
   let ret_by_arg = false;
 
+  let sig = "";
 #if WASM_BIGINT
   if (rtype_id === FFI_TYPE_COMPLEX) {
     throw new Error('complex ret marshalling nyi');
@@ -161,7 +162,6 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     ret_by_arg = true;
   }
 #else
-  let sig;
   switch(rtype_id) {
   case FFI_TYPE_VOID:
     sig = 'v';
@@ -278,12 +278,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   }
 
   stackRestore(structs_addr);
-
-#if WASM_BIGINT
-  const result = wasmTable.get(fn).apply(null, args);
-#else
   const result = dynCall(sig, fn, args);
-#endif
 
   stackRestore(orig_stack_ptr);
 
@@ -389,7 +384,7 @@ ffi_prep_closure_loc_helper,
   const nargs = CIF__NARGS(cif);
   const arg_types = CIF__ARGTYPES(cif);
   const [rtype, rtype_id] = unbox_small_structs(CIF__RTYPE(cif));
-  let sig;
+  let sig = "";
   let ret_by_arg = false;
   switch (rtype_id) {
   case FFI_TYPE_VOID:
@@ -513,9 +508,9 @@ ffi_prep_closure_loc_helper,
       }
     }
     stackRestore(cur_ptr);
-    wasmTable.get(CLOSURE__fun(closure))(
+    dynCall("viiii", CLOSURE__fun(closure),[
         CLOSURE__cif(closure), ret_ptr, args_ptr,
-        CLOSURE__user_data(closure));
+        CLOSURE__user_data(closure)]);
     stackRestore(orig_stack_ptr);
     if (!ret_by_arg) {
       return DEREF_U32(ret_ptr, 0);
