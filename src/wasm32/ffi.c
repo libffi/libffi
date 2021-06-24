@@ -107,6 +107,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
         break;
       case FFI_TYPE_LONGDOUBLE:
         item_size = 16;
+        break;
       case FFI_TYPE_COMPLEX:
         throw new Error('complex ret marshalling nyi');
       default:
