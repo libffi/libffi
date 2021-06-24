@@ -147,6 +147,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   const [rtype, rtype_id] = unbox_small_structs(CIF__RTYPE(cif));
 
   const args = [];
+  let ret_by_arg = false;
 
 #if WASM_BIGINT
   if (rtype_id === FFI_TYPE_COMPLEX) {
@@ -155,11 +156,21 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   if (rtype_id < 0 || rtype_id > FFI_TYPE_LAST) {
     throw new Error('Unexpected rtype ' + rtype_id);
   }
+  if (rtype_id === FFI_TYPE_LONGDOUBLE || rtype_id === FFI_TYPE_STRUCT) {
+    args.push(rvalue);
+    ret_by_arg = true;
+  }
 #else
   let sig;
   switch(rtype_id) {
   case FFI_TYPE_VOID:
     sig = 'v';
+    break;
+  case FFI_TYPE_STRUCT:
+  case FFI_TYPE_LONGDOUBLE:
+    sig = 'vi';
+    args.push(rvalue);
+    ret_by_arg = true;
     break;
   case FFI_TYPE_INT:
   case FFI_TYPE_UINT8:
@@ -169,14 +180,12 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   case FFI_TYPE_UINT32:
   case FFI_TYPE_SINT32:
   case FFI_TYPE_POINTER:
-  case FFI_TYPE_STRUCT:
     sig = 'i';
     break;
   case FFI_TYPE_FLOAT:
     sig = 'f';
     break;
   case FFI_TYPE_DOUBLE:
-  case FFI_TYPE_LONGDOUBLE:
     sig = 'd';
     break;
   case FFI_TYPE_UINT64:
@@ -189,12 +198,6 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     throw new Error('Unexpected rtype ' + rtype_id);
   }
 #endif
-
-  let ret_by_arg = false;
-  if (rtype_id === FFI_TYPE_LONGDOUBLE || rtype_id === FFI_TYPE_STRUCT) {
-    args.push(rvalue);
-    ret_by_arg = true;
-  }
 
   const orig_stack_ptr = stackSave();
   let structs_addr = orig_stack_ptr;
