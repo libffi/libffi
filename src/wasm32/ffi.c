@@ -278,6 +278,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   }
 
   stackRestore(structs_addr);
+  console.log("calling fn", fn, args);
   const result = dynCall(sig, fn, args);
 
   stackRestore(orig_stack_ptr);
@@ -507,6 +508,7 @@ ffi_prep_closure_loc_helper,
         break;
       }
     }
+    console.log("calling fn", fn, sig, args);
     stackRestore(cur_ptr);
     dynCall("viiii", CLOSURE__fun(closure),[
         CLOSURE__cif(closure), ret_ptr, args_ptr,

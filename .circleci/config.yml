@@ -40,7 +40,7 @@ jobs:
 
   test-node:
     <<: *defaults
-    steps:  
+    steps:
       - checkout
 
       - attach_workspace:
@@ -52,6 +52,21 @@ jobs:
           command: |
             source ./emsdk/emsdk_env.sh
             testsuite/emscripten-test-stuff/node-tests.sh
+
+  test-node-bigint:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: run tests
+          no_output_timeout: 1200
+          command: |
+            source ./emsdk/emsdk_env.sh
+            testsuite/emscripten-test-stuff/node-tests.sh --enable-wasm-bigint
 
 
   # test-call:
@@ -88,5 +103,8 @@ workflows:
     jobs:
       - install-emsdk
       - test-node:
+          requires:
+            - install-emsdk
+      - test-node-bigint:
           requires:
             - install-emsdk
