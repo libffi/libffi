@@ -323,7 +323,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     // Warning: returns a truncated 32-bit integer directly.
     // High bits are in $tempRet0
     DEREF_I32(rvalue, 0) = result;
-    DEREF_I32(rvalue, 1) = Module.getTempRet0();
+    DEREF_I32(rvalue, 1) = getTempRet0();
 #endif
     break;
   case FFI_TYPE_COMPLEX:
