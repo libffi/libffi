@@ -251,7 +251,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     case FFI_TYPE_SINT64:
 #if WASM_BIGINT
       args.push(BigInt(DEREF_U32(arg_ptr, 0)) |
-                (BigInt(DEREF_U32(arg_ptr, 1)) << 32n));
+                (BigInt(DEREF_U32(arg_ptr, 1)) << BigInt(32)));
 #else
       // LEGALIZE_JS_FFI mode splits i64 (j) into two i32 args
       // for compatibility with JavaScript's f64-based numbers.
@@ -278,7 +278,6 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   }
 
   stackRestore(structs_addr);
-  console.log("calling fn", fn, args);
   const result = dynCall(sig, fn, args);
 
   stackRestore(orig_stack_ptr);
@@ -313,8 +312,8 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   case FFI_TYPE_UINT64:
   case FFI_TYPE_SINT64:
 #if WASM_BIGINT
-    DEREF_I32(rvalue, 0) = Number(result & 0xffffffffn) | 0;
-    DEREF_I32(rvalue, 1) = Number(result >> 32n) | 0;
+    DEREF_I32(rvalue, 0) = Number(result & BigInt(0xffffffff)) | 0;
+    DEREF_I32(rvalue, 1) = Number(result >> BigInt(32)) | 0;
 #else
     // Warning: returns a truncated 32-bit integer directly.
     // High bits are in $tempRet0
@@ -492,8 +491,8 @@ ffi_prep_closure_loc_helper,
         cur_ptr &= ~(8 - 1);
         cur_ptr -= 8;
         DEREF_U32(args_ptr, cargs_idx) = cur_ptr;
-        DEREF_I32(cur_ptr, 0) = Number(cur_arg & 0xffffffffn) | 0;
-        DEREF_I32(cur_ptr, 1) = Number(cur_arg >> 32n) | 0;
+        DEREF_I32(cur_ptr, 0) = Number(cur_arg & BigInt(0xffffffff)) | 0;
+        DEREF_I32(cur_ptr, 1) = Number(cur_arg >> BigInt(32)) | 0;
         break;
       case "d":
         cur_ptr &= ~(8 - 1);
@@ -508,7 +507,6 @@ ffi_prep_closure_loc_helper,
         break;
       }
     }
-    console.log("calling fn", fn, sig, args);
     stackRestore(cur_ptr);
     dynCall("viiii", CLOSURE__fun(closure),[
         CLOSURE__cif(closure), ret_ptr, args_ptr,
