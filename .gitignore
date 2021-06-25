@@ -41,3 +41,5 @@ src/arm/trampoline.S
 target/
 testsuite/libffi.call/*.wasm
 testsuite/libffi.call/*.js
+__pycache__
+.docker_home
