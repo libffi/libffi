@@ -381,7 +381,7 @@ ffi_prep_closure_loc_helper,
 
   // First construct the signature of the wasm function we are going to create.
   // We can close over this so the trampoline won't have to recompute it.
-  var sig = "";
+  var sig;
   var ret_by_arg = false;
   switch (rtype_id) {
   case FFI_TYPE_VOID:
