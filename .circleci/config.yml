@@ -131,7 +131,7 @@ jobs:
             ./build.sh --enable-wasm-bigint
             cp -r testsuite/libffi.call testsuite/libffi.call.test
             cp -r testsuite/libffi.closures testsuite/libffi.closures.test
-            export EXTRA_CFLAGS="-s WASM_BIGINT=1"
+            export EXTRA_LDFLAGS="-s WASM_BIGINT=1"
             ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
             ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
 
@@ -156,7 +156,7 @@ jobs:
             ./build.sh --enable-wasm-bigint
             cp -r testsuite/libffi.call testsuite/libffi.call.test
             cp -r testsuite/libffi.closures testsuite/libffi.closures.test
-            export EXTRA_CFLAGS="-s WASM_BIGINT=1"
+            export EXTRA_LDFLAGS="-s WASM_BIGINT=1"
             ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
             ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
 
