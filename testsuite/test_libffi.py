@@ -1,13 +1,7 @@
-import shutil
 import subprocess
 import pathlib
-import pytest
 
-import sys
-sys.path.insert(0, str((pathlib.Path(__file__).resolve().parents[1])))
-
-
-TEST_DIR = "libffi.call"
+TEST_PATH = pathlib.Path(__file__).parents[0].resolve()
 
 class BaseTestClass:
     def test_libffi(self, selenium, libffi_test):
@@ -40,7 +34,7 @@ class TestClosures(BaseTestClass):
 
 def pytest_generate_tests(metafunc):
     test_build_dir = metafunc.cls.TEST_BUILD_DIR
-    test_names = [x.stem for x in pathlib.Path(test_build_dir).glob("*.o")]
+    test_names = [x.stem for x in (TEST_PATH / test_build_dir).glob("*.o")]
     metafunc.parametrize("libffi_test", test_names)
 
 if __name__ == "__main__":
