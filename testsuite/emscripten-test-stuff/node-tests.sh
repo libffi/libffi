@@ -14,13 +14,16 @@ done
 
 # Common compiler flags
 export CFLAGS="-O3 -fPIC"
-if [ "$WASM_BIGINT" = "true" ]; then export CFLAGS+=" -DWASM_BIGINT"; fi
+if [ "$WASM_BIGINT" = "true" ]; then
+  # We need to detect WASM_BIGINT support at compile time
+  export CFLAGS+=" -DWASM_BIGINT";
+fi
 export CXXFLAGS="$CFLAGS"
-export LDFLAGS="-O3 -s EXPORTED_RUNTIME_METHODS=\['stackSave','stackRestore'\]"
+export LDFLAGS="-O3"
 if [ "$WASM_BIGINT" = "true" ]; then
   export LDFLAGS+=" -s WASM_BIGINT";
 else
-  export LDFLAGS+=" -s DYNCALLS -s EXPORTED_RUNTIME_METHODS='getTempRet0'";
+  export LDFLAGS+=" -s DYNCALLS";
 fi
 
 # Specific variables for cross-compilation
