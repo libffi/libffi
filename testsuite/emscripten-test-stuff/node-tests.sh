@@ -19,7 +19,7 @@ if [ "$WASM_BIGINT" = "true" ]; then
   export CFLAGS+=" -DWASM_BIGINT";
 fi
 export CXXFLAGS="$CFLAGS"
-export LDFLAGS="-O3"
+export LDFLAGS="-O3 -s EXPORTED_FUNCTIONS=_main,_malloc,_free -s ALLOW_TABLE_GROWTH"
 if [ "$WASM_BIGINT" = "true" ]; then
   export LDFLAGS+=" -s WASM_BIGINT";
 else
