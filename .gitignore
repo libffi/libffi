@@ -42,3 +42,7 @@ testsuite/libffi.call/*.wasm
 testsuite/libffi.call/*.js
 __pycache__
 .docker_home
+emsdk
+*.test
+*.log
+test-results
