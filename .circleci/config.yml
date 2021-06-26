@@ -51,37 +51,25 @@ jobs:
             source ./emsdk/emsdk_env.sh
             ./build.sh
 
+      - run:
+          name: build tests
+          command: |
+            source ./emsdk/emsdk_env.sh
+            cp -r testsuite/libffi.call testsuite/libffi.call.test
+            cp -r testsuite/libffi.closures testsuite/libffi.closures.test
+            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
+            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
+
       - persist_to_workspace:
           root: .
           paths:
             - target
-
-  build-selenium-tests:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: build
-          command: |
-            source ./emsdk/emsdk_env.sh
-            cp -r testsuite/libffi.call testsuite/libffi.call.test
-            cp -r testsuite/libffi.closures testsuite/libffi.closures.test
-            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
-            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
-      - persist_to_workspace:
-          root: .
-          paths:
             - testsuite
 
-  build-selenium-tests-bigint:
+  build-libffi-bigint:
     <<: *defaults
     steps:
       - checkout
-
       - attach_workspace:
           at: .
 
@@ -89,14 +77,22 @@ jobs:
           name: build
           command: |
             source ./emsdk/emsdk_env.sh
+            ./build.sh --enable-wasm-bigint
+
+      - run:
+          name: build tests
+          command: |
+            source ./emsdk/emsdk_env.sh
             cp -r testsuite/libffi.call testsuite/libffi.call.test
             cp -r testsuite/libffi.closures testsuite/libffi.closures.test
-            export EXTRA_LDFLAGS="-s WASM_BIGINT=1"
+            export EXTRA_LD_FLAGS="-s WASM_BIGINT"
             ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
             ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
+
       - persist_to_workspace:
           root: .
           paths:
+            - target
             - testsuite
 
   test-selenium-firefox:
@@ -210,26 +206,23 @@ workflows:
       - build-libffi:
           requires:
             - install-emsdk
-      - build-selenium-tests:
+      - build-libffi-bigint:
           requires:
-            - build-libffi
-      - build-selenium-tests-bigint:
-          requires:
-            - build-libffi
+            - install-emsdk
 
       - test-selenium-firefox:
           requires:
-            - build-selenium-tests
+            - build-libffi
       - test-selenium-chrome:
           requires:
-            - build-selenium-tests
+            - build-libffi
 
       - test-selenium-firefox-bigint:
           requires:
-            - build-selenium-tests-bigint
+            - build-libffi-bigint
       - test-selenium-chrome-bigint:
           requires:
-            - build-selenium-tests-bigint
+            - build-libffi-bigint
 
       - test-node:
           requires:
