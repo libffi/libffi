@@ -8,7 +8,7 @@
 #include "ffitest.h"
 
 typedef struct A {
-  float a, b;
+  float a;
 } A;
 
 typedef struct B {
@@ -18,7 +18,6 @@ typedef struct B {
 static struct B B_fn(float b0, struct B b1)
 {
   b1.y.a += b0;
-  b1.y.b -= b0;
   return b1;
 }
 
@@ -37,17 +36,18 @@ B_gn(ffi_cif* cif __UNUSED__, void* resp, void** args,
 
 int main (void)
 {
+  printf("123\n");
   ffi_cif cif;
   void *code;
   ffi_closure *pcl = ffi_closure_alloc(sizeof(ffi_closure), &code);
   void* args_dbl[3];
-  ffi_type* cls_struct_fields[3];
+  ffi_type* cls_struct_fields[2];
   ffi_type* cls_struct_fields1[2];
   ffi_type cls_struct_type, cls_struct_type1;
   ffi_type* dbl_arg_types[3];
 
   float e_dbl = 12.125f;
-  struct B f_dbl = { { 31.625f, 16.723f } };
+  struct B f_dbl = { { 31.625f } };
 
   struct B res_dbl;
 
@@ -62,8 +62,7 @@ int main (void)
   cls_struct_type1.elements = cls_struct_fields1;
 
   cls_struct_fields[0] = &ffi_type_float;
-  cls_struct_fields[1] = &ffi_type_float;
-  cls_struct_fields[2] = NULL;
+  cls_struct_fields[1] = NULL;
 
   cls_struct_fields1[0] = &cls_struct_type;
   cls_struct_fields1[1] = NULL;
@@ -74,7 +73,7 @@ int main (void)
   dbl_arg_types[2] = NULL;
 
   res_dbl = B_fn(e_dbl, f_dbl);
-  printf("0 res_dbl: %f %f\n", res_dbl.y.a, res_dbl.y.b);
+  printf("0 res_dbl: %f \n", res_dbl.y.a);
 
   CHECK(ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 2, &cls_struct_type1,
                     dbl_arg_types) == FFI_OK);
@@ -83,19 +82,16 @@ int main (void)
   args_dbl[1] = &f_dbl;
   args_dbl[2] = NULL;
 
+
   ffi_call(&cif, FFI_FN(B_fn), &res_dbl, args_dbl);
-  printf("1 res_dbl: %f %f\n", res_dbl.y.a, res_dbl.y.b);
-  /* { dg-output "12.125 24.75 31.625 32.25: 36.875 43.75 44.375" } */
-  CHECK( res_dbl.y.a == (f_dbl.y.a + e_dbl));
-  CHECK( res_dbl.y.b == (f_dbl.y.b - e_dbl));
+  printf("1 res_dbl: %f \n", res_dbl.y.a);
+  CHECK( res_dbl.y.a == (e_dbl + f_dbl.y.a));
 
   CHECK(ffi_prep_closure_loc(pcl, &cif, B_gn, NULL, code) == FFI_OK);
 
   res_dbl = ((B(*)(float, B))(code))(e_dbl, f_dbl);
-  printf("2 res_dbl: %f %f\n", res_dbl.y.a, res_dbl.y.b);
-  /* { dg-output "\n12.125 24.75 31.625 32.25: 36.875 43.75 44.375" } */
-  CHECK( res_dbl.y.a == (f_dbl.y.a + e_dbl));
-  CHECK( res_dbl.y.b == (f_dbl.y.b - e_dbl));
+  printf("2 res_dbl: %f \n", res_dbl.y.a);
+  CHECK( res_dbl.y.a == (e_dbl + f_dbl.y.a));
 
   exit(0);
 }
