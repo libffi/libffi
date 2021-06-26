@@ -481,8 +481,19 @@ ffi_prep_closure_loc_helper,
     if (ret_by_arg) {
       ret_ptr = args[0];
     } else {
-      cur_ptr -= 8;
-      cur_ptr &= (~(8 - 1));
+      var ret_size;
+      switch (sig[ret_by_arg]) {
+      case "i":
+      case "f":
+        ret_size = 4;
+        break;
+      case "j":
+      case "d":
+        ret_size = 8;
+        break;
+      }
+      cur_ptr -= ret_size;
+      cur_ptr &= (~(ret_size - 1));
       ret_ptr = cur_ptr;
     }
     cur_ptr -= 4 * (sig.length - 1 - ret_by_arg);
