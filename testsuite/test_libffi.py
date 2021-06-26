@@ -3,33 +3,34 @@ import pathlib
 
 TEST_PATH = pathlib.Path(__file__).parents[0].resolve()
 
-class BaseTestClass:
-    def test_libffi(self, selenium, libffi_test):
-        res = selenium.run_js(
-            """
-            window.TestModule = await Module();
-            """
-        )
-        selenium.run_js(
-            f"""
-            try {{
-                TestModule._test__{libffi_test}();
-            }} catch(e){{
-                if(e.name !== "ExitStatus"){{
-                    throw e;
-                }}
-                if(e.status !== 0){{
-                    throw new Error(`Terminated with nonzero status code ${{e.status}}: ` + e.message);
-                }}
+def libffi_tests(self, selenium, libffi_test):
+    res = selenium.run_js(
+        """
+        window.TestModule = await Module();
+        """
+    )
+    selenium.run_js(
+        f"""
+        try {{
+            TestModule._test__{libffi_test}();
+        }} catch(e){{
+            if(e.name !== "ExitStatus"){{
+                throw e;
             }}
-            """
-        )
+            if(e.status !== 0){{
+                throw new Error(`Terminated with nonzero status code ${{e.status}}: ` + e.message);
+            }}
+        }}
+        """
+    )
 
-class TestCall(BaseTestClass):
+class TestCall:
     TEST_BUILD_DIR = "libffi.call.test"
+    test_call = libffi_tests
 
-class TestClosures(BaseTestClass):
+class TestClosures:
     TEST_BUILD_DIR = "libffi.closures.test"
+    test_closures = libffi_tests
 
 
 def pytest_generate_tests(metafunc):

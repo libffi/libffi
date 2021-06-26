@@ -1,16 +1,16 @@
 #!/bin/sh
-cd $1
-export CFLAGS="-fPIC -I../.. -I ../../target/include -I ../../include/ $EXTRA_CFLAGS"
+set -e
+cd "$1"
+export CFLAGS="-fPIC -I../../target/include $EXTRA_CFLAGS"
 export LDFLAGS=" \
     -s EXPORT_ALL=1 \
     -s MODULARIZE=1 \
     -s MAIN_MODULE=1 \
-    -L../../target/lib/ -lffi 
+    -L../../target/lib/ -lffi \
     -s EXPORTED_RUNTIME_METHODS='getTempRet0' \
-    -s EXPORTED_RUNTIME_METHODS='stackSave' \
-    -s EXPORTED_RUNTIME_METHODS='stackRestore' \
-    $EXTRA_LD_FLAGS
-    "
+    $EXTRA_LD_FLAGS \
+"
+
 # Rename main functions to test__filename so we can link them together
 ls *.c | sed 's!\(.*\)\.c!sed -i "s/main/test__\1/g" \0!g' | bash
 

@@ -258,6 +258,7 @@ def selenium_class_scope(request, web_server_main):
         server_hostname=server_hostname,
         server_log=server_log,
     )
+    request.cls.call_number = 0
     with set_webdriver_script_timeout(
         selenium, script_timeout=parse_driver_timeout(request)
     ):
@@ -268,12 +269,15 @@ def selenium_class_scope(request, web_server_main):
             selenium.driver.quit()
 
 @pytest.fixture(scope="function")
-def selenium(selenium_class_scope, capsys):
-    try:
-        selenium_class_scope.clean_logs()
-        yield selenium_class_scope
-    finally:
-        print(selenium_class_scope.logs)
+def selenium(selenium_class_scope, request):
+    selenium = selenium_class_scope
+    request.cls.call_number += 1
+    # Refresh page every 50 calls to prevent firefox out of memory errors
+    if request.cls.call_number % 50 == 0:
+        selenium.driver.refresh()
+        selenium.javascript_setup()
+    selenium.clean_logs()
+    yield selenium
 
 @pytest.fixture(scope="session")
 def web_server_main(request):

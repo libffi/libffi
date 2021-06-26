@@ -36,7 +36,139 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - .
+            - emsdk
+
+  build-libffi:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: build
+          command: |
+            source ./emsdk/emsdk_env.sh
+            ./build.sh
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - target
+
+  build-selenium-tests:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: build
+          command: |
+            source ./emsdk/emsdk_env.sh
+            cp -r testsuite/libffi.call testsuite/libffi.call.test
+            cp -r testsuite/libffi.closures testsuite/libffi.closures.test
+            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
+            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
+      - persist_to_workspace:
+          root: .
+          paths:
+            - testsuite
+
+  build-selenium-tests-bigint:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: build
+          command: |
+            source ./emsdk/emsdk_env.sh
+            cp -r testsuite/libffi.call testsuite/libffi.call.test
+            cp -r testsuite/libffi.closures testsuite/libffi.closures.test
+            export EXTRA_LDFLAGS="-s WASM_BIGINT=1"
+            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
+            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
+      - persist_to_workspace:
+          root: .
+          paths:
+            - testsuite
+
+  test-selenium-firefox:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: run tests
+          no_output_timeout: 1200
+          command: |
+            git reset --hard
+            mkdir test-results
+            pytest --junitxml=test-results/junit.xml -k firefox testsuite/test_libffi.py
+      - store_test_results:
+          path: test-results
+
+  test-selenium-chrome:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: run tests
+          no_output_timeout: 1200
+          command: |
+            git reset --hard
+            pytest --junitxml=test-results/junit.xml -k chrome testsuite/test_libffi.py
+      - store_test_results:
+          path: test-results
+
+  test-selenium-firefox-bigint:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: run tests
+          no_output_timeout: 1200
+          command: |
+            git reset --hard
+            mkdir test-results
+            pytest --junitxml=test-results/junit.xml -k firefox testsuite/test_libffi.py
+      - store_test_results:
+          path: test-results
+
+  test-selenium-chrome-bigint:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: run tests
+          no_output_timeout: 1200
+          command: |
+            git reset --hard
+            mkdir test-results
+            pytest --junitxml=test-results/junit.xml -k chrome testsuite/test_libffi.py
+      - store_test_results:
+          path: test-results
 
   test-node:
     <<: *defaults
@@ -68,124 +200,39 @@ jobs:
             source ./emsdk/emsdk_env.sh
             testsuite/emscripten-test-stuff/node-tests.sh --enable-wasm-bigint
 
-  test-selenium-firefox:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: build
-          command: |
-            source ./emsdk/emsdk_env.sh
-            ./build.sh
-            cp -r testsuite/libffi.call testsuite/libffi.call.test
-            cp -r testsuite/libffi.closures testsuite/libffi.closures.test
-            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
-            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
-
-      - run:
-          name: run tests
-          no_output_timeout: 1200
-          command: |
-            pytest -k firefox testsuite/test_libffi.py
-
-  test-selenium-chrome:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: build
-          command: |
-            source ./emsdk/emsdk_env.sh
-            ./build.sh
-            cp -r testsuite/libffi.call testsuite/libffi.call.test
-            cp -r testsuite/libffi.closures testsuite/libffi.closures.test
-            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
-            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
-
-      - run:
-          name: run tests
-          no_output_timeout: 1200
-          command: |
-            pytest -k chrome testsuite/test_libffi.py
-
-  test-selenium-firefox-bigint:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: build
-          command: |
-            source ./emsdk/emsdk_env.sh
-            ./build.sh --enable-wasm-bigint
-            cp -r testsuite/libffi.call testsuite/libffi.call.test
-            cp -r testsuite/libffi.closures testsuite/libffi.closures.test
-            export EXTRA_LDFLAGS="-s WASM_BIGINT=1"
-            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
-            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
-
-      - run:
-          name: run tests
-          no_output_timeout: 1200
-          command: |
-            pytest -k firefox testsuite/test_libffi.py
-
-  test-selenium-chrome-bigint:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: build
-          command: |
-            source ./emsdk/emsdk_env.sh
-            ./build.sh --enable-wasm-bigint
-            cp -r testsuite/libffi.call testsuite/libffi.call.test
-            cp -r testsuite/libffi.closures testsuite/libffi.closures.test
-            export EXTRA_LDFLAGS="-s WASM_BIGINT=1"
-            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
-            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
-
-      - run:
-          name: run tests
-          no_output_timeout: 1200
-          command: |
-            pytest -k chrome testsuite/test_libffi.py
-
 workflows:
   version: 2
   build-and-test:
     jobs:
       - install-emsdk
+
+      - build-libffi:
+          requires:
+            - install-emsdk
+      - build-selenium-tests:
+          requires:
+            - build-libffi
+      - build-selenium-tests-bigint:
+          requires:
+            - build-libffi
+
+      - test-selenium-firefox:
+          requires:
+            - build-selenium-tests
+      - test-selenium-chrome:
+          requires:
+            - build-selenium-tests
+
+      - test-selenium-firefox-bigint:
+          requires:
+            - build-selenium-tests-bigint
+      - test-selenium-chrome-bigint:
+          requires:
+            - build-selenium-tests-bigint
+
       - test-node:
           requires:
             - install-emsdk
       - test-node-bigint:
-          requires:
-            - install-emsdk
-      - test-selenium-firefox:
-          requires:
-            - install-emsdk
-      - test-selenium-chrome:
-          requires:
-            - install-emsdk
-      - test-selenium-firefox-bigint:
-          requires:
-            - install-emsdk
-      - test-selenium-chrome-bigint:
           requires:
             - install-emsdk
