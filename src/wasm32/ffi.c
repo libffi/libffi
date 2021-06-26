@@ -481,8 +481,8 @@ ffi_prep_closure_loc_helper,
     if (ret_by_arg) {
       ret_ptr = args[0];
     } else {
-      cur_ptr -= 4;
-      cur_ptr &= (~(4 - 1));
+      cur_ptr -= 8;
+      cur_ptr &= (~(8 - 1));
       ret_ptr = cur_ptr;
     }
     cur_ptr -= 4 * (sig.length - 1 - ret_by_arg);
@@ -532,12 +532,12 @@ ffi_prep_closure_loc_helper,
     stackRestore(orig_stack_ptr);
 
     if (!ret_by_arg) {
-      switch(sig[+ret_by_arg]){
+      switch(sig[0]){
       case "i":
         return DEREF_U32(ret_ptr, 0);
         break;
       case "j":
-        throw new Error("????");
+        return DEREF_U64(ret_ptr, 0);
         break;
       case "d":
         return DEREF_F64(ret_ptr, 0);
