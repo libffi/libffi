@@ -41,6 +41,8 @@ AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 AC_CONFIG_MACRO_DIR([m4])
 
+AC_CHECK_TOOL(READELF, readelf)
+
 # Test for 64-bit build.
 AC_CHECK_SIZEOF([size_t])
 
@@ -271,7 +273,7 @@ if test "x$GCC" = "xyes"; then
   	libffi_cv_ro_eh_frame=yes
   	echo 'extern void foo (void); void bar (void) { foo (); foo (); }' > conftest.c
   	if $CC $CFLAGS -c -fpic -fexceptions $libffi_cv_no_lto -o conftest.o conftest.c > /dev/null 2>&1; then
-	    if readelf -WS conftest.o | grep -q -n 'eh_frame .* WA'; then
+	    if $READELF -WS conftest.o | grep -q -n 'eh_frame .* WA'; then
 	        libffi_cv_ro_eh_frame=no
 	    fi
   	fi
