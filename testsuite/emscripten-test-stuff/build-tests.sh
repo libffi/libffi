@@ -8,6 +8,7 @@ export LDFLAGS=" \
     -s MAIN_MODULE=1 \
     -L../../target/lib/ -lffi \
     -s EXPORTED_RUNTIME_METHODS='getTempRet0' \
+    -s STRICT_JS \
     $EXTRA_LD_FLAGS \
 "
 

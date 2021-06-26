@@ -67,7 +67,6 @@ EM_JS_MACROS(
 void,
 ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 {
-  "use strict";
   function ffi_struct_size_and_alignment(arg_type) {
     const stored_size = FFI_TYPE__SIZE(arg_type);
     if (stored_size) {
@@ -362,7 +361,6 @@ ffi_status,
 ffi_prep_closure_loc_helper,
 (ffi_closure * closure, ffi_cif *cif, void *fun, void *user_data, void *codeloc),
 {
-  "use strict";
   function unbox_small_structs(typ) {
     let typ_id = FFI_TYPE__TYPEID(typ);
     while (typ_id === FFI_TYPE_STRUCT) {
