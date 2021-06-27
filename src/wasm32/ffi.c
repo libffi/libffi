@@ -63,12 +63,6 @@ ffi_status FFI_HIDDEN ffi_prep_cif_machdep(ffi_cif *cif) { return FFI_OK; }
 #define BIGINT_FROM_PAIR(lower, upper) \
     (BigInt(lower) | (BigInt(upper) << BigInt(32)))
 
-#if WASM_BIGINT
-#define SIG(sig)
-#else
-#define SIG(sig) sig
-#endif
-
 EM_JS_MACROS(
 void,
 ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
@@ -158,8 +152,6 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   var args = [];
   var ret_by_arg = false;
 
-  var sig = "";
-#if WASM_BIGINT
   if (rtype_id === FFI_TYPE_COMPLEX) {
     throw new Error('complex ret marshalling nyi');
   }
@@ -170,43 +162,6 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     args.push(rvalue);
     ret_by_arg = true;
   }
-#else
-  switch(rtype_id) {
-  case FFI_TYPE_VOID:
-    sig = 'v';
-    break;
-  case FFI_TYPE_STRUCT:
-  case FFI_TYPE_LONGDOUBLE:
-    sig = 'vi';
-    args.push(rvalue);
-    ret_by_arg = true;
-    break;
-  case FFI_TYPE_INT:
-  case FFI_TYPE_UINT8:
-  case FFI_TYPE_SINT8:
-  case FFI_TYPE_UINT16:
-  case FFI_TYPE_SINT16:
-  case FFI_TYPE_UINT32:
-  case FFI_TYPE_SINT32:
-  case FFI_TYPE_POINTER:
-    sig = 'i';
-    break;
-  case FFI_TYPE_FLOAT:
-    sig = 'f';
-    break;
-  case FFI_TYPE_DOUBLE:
-    sig = 'd';
-    break;
-  case FFI_TYPE_UINT64:
-  case FFI_TYPE_SINT64:
-    sig = 'j';
-    break;
-  case FFI_TYPE_COMPLEX:
-    throw new Error('complex ret marshalling nyi');
-  default:
-    throw new Error('Unexpected rtype ' + rtype_id);
-  }
-#endif
 
   var orig_stack_ptr = stackSave();
   var structs_addr = orig_stack_ptr;
@@ -220,54 +175,50 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     case FFI_TYPE_INT:
     case FFI_TYPE_SINT32:
       args.push(DEREF_I32(arg_ptr, 0));
-      SIG(sig += 'i');
       break;
     case FFI_TYPE_FLOAT:
       args.push(DEREF_F32(arg_ptr, 0));
-      SIG(sig += 'f');
       break;
     case FFI_TYPE_DOUBLE:
       args.push(DEREF_F64(arg_ptr, 0));
-      SIG(sig += 'd');
       break;
     case FFI_TYPE_LONGDOUBLE:
       // emscripten doesn't define HEAPU64 by default
-      const HEAPU64 = new BigInt64Array(HEAP8.buffer);
-      args.push(DEREF_U64(arg_ptr, 0));
-      args.push(DEREF_U64(arg_ptr, 1));
-      SIG(sig += "iiii");
+#if WASM_BIGINT
+        args.push(DEREF_U64(arg_ptr, 0));
+        args.push(DEREF_U64(arg_ptr, 1));
+#else
+        args.push(DEREF_U32(arg_ptr, 0));
+        args.push(DEREF_U32(arg_ptr, 1));
+        args.push(DEREF_U32(arg_ptr, 2));
+        args.push(DEREF_U32(arg_ptr, 3));
+#endif
       break;
     case FFI_TYPE_UINT8:
       args.push(HEAPU8[arg_ptr]);
-      SIG(sig += 'i');
       break;
     case FFI_TYPE_SINT8:
       args.push(HEAP8[arg_ptr]);
-      SIG(sig += 'i');
       break;
     case FFI_TYPE_UINT16:
       args.push(DEREF_U16(arg_ptr, 0));
-      SIG(sig += 'i');
       break;
     case FFI_TYPE_SINT16:
       args.push(DEREF_U16(arg_ptr, 0));
-      SIG(sig += 'i');
       break;
     case FFI_TYPE_UINT32:
     case FFI_TYPE_POINTER:
       args.push(DEREF_U32(arg_ptr, 0));
-      SIG(sig += 'i');
       break;
     case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
 #if WASM_BIGINT
-      args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 0), DEREF_U32(arg_ptr, 1)));
+      args.push(DEREF_U64(arg_ptr, 0));
 #else
       // LEGALIZE_JS_FFI mode splits i64 (j) into two i32 args
       // for compatibility with JavaScript's f64-based numbers.
       args.push(DEREF_U32(arg_ptr, 0));
       args.push(DEREF_U32(arg_ptr, 1));
-      sig += 'j';
 #endif
       break;
     case FFI_TYPE_STRUCT:
@@ -280,7 +231,6 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       var src_ptr = DEREF_U32(avalue, i);
       HEAP8.subarray(structs_addr, structs_addr + item_size)
           .set(HEAP8.subarray(src_ptr, src_ptr + item_size));
-      SIG(sig += 'i');
       break;
     case FFI_TYPE_COMPLEX:
       throw new Error('complex marshalling nyi');
@@ -290,8 +240,8 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   }
 
   stackRestore(structs_addr);
-  console.log(sig, fn, {args});
-  var result = dynCall(sig, fn, args);
+  console.log(wasmTable, "fn", fn, "args", args);
+  var result = wasmTable.get(fn).apply(null, args);
 
   stackRestore(orig_stack_ptr);
 
@@ -325,10 +275,9 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   case FFI_TYPE_UINT64:
   case FFI_TYPE_SINT64:
 #if WASM_BIGINT
-    DEREF_I32(rvalue, 0) = BIGINT_LOWER(result);
-    DEREF_I32(rvalue, 1) = BIGINT_UPPER(result);
+    DEREF_U64(rvalue, 0) = result;
 #else
-    // Warning: returns a truncated 32-bit integer directly.
+    // Returns a truncated 32-bit integer directly.
     // High bits are in $tempRet0
     DEREF_I32(rvalue, 0) = result;
     DEREF_I32(rvalue, 1) = getTempRet0();
