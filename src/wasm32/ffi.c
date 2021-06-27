@@ -387,9 +387,6 @@ ffi_prep_closure_loc_helper,
     return [typ, typ_id];
   }
   var abi = CIF__ABI(cif);
-  if(abi !== FFI_DEFAULT_ABI){
-    return FFI_BAD_ABI;
-  }
   var nargs = CIF__NARGS(cif);
   var arg_types = CIF__ARGTYPES(cif);
   var rtype_unboxed = unbox_small_structs(CIF__RTYPE(cif));

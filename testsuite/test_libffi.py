@@ -7,6 +7,7 @@ TEST_PATH = pathlib.Path(__file__).parents[0].resolve()
 xfails = {
     "closure_loc_fn0" : "Not applicable -- codeloc doesn't point to closure",
     "huge_struct" : "Function signature too long",
+    "err_bad_abi" : "ABI is defined using an enum hard to access from Javascript"
 }
 
 def libffi_tests(self, selenium, libffi_test):
