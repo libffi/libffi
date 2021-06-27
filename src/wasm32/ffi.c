@@ -129,13 +129,6 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     var typ_id = FFI_TYPE__TYPEID(typ);
     while (typ_id === FFI_TYPE_STRUCT) {
       var elements = FFI_TYPE__ELEMENTS(typ);
-console.log("unbox small structs");
-let struct_entries = [];
-for (var idx = 0; DEREF_U32(elements, idx) !== 0; idx++) {
-  console.log("index", idx);
-  struct_entries.push(idx);
-}
-console.log("unbox_small_structs entries", struct_entries);
       var first_element = DEREF_U32(elements, 0);
       if (first_element === 0) {
         typ_id = FFI_TYPE_VOID;
