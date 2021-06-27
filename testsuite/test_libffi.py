@@ -1,9 +1,17 @@
 import subprocess
 import pathlib
+import pytest 
 
 TEST_PATH = pathlib.Path(__file__).parents[0].resolve()
 
+xfails = {
+    "closure_loc_fn0" : "Not applicable -- codeloc doesn't point to closure",
+    "huge_struct" : "Function signature too long",
+}
+
 def libffi_tests(self, selenium, libffi_test):
+    if libffi_test in xfails:
+        pytest.xfail(f'known failure with code "{xfails[libffi_test]}"')
     res = selenium.run_js(
         """
         window.TestModule = await Module();
