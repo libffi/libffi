@@ -1,7 +1,7 @@
 Status
 ======
 
-[![Build Status](https://travis-ci.com/libffi/libffi.svg?branch=master)](https://travis-ci.com/libffi/libffi)
+[![Build Status](https://travis-ci.org/libffi/libffi.svg?branch=master)](https://travis-ci.org/libffi/libffi)
 [![Build status](https://ci.appveyor.com/api/projects/status/8lko9vagbx4w2kxq?svg=true)](https://ci.appveyor.com/project/atgreen/libffi)
 
 libffi-3.4 was released on TBD.  Check the libffi web
@@ -443,9 +443,10 @@ developers:
     avr32               Bradley Smith
     blackfin            Alexandre Keunecke I. de Mendonca
     cris                Simon Posnjak, Hans-Peter Nilsson
-    csky		Ma Jun, Zhang Wenmeng
+    csky                Ma Jun, Zhang Wenmeng
     frv                 Anthony Green
     ia64                Hans Boehm
+    kvx                 Yann Sionneau
     m32r                Kazuhiro Inaoka
     m68k                Andreas Schwab
     m88k                Miod Vallat
@@ -487,6 +488,11 @@ Alex Oliva solved the executable page problem for SElinux.
 The list above is almost certainly incomplete and inaccurate.  I'm
 happy to make corrections or additions upon request.
 
-If you have a problem, or have found a bug, please send a note to the
-author at green@moxielogic.com, or the project mailing list at
-libffi-discuss@sourceware.org.
+If you have a problem, or have found a bug, please file an issue on
+our issue tracker at https://github.com/libffi/libffi/issues.
+
+The author can be reached at green@moxielogic.com.
+
+To subscribe/unsubscribe to our mailing lists, visit:
+https://sourceware.org/mailman/listinfo/libffi-announce
+https://sourceware.org/mailman/listinfo/libffi-discuss
