@@ -28,10 +28,9 @@
 #include <ffi_common.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <emscripten/emscripten.h>
-
-ffi_status FFI_HIDDEN ffi_prep_cif_machdep(ffi_cif *cif) { return FFI_OK; }
 
 #define EM_JS_MACROS(ret, name, args, body...) EM_JS(ret, name, args, body)
 
@@ -50,6 +49,7 @@ ffi_status FFI_HIDDEN ffi_prep_cif_machdep(ffi_cif *cif) { return FFI_OK; }
 #define CIF__NARGS(addr) DEREF_U32(addr, 1)
 #define CIF__ARGTYPES(addr) DEREF_U32(addr, 2)
 #define CIF__RTYPE(addr) DEREF_U32(addr, 3)
+#define CIF__NFIXEDARGS(addr) DEREF_U32(addr, 6)
 
 #define FFI_TYPE__SIZE(addr) DEREF_U32(addr, 0)
 #define FFI_TYPE__ALIGN(addr) DEREF_U16(addr + 4, 0)
@@ -62,6 +62,27 @@ ffi_status FFI_HIDDEN ffi_prep_cif_machdep(ffi_cif *cif) { return FFI_OK; }
 #define BIGINT_UPPER(x) (Number((x) >> BigInt(32)) | 0)
 #define BIGINT_FROM_PAIR(lower, upper) \
     (BigInt(lower) | (BigInt(upper) << BigInt(32)))
+
+#define VARARGS_FLAG 1
+
+ffi_status FFI_HIDDEN
+ffi_prep_cif_machdep(ffi_cif *cif)
+{
+  // This is called after ffi_prep_cif_machdep_var so we need to avoid
+  // overwriting cif->nfixedargs.
+  if(!(cif->flags & VARARGS_FLAG)){
+    cif->nfixedargs = cif->nargs;
+  }
+  return FFI_OK;
+}
+
+ffi_status FFI_HIDDEN
+ffi_prep_cif_machdep_var(ffi_cif *cif, unsigned nfixedargs, unsigned ntotalargs)
+{
+  cif->flags |= VARARGS_FLAG;
+  cif->nfixedargs = nfixedargs;
+  return FFI_OK;
+}
 
 // Javascript helper functions
 EM_JS_MACROS(
@@ -322,6 +343,7 @@ ffi_prep_closure_loc_helper,
 {
   var abi = CIF__ABI(cif);
   var nargs = CIF__NARGS(cif);
+  var nfixedargs = CIF__NFIXEDARGS(cif);
   var arg_types_ptr = CIF__ARGTYPES(cif);
   var rtype_unboxed = unbox_small_structs(CIF__RTYPE(cif));
   var rtype_ptr = rtype_unboxed[0];
@@ -363,7 +385,7 @@ ffi_prep_closure_loc_helper,
     throw new Error('Unexpected rtype ' + rtype_id);
   }
   var arg_types_list = [];
-  for (var i = 0; i < nargs; i++) {
+  for (var i = 0; i < nfixedargs; i++) {
     var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
     var arg_type_ptr = arg_unboxed[0];
     var arg_type_id = arg_unboxed[1];
@@ -399,26 +421,30 @@ ffi_prep_closure_loc_helper,
       throw new Error('Unexpected argtype ' + arg_type_id);
     }
   }
+  if ( nfixedargs < nargs ) {
+    sig += "i";
+  }
   function trampoline() {
     var args = Array.prototype.slice.call(arguments);
     var size = 0;
     var orig_stack_ptr = stackSave();
     var cur_ptr = orig_stack_ptr;
     var ret_ptr;
+    var jsarg_idx = 0;
     if (ret_by_arg) {
-      ret_ptr = args[0];
+      ret_ptr = args[jsarg_idx++];
     } else {
       cur_ptr -= 8;
       cur_ptr &= (~(8 - 1));
       ret_ptr = cur_ptr;
     }
-    cur_ptr -= 4 * (sig.length - 1 - ret_by_arg);
+    cur_ptr -= 4 * nargs;
     var args_ptr = cur_ptr;
     var HEAPU64 = new BigInt64Array(HEAP8.buffer);
-    var jsarg_idx = +ret_by_arg - 1;
-    for (var carg_idx = 0; carg_idx < nargs; carg_idx++) {
-      var cur_arg = args[++jsarg_idx];
-      let arg_type_id = arg_types_list[carg_idx];
+    var carg_idx = 0;
+    while (jsarg_idx < args.length) {
+      var cur_arg = args[jsarg_idx++];
+      let arg_type_id = arg_types_list[carg_idx++];
       if ( arg_type_id === FFI_TYPE_STRUCT ) {
         cur_ptr -= 4;
         DEREF_U32(args_ptr, carg_idx) = cur_arg;
