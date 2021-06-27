@@ -68,13 +68,13 @@ EM_JS_MACROS(
 void,
 ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 {
-  function ffi_struct_size_and_alignment(arg_type) {
-    var stored_size = FFI_TYPE__SIZE(arg_type);
+  function ffi_struct_size_and_alignment(arg_type_ptr) {
+    var stored_size = FFI_TYPE__SIZE(arg_type_ptr);
     if (stored_size) {
-      var stored_align = FFI_TYPE__ALIGN(arg_type);
+      var stored_align = FFI_TYPE__ALIGN(arg_type_ptr);
       return [stored_size, stored_align];
     }
-    var elements = FFI_TYPE__ELEMENTS(arg_type);
+    var elements = FFI_TYPE__ELEMENTS(arg_type_ptr);
     var size = 0;
     var align = 1;
     for (var idx = 0; DEREF_U32(elements, idx) !== 0; idx++) {
@@ -116,8 +116,8 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
         throw new Error('Unexpected rtype ' + rtype);
       }
       item_align = item_align || item_size;
-      FFI_TYPE__SIZE(arg_type) = item_size;
-      FFI_TYPE__ALIGN(arg_type) = item_align;
+      FFI_TYPE__SIZE(arg_type_ptr) = item_size;
+      FFI_TYPE__ALIGN(arg_type_ptr) = item_align;
       size += item_size + PADDING(size, item_align);
       align = item_align > align ? item_align : align;
     }
@@ -145,9 +145,9 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 
   var abi = CIF__ABI(cif);
   var nargs = CIF__NARGS(cif);
-  var arg_types = CIF__ARGTYPES(cif);
+  var arg_types_ptr = CIF__ARGTYPES(cif);
   var rtype_unboxed = unbox_small_structs(CIF__RTYPE(cif));
-  var rtype = rtype_unboxed[0];
+  var rtype_ptr = rtype_unboxed[0];
   var rtype_id = rtype_unboxed[1];
 
   var args = [];
@@ -207,8 +207,8 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   var structs_addr = orig_stack_ptr;
   for (var i = 0; i < nargs; i++) {
     var arg_ptr = DEREF_U32(avalue, i);
-    var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types, i));
-    var arg_type = arg_unboxed[0];
+    var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
+    var arg_type_ptr = arg_unboxed[0];
     var arg_type_id = arg_unboxed[1];
 
     switch (arg_type_id) {
@@ -266,7 +266,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 #endif
       break;
     case FFI_TYPE_STRUCT:
-      var item = ffi_struct_size_and_alignment(arg_type);
+      var item = ffi_struct_size_and_alignment(arg_type_ptr);
       var item_size = item[0];
       var item_align = item[1];
       structs_addr -= item_size;
@@ -388,9 +388,9 @@ ffi_prep_closure_loc_helper,
   }
   var abi = CIF__ABI(cif);
   var nargs = CIF__NARGS(cif);
-  var arg_types = CIF__ARGTYPES(cif);
+  var arg_types_ptr = CIF__ARGTYPES(cif);
   var rtype_unboxed = unbox_small_structs(CIF__RTYPE(cif));
-  var rtype = rtype_unboxed[0];
+  var rtype_ptr = rtype_unboxed[0];
   var rtype_id = rtype_unboxed[1];
   var sig = "";
   var ret_by_arg = false;
@@ -428,13 +428,12 @@ ffi_prep_closure_loc_helper,
   default:
     throw new Error('Unexpected rtype ' + rtype_id);
   }
-  var struct_flags = [];
-  var arg_types = [];
+  var arg_types_list = [];
   for (var i = 0; i < nargs; i++) {
-    var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types, i));
-    var arg_type = arg_unboxed[0];
+    var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
+    var arg_type_ptr = arg_unboxed[0];
     var arg_type_id = arg_unboxed[1];
-    arg_types.push(arg_type_id);
+    arg_types_list.push(arg_type_id);
     switch (arg_type_id) {
     case FFI_TYPE_INT:
     case FFI_TYPE_UINT8:
@@ -485,10 +484,10 @@ ffi_prep_closure_loc_helper,
     var jsarg_idx = +ret_by_arg - 1;
     for (var carg_idx = 0; carg_idx < nargs; carg_idx++) {
       var cur_arg = args[++jsarg_idx];
-      let arg_type_id = arg_types[carg_idx];
+      let arg_type_id = arg_types_list[carg_idx];
       if ( arg_type_id === FFI_TYPE_STRUCT ) {
         cur_ptr -= 4;
-        DEREF_U32(args_ptr, cargs_idx) = cur_arg;
+        DEREF_U32(args_ptr, carg_idx) = cur_arg;
         continue;
       }
       switch (arg_type_id) {
@@ -505,27 +504,27 @@ ffi_prep_closure_loc_helper,
         break;
       case FFI_TYPE_FLOAT:
         cur_ptr -= 4;
-        DEREF_U32(args_ptr, cargs_idx) = cur_ptr;
+        DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_F32(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_DOUBLE:
         cur_ptr &= ~(8 - 1);
         cur_ptr -= 8;
-        DEREF_U32(args_ptr, cargs_idx) = cur_ptr;
+        DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_F64(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_UINT64:
       case FFI_TYPE_SINT64:
         cur_ptr &= ~(8 - 1);
         cur_ptr -= 8;
-        DEREF_U32(args_ptr, cargs_idx) = cur_ptr;
+        DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_U32(cur_ptr, 0) = Number(cur_arg & BigInt(0xffffffff)) | 0;
         DEREF_U32(cur_ptr, 1) = Number(cur_arg >> BigInt(32)) | 0;
         break;
       case FFI_TYPE_LONGDOUBLE:
         cur_ptr &= ~(16 - 1);
         cur_ptr -= 16;
-        DEREF_U32(args_ptr, cargs_idx) = cur_ptr;
+        DEREF_U32(args_ptr, carg_idx) = cur_ptr;
 #if WASM_BIGINT
         DEREF_U32(cur_ptr, 0) = Number(cur_arg & BigInt(0xffffffff)) | 0;
         DEREF_U32(cur_ptr, 1) = Number(cur_arg >> BigInt(32)) | 0;
