@@ -63,85 +63,90 @@ ffi_status FFI_HIDDEN ffi_prep_cif_machdep(ffi_cif *cif) { return FFI_OK; }
 #define BIGINT_FROM_PAIR(lower, upper) \
     (BigInt(lower) | (BigInt(upper) << BigInt(32)))
 
+// Javascript helper functions
+EM_JS_MACROS(
+void,
+unbox_small_structs, (ffi_type typ), {
+  var typ_id = FFI_TYPE__TYPEID(typ);
+  while (typ_id === FFI_TYPE_STRUCT) {
+    var elements = FFI_TYPE__ELEMENTS(typ);
+    var first_element = DEREF_U32(elements, 0);
+    if (first_element === 0) {
+      typ_id = FFI_TYPE_VOID;
+      break;
+    } else if (DEREF_U32(elements, 1) === 0) {
+      typ = first_element;
+      typ_id = FFI_TYPE__TYPEID(first_element);
+    } else {
+      break;
+    }
+  }
+  return [typ, typ_id];
+})
+
+EM_JS_MACROS(
+void,
+ffi_struct_size_and_alignment, (ffi_type arg_type_ptr), {
+  var stored_size = FFI_TYPE__SIZE(arg_type_ptr);
+  if (stored_size) {
+    var stored_align = FFI_TYPE__ALIGN(arg_type_ptr);
+    return [stored_size, stored_align];
+  }
+  var elements = FFI_TYPE__ELEMENTS(arg_type_ptr);
+  var size = 0;
+  var align = 1;
+  for (var idx = 0; DEREF_U32(elements, idx) !== 0; idx++) {
+    var item_size;
+    var item_align;
+    var element = DEREF_U32(elements, idx);
+    switch (FFI_TYPE__TYPEID(element)) {
+    case FFI_TYPE_STRUCT:
+      var item = ffi_struct_size_and_alignment(element);
+      item_size = item[0];
+      item_align = item[1];
+      break;
+    case FFI_TYPE_UINT8:
+    case FFI_TYPE_SINT8:
+      item_size = 1;
+      break;
+    case FFI_TYPE_UINT16:
+    case FFI_TYPE_SINT16:
+      item_size = 2;
+      break;
+    case FFI_TYPE_INT:
+    case FFI_TYPE_UINT32:
+    case FFI_TYPE_SINT32:
+    case FFI_TYPE_POINTER:
+    case FFI_TYPE_FLOAT:
+      item_size = 4;
+      break;
+    case FFI_TYPE_DOUBLE:
+    case FFI_TYPE_UINT64:
+    case FFI_TYPE_SINT64:
+      item_size = 8;
+      break;
+    case FFI_TYPE_LONGDOUBLE:
+      item_size = 16;
+      break;
+    case FFI_TYPE_COMPLEX:
+      throw new Error('complex ret marshalling nyi');
+    default:
+      throw new Error('Unexpected rtype ' + rtype);
+    }
+    item_align = item_align || item_size;
+    FFI_TYPE__SIZE(arg_type_ptr) = item_size;
+    FFI_TYPE__ALIGN(arg_type_ptr) = item_align;
+    size += item_size + PADDING(size, item_align);
+    align = item_align > align ? item_align : align;
+  }
+  return [size, align];
+})
+
+
 EM_JS_MACROS(
 void,
 ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 {
-  function ffi_struct_size_and_alignment(arg_type_ptr) {
-    var stored_size = FFI_TYPE__SIZE(arg_type_ptr);
-    if (stored_size) {
-      var stored_align = FFI_TYPE__ALIGN(arg_type_ptr);
-      return [stored_size, stored_align];
-    }
-    var elements = FFI_TYPE__ELEMENTS(arg_type_ptr);
-    var size = 0;
-    var align = 1;
-    for (var idx = 0; DEREF_U32(elements, idx) !== 0; idx++) {
-      var item_size;
-      var item_align;
-      var element = DEREF_U32(elements, idx);
-      switch (FFI_TYPE__TYPEID(element)) {
-      case FFI_TYPE_STRUCT:
-        var item = ffi_struct_size_and_alignment(element);
-        item_size = item[0];
-        item_align = item[1];
-        break;
-      case FFI_TYPE_UINT8:
-      case FFI_TYPE_SINT8:
-        item_size = 1;
-        break;
-      case FFI_TYPE_UINT16:
-      case FFI_TYPE_SINT16:
-        item_size = 2;
-        break;
-      case FFI_TYPE_INT:
-      case FFI_TYPE_UINT32:
-      case FFI_TYPE_SINT32:
-      case FFI_TYPE_POINTER:
-      case FFI_TYPE_FLOAT:
-        item_size = 4;
-        break;
-      case FFI_TYPE_DOUBLE:
-      case FFI_TYPE_UINT64:
-      case FFI_TYPE_SINT64:
-        item_size = 8;
-        break;
-      case FFI_TYPE_LONGDOUBLE:
-        item_size = 16;
-        break;
-      case FFI_TYPE_COMPLEX:
-        throw new Error('complex ret marshalling nyi');
-      default:
-        throw new Error('Unexpected rtype ' + rtype);
-      }
-      item_align = item_align || item_size;
-      FFI_TYPE__SIZE(arg_type_ptr) = item_size;
-      FFI_TYPE__ALIGN(arg_type_ptr) = item_align;
-      size += item_size + PADDING(size, item_align);
-      align = item_align > align ? item_align : align;
-    }
-    return [size, align];
-  }
-
-  // Unbox structs of size 0 and 1
-  function unbox_small_structs(typ) {
-    var typ_id = FFI_TYPE__TYPEID(typ);
-    while (typ_id === FFI_TYPE_STRUCT) {
-      var elements = FFI_TYPE__ELEMENTS(typ);
-      var first_element = DEREF_U32(elements, 0);
-      if (first_element === 0) {
-        typ_id = FFI_TYPE_VOID;
-        break;
-      } else if (DEREF_U32(elements, 1) === 0) {
-        typ = first_element;
-        typ_id = FFI_TYPE__TYPEID(first_element);
-      } else {
-        break;
-      }
-    }
-    return [typ, typ_id];
-  }
-
   var abi = CIF__ABI(cif);
   var nargs = CIF__NARGS(cif);
   var arg_types_ptr = CIF__ARGTYPES(cif);
@@ -315,23 +320,6 @@ ffi_status,
 ffi_prep_closure_loc_helper,
 (ffi_closure * closure, ffi_cif *cif, void *fun, void *user_data, void *codeloc),
 {
-  function unbox_small_structs(typ) {
-    var typ_id = FFI_TYPE__TYPEID(typ);
-    while (typ_id === FFI_TYPE_STRUCT) {
-      var elements = FFI_TYPE__ELEMENTS(typ);
-      var first_element = DEREF_U32(elements, 0);
-      if (first_element === 0) {
-        typ_id = FFI_TYPE_VOID;
-        break;
-      } else if (DEREF_U32(elements, 1) === 0) {
-        typ = first_element;
-        typ_id = FFI_TYPE__TYPEID(first_element);
-      } else {
-        break;
-      }
-    }
-    return [typ, typ_id];
-  }
   var abi = CIF__ABI(cif);
   var nargs = CIF__NARGS(cif);
   var arg_types_ptr = CIF__ARGTYPES(cif);
