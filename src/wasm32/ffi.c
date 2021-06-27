@@ -188,10 +188,8 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
         args.push(DEREF_U64(arg_ptr, 0));
         args.push(DEREF_U64(arg_ptr, 1));
 #else
-        args.push(DEREF_U32(arg_ptr, 0));
-        args.push(DEREF_U32(arg_ptr, 1));
-        args.push(DEREF_U32(arg_ptr, 2));
-        args.push(DEREF_U32(arg_ptr, 3));
+        args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 0), DEREF_U32(arg_ptr, 1)));
+        args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 2), DEREF_U32(arg_ptr, 3)));
 #endif
       break;
     case FFI_TYPE_UINT8:
@@ -215,10 +213,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 #if WASM_BIGINT
       args.push(DEREF_U64(arg_ptr, 0));
 #else
-      // LEGALIZE_JS_FFI mode splits i64 (j) into two i32 args
-      // for compatibility with JavaScript's f64-based numbers.
-      args.push(DEREF_U32(arg_ptr, 0));
-      args.push(DEREF_U32(arg_ptr, 1));
+      args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 0), DEREF_U32(arg_ptr, 1)));
 #endif
       break;
     case FFI_TYPE_STRUCT:
@@ -240,9 +235,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   }
 
   stackRestore(structs_addr);
-  console.log(wasmTable, "fn", fn, "args", args);
   var result = wasmTable.get(fn).apply(null, args);
-
   stackRestore(orig_stack_ptr);
 
   if (ret_by_arg) {
@@ -277,10 +270,8 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 #if WASM_BIGINT
     DEREF_U64(rvalue, 0) = result;
 #else
-    // Returns a truncated 32-bit integer directly.
-    // High bits are in $tempRet0
-    DEREF_I32(rvalue, 0) = result;
-    DEREF_I32(rvalue, 1) = getTempRet0();
+    DEREF_U32(rvalue, 0) = BIGINT_LOWER(result);
+    DEREF_I32(rvalue, 1) = BIGINT_UPPER(result);
 #endif
     break;
   case FFI_TYPE_COMPLEX:
