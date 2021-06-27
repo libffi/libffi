@@ -1041,9 +1041,6 @@ The ``raw'' API is undocumented.
 The Go API is undocumented.
 @end itemize
 
-Note that variadic support is very new and tested on a relatively
-small number of platforms.
-
 @node Index
 @unnumbered Index
 
