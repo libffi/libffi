@@ -13,10 +13,10 @@ What is libffi?
 
 Compilers for high level languages generate code that follow certain
 conventions. These conventions are necessary, in part, for separate
-compilation to work. One such convention is the *"calling
-convention"*. The *"calling convention"* is essentially a set of
+compilation to work. One such convention is the *calling
+convention*. The *calling convention* is essentially a set of
 assumptions made by the compiler about where function arguments will
-be found on entry to a function. A "calling convention" also specifies
+be found on entry to a function. A *calling convention* also specifies
 where the return value for a function is found.
 
 Some programs may not know at the time of compilation what arguments
@@ -127,7 +127,7 @@ Installing libffi
 
 First you must configure the distribution for your particular
 system. Go to the directory you wish to build libffi in and run the
-`"configure"` program found in the root directory of the libffi source
+`configure` program found in the root directory of the libffi source
 distribution.  Note that building libffi requires a C99 compatible
 compiler.
 
