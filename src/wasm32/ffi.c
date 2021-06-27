@@ -58,6 +58,11 @@ ffi_status FFI_HIDDEN ffi_prep_cif_machdep(ffi_cif *cif) { return FFI_OK; }
 
 #define PADDING(size, align) align - ((size + align - 1) % align) - 1
 
+#define BIGINT_LOWER(x) (Number((x) & BigInt(0xffffffff)) | 0)
+#define BIGINT_UPPER(x) (Number((x) >> BigInt(32)) | 0)
+#define BIGINT_FROM_PAIR(lower, upper) \
+    (BigInt(lower) | (BigInt(upper) << BigInt(32)))
+
 #if WASM_BIGINT
 #define SIG(sig)
 #else
@@ -230,6 +235,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       const HEAPU64 = new BigInt64Array(HEAP8.buffer);
       args.push(DEREF_U64(arg_ptr, 0));
       args.push(DEREF_U64(arg_ptr, 1));
+      SIG(sig += "iiii");
       break;
     case FFI_TYPE_UINT8:
       args.push(HEAPU8[arg_ptr]);
@@ -255,8 +261,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
 #if WASM_BIGINT
-      args.push(BigInt(DEREF_U32(arg_ptr, 0)) |
-                (BigInt(DEREF_U32(arg_ptr, 1)) << BigInt(32)));
+      args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 0), DEREF_U32(arg_ptr, 1)));
 #else
       // LEGALIZE_JS_FFI mode splits i64 (j) into two i32 args
       // for compatibility with JavaScript's f64-based numbers.
@@ -285,6 +290,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   }
 
   stackRestore(structs_addr);
+  console.log(sig, fn, {args});
   var result = dynCall(sig, fn, args);
 
   stackRestore(orig_stack_ptr);
@@ -319,8 +325,8 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   case FFI_TYPE_UINT64:
   case FFI_TYPE_SINT64:
 #if WASM_BIGINT
-    DEREF_I32(rvalue, 0) = Number(result & BigInt(0xffffffff)) | 0;
-    DEREF_I32(rvalue, 1) = Number(result >> BigInt(32)) | 0;
+    DEREF_I32(rvalue, 0) = BIGINT_LOWER(result);
+    DEREF_I32(rvalue, 1) = BIGINT_UPPER(result);
 #else
     // Warning: returns a truncated 32-bit integer directly.
     // High bits are in $tempRet0
@@ -519,27 +525,23 @@ ffi_prep_closure_loc_helper,
         cur_ptr &= ~(8 - 1);
         cur_ptr -= 8;
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
-        DEREF_U32(cur_ptr, 0) = Number(cur_arg & BigInt(0xffffffff)) | 0;
-        DEREF_U32(cur_ptr, 1) = Number(cur_arg >> BigInt(32)) | 0;
+        DEREF_U32(cur_ptr, 0) = BIGINT_LOWER(cur_arg);
+        DEREF_U32(cur_ptr, 1) = BIGINT_UPPER(cur_arg);
         break;
       case FFI_TYPE_LONGDOUBLE:
         cur_ptr &= ~(16 - 1);
         cur_ptr -= 16;
-        DEREF_U32(args_ptr, carg_idx) = cur_ptr;
 #if WASM_BIGINT
-        DEREF_U32(cur_ptr, 0) = Number(cur_arg & BigInt(0xffffffff)) | 0;
-        DEREF_U32(cur_ptr, 1) = Number(cur_arg >> BigInt(32)) | 0;
-        cur_arg = args[++jsarg_idx];
-        DEREF_U32(cur_ptr, 2) = Number(next_arg & BigInt(0xffffffff)) | 0;
-        DEREF_U32(cur_ptr, 3) = Number(next_arg >> BigInt(32)) | 0;
+        DEREF_U32(args_ptr, carg_idx) = cur_ptr;
+        DEREF_U64(cur_ptr, 0) = cur_arg;
+        cur_arg = args[jsarg_idx++];
+        DEREF_U64(cur_ptr, 1) = cur_arg;
 #else
-        DEREF_U32(cur_ptr, 0) = cur_arg;
-        cur_arg = args[++jsarg_idx];
-        DEREF_U32(cur_ptr, 1) = cur_arg;
-        cur_arg = args[++jsarg_idx];
-        DEREF_U32(cur_ptr, 2) = cur_arg;
-        cur_arg = args[++jsarg_idx];
-        DEREF_U32(cur_ptr, 3) = cur_arg;
+        DEREF_U32(cur_ptr, 0) = BIGINT_LOWER(cur_arg);
+        DEREF_U32(cur_ptr, 1) = BIGINT_UPPER(cur_arg);
+        cur_arg = args[jsarg_idx++];
+        DEREF_U32(cur_ptr, 2) = BIGINT_LOWER(cur_arg);
+        DEREF_U32(cur_ptr, 3) = BIGINT_UPPER(cur_arg);
 #endif
         break;
       }
