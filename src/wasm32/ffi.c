@@ -471,8 +471,8 @@ ffi_prep_closure_loc_helper,
       case FFI_TYPE_LONGDOUBLE:
         cur_ptr &= ~(16 - 1);
         cur_ptr -= 16;
-#if WASM_BIGINT
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
+#if WASM_BIGINT
         DEREF_U64(cur_ptr, 0) = cur_arg;
         cur_arg = args[jsarg_idx++];
         DEREF_U64(cur_ptr, 1) = cur_arg;
