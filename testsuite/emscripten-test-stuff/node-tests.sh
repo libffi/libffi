@@ -16,14 +16,14 @@ done
 export CFLAGS="-O3 -fPIC"
 if [ "$WASM_BIGINT" = "true" ]; then
   # We need to detect WASM_BIGINT support at compile time
-  export CFLAGS+=" -DWASM_BIGINT";
+  export CFLAGS+=" -DWASM_BIGINT"
 fi
 export CXXFLAGS="$CFLAGS"
 export LDFLAGS="-O3 -s EXPORTED_FUNCTIONS=_main,_malloc,_free -s ALLOW_TABLE_GROWTH"
 if [ "$WASM_BIGINT" = "true" ]; then
-  export LDFLAGS+=" -s WASM_BIGINT";
+  export LDFLAGS+=" -s WASM_BIGINT"
 else
-  export LDFLAGS+=" -s DYNCALLS";
+  export LDFLAGS+=" -s DYNCALLS"
 fi
 
 # Specific variables for cross-compilation
