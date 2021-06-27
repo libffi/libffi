@@ -500,6 +500,7 @@ ffi_prep_closure_loc_helper,
       case FFI_TYPE_SINT16:
       case FFI_TYPE_POINTER:
         cur_ptr -= 4;
+        DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_U32(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_FLOAT:

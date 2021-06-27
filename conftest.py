@@ -96,7 +96,7 @@ class SeleniumWrapper:
                 f"{test_path.resolve()} does not exist!"
             )
         self.driver.get(f"http://{server_hostname}:{server_port}/{test_dir}/test.html")
-        print(self.run_js("globalThis.TestModule = await globalThis.Module(); return typeof TestModule;"));
+        self.run_js("globalThis.TestModule = await globalThis.Module();");
         self.javascript_setup()
         self.script_timeout = script_timeout
         self.driver.set_script_timeout(script_timeout)
