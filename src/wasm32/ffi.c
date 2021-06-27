@@ -537,7 +537,7 @@ ffi_prep_closure_loc_helper,
 ffi_status ffi_prep_closure_loc(ffi_closure *closure, ffi_cif *cif,
                                 void (*fun)(ffi_cif *, void *, void **, void *),
                                 void *user_data, void *codeloc) {
-  if(ffi_cif->abi != FFI_WASM32_EMSCRIPTEN){
+  if(cif->abi != FFI_WASM32_EMSCRIPTEN){
     return FFI_BAD_ABI;
   }
   return ffi_prep_closure_loc_helper(closure, cif, (void *)fun, user_data,
