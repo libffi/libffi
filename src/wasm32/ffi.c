@@ -441,10 +441,10 @@ ffi_prep_closure_loc_helper,
     cur_ptr -= 4 * nargs;
     var args_ptr = cur_ptr;
     var HEAPU64 = new BigInt64Array(HEAP8.buffer);
-    var carg_idx = 0;
+    var carg_idx = -1;
     while (jsarg_idx < args.length) {
       var cur_arg = args[jsarg_idx++];
-      let arg_type_id = arg_types_list[carg_idx++];
+      let arg_type_id = arg_types_list[++carg_idx];
       if ( arg_type_id === FFI_TYPE_STRUCT ) {
         cur_ptr -= 4;
         DEREF_U32(args_ptr, carg_idx) = cur_arg;
@@ -501,10 +501,10 @@ ffi_prep_closure_loc_helper,
       }
     }
     stackRestore(cur_ptr);
-    dynCall("viiii", CLOSURE__fun(closure), [
+    wasmTable.get(CLOSURE__fun(closure))(
         CLOSURE__cif(closure), ret_ptr, args_ptr,
         CLOSURE__user_data(closure)
-    ]);
+    );
     stackRestore(orig_stack_ptr);
 
     if (!ret_by_arg) {
