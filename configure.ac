@@ -366,6 +366,10 @@ AC_ARG_ENABLE(raw-api,
     AC_DEFINE(FFI_NO_RAW_API, 1, [Define this if you do not want support for the raw API.])
   fi)
 
+AC_ARG_ENABLE(exec-static-tramp,
+[  --disable-exec-static-tramp  disable use of static exec trampolines (enabled by default)])
+
+if test "$enable_exec_static_tramp" != no; then
 case "$target" in
      *-cygwin*)
      ;;
@@ -374,6 +378,7 @@ case "$target" in
                  [Define this if you want statically defined trampolines])
      ;;
 esac
+fi
 
 AC_ARG_ENABLE(purify-safety,
 [  --enable-purify-safety  purify-safe mode],
