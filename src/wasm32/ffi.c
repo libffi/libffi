@@ -432,11 +432,12 @@ ffi_prep_closure_loc_helper,
     throw new Error('Unexpected rtype ' + rtype_id);
   }
   var struct_flags = [];
+  var arg_types = [];
   for (var i = 0; i < nargs; i++) {
     var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types, i));
     var arg_type = arg_unboxed[0];
     var arg_type_id = arg_unboxed[1];
-    struct_flags.push(arg_type_id === FFI_TYPE_STRUCT);
+    arg_types.push(arg_type_id);
     switch (arg_type_id) {
     case FFI_TYPE_INT:
     case FFI_TYPE_UINT8:
@@ -456,7 +457,7 @@ ffi_prep_closure_loc_helper,
       sig += 'd';
       break;
     case FFI_TYPE_LONGDOUBLE:
-      throw new Error('longdouble marshalling nyi');
+      sig += 'jj';
       break;
     case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
@@ -484,39 +485,65 @@ ffi_prep_closure_loc_helper,
     cur_ptr -= 4 * (sig.length - 1 - ret_by_arg);
     var args_ptr = cur_ptr;
     var HEAPU64 = new BigInt64Array(HEAP8.buffer);
-    for (var sig_idx = 1 + ret_by_arg; sig_idx < sig.length; sig_idx++) {
-      var jsargs_idx = sig_idx - 1;
-      var cargs_idx = jsargs_idx - ret_by_arg;
-      var x = sig[sig_idx];
-      var cur_arg = args[jsargs_idx];
-      if (struct_flags[cargs_idx]) {
+    var jsarg_idx = +ret_by_arg - 1;
+    for (var carg_idx = 0; carg_idx < nargs; carg_idx++) {
+      var cur_arg = args[++jsarg_idx];
+      let arg_type_id = arg_types[carg_idx];
+      if ( arg_type_id === FFI_TYPE_STRUCT ) {
         cur_ptr -= 4;
         DEREF_U32(args_ptr, cargs_idx) = cur_arg;
         continue;
       }
-      switch (x) {
-      case "i":
+      switch (arg_type_id) {
+      case FFI_TYPE_INT:
+      case FFI_TYPE_UINT32:
+      case FFI_TYPE_SINT32:
+      case FFI_TYPE_UINT8:
+      case FFI_TYPE_SINT8:
+      case FFI_TYPE_UINT16:
+      case FFI_TYPE_SINT16:
+      case FFI_TYPE_POINTER:
         cur_ptr -= 4;
-        DEREF_U32(args_ptr, cargs_idx) = cur_ptr;
         DEREF_U32(cur_ptr, 0) = cur_arg;
         break;
-      case "j":
-        cur_ptr &= ~(8 - 1);
-        cur_ptr -= 8;
+      case FFI_TYPE_FLOAT:
+        cur_ptr -= 4;
         DEREF_U32(args_ptr, cargs_idx) = cur_ptr;
-        DEREF_I32(cur_ptr, 0) = Number(cur_arg & BigInt(0xffffffff)) | 0;
-        DEREF_I32(cur_ptr, 1) = Number(cur_arg >> BigInt(32)) | 0;
+        DEREF_F32(cur_ptr, 0) = cur_arg;
         break;
-      case "d":
+      case FFI_TYPE_DOUBLE:
         cur_ptr &= ~(8 - 1);
         cur_ptr -= 8;
         DEREF_U32(args_ptr, cargs_idx) = cur_ptr;
         DEREF_F64(cur_ptr, 0) = cur_arg;
         break;
-      case "f":
-        cur_ptr -= 4;
+      case FFI_TYPE_UINT64:
+      case FFI_TYPE_SINT64:
+        cur_ptr &= ~(8 - 1);
+        cur_ptr -= 8;
         DEREF_U32(args_ptr, cargs_idx) = cur_ptr;
-        DEREF_F32(cur_ptr, 0) = cur_arg;
+        DEREF_U32(cur_ptr, 0) = Number(cur_arg & BigInt(0xffffffff)) | 0;
+        DEREF_U32(cur_ptr, 1) = Number(cur_arg >> BigInt(32)) | 0;
+        break;
+      case FFI_TYPE_LONGDOUBLE:
+        cur_ptr &= ~(16 - 1);
+        cur_ptr -= 16;
+        DEREF_U32(args_ptr, cargs_idx) = cur_ptr;
+#if WASM_BIGINT
+        DEREF_U32(cur_ptr, 0) = Number(cur_arg & BigInt(0xffffffff)) | 0;
+        DEREF_U32(cur_ptr, 1) = Number(cur_arg >> BigInt(32)) | 0;
+        cur_arg = args[++jsarg_idx];
+        DEREF_U32(cur_ptr, 2) = Number(next_arg & BigInt(0xffffffff)) | 0;
+        DEREF_U32(cur_ptr, 3) = Number(next_arg >> BigInt(32)) | 0;
+#else
+        DEREF_U32(cur_ptr, 0) = cur_arg;
+        cur_arg = args[++jsarg_idx];
+        DEREF_U32(cur_ptr, 1) = cur_arg;
+        cur_arg = args[++jsarg_idx];
+        DEREF_U32(cur_ptr, 2) = cur_arg;
+        cur_arg = args[++jsarg_idx];
+        DEREF_U32(cur_ptr, 3) = cur_arg;
+#endif
         break;
       }
     }
