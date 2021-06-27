@@ -344,9 +344,9 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 
 EM_JS_MACROS(void *, ffi_closure_alloc_helper, (size_t size, void **code), {
   var closure = _malloc(size);
-  var func_ptr = getEmptyTableSlot();
-  DEREF_U32(code, 0) = func_ptr;
-  CLOSURE__wrapper(closure) = func_ptr;
+  var index = getEmptyTableSlot();
+  DEREF_U32(code, 0) = index;
+  CLOSURE__wrapper(closure) = index;
   return closure;
 })
 
@@ -356,8 +356,8 @@ ffi_closure_alloc(size_t size, void **code) {
 }
 
 EM_JS_MACROS(void, ffi_closure_free_helper, (void *closure), {
-  var func_ptr = CLOSURE__wrapper(closure);
-  removeFunction(func_ptr);
+  var index = CLOSURE__wrapper(closure);
+  freeTableIndexes.push(index);
   _free(closure);
 })
 
