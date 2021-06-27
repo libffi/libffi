@@ -5,7 +5,7 @@ Status
 [![Build status](https://ci.appveyor.com/api/projects/status/8lko9vagbx4w2kxq?svg=true)](https://ci.appveyor.com/project/atgreen/libffi)
 
 libffi-3.4 was released on TBD.  Check the libffi web
-page for updates: <URL:http://sourceware.org/libffi/>.
+page for updates: [http://sourceware.org/libffi/](http://sourceware.org/libffi/).
 
 
 What is libffi?
@@ -13,10 +13,10 @@ What is libffi?
 
 Compilers for high level languages generate code that follow certain
 conventions. These conventions are necessary, in part, for separate
-compilation to work. One such convention is the "calling
-convention". The "calling convention" is essentially a set of
+compilation to work. One such convention is the *calling
+convention*. The *calling convention* is essentially a set of
 assumptions made by the compiler about where function arguments will
-be found on entry to a function. A "calling convention" also specifies
+be found on entry to a function. A *calling convention* also specifies
 where the return value for a function is found.
 
 Some programs may not know at the time of compilation what arguments
@@ -30,7 +30,7 @@ interface to various calling conventions. This allows a programmer to
 call any function specified by a call interface description at run
 time.
 
-FFI stands for Foreign Function Interface.  A foreign function
+FFI stands for _Foreign Function Interface_.  A foreign function
 interface is the popular name for the interface that allows code
 written in one language to call code written in another language. The
 libffi library really only provides the lowest, machine dependent
@@ -127,17 +127,17 @@ Installing libffi
 
 First you must configure the distribution for your particular
 system. Go to the directory you wish to build libffi in and run the
-"configure" program found in the root directory of the libffi source
+`configure` program found in the root directory of the libffi source
 distribution.  Note that building libffi requires a C99 compatible
 compiler.
 
 If you're building libffi directly from git hosted sources, configure
-won't exist yet; run ./autogen.sh first.  This will require that you
-install autoconf, automake and libtool.
+won't exist yet; run `./autogen.sh` first.  This will require that you
+install `autoconf`, `automake` and `libtool`.
 
 You may want to tell configure where to install the libffi library and
 header files. To do that, use the ``--prefix`` configure switch.  Libffi
-will install under /usr/local by default.
+will install under `/usr/local` by default.
 
 If you want to enable extra run-time debugging checks use the the
 ``--enable-debug`` configure switch. This is useful when your program dies
@@ -167,13 +167,13 @@ project's clang-cl compiler, like below:
     path/to/configure CC="path/to/msvcc.sh -clang-cl" CXX="path/to/msvcc.sh -clang-cl" LD=link CPP="clang-cl -EP"
 
 When building with MSVC under a MingW environment, you may need to
-remove the line in configure that sets 'fix_srcfile_path' to a 'cygpath'
-command.  ('cygpath' is not present in MingW, and is not required when
+remove the line in configure that sets `fix_srcfile_path` to a `cygpath`
+command.  (`cygpath` is not present in MingW, and is not required when
 using MingW-style paths.)
 
-To build static library for ARM64 with MSVC using visual studio solution, msvc_build folder have
-   aarch64/Ffi_staticLib.sln
-   required header files in aarch64/aarch64_include/
+To build static library for ARM64 with MSVC using visual studio solution, *msvc_build* folder have
+   `aarch64/Ffi_staticLib.sln`
+   required header files in `aarch64/aarch64_include/`
 
 
 SPARC Solaris builds require the use of the GNU assembler and linker.
@@ -184,10 +184,10 @@ For iOS builds, the ``libffi.xcodeproj`` Xcode project is available.
 
 Configure has many other options. Use ``configure --help`` to see them all.
 
-Once configure has finished, type "make". Note that you must be using
-GNU make.  You can ftp GNU make from ftp.gnu.org:/pub/gnu/make .
+Once configure has finished, type *"make"*. Note that you must be using
+GNU make.  You can ftp GNU make from [ftp.gnu.org:/pub/gnu/make](ftp.gnu.org:/pub/gnu/make) .
 
-To ensure that libffi is working as advertised, type "make check".
+To ensure that libffi is working as advertised, type `make check`.
 This will require that you have DejaGNU installed.
 
 To install the library and header files, type ``make install``.
