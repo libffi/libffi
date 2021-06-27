@@ -123,6 +123,7 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
   if (! (abi > FFI_FIRST_ABI && abi < FFI_LAST_ABI))
     return FFI_BAD_ABI;
 
+  *cif = { 0 };
   cif->abi = abi;
   cif->arg_types = atypes;
   cif->nargs = ntotalargs;
