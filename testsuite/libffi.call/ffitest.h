@@ -18,7 +18,13 @@
 
 #define MAX_ARGS 256
 
-#define CHECK(x) (void)(!(x) ? (abort(), 1) : 0)
+#define CHECK(x) \
+   do { \
+      if(!(x)){ \
+         printf("Check failed %s\n", #x); \
+         abort(); \
+      } \
+   } while(0)
 
 #define CHECK_FLOAT_EQ(x, y) \
    do { \

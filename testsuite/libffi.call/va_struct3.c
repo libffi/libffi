@@ -48,7 +48,7 @@ test_fn (int n, ...)
   CHECK(l.d == 13);
   CHECK(l.e == 14);
   CHECK(s2.a == 7);
-  CHECK(s2.a == 8);
+  CHECK(s2.b == 8);
   va_end (ap);
   l.a += s1.a;
   l.b += s1.b;

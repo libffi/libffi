@@ -128,7 +128,7 @@ main (void)
   printf("res: %d %d\n", res.a, res.b);
   /* { dg-output "\nres: 12 14" } */
   CHECK(res.a == 12);
-  CHECK(res.a == 14);
+  CHECK(res.b == 14);
 
   return 0;
 }
