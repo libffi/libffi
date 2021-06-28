@@ -28,7 +28,6 @@ static cls_struct_align cls_struct_align_fn(struct cls_struct_align a1,
          result.a, (uintptr_t)result.b,
 	 result.c);
 
-  /* { dg-output "\n12 4951 127 1 9320 13: 13 14271 140" } */
   CHECK(a1.a == 12);
   CHECK(a1.b == (void *)4951);
   CHECK(a1.c == 127);

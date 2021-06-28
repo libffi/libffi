@@ -25,7 +25,7 @@ static cls_struct_9byte cls_struct_9byte_fn(struct cls_struct_9byte b1,
 
   printf("%d %g %d %g: %d %g\n", b1.a, b1.b,  b2.a, b2.b,
 	 result.a, result.b);
-  /* { dg-output "\n7 8 1 9: 8 17" } */
+
   CHECK(b1.a == 7);
   CHECK(b1.b == 8);
 

@@ -29,7 +29,6 @@ cls_struct_4_1byte cls_struct_4_1byte_fn(struct cls_struct_4_1byte a1,
   printf("%d %d %d %d %d %d %d %d: %d %d %d %d\n", a1.a, a1.b, a1.c, a1.d,
 	 a2.a, a2.b, a2.c, a2.d,
 	 result.a, result.b, result.c, result.d);
-  /* { dg-output "12 13 14 15 178 179 180 181: 190 192 194 196" } */
 
   CHECK(a1.a == 12);
   CHECK(a1.b == 13);

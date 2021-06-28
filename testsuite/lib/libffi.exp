@@ -414,9 +414,10 @@ proc libffi_target_compile { source dest type options } {
 	lappend options "libs= -lpthread"
     }
 
+    # emscripten emits this warning while building the feature test
+    # which causes it to be seen as unsupported.
     if { [string match "wasm32-*" $target_triplet] } {
-	# emscripten sometimes doesn't see the filesystem which breaks the tests using stdout
-	lappend options "additional_flags=-s FORCE_FILESYSTEM"
+    lappend options "additional_flags=-Wno-unused-command-line-argument"
     }
 
     verbose "options: $options"

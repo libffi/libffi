@@ -34,7 +34,6 @@ static cls_struct_6byte cls_struct_6byte_fn(struct cls_struct_6byte a1,
 	 a2.a, a2.b, a2.c, a2.d, a2.e, a2.f,
 	 result.a, result.b, result.c, result.d, result.e, result.f);
 
-  /* { dg-output "\n127 120 1 3 4 5 12 128 9 3 4 5: 139 248 10 6 8 10" } */
   CHECK(a1.a == 127);
   CHECK(a1.b == 120);
   CHECK(a1.c == 1);

@@ -26,9 +26,9 @@
 
 #include <ffi.h>
 #include <ffi_common.h>
-#include <stdint.h>
+
 #include <stdlib.h>
-#include <stdio.h>
+#include <stdint.h>
 
 #include <emscripten/emscripten.h>
 
@@ -66,8 +66,6 @@
 )
 #endif
 
-
-
 #define CIF__ABI(addr) DEREF_U32(addr, 0)
 #define CIF__NARGS(addr) DEREF_U32(addr, 1)
 #define CIF__ARGTYPES(addr) DEREF_U32(addr, 2)
@@ -82,8 +80,6 @@
 #define ALIGN_ADDRESS(addr, align) (addr &= (~((align) - 1)))
 #define STACK_ALLOC(stack, size, align) (ALIGN_ADDRESS(stack, align), (stack -= (size)))
 
-
-
 #define VARARGS_FLAG 1
 
 ffi_status FFI_HIDDEN
@@ -91,9 +87,8 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 {
   // This is called after ffi_prep_cif_machdep_var so we need to avoid
   // overwriting cif->nfixedargs.
-  if(!(cif->flags & VARARGS_FLAG)){
+  if (!(cif->flags & VARARGS_FLAG))
     cif->nfixedargs = cif->nargs;
-  }
   return FFI_OK;
 }
 
@@ -237,7 +232,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   // have to make any BigInts.
   if (nfixedargs != nargs) {
     var varargs_addr = orig_stack_ptr;
-    for(let i = nargs - 1;  i >= nfixedargs; i--){
+    for (var i = nargs - 1;  i >= nfixedargs; i--) {
       var arg_ptr = DEREF_U32(avalue, i);
       var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
       var arg_type_ptr = arg_unboxed[0];
@@ -290,7 +285,6 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     args.push(varargs_addr);
     stackRestore(varargs_addr);
   }
-  console.log({wasmTable, fn, args});
   var result = wasmTable.get(fn).apply(null, args);
   // Put the stack pointer back (we moved it if we made a varargs call)
   stackRestore(orig_stack_ptr);
@@ -344,9 +338,9 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 
 EM_JS_MACROS(void *, ffi_closure_alloc_helper, (size_t size, void **code), {
   var closure = _malloc(size);
-  var func_ptr = getEmptyTableSlot();
-  DEREF_U32(code, 0) = func_ptr;
-  CLOSURE__wrapper(closure) = func_ptr;
+  var index = getEmptyTableSlot();
+  DEREF_U32(code, 0) = index;
+  CLOSURE__wrapper(closure) = index;
   return closure;
 })
 
@@ -356,8 +350,8 @@ ffi_closure_alloc(size_t size, void **code) {
 }
 
 EM_JS_MACROS(void, ffi_closure_free_helper, (void *closure), {
-  var func_ptr = CLOSURE__wrapper(closure);
-  removeFunction(func_ptr);
+  var index = CLOSURE__wrapper(closure);
+  freeTableIndexes.push(index);
   _free(closure);
 })
 
@@ -381,7 +375,7 @@ ffi_prep_closure_loc_helper,
 
   // First construct the signature of the wasm function we are going to create.
   // We can close over this so the trampoline won't have to recompute it.
-  var sig = "";
+  var sig;
   var ret_by_arg = false;
   switch (rtype_id) {
   case FFI_TYPE_VOID:
@@ -458,7 +452,7 @@ ffi_prep_closure_loc_helper,
       throw new Error('Unexpected argtype ' + arg_type_id);
     }
   }
-  if ( nfixedargs < nargs ) {
+  if (nfixedargs < nargs) {
     // extra pointer to varargs stack
     sig += "i";
   }
@@ -479,15 +473,13 @@ ffi_prep_closure_loc_helper,
     var args_ptr = cur_ptr;
     var carg_idx = -1;
     // Now we have to do a Javascript to C translation.
-    console.log(args);
     var varargs;
-    if(nfixedargs < nargs){
+    if (nfixedargs < nargs) {
       varargs = args.pop();
     }
     while (jsarg_idx < args.length) {
       var cur_arg = args[jsarg_idx++];
-      let arg_type_id = unboxed_arg_type_id_list[++carg_idx];
-      console.log("arg:", {jsarg_idx, cur_arg, arg_type_id});
+      var arg_type_id = unboxed_arg_type_id_list[++carg_idx];
       switch (arg_type_id) {
       case FFI_TYPE_UINT8:
       case FFI_TYPE_SINT8:
@@ -534,14 +526,13 @@ ffi_prep_closure_loc_helper,
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         STORE_U64(cur_ptr, 0, cur_arg);
         cur_arg = args[jsarg_idx++];
-        STORE_U64(cur_ptr, 0, cur_arg);
+        STORE_U64(cur_ptr, 1, cur_arg);
         break;
       }
     }
-    for(var carg_idx = nfixedargs; carg_idx < nargs; carg_idx++){
-      let arg_type_id = unboxed_arg_type_id_list[carg_idx];
-      console.log("    vararg", {arg_type_id});
-      if(arg_type_id === FFI_TYPE_STRUCT){
+    for (var carg_idx = nfixedargs; carg_idx < nargs; carg_idx++) {
+      var arg_type_id = unboxed_arg_type_id_list[carg_idx];
+      if (arg_type_id === FFI_TYPE_STRUCT) {
         DEREF_U32(args_ptr, carg_idx) = DEREF_U32(varargs, 0);
       } else {
         DEREF_U32(args_ptr, carg_idx) = varargs;
@@ -549,7 +540,6 @@ ffi_prep_closure_loc_helper,
       varargs += 4;
     }
     stackRestore(cur_ptr);
-    console.log({wasmTable, fn : CLOSURE__fun(closure), ret_ptr, args_ptr });
     wasmTable.get(CLOSURE__fun(closure))(
         CLOSURE__cif(closure), ret_ptr, args_ptr,
         CLOSURE__user_data(closure)
@@ -557,7 +547,7 @@ ffi_prep_closure_loc_helper,
     stackRestore(orig_stack_ptr);
 
     if (!ret_by_arg) {
-      switch(sig[0]){
+      switch (sig[0]) {
       case "i":
         return DEREF_U32(ret_ptr, 0);
         break;
@@ -586,9 +576,8 @@ ffi_prep_closure_loc_helper,
 ffi_status ffi_prep_closure_loc(ffi_closure *closure, ffi_cif *cif,
                                 void (*fun)(ffi_cif *, void *, void **, void *),
                                 void *user_data, void *codeloc) {
-  if(cif->abi != FFI_WASM32_EMSCRIPTEN){
+  if (cif->abi != FFI_WASM32_EMSCRIPTEN)
     return FFI_BAD_ABI;
-  }
   return ffi_prep_closure_loc_helper(closure, cif, (void *)fun, user_data,
                                      codeloc);
 }

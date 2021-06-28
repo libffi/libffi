@@ -23,7 +23,6 @@ cls_struct_3byte_1 cls_struct_3byte_fn1(struct cls_struct_3byte_1 a1,
   result.b = a1.b + a2.b;
 
   printf("%d %d %d %d: %d %d\n", a1.a, a1.b, a2.a, a2.b, result.a, result.b);
-  /* { dg-output "\n15 125 9 19: 24 144" } */
 
   CHECK(a1.a == 15);
   CHECK(a1.b == 125);

@@ -14,13 +14,12 @@ static unsigned short test_func_fn(unsigned short a1, unsigned short a2)
   result = a1 + a2;
 
   printf("%d %d: %d\n", a1, a2, result);
-  
+
   CHECK(a1 == 2);
   CHECK(a2 == 32765);
   CHECK(result == 32767);
-  
-  return result;
 
+  return result;
 }
 
 static void test_func_gn(ffi_cif *cif __UNUSED__, void *rval, void **avals,

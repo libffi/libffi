@@ -118,7 +118,7 @@ int main (void)
   args_dbl[4] = NULL;
 
   ffi_call(&cif, FFI_FN(cls_struct_24byte_fn), &res_dbl, args_dbl);
-  /* { dg-output "9 2 6 5 1 2 3 7 4 5 7 9 8 6 1 4: 22 15 17 25" } */
+  /* { dg-output "9 2 6 5 1 2 3 7 4 5 7 9 8 6 1 9: 22 15 17 25" } */
   printf("res: %g %g %d %g\n", res_dbl.a, res_dbl.b, res_dbl.c, res_dbl.d);
   /* { dg-output "\nres: 22 15 17 25" } */
   CHECK_DOUBLE_EQ(res_dbl.a, 22);
@@ -133,7 +133,7 @@ int main (void)
 				   cls_struct_24byte,
 				   cls_struct_24byte))
 	     (code))(e_dbl, f_dbl, g_dbl, h_dbl);
-  /* { dg-output "\n9 2 6 5 1 2 3 7 4 5 7 9 8 6 1 4: 22 15 17 25" } */
+  /* { dg-output "\n9 2 6 5 1 2 3 7 4 5 7 9 8 6 1 9: 22 15 17 25" } */
   printf("res: %g %g %d %g\n", res_dbl.a, res_dbl.b, res_dbl.c, res_dbl.d);
   /* { dg-output "\nres: 22 15 17 25" } */
   CHECK_DOUBLE_EQ(res_dbl.a, 22);

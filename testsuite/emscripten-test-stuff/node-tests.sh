@@ -16,14 +16,12 @@ done
 export CFLAGS="-O3 -fPIC"
 if [ "$WASM_BIGINT" = "true" ]; then
   # We need to detect WASM_BIGINT support at compile time
-  export CFLAGS+=" -DWASM_BIGINT";
+  export CFLAGS+=" -DWASM_BIGINT"
 fi
 export CXXFLAGS="$CFLAGS"
-export LDFLAGS="-O3"
+export LDFLAGS="-O3 -s EXPORTED_FUNCTIONS=_main,_malloc,_free -s ALLOW_TABLE_GROWTH"
 if [ "$WASM_BIGINT" = "true" ]; then
-  export LDFLAGS+=" -s WASM_BIGINT";
-else
-  export LDFLAGS+=" -s DYNCALLS";
+  export LDFLAGS+=" -s WASM_BIGINT"
 fi
 
 # Specific variables for cross-compilation
@@ -33,5 +31,7 @@ autoreconf -fiv
 emconfigure ./configure --host=$CHOST --enable-static --disable-shared \
   --disable-builddir --disable-multi-os-directory --disable-raw-api || (cat config.log && exit 1)
 make
+#EMMAKEN_JUST_CONFIGURE=1 emmake make check \
+#  RUNTESTFLAGS="libffi.closures/closure.exp LDFLAGS_FOR_TARGET='$LDFLAGS'" || (cat testsuite/libffi.log && exit 1)
 EMMAKEN_JUST_CONFIGURE=1 emmake make check \
   RUNTESTFLAGS="LDFLAGS_FOR_TARGET='$LDFLAGS'" || (cat testsuite/libffi.log && exit 1)

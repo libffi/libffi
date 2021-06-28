@@ -25,7 +25,6 @@ cls_struct_16byte cls_struct_16byte_fn(struct cls_struct_16byte b1,
 
   printf("%d %g %d %d %g %d: %d %g %d\n", b1.a, b1.b, b1.c, b2.a, b2.b, b2.c,
 	 result.a, result.b, result.c);
-  /* { dg-output "7 8 9 1 9 3: 8 17 12" } */
 
   CHECK(b1.a == 7);
   CHECK(b1.b == 8);

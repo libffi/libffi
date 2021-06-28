@@ -22,6 +22,8 @@ static cls_struct_align cls_struct_align_fn(struct cls_struct_align a1,
   result.a = a1.a + a2.a;
   result.b = a1.b + a2.b;
   result.c = a1.c + a2.c;
+
+  printf("%d %" PRIdLL " %d %d %" PRIdLL " %d: %d %" PRIdLL " %d\n", a1.a, a1.b, a1.c, a2.a, a2.b, a2.c, result.a, result.b, result.c);
   CHECK(a1.a == 12);
   CHECK(a1.b == 4951);
   CHECK(a1.c == 127);
@@ -33,8 +35,6 @@ static cls_struct_align cls_struct_align_fn(struct cls_struct_align a1,
   CHECK(result.a == 13);
   CHECK(result.b == 14271);
   CHECK(result.c == 140);
-
-  printf("%d %" PRIdLL " %d %d %" PRIdLL " %d: %d %" PRIdLL " %d\n", a1.a, a1.b, a1.c, a2.a, a2.b, a2.c, result.a, result.b, result.c);
 
   return  result;
 }

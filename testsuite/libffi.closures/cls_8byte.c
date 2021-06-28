@@ -22,13 +22,13 @@ cls_struct_8byte cls_struct_8byte_fn(struct cls_struct_8byte a1,
   result.b = a1.b + a2.b;
 
   printf("%d %g %d %g: %d %g\n", a1.a, a1.b, a2.a, a2.b, result.a, result.b);
-  
+
   CHECK(a1.a == 1);
   CHECK(a1.b == 2);
-  
+
   CHECK(a2.a == 4);
   CHECK(a2.b == 5);
-    
+
   CHECK(result.a == 5);
   CHECK(result.b == 7);
 
@@ -87,7 +87,7 @@ int main (void)
   printf("res: %d %g\n", res_dbl.a, res_dbl.b);
   CHECK(res_dbl.a == 5);
   CHECK(res_dbl.b == 7); 
-  
+
   /* { dg-output "\nres: 5 7" } */
   CHECK(ffi_prep_closure_loc(pcl, &cif, cls_struct_8byte_gn, NULL, code) == FFI_OK);
 
