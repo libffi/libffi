@@ -29,7 +29,6 @@ cls_struct_18byte cls_struct_18byte_fn(struct cls_struct_18byte a1,
   printf("%g %d %d %g %g %d %d %g: %g %d %d %g\n", a1.a, a1.b, a1.c, a1.d,
 	 a2.a, a2.b, a2.c, a2.d,
 	 result.a, result.b, result.c, result.d);
-  /* { dg-output "1 127 126 3 4 125 124 5: 5 252 250 8" } */
 
   CHECK(a1.a == 1);
   CHECK(a1.b == 127);

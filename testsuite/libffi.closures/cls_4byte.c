@@ -89,7 +89,7 @@ int main (void)
   /* { dg-output "\nres: 139 248" } */
   CHECK(res_dbl.a == 139);
   CHECK(res_dbl.b == 248);
-  
+
   CHECK(ffi_prep_closure_loc(pcl, &cif, cls_struct_4byte_gn, NULL, code) == FFI_OK);
 
   res_dbl = ((cls_struct_4byte(*)(cls_struct_4byte, cls_struct_4byte))(code))(g_dbl, f_dbl);

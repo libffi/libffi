@@ -27,8 +27,7 @@ static cls_struct_20byte cls_struct_20byte_fn(struct cls_struct_20byte a1,
 
   printf("%d %g %g %d %g %g: %d %g %g\n", a1.a, a1.b, a1.c, a2.a, a2.b, a2.c,
 	 result.a, result.b, result.c);
-  /* { dg-output "1 2 3 4 5 7: 5 7 10" } */
-  
+
   CHECK(a1.a == 1);
   CHECK(a1.b == 2);
   CHECK(a1.c == 3);

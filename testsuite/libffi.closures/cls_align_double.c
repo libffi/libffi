@@ -26,7 +26,6 @@ static cls_struct_align cls_struct_align_fn(struct cls_struct_align a1,
 
   printf("%d %g %d %d %g %d: %d %g %d\n", a1.a, a1.b, a1.c, a2.a, a2.b, a2.c, result.a, result.b, result.c);
 
-  /* { dg-output "\n12 4951 127 1 9320 13: 13 14271 140" } */
   CHECK(a1.a == 12);
   CHECK(a1.b == 4951);
   CHECK(a1.c == 127);
@@ -97,7 +96,7 @@ int main (void)
   CHECK(res_dbl.a == 13);
   CHECK(res_dbl.b == 14271);
   CHECK(res_dbl.c == 140);
-  
+
   CHECK(ffi_prep_closure_loc(pcl, &cif, cls_struct_align_gn, NULL, code) == FFI_OK);
 
   res_dbl = ((cls_struct_align(*)(cls_struct_align, cls_struct_align))(code))(g_dbl, f_dbl);

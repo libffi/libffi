@@ -38,12 +38,7 @@ static cls_struct_align cls_struct_align_fn(
 		a1.a, a1.b, a1.c, a1.d, a1.e, a1.f, a1.g,
 		a2.a, a2.b, a2.c, a2.d, a2.e, a2.f, a2.g,
 		r.a, r.b, r.c, r.d, r.e, r.f, r.g);
-	printf("%Lg %Lg %Lg %Lg %Lg %Lg %Lg: "
-		"%Lg %Lg %Lg %Lg %Lg %Lg %Lg\n",
-		a1.a, a1.b, a1.c, a1.d, a1.e, a1.f, a1.g,
-		r.a, r.b, r.c, r.d, r.e, r.f, r.g);
-	/* { dg-output "1 2 3 4 5 6 7 8 9 10 11 12 13 14: 9 11 13 15 17 19 21" } */
-	
+
 	CHECK(a1.a == 1);
 	CHECK(a1.b == 2);
 	CHECK(a1.c == 3);
@@ -71,7 +66,7 @@ static cls_struct_align cls_struct_align_fn(
 }
 
 static void
-cls_struct_align_gn(ffi_cif* cif __UNUSED__, void* resp, void** args, 
+cls_struct_align_gn(ffi_cif* cif __UNUSED__, void* resp, void** args,
 		    void* userdata __UNUSED__)
 {
 	struct cls_struct_align a1, a2;
@@ -148,5 +143,5 @@ int main (void)
 	CHECK(res_dbl.e == 17);
 	CHECK(res_dbl.f == 19);
 	CHECK(res_dbl.g == 21);
-  	exit(0);
+  exit(0);
 }

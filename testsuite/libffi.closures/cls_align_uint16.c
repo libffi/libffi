@@ -34,7 +34,7 @@ static cls_struct_align cls_struct_align_fn(struct cls_struct_align a1,
   CHECK(result.a == 13);
   CHECK(result.b == 14271);
   CHECK(result.c == 140);
-  
+
   return  result;
 }
 

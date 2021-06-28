@@ -97,7 +97,7 @@ int main (void)
   CHECK(res_dbl.a == 139);
   CHECK(res_dbl.b == 248);
   CHECK(res_dbl.c == 10);
-  
+
   res_dbl.a = 0;
   res_dbl.b = 0;
   res_dbl.c = 0;

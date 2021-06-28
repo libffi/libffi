@@ -32,7 +32,6 @@ cls_struct_19byte cls_struct_19byte_fn(struct cls_struct_19byte a1,
 	 a1.a, a1.b, a1.c, a1.d, a1.e,
 	 a2.a, a2.b, a2.c, a2.d, a2.e,
 	 result.a, result.b, result.c, result.d, result.e);
-  /* { dg-output "1 127 126 3 120 4 125 124 5 119: 5 252 250 8 239" } */
 
   CHECK(a1.a == 1);
   CHECK(a1.b == 127);

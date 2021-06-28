@@ -72,19 +72,17 @@ int main (void)
   cl_arg_types[15] = &ffi_type_sint;
   cl_arg_types[16] = NULL;
 
-  printf("prep_cif: %d\n",res);
   /* Initialize the cif */
   CHECK(ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 16,
 		     &ffi_type_sint, cl_arg_types) == FFI_OK);
 
-  printf("prep_cif: %d\n",res);
   pcl = ffi_closure_alloc(sizeof(ffi_closure), &codeloc);
   CHECK(pcl != NULL);
   CHECK(codeloc != NULL);
 
   CHECK(ffi_prep_closure_loc(pcl, &cif, closure_loc_test_fn0,
 			 (void *) 3 /* userdata */, codeloc) == FFI_OK);
-  
+
 #ifndef FFI_EXEC_STATIC_TRAMP
   /* With static trampolines, the codeloc does not point to closure */
   CHECK(memcmp(pcl, codeloc, sizeof(*pcl)) == 0);
@@ -94,8 +92,8 @@ int main (void)
     (1LL, 2, 3LL, 4, 127, 429LL, 7, 8, 9.5, 10, 11, 12, 13,
      19, 21, 1);
   /* { dg-output "1 2 3 4 127 429 7 8 9 10 11 12 13 19 21 1 3: 680" } */
-  CHECK(res == 680);
   printf("res: %d\n",res);
   /* { dg-output "\nres: 680" } */
-     exit(0);
+  CHECK(res == 680);
+  exit(0);
 }

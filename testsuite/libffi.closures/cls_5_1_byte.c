@@ -31,7 +31,6 @@ static cls_struct_5byte cls_struct_5byte_fn(struct cls_struct_5byte a1,
 	 a1.a, a1.b, a1.c, a1.d, a1.e,
 	 a2.a, a2.b, a2.c, a2.d, a2.e,
 	 result.a, result.b, result.c, result.d, result.e);
-  /* { dg-output "\n127 120 1 3 4 12 128 9 3 4: 139 248 10 6 8" } */
 
   CHECK(a1.a == 127);
   CHECK(a1.b == 120);
@@ -133,6 +132,6 @@ int main (void)
   CHECK(res_dbl.c == 10);
   CHECK(res_dbl.d == 6);
   CHECK(res_dbl.e == 8);
-  
+
   exit(0);
 }

@@ -35,7 +35,6 @@ static cls_struct_7byte cls_struct_7byte_fn(struct cls_struct_7byte a1,
 	 a1.a, a1.b, a1.c, a1.d, a1.e, a1.f, a1.g,
 	 a2.a, a2.b, a2.c, a2.d, a2.e, a2.f, a2.g,
 	 result.a, result.b, result.c, result.d, result.e, result.f, result.g);
-  /* { dg-output "\n127 120 1 3 4 5 6 12 128 9 3 4 5 6: 139 248 10 6 8 10 12" } */
 
   CHECK(a1.a == 127);
   CHECK(a1.b == 120);

@@ -28,7 +28,6 @@ static cls_struct_7byte cls_struct_7byte_fn(struct cls_struct_7byte a1,
   printf("%d %d %d %d %d %d %d %d: %d %d %d %d\n", a1.a, a1.b, a1.c, a1.d,
 	 a2.a, a2.b, a2.c, a2.d,
 	 result.a, result.b, result.c, result.d);
-  /* { dg-output "\n127 120 1 254 12 128 9 255: 139 248 10 509" } */
 
   CHECK(a1.a == 127);
   CHECK(a1.b == 120);

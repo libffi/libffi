@@ -18,7 +18,7 @@ cls_double_va_fn(ffi_cif* cif __UNUSED__, void* resp,
 {
 	char*	format		= *(char**)args[0];
 	double	doubleValue	= *(double*)args[1];
-	
+
 	*(ffi_arg*)resp = printf(format, doubleValue);
 	CHECK(*(ffi_arg*)resp == 4);
 	sprintf(buffer, format, doubleValue);
