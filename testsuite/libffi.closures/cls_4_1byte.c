@@ -37,7 +37,7 @@ cls_struct_4_1byte cls_struct_4_1byte_fn(struct cls_struct_4_1byte a1,
   CHECK(a1.d == 15);
 
   CHECK(a2.a == 178);
-  CHECK(a2.b == 178);
+  CHECK(a2.b == 179);
   CHECK(a2.c == 180);
   CHECK(a2.d == 181);
 

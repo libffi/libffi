@@ -25,13 +25,13 @@ cls_struct_2byte cls_struct_2byte_fn(struct cls_struct_2byte a1,
   printf("%d %d %d %d: %d %d\n", a1.a, a1.b, a2.a, a2.b, result.a, result.b);
   
   CHECK(a1.a == 12);
-  CHECK(a1.a == 127);
+  CHECK(a1.b == 127);
   
   CHECK(a2.a == 1);
-  CHECK(a2.a == 13);
+  CHECK(a2.b == 13);
     
   CHECK(result.a == 13);
-  CHECK(result.a == 140);
+  CHECK(result.b == 140);
   
   return  result;
 }

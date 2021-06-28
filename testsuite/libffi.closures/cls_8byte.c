@@ -23,16 +23,14 @@ cls_struct_8byte cls_struct_8byte_fn(struct cls_struct_8byte a1,
 
   printf("%d %g %d %g: %d %g\n", a1.a, a1.b, a2.a, a2.b, result.a, result.b);
   
-  /* { dg-output "1 2 4 5: 5 7" } */
-  
   CHECK(a1.a == 1);
-  CHECK(a1.a == 2);
+  CHECK(a1.b == 2);
   
   CHECK(a2.a == 4);
-  CHECK(a2.a == 5);
+  CHECK(a2.b == 5);
     
   CHECK(result.a == 5);
-  CHECK(result.a == 7);
+  CHECK(result.b == 7);
 
   return  result;
 }

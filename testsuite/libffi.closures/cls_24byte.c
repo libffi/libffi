@@ -33,7 +33,6 @@ cls_struct_24byte cls_struct_24byte_fn(struct cls_struct_24byte b0,
 	 b2.a, b2.b, b2.c, b2.d,
 	 b3.a, b3.b, b3.c, b2.d,
 	 result.a, result.b, result.c, result.d);
-  /* { dg-output "\n9 2 6 5    1 2 3 7     4 5 7 9   8 6 1 9: 22 15 17 25" } */
 
   CHECK(b0.a == 9);
   CHECK(b0.b == 2);
@@ -48,7 +47,7 @@ cls_struct_24byte cls_struct_24byte_fn(struct cls_struct_24byte b0,
   CHECK(b2.a == 4);
   CHECK(b2.b == 5);
   CHECK(b2.c == 7);
-  CHECK(b2.d == 8);
+  CHECK(b2.d == 9);
 
   CHECK(b3.a == 8);
   CHECK(b3.b == 6);
