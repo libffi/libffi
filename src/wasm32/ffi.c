@@ -78,7 +78,7 @@
 #define FFI_TYPE__ELEMENTS(addr) DEREF_U32(addr + 8, 0)
 
 #define ALIGN_ADDRESS(addr, align) (addr &= (~((align) - 1)))
-#define STACK_ALLOC(stack, size, align) (ALIGN_ADDRESS(stack, align), (stack -= (size)))
+#define STACK_ALLOC(stack, size) (ALIGN_ADDRESS(stack, size), (stack -= (size)))
 
 // Pyodide needs to redefine this to support fpcast emulation
 #ifndef CALL_FUNC_PTR
@@ -152,6 +152,8 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   var rtype_id = rtype_unboxed[1];
 
   var args = [];
+  // Does our onwards call return by argument or normally? We return by argument
+  // no matter what.
   var ret_by_arg = false;
 
   if (rtype_id === FFI_TYPE_COMPLEX) {
@@ -233,9 +235,6 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   // We don't have any way of knowing how many args were actually passed, so we
   // just always copy extra nonsense past the end. The ownwards call will know
   // not to look at it.
-  //
-  // Here the int64 and long double handling is easier because we don't actually
-  // have to make any BigInts.
   if (nfixedargs != nargs) {
     var varargs_addr = orig_stack_ptr;
     for (var i = nargs - 1;  i >= nfixedargs; i--) {
@@ -246,12 +245,12 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       switch (arg_type_id) {
       case FFI_TYPE_UINT8:
       case FFI_TYPE_SINT8:
-        STACK_ALLOC(varargs_addr, 1, 1);
+        STACK_ALLOC(varargs_addr);
         DEREF_U8(varargs_addr, 0) = DEREF_U8(arg_ptr, 0);
         break;
       case FFI_TYPE_UINT16:
       case FFI_TYPE_SINT16:
-        STACK_ALLOC(varargs_addr, 2, 2);
+        STACK_ALLOC(varargs_addr, 2);
         DEREF_U16(varargs_addr, 0) = DEREF_U16(arg_ptr, 0);
         break;
       case FFI_TYPE_INT:
@@ -259,18 +258,18 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       case FFI_TYPE_SINT32:
       case FFI_TYPE_POINTER:
       case FFI_TYPE_FLOAT:
-        STACK_ALLOC(varargs_addr, 4, 4);
+        STACK_ALLOC(varargs_addr, 4);
         DEREF_U32(varargs_addr, 0) = DEREF_U32(arg_ptr, 0);
         break;
       case FFI_TYPE_DOUBLE:
       case FFI_TYPE_UINT64:
       case FFI_TYPE_SINT64:
-        STACK_ALLOC(varargs_addr, 8, 8);
+        STACK_ALLOC(varargs_addr, 8);
         DEREF_U32(varargs_addr, 0) = DEREF_U32(arg_ptr, 0);
         DEREF_U32(varargs_addr, 1) = DEREF_U32(arg_ptr, 1);
         break;
       case FFI_TYPE_LONGDOUBLE:
-        STACK_ALLOC(varargs_addr, 16, 16);
+        STACK_ALLOC(varargs_addr, 16);
         DEREF_U32(varargs_addr, 0) = DEREF_U32(arg_ptr, 0);
         DEREF_U32(varargs_addr, 1) = DEREF_U32(arg_ptr, 1);
         DEREF_U32(varargs_addr, 2) = DEREF_U32(arg_ptr, 1);
@@ -278,7 +277,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
         break;
       case FFI_TYPE_STRUCT:
         // Again, struct must be passed by pointer.
-        STACK_ALLOC(varargs_addr, 4, 4);
+        STACK_ALLOC(varargs_addr, 4);
         DEREF_U32(varargs_addr, 0) = arg_ptr;
         break;
       case FFI_TYPE_COMPLEX:
@@ -295,14 +294,14 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   // Put the stack pointer back (we moved it if we made a varargs call)
   stackRestore(orig_stack_ptr);
 
-  // If return value was a nontrivial struct or long double, the onwards call
-  // already put the return value in rvalue
+  // We need to return by argument. If return value was a nontrivial struct or
+  // long double, the onwards call already put the return value in rvalue
   if (ret_by_arg) {
     return;
   }
 
-  // Otherwise, we yet again have the result converted from C into Javascript
-  // and we need to manually convert it back to C.
+  // Otherwise the result was automatically converted from C into Javascript and
+  // we need to manually convert it back to C. 
   switch (rtype_id) {
   case FFI_TYPE_VOID:
     break;
@@ -320,7 +319,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     break;
   case FFI_TYPE_UINT8:
   case FFI_TYPE_SINT8:
-    HEAP8[rvalue] = result;
+    DEREF_U8(rvalue, 0) = result;
     break;
   case FFI_TYPE_UINT16:
   case FFI_TYPE_SINT16:
@@ -379,8 +378,8 @@ ffi_prep_closure_loc_helper,
   var rtype_ptr = rtype_unboxed[0];
   var rtype_id = rtype_unboxed[1];
 
-  // First construct the signature of the wasm function we are going to create.
-  // We can close over this so the trampoline won't have to recompute it.
+  // First construct the signature of the javascript trampoline we are going to create.
+  // Important: this is the signature for calling us, the onward call always has sig viiii.
   var sig;
   var ret_by_arg = false;
   switch (rtype_id) {
@@ -445,7 +444,6 @@ ffi_prep_closure_loc_helper,
       sig += 'd';
       break;
     case FFI_TYPE_LONGDOUBLE:
-      // long double passed as two 64 bit params
       sig += 'jj';
       break;
     case FFI_TYPE_UINT64:
@@ -469,33 +467,37 @@ ffi_prep_closure_loc_helper,
     var cur_ptr = orig_stack_ptr;
     var ret_ptr;
     var jsarg_idx = 0;
+    // Should we return by argument or not? The onwards call returns by argument
+    // no matter what. (Warning: ret_by_arg means the opposite in ffi_call)
     if (ret_by_arg) {
       ret_ptr = args[jsarg_idx++];
     } else {
-      STACK_ALLOC(cur_ptr, 8, 8);
+      STACK_ALLOC(cur_ptr, 8);
       ret_ptr = cur_ptr;
     }
     cur_ptr -= 4 * nargs;
     var args_ptr = cur_ptr;
     var carg_idx = -1;
-    // Now we have to do a Javascript to C translation.
-    var varargs;
-    if (nfixedargs < nargs) {
-      varargs = args.pop();
-    }
-    while (jsarg_idx < args.length) {
+    // Here we either have the actual argument, or a pair of BigInts for long
+    // double, or a pointer to struct. We have to store into args_ptr[i] a
+    // pointer to the ith argument. If the argument is a struct, just store the
+    // pointer. Otherwise allocate stack space and copy the js argument onto the
+    // stack.
+    for (var carg_idx = 0; carg_idx < nfixedargs; carg_idx++ ) {
+      // jsarg_idx might start out as 0 or 1 depending on ret_by_arg
+      // it advances an extra time for long double
       var cur_arg = args[jsarg_idx++];
-      var arg_type_id = unboxed_arg_type_id_list[++carg_idx];
+      var arg_type_id = unboxed_arg_type_id_list[carg_idx];
       switch (arg_type_id) {
       case FFI_TYPE_UINT8:
       case FFI_TYPE_SINT8:
-        STACK_ALLOC(cur_ptr, 1, 1);
+        STACK_ALLOC(cur_ptr, 1);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_U8(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_UINT16:
       case FFI_TYPE_SINT16:
-        STACK_ALLOC(cur_ptr, 2, 2);
+        STACK_ALLOC(cur_ptr, 2);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_U16(cur_ptr, 0) = cur_arg;
         break;
@@ -503,7 +505,7 @@ ffi_prep_closure_loc_helper,
       case FFI_TYPE_UINT32:
       case FFI_TYPE_SINT32:
       case FFI_TYPE_POINTER:
-        STACK_ALLOC(cur_ptr, 4, 4);
+        STACK_ALLOC(cur_ptr, 4);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_U32(cur_ptr, 0) = cur_arg;
         break;
@@ -512,23 +514,23 @@ ffi_prep_closure_loc_helper,
         DEREF_U32(args_ptr, carg_idx) = cur_arg;
         break;
       case FFI_TYPE_FLOAT:
-        STACK_ALLOC(cur_ptr, 4, 4);
+        STACK_ALLOC(cur_ptr, 4);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_F32(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_DOUBLE:
-        STACK_ALLOC(cur_ptr, 8, 8);
+        STACK_ALLOC(cur_ptr, 8);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_F64(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_UINT64:
       case FFI_TYPE_SINT64:
-        STACK_ALLOC(cur_ptr, 8, 8);
+        STACK_ALLOC(cur_ptr, 8);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         STORE_U64(cur_ptr, 0, cur_arg);
         break;
       case FFI_TYPE_LONGDOUBLE:
-        STACK_ALLOC(cur_ptr, 16, 16);
+        STACK_ALLOC(cur_ptr, 16);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         STORE_U64(cur_ptr, 0, cur_arg);
         cur_arg = args[jsarg_idx++];
@@ -536,9 +538,20 @@ ffi_prep_closure_loc_helper,
         break;
       }
     }
+    // If its a varargs call, last js argument is a pointer to the varargs. 
+    var varargs = args[args.length - 1];
+    // We have no way of knowing how many varargs were actually provided, this
+    // fills the rest of the stack space allocated with nonsense. The onward
+    // call will know to ignore the nonsense.
+
+    // We either have a pointer to the argument if the argument is not a struct
+    // or a pointer to pointer to struct. We need to store a pointer to the
+    // argument into args_ptr[i]
     for (var carg_idx = nfixedargs; carg_idx < nargs; carg_idx++) {
       var arg_type_id = unboxed_arg_type_id_list[carg_idx];
       if (arg_type_id === FFI_TYPE_STRUCT) {
+        // In this case varargs is a pointer to pointer to struct so we need to
+        // deref once
         DEREF_U32(args_ptr, carg_idx) = DEREF_U32(varargs, 0);
       } else {
         DEREF_U32(args_ptr, carg_idx) = varargs;
@@ -552,20 +565,17 @@ ffi_prep_closure_loc_helper,
     ]);
     stackRestore(orig_stack_ptr);
 
+    // If we aren't supposed to return by argument, figure out what to return.
     if (!ret_by_arg) {
       switch (sig[0]) {
       case "i":
         return DEREF_U32(ret_ptr, 0);
-        break;
       case "j":
         return LOAD_U64(ret_ptr, 0);
-        break;
       case "d":
         return DEREF_F64(ret_ptr, 0);
-        break;
       case "f":
         return DEREF_F32(ret_ptr, 0);
-        break;
       }
     }
   }
