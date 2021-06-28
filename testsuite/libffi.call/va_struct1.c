@@ -37,7 +37,7 @@ test_fn (int n, ...)
   s1 = va_arg (ap, struct small_tag);
   l = va_arg (ap, struct large_tag);
   s2 = va_arg (ap, struct small_tag);
-  printf ("%u %u %u %u\n", s1.a, s1.b, l.a, l.b, l.c, l.d, l.e,
+  printf ("%u %u %u %u %u %u %u %u %u\n", s1.a, s1.b, l.a, l.b, l.c, l.d, l.e,
 	  s2.a, s2.b);
   va_end (ap);
   /* { dg-output "5 6 10 11 12 13 14 7 8" } */
