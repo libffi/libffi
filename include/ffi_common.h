@@ -126,7 +126,7 @@ void *ffi_data_to_code_pointer (void *data) FFI_HIDDEN;
 
 /* The arch code calls this to determine if a given closure has a
    static trampoline. */
-int ffi_tramp_is_present (void *closure);
+int ffi_tramp_is_present (void *closure) FFI_HIDDEN;
 
 /* Extended cif, used in callback from assembly routine */
 typedef struct
