@@ -475,7 +475,6 @@ ffi_prep_closure_loc_helper,
     }
     cur_ptr -= 4 * nargs;
     var args_ptr = cur_ptr;
-    var HEAPU64 = new BigInt64Array(HEAP8.buffer);
     var carg_idx = -1;
     // Now we have to do a Javascript to C translation.
     // The varargs have been unpacked by the C to Javascript shim, so they
