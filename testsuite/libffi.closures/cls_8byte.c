@@ -86,7 +86,7 @@ int main (void)
   /* { dg-output "1 2 4 5: 5 7" } */
   printf("res: %d %g\n", res_dbl.a, res_dbl.b);
   CHECK(res_dbl.a == 5);
-  CHECK(res_dbl.a == 7); 
+  CHECK(res_dbl.b == 7); 
   
   /* { dg-output "\nres: 5 7" } */
   CHECK(ffi_prep_closure_loc(pcl, &cif, cls_struct_8byte_gn, NULL, code) == FFI_OK);
@@ -96,7 +96,7 @@ int main (void)
   printf("res: %d %g\n", res_dbl.a, res_dbl.b);
   /* { dg-output "\nres: 5 7" } */
   CHECK(res_dbl.a == 5);
-  CHECK(res_dbl.a == 7);  
+  CHECK(res_dbl.b == 7);  
 
   exit(0);
 }

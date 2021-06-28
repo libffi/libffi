@@ -121,10 +121,10 @@ int main (void)
   /* { dg-output "9 2 6 5 1 2 3 7 4 5 7 9 8 6 1 9: 22 15 17 25" } */
   printf("res: %g %g %d %g\n", res_dbl.a, res_dbl.b, res_dbl.c, res_dbl.d);
   /* { dg-output "\nres: 22 15 17 25" } */
-  CHECK(res_dbl.a == 22);
-  CHECK(res_dbl.b == 15);
+  CHECK_DOUBLE_EQ(res_dbl.a, 22);
+  CHECK_DOUBLE_EQ(res_dbl.b, 15);
   CHECK(res_dbl.c == 17);
-  CHECK(res_dbl.d == 25);
+  CHECK_FLOAT_EQ(res_dbl.d, 25);
 
   CHECK(ffi_prep_closure_loc(pcl, &cif, cls_struct_24byte_gn, NULL, code) == FFI_OK);
 
@@ -136,10 +136,10 @@ int main (void)
   /* { dg-output "\n9 2 6 5 1 2 3 7 4 5 7 9 8 6 1 9: 22 15 17 25" } */
   printf("res: %g %g %d %g\n", res_dbl.a, res_dbl.b, res_dbl.c, res_dbl.d);
   /* { dg-output "\nres: 22 15 17 25" } */
-  CHECK(res_dbl.a == 22);
-  CHECK(res_dbl.b == 15);
+  CHECK_DOUBLE_EQ(res_dbl.a, 22);
+  CHECK_DOUBLE_EQ(res_dbl.b, 15);
   CHECK(res_dbl.c == 17);
-  CHECK(res_dbl.d == 25);
+  CHECK_FLOAT_EQ(res_dbl.d, 25);
 
   exit(0);
 }

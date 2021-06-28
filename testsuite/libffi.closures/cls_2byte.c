@@ -88,7 +88,7 @@ int main (void)
   printf("res: %d %d\n", res_dbl.a, res_dbl.b);
   /* { dg-output "\nres: 13 140" } */
   CHECK(res_dbl.a == 13);
-  CHECK(res_dbl.a == 140);
+  CHECK(res_dbl.b == 140);
 
   CHECK(ffi_prep_closure_loc(pcl, &cif, cls_struct_2byte_gn, NULL, code) == FFI_OK);
 
@@ -97,7 +97,7 @@ int main (void)
   printf("res: %d %d\n", res_dbl.a, res_dbl.b);
   /* { dg-output "\nres: 13 140" } */
   CHECK(res_dbl.a == 13);
-  CHECK(res_dbl.a == 140);
+  CHECK(res_dbl.b == 140);
 
   exit(0);
 }
