@@ -86,35 +86,56 @@ ffi_prep_cif_machdep_var(ffi_cif *cif, unsigned nfixedargs, unsigned ntotalargs)
 }
 
 // Javascript helper functions
+
+/**
+ * This takes an argument typ which is a wasm pointer to an ffi_type object. It
+ * returns a pair a type and a type id.
+ *
+ * If it is not a struct, return its type and its typeid field. 
+ *
+ * If it is a struct of size >= 2, return the type and its typeid (which will be
+ * FFI_TYPE_STRUCT) 
+ *
+ * If it is a struct of size 0, return FFI_TYPE_VOID (????? this is broken) 
+
+ * If it is a struct of size 1, replace it with the single field and apply the
+ * same logic again to that.
+ */
 EM_JS_MACROS(
 void,
-unbox_small_structs, (ffi_type typ), {
-  var typ_id = FFI_TYPE__TYPEID(typ);
-  while (typ_id === FFI_TYPE_STRUCT) {
-    var elements = FFI_TYPE__ELEMENTS(typ);
+unbox_small_structs, (ffi_type type_ptr), {
+  var type_id = FFI_TYPE__TYPEID(type_ptr);
+  while (type_id === FFI_TYPE_STRUCT) {
+    var elements = FFI_TYPE__ELEMENTS(type_ptr);
     var first_element = DEREF_U32(elements, 0);
     if (first_element === 0) {
-      typ_id = FFI_TYPE_VOID;
+      type_id = FFI_TYPE_VOID;
       break;
     } else if (DEREF_U32(elements, 1) === 0) {
-      typ = first_element;
-      typ_id = FFI_TYPE__TYPEID(first_element);
+      type_ptr = first_element;
+      type_id = FFI_TYPE__TYPEID(first_element);
     } else {
       break;
     }
   }
-  return [typ, typ_id];
+  return [type_ptr, type_id];
 })
 
+/**
+ * Compute the size and alignment of the struct type.
+ *
+ * The argument is a wasm pointer to the type. We compute the size and alignment
+ * of the struct and return this pair.
+ */
 EM_JS_MACROS(
 void,
-ffi_struct_size_and_alignment, (ffi_type arg_type_ptr), {
-  var stored_size = FFI_TYPE__SIZE(arg_type_ptr);
+ffi_struct_size_and_alignment, (ffi_type type_ptr), {
+  var stored_size = FFI_TYPE__SIZE(type_ptr);
   if (stored_size) {
-    var stored_align = FFI_TYPE__ALIGN(arg_type_ptr);
+    var stored_align = FFI_TYPE__ALIGN(type_ptr);
     return [stored_size, stored_align];
   }
-  var elements = FFI_TYPE__ELEMENTS(arg_type_ptr);
+  var elements = FFI_TYPE__ELEMENTS(type_ptr);
   var size = 0;
   var align = 1;
   for (var idx = 0; DEREF_U32(elements, idx) !== 0; idx++) {
@@ -193,6 +214,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 
   var orig_stack_ptr = stackSave();
   var structs_addr = orig_stack_ptr;
+  // Accumulate a list of Javascript arguments.
   for (var i = 0; i < nfixedargs; i++) {
     var arg_ptr = DEREF_U32(avalue, i);
     var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
@@ -245,14 +267,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 #endif
       break;
     case FFI_TYPE_STRUCT:
-      var item = ffi_struct_size_and_alignment(arg_type_ptr);
-      var item_size = item[0];
-      var item_align = item[1];
-      STACK_ALLOC(structs_addr, item_size, item_align);
-      args.push(structs_addr);
-      var src_ptr = DEREF_U32(avalue, i);
-      HEAP8.subarray(structs_addr, structs_addr + item_size)
-           .set(HEAP8.subarray(src_ptr, src_ptr + item_size));
+      args.push(DEREF_U32(avalue, i));
       break;
     case FFI_TYPE_COMPLEX:
       throw new Error('complex marshalling nyi');
@@ -263,7 +278,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 
   var varargs_addr = structs_addr;
   for (var i = nfixedargs; i < nargs; i++) {
-    var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types, i));
+    var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
     var arg_type = arg_unboxed[0];
     var item = ffi_struct_size_and_alignment(arg_type);
     var item_size = item[0];
