@@ -290,7 +290,6 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     args.push(varargs_addr);
     stackRestore(varargs_addr);
   }
-
   var result = wasmTable.get(fn).apply(null, args);
   // Put the stack pointer back (we moved it if we made a varargs call)
   stackRestore(orig_stack_ptr);
@@ -419,12 +418,14 @@ ffi_prep_closure_loc_helper,
     throw new Error('Unexpected rtype ' + rtype_id);
   }
   var unboxed_arg_type_id_list = [];
-  for (var i = 0; i < nfixedargs; i++) {
+  for (var i = 0; i < nargs; i++) {
     var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
     var arg_type_ptr = arg_unboxed[0];
     var arg_type_id = arg_unboxed[1];
     unboxed_arg_type_id_list.push(arg_type_id);
-    switch (arg_type_id) {
+  }
+  for (var i = 0; i < nfixedargs; i++) {
+    switch (unboxed_arg_type_id_list[i]) {
     case FFI_TYPE_INT:
     case FFI_TYPE_UINT8:
     case FFI_TYPE_SINT8:
@@ -479,6 +480,10 @@ ffi_prep_closure_loc_helper,
     // Now we have to do a Javascript to C translation.
     // The varargs have been unpacked by the C to Javascript shim, so they
     // aren't a special case here.
+    var varargs;
+    if(nfixedargs < nargs){
+      varargs = args.pop();
+    }
     while (jsarg_idx < args.length) {
       var cur_arg = args[jsarg_idx++];
       let arg_type_id = unboxed_arg_type_id_list[++carg_idx];
@@ -530,6 +535,41 @@ ffi_prep_closure_loc_helper,
         cur_arg = args[jsarg_idx++];
         STORE_U64(cur_ptr, 0, cur_arg);
         break;
+      }
+    }
+    if(varargs){
+      while(carg_idx < nargs){
+        let arg_type_id = unboxed_arg_type_id_list[++carg_idx];
+        switch (arg_type_id) {
+        case FFI_TYPE_UINT8:
+        case FFI_TYPE_SINT8:
+          DEREF_U8(args_ptr, carg_idx) = DEREF_U8(varargs, 0);
+          break;
+        case FFI_TYPE_UINT16:
+        case FFI_TYPE_SINT16:
+          DEREF_U16(args_ptr, carg_idx) = DEREF_U16(varargs, 0);
+          varargs += 2;
+          break;
+        case FFI_TYPE_INT:
+        case FFI_TYPE_UINT32:
+        case FFI_TYPE_SINT32:
+        case FFI_TYPE_POINTER:
+        case FFI_TYPE_STRUCT:
+        case FFI_TYPE_FLOAT:
+          DEREF_U32(args_ptr, carg_idx) = DEREF_U32(varargs, 0);
+          varargs += 4;
+          break;
+        case FFI_TYPE_DOUBLE:
+        case FFI_TYPE_UINT64:
+        case FFI_TYPE_SINT64:
+          DEREF_U32(args_ptr, carg_idx) = DEREF_U32(varargs, 0);
+          DEREF_U32(args_ptr, carg_idx) = DEREF_U32(varargs, 0);
+          varargs += 8;
+          break;
+        case FFI_TYPE_LONGDOUBLE:
+          varargs += 16;
+          break;
+        }
       }
     }
     stackRestore(cur_ptr);
