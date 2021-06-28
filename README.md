@@ -1,11 +1,8 @@
 Status
 ======
 
-[![Build Status](https://travis-ci.org/libffi/libffi.svg?branch=master)](https://travis-ci.org/libffi/libffi)
-[![Build status](https://ci.appveyor.com/api/projects/status/8lko9vagbx4w2kxq?svg=true)](https://ci.appveyor.com/project/atgreen/libffi)
-
-libffi-3.4.0 was released on TBD.  Check the libffi web page for
-updates: <URL:http://sourceware.org/libffi/>.
+libffi-3.4.0 was released on June 28, 2022.  Check the libffi web page
+for updates: <URL:http://sourceware.org/libffi/>.
 
 
 What is libffi?
@@ -198,7 +195,7 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
-    3.4 TBD
+    3.4.0 Jun-28-22
         Add static trampoline support for Linux on x86_64 and ARM64.
         Add support for Alibaba's CSKY architecture.
         Add support for Kalray's KVX architecture.
