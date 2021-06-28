@@ -80,6 +80,7 @@
 #define ALIGN_ADDRESS(addr, align) (addr &= (~((align) - 1)))
 #define STACK_ALLOC(stack, size, align) (ALIGN_ADDRESS(stack, align), (stack -= (size)))
 
+// Pyodide needs to redefine this to support fpcast emulation
 #ifndef CALL_FUNC_PTR
 #define CALL_FUNC_PTR(func, args...) \
   wasmTable.get(func).apply(null, args)
