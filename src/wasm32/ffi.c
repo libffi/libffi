@@ -170,6 +170,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 {
   var abi = CIF__ABI(cif);
   var nargs = CIF__NARGS(cif);
+  var nfixedargs = CIF__NFIXEDARGS(cif);
   var arg_types_ptr = CIF__ARGTYPES(cif);
   var rtype_unboxed = unbox_small_structs(CIF__RTYPE(cif));
   var rtype_ptr = rtype_unboxed[0];
@@ -191,7 +192,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 
   var orig_stack_ptr = stackSave();
   var structs_addr = orig_stack_ptr;
-  for (var i = 0; i < nargs; i++) {
+  for (var i = 0; i < nfixedargs; i++) {
     var arg_ptr = DEREF_U32(avalue, i);
     var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
     var arg_type_ptr = arg_unboxed[0];
@@ -251,7 +252,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       args.push(structs_addr);
       var src_ptr = DEREF_U32(avalue, i);
       HEAP8.subarray(structs_addr, structs_addr + item_size)
-          .set(HEAP8.subarray(src_ptr, src_ptr + item_size));
+           .set(HEAP8.subarray(src_ptr, src_ptr + item_size));
       break;
     case FFI_TYPE_COMPLEX:
       throw new Error('complex marshalling nyi');
@@ -260,7 +261,21 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     }
   }
 
-  stackRestore(structs_addr);
+  var varargs_addr = structs_addr;
+  for (var i = nfixedargs; i < nargs; i++) {
+    var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types, i));
+    var arg_type = arg_unboxed[0];
+    var item = ffi_struct_size_and_alignment(arg_type);
+    var item_size = item[0];
+    varargs_addr -= item_size;
+    args.push(varargs_addr);
+    var arg_ptr = DEREF_U32(avalue, i);
+    HEAP8.subarray(varargs_addr, varargs_addr + item_size)
+         .set(HEAP8.subarray(arg_ptr, arg_ptr + item_size));
+  }
+
+  stackRestore(varargs_addr);
+  console.log({wasmTable, fn, args});
   var result = wasmTable.get(fn).apply(null, args);
   stackRestore(orig_stack_ptr);
 
