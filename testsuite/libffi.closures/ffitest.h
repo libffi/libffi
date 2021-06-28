@@ -27,11 +27,20 @@
    } while(0)
 
 #define CHECK_FLOAT_EQ(x, y) \
-   CHECK(fabs((x) - (y)) < FLT_EPSILON)
+   do { \
+      if(fabs((x) - (y)) > FLT_EPSILON){ \
+         printf("Check failed CHECK_FLOAT_EQ(%s, %s)\n", #x, #y); \
+         abort(); \
+      } \
+   } while(0)
 
 #define CHECK_DOUBLE_EQ(x, y) \
-   CHECK(fabs((x) - (y)) < DBL_EPSILON)
-
+   do { \
+      if(fabs((x) - (y)) > DBL_EPSILON){ \
+         printf("Check failed CHECK_FLOAT_EQ(%s, %s)\n", #x, #y); \
+         abort(); \
+      } \
+   } while(0)
 
 /* Define macros so that compilers other than gcc can run the tests.  */
 #undef __UNUSED__
