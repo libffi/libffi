@@ -10,14 +10,19 @@
 
 #include "ffitest.h"
 
+char buffer[50];
+
 static void
 cls_double_va_fn(ffi_cif* cif __UNUSED__, void* resp, 
 		 void** args, void* userdata __UNUSED__)
 {
 	char*	format		= *(char**)args[0];
 	double	doubleValue	= *(double*)args[1];
-
+	
 	*(ffi_arg*)resp = printf(format, doubleValue);
+	CHECK(resp == 4);
+	sprintf(buffer, format, doubleValue);
+	CHECK(strncmp(buffer, "7.0", 5) == 0);
 }
 
 int main (void)
