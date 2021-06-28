@@ -31,7 +31,7 @@ cls_struct_12byte cls_struct_12byte_fn(struct cls_struct_12byte b1,
 
   CHECK(b2.a == 1);
   CHECK(b2.b == 5);
-  CHECK(b2.c == 3);  
+  CHECK(b2.c == 3);
 
   CHECK(result.a == 8);
   CHECK(result.b == 9);

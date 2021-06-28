@@ -105,8 +105,10 @@ int main (void)
   /* { dg-output "\n12 13 14 178 179 180: 190 192 194" } */
   printf("res: %d %d %d\n", res_dbl.a, res_dbl.b, res_dbl.c);
   /* { dg-output "\nres: 190 192 194" } */
+
   CHECK(res_dbl.a == 190);
   CHECK(res_dbl.b == 192);
   CHECK(res_dbl.c == 194);
+
   exit(0);
 }

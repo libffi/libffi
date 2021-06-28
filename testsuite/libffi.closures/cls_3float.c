@@ -33,7 +33,7 @@ cls_struct_3float cls_struct_3float_fn(struct cls_struct_3float a1,
 
   CHECK(a2.f == 1);
   CHECK(a2.g == 2);
-  CHECK(a2.h == 3);  
+  CHECK(a2.h == 3);
 
   CHECK(result.f == 2);
   CHECK(result.g == 4);

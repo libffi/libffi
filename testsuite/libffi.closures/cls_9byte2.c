@@ -98,5 +98,6 @@ int main (void)
   /* { dg-output "\nres: 8 17" } */
   CHECK(res_dbl.a == 8);
   CHECK(res_dbl.b == 17);
+
   exit(0);
 }
