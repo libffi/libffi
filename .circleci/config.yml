@@ -95,7 +95,7 @@ jobs:
             - target
             - testsuite
 
-  test-selenium-firefox:
+  test-firefox:
     <<: *defaults
     steps:
       - checkout
@@ -113,7 +113,7 @@ jobs:
       - store_test_results:
           path: test-results
 
-  test-selenium-chrome:
+  test-chrome:
     <<: *defaults
     steps:
       - checkout
@@ -130,7 +130,7 @@ jobs:
       - store_test_results:
           path: test-results
 
-  test-selenium-firefox-bigint:
+  test-firefox-bigint:
     <<: *defaults
     steps:
       - checkout
@@ -148,7 +148,7 @@ jobs:
       - store_test_results:
           path: test-results
 
-  test-selenium-chrome-bigint:
+  test-chrome-bigint:
     <<: *defaults
     steps:
       - checkout
@@ -197,6 +197,73 @@ jobs:
             sed -i'.old' "/^NODE_JS = /s/emsdk.*/\[&, '--experimental-wasm-bigint'\]/" $EM_CONFIG
             testsuite/emscripten-test-stuff/node-tests.sh --enable-wasm-bigint
 
+  build-libffi-pyodide:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: install Pyodide patched emscripten
+          command: |
+            git clone git@github.com:pyodide/pyodide.git --depth 1 
+            cd pyodide/emsdk
+            make
+
+      - run:
+          name: build
+          command: |
+            source ./pyodide/emsdk/emsdk_env.sh
+            ./build.sh --pyodide-fpcast
+
+      - run:
+          name: build tests
+          command: |
+            source ./pyodide/emsdk/emsdk_env.sh
+            cp -r testsuite/libffi.call testsuite/libffi.call.test
+            cp -r testsuite/libffi.closures testsuite/libffi.closures.test
+            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
+            ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.closures.test
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - target
+            - testsuite
+
+  test-firefox-pyodide:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: run tests
+          no_output_timeout: 1200
+          command: |
+            git reset --hard
+            mkdir test-results
+            pytest --junitxml=test-results/junit.xml -k firefox testsuite/test_libffi.py
+      - store_test_results:
+          path: test-results
+
+  test-chrome-pyodide:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: run tests
+          no_output_timeout: 1200
+          command: |
+            git reset --hard
+            pytest --junitxml=test-results/junit.xml -k chrome testsuite/test_libffi.py
+      - store_test_results:
+          path: test-results
+
 workflows:
   version: 2
   build-and-test:
@@ -210,19 +277,29 @@ workflows:
           requires:
             - install-emsdk
 
-      - test-selenium-firefox:
+      - test-firefox:
           requires:
             - build-libffi
-      - test-selenium-chrome:
+      - test-chrome:
           requires:
             - build-libffi
 
-      - test-selenium-firefox-bigint:
+      - test-firefox-bigint:
           requires:
             - build-libffi-bigint
-      - test-selenium-chrome-bigint:
+      - test-chrome-bigint:
           requires:
             - build-libffi-bigint
+
+      - build-libffi-pyodide
+      - test-firefox-pyodide:
+          requires:
+            - build-libffi-pyodide
+      - test-chrome-pyodide:
+          requires:
+            - build-libffi-pyodide
+        
+
 
       # - test-node:
       #     requires:

@@ -81,9 +81,16 @@
 #define STACK_ALLOC(stack, size) (ALIGN_ADDRESS(stack, size), (stack -= (size)))
 
 // Pyodide needs to redefine this to support fpcast emulation
-#ifndef CALL_FUNC_PTR
-#define CALL_FUNC_PTR(func, args...) \
+#define CALL_FUNC_PTR_DEFAULT(func, args...) \
   wasmTable.get(func).apply(null, args)
+
+#ifndef CALL_FUNC_PTR
+#if PYODIDE_FP_CAST
+#define CALL_FUNC_PTR(func, args...) \
+  CALL_FUNC_PTR_DEFAULT(dyncallInvokeMap[func] || func, args)
+#else
+#define CALL_FUNC_PTR CALL_FUNC_PTR_DEFAULT
+#endif
 #endif
 
 #define VARARGS_FLAG 1
