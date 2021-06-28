@@ -33,31 +33,30 @@ cls_struct_24byte cls_struct_24byte_fn(struct cls_struct_24byte b0,
 	 b2.a, b2.b, b2.c, b2.d,
 	 b3.a, b3.b, b3.c, b2.d,
 	 result.a, result.b, result.c, result.d);
-
-  CHECK(b0.a == 9);
-  CHECK(b0.b == 2);
+  CHECK_DOUBLE_EQ(b0.a, 9);
+  CHECK_DOUBLE_EQ(b0.b, 2);
   CHECK(b0.c == 6);
-  CHECK(b0.d == 5);
+  CHECK_FLOAT_EQ(b0.d, 5);
 
-  CHECK(b1.a == 1);
-  CHECK(b1.b == 2);
+  CHECK_DOUBLE_EQ(b1.a, 1);
+  CHECK_DOUBLE_EQ(b1.b, 2);
   CHECK(b1.c == 3);
-  CHECK(b1.d == 7);
+  CHECK_FLOAT_EQ(b1.d, 7);
 
-  CHECK(b2.a == 4);
-  CHECK(b2.b == 5);
+  CHECK_DOUBLE_EQ(b2.a, 4);
+  CHECK_DOUBLE_EQ(b2.b, 5);
   CHECK(b2.c == 7);
-  CHECK(b2.d == 9);
+  CHECK_FLOAT_EQ(b2.d, 9);
 
-  CHECK(b3.a == 8);
-  CHECK(b3.b == 6);
+  CHECK_DOUBLE_EQ(b3.a, 8);
+  CHECK_DOUBLE_EQ(b3.b, 6);
   CHECK(b3.c == 1);
-  CHECK(b3.d == 9);
+  CHECK_FLOAT_EQ(b3.d, 9);
 
-  CHECK(result.a == 22);
-  CHECK(result.b == 15);
+  CHECK_DOUBLE_EQ(result.a, 22);
+  CHECK_DOUBLE_EQ(result.b, 15);
   CHECK(result.c == 17);
-  CHECK(result.d == 25);
+  CHECK_FLOAT_EQ(result.d, 25);
 
   return result;
 }

@@ -5,6 +5,9 @@
 #include <ffi.h>
 #include "fficonfig.h"
 
+#include <float.h>
+#include <math.h>
+
 #if defined HAVE_STDINT_H
 #include <stdint.h>
 #endif
@@ -22,6 +25,13 @@
          abort(); \
       } \
    } while(0)
+
+#define CHECK_FLOAT_EQ(x, y) \
+   CHECK(fabs((x) - (y)) < FLT_EPSILON)
+
+#define CHECK_DOUBLE_EQ(x, y) \
+   CHECK(fabs((x) - (y)) < DBL_EPSILON)
+
 
 /* Define macros so that compilers other than gcc can run the tests.  */
 #undef __UNUSED__
