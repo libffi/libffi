@@ -41,5 +41,6 @@ int main (void)
   /* { dg-output "67: 67 4" } */
   printf("res: %ld\n", res);
   /* { dg-output "\nres: 67" } */
+  CHECK(res == 67);
   exit(0);
 }

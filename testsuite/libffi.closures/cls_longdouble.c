@@ -23,8 +23,16 @@ long double cls_ldouble_fn(
 {
 	long double	r = a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
 
-	// printf("%Lg %Lg %Lg %Lg %Lg %Lg %Lg %Lg: %Lg\n",
-	// 	a1, a2, a3, a4, a5, a6, a7, a8, r);
+	printf("%Lg %Lg %Lg %Lg %Lg %Lg %Lg %Lg: %Lg\n",
+		a1, a2, a3, a4, a5, a6, a7, a8, r);
+	CHECK(a1 == 1);
+	CHECK(a2 == 2);
+	CHECK(a3 == 3);
+	CHECK(a4 == 4);
+	CHECK(a5 == 5);
+	CHECK(a6 == 6);
+	CHECK(a7 == 7);
+	CHECK(a8 == 8);
 
 	return r;
 }
@@ -89,8 +97,9 @@ int main(void)
 
 	ffi_call(&cif, FFI_FN(cls_ldouble_fn), &res, args);
 	/* { dg-output "1 2 3 4 5 6 7 8: 36" } */
-	// printf("res: %Lg\n", res);
+	printf("res: %Lg\n", res);
 	/* { dg-output "\nres: 36" } */
+	CHECK(res == 36);
 
 	CHECK(ffi_prep_closure_loc(pcl, &cif, cls_ldouble_gn, NULL, code) == FFI_OK);
 
@@ -98,8 +107,9 @@ int main(void)
 		long double, long double, long double, long double))(code))(arg1, arg2,
 		arg3, arg4, arg5, arg6, arg7, arg8);
 	/* { dg-output "\n1 2 3 4 5 6 7 8: 36" } */
-	// printf("res: %Lg\n", res);
+	printf("res: %Lg\n", res);
 	/* { dg-output "\nres: 36" } */
+	CHECK(res == 36);
 
 	return 0;
 }

@@ -33,6 +33,32 @@ cls_struct_24byte cls_struct_24byte_fn(struct cls_struct_24byte b0,
 	 b2.a, b2.b, b2.c, b2.d,
 	 b3.a, b3.b, b3.c, b2.d,
 	 result.a, result.b, result.c, result.d);
+  /* { dg-output "\n9 2 6 5    1 2 3 7     4 5 7 9   8 6 1 9: 22 15 17 25" } */
+
+  CHECK(b0.a == 9);
+  CHECK(b0.b == 2);
+  CHECK(b0.c == 6);
+  CHECK(b0.d == 5);
+
+  CHECK(b1.a == 1);
+  CHECK(b1.b == 2);
+  CHECK(b1.c == 3);
+  CHECK(b1.d == 7);
+
+  CHECK(b2.a == 4);
+  CHECK(b2.b == 5);
+  CHECK(b2.c == 7);
+  CHECK(b2.d == 8);
+
+  CHECK(b3.a == 8);
+  CHECK(b3.b == 6);
+  CHECK(b3.c == 1);
+  CHECK(b3.d == 9);
+
+  CHECK(result.a == 22);
+  CHECK(result.b == 15);
+  CHECK(result.c == 17);
+  CHECK(result.d == 25);
 
   return result;
 }
@@ -97,6 +123,10 @@ int main (void)
   /* { dg-output "9 2 6 5 1 2 3 7 4 5 7 9 8 6 1 9: 22 15 17 25" } */
   printf("res: %g %g %d %g\n", res_dbl.a, res_dbl.b, res_dbl.c, res_dbl.d);
   /* { dg-output "\nres: 22 15 17 25" } */
+  CHECK(res_dbl.a == 22);
+  CHECK(res_dbl.b == 15);
+  CHECK(res_dbl.c == 17);
+  CHECK(res_dbl.d == 25);
 
   CHECK(ffi_prep_closure_loc(pcl, &cif, cls_struct_24byte_gn, NULL, code) == FFI_OK);
 
@@ -108,6 +138,10 @@ int main (void)
   /* { dg-output "\n9 2 6 5 1 2 3 7 4 5 7 9 8 6 1 9: 22 15 17 25" } */
   printf("res: %g %g %d %g\n", res_dbl.a, res_dbl.b, res_dbl.c, res_dbl.d);
   /* { dg-output "\nres: 22 15 17 25" } */
+  CHECK(res_dbl.a == 22);
+  CHECK(res_dbl.b == 15);
+  CHECK(res_dbl.c == 17);
+  CHECK(res_dbl.d == 25);
 
   exit(0);
 }

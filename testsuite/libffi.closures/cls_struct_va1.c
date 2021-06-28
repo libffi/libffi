@@ -23,6 +23,8 @@ struct large_tag
   unsigned e;
 };
 
+char test[100] = { 0 };
+
 static void
 test_fn (ffi_cif* cif __UNUSED__, void* resp,
 	 void** args, void* userdata __UNUSED__)
@@ -31,10 +33,19 @@ test_fn (ffi_cif* cif __UNUSED__, void* resp,
   struct small_tag s1 = * (struct small_tag *) args[1];
   struct large_tag l1 = * (struct large_tag *) args[2];
   struct small_tag s2 = * (struct small_tag *) args[3];
-
   printf ("%d %d %d %d %d %d %d %d %d %d\n", n, s1.a, s1.b,
 	  l1.a, l1.b, l1.c, l1.d, l1.e,
 	  s2.a, s2.b);
+  CHECK(n == 4);
+  CHECK(s1.a == 5);
+  CHECK(s1.b == 6);
+  CHECK(l1.a == 10);
+  CHECK(l1.b == 11);
+  CHECK(l1.c == 12);
+  CHECK(l1.d == 13);
+  CHECK(l1.e == 14);
+  CHECK(s2.a == 20);
+  CHECK(s2.b == 21);
   * (ffi_arg*) resp = 42;
 }
 
@@ -109,6 +120,7 @@ main (void)
   /* { dg-output "4 5 6 10 11 12 13 14 20 21" } */
   printf("res: %d\n", (int) res);
   /* { dg-output "\nres: 42" } */
+  CHECK(res == 42);
 
   exit(0);
 }

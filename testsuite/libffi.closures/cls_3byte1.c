@@ -23,6 +23,16 @@ cls_struct_3byte cls_struct_3byte_fn(struct cls_struct_3byte a1,
   result.b = a1.b + a2.b;
 
   printf("%d %d %d %d: %d %d\n", a1.a, a1.b, a2.a, a2.b, result.a, result.b);
+  /* { dg-output "\n12 119 1 15: 13 134" } */
+
+  CHECK(a1.a == 12);
+  CHECK(a1.b == 119);
+
+  CHECK(a2.a == 1);
+  CHECK(a2.b == 15);
+
+  CHECK(result.a == 13);
+  CHECK(result.b == 134);
 
   return  result;
 }
@@ -78,13 +88,17 @@ int main (void)
   /* { dg-output "12 119 1 15: 13 134" } */
   printf("res: %d %d\n", res_dbl.a, res_dbl.b);
   /* { dg-output "\nres: 13 134" } */
-
+  CHECK(res_dbl.a == 13);
+  CHECK(res_dbl.b == 134);
+  
   CHECK(ffi_prep_closure_loc(pcl, &cif, cls_struct_3byte_gn, NULL, code) == FFI_OK);
 
   res_dbl = ((cls_struct_3byte(*)(cls_struct_3byte, cls_struct_3byte))(code))(g_dbl, f_dbl);
   /* { dg-output "\n12 119 1 15: 13 134" } */
   printf("res: %d %d\n", res_dbl.a, res_dbl.b);
   /* { dg-output "\nres: 13 134" } */
+  CHECK(res_dbl.a == 13);
+  CHECK(res_dbl.b == 134);
 
   exit(0);
 }

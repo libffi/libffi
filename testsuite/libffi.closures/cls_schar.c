@@ -39,6 +39,7 @@ int main (void)
   /* { dg-output "127: 127" } */
   printf("res: %d\n", res);
   /* { dg-output "\nres: 127" } */
+  CHECK(res == 127);
 
   exit(0);
 }

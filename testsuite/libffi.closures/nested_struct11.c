@@ -117,5 +117,5 @@ int main (void)
   CHECK (result.a.a_y == source.a.a_y);
   CHECK (result.b.b_x == source.b.b_x);
   CHECK (result.b.b_y == source.b.b_y);
-  ;
+  exit(0);
 }

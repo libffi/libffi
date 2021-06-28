@@ -37,6 +37,7 @@ int main (void)
   /* { dg-output "255: 255" } */
   printf("res: %d\n",res);
   /* { dg-output "\nres: 255" } */
+  CHECK(res == 255);
 
   exit(0);
 }
