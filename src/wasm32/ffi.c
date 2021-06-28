@@ -526,7 +526,7 @@ ffi_prep_closure_loc_helper,
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         STORE_U64(cur_ptr, 0, cur_arg);
         cur_arg = args[jsarg_idx++];
-        STORE_U64(cur_ptr, 0, cur_arg);
+        STORE_U64(cur_ptr, 1, cur_arg);
         break;
       }
     }
