@@ -1,7 +1,7 @@
 Status
 ======
 
-libffi-3.4.0 was released on June 28, 2022.  Check the libffi web page
+libffi-3.4.1 was released on June 28, 2021.  Check the libffi web page
 for updates: <URL:http://sourceware.org/libffi/>.
 
 
@@ -195,7 +195,7 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
-    3.4.0 Jun-28-22
+    3.4.1 Jun-28-21
         Add static trampoline support for Linux on x86_64 and ARM64.
         Add support for Alibaba's CSKY architecture.
         Add support for Kalray's KVX architecture.
