@@ -35,18 +35,38 @@
 #define EM_JS_MACROS(ret, name, args, body...) EM_JS(ret, name, args, body)
 
 #define DEREF_U8(addr, offset) HEAPU8[addr + offset]
-#define DEREF_I8(addr, offset) HEAP8[addr + offset]
-
 #define DEREF_U16(addr, offset) HEAPU16[(addr >> 1) + offset]
-#define DEREF_I16(addr, offset) HEAP16[(addr >> 1) + offset]
-
 #define DEREF_U32(addr, offset) HEAPU32[(addr >> 2) + offset]
-#define DEREF_I32(addr, offset) HEAP32[(addr >> 2) + offset]
-#define DEREF_F32(addr, offset) HEAPF32[(addr >> 2) + offset]
 
-#define DEREF_U64(addr, offset) HEAPU64[(addr >> 3) + offset]
-#define DEREF_I64(addr, offset) HEAP64[(addr >> 3) + offset]
+#define DEREF_F32(addr, offset) HEAPF32[(addr >> 2) + offset]
 #define DEREF_F64(addr, offset) HEAPF64[(addr >> 3) + offset]
+
+#if WASM_BIGINT
+// We have HEAPU64 in this case.
+#define DEREF_U64(addr, offset) HEAPU64[(addr >> 3) + offset]
+#define LOAD_U64(addr,offset) \
+    DEREF_U64(addr, offset)
+
+#define STORE_U64(addr, offset, val) \
+    (DEREF_U64(addr, offset) = val)
+
+#else
+// No BigUint64Array, have to manually split / join lower and upper byte
+#define BIGINT_LOWER(x) (Number((x) & BigInt(0xffffffff)) | 0)
+#define BIGINT_UPPER(x) (Number((x) >> BigInt(32)) | 0)
+#define BIGINT_FROM_PAIR(lower, upper) \
+    (BigInt(lower) | (BigInt(upper) << BigInt(32)))
+
+#define LOAD_U64(addr, offset) \
+    BIGINT_FROM_PAIR(DEREF_U32(addr, offset*2), DEREF_U32(addr, offset*2 + 1))
+
+#define STORE_U64(addr, offset, val) (  \
+  (DEREF_U32(addr, offset*2) = BIGINT_LOWER(val)), \
+  (DEREF_U32(addr, offset*2+1) = BIGINT_UPPER(val)) \
+)
+#endif
+
+
 
 #define CIF__ABI(addr) DEREF_U32(addr, 0)
 #define CIF__NARGS(addr) DEREF_U32(addr, 1)
@@ -62,11 +82,7 @@
 #define ALIGN_ADDRESS(addr, align) (addr &= (~((align) - 1)))
 #define STACK_ALLOC(stack, size, align) (ALIGN_ADDRESS(stack, align), (stack -= (size)))
 
-#define BIGINT_LOWER(x) (Number((x) & BigInt(0xffffffff)) | 0)
-#define BIGINT_UPPER(x) (Number((x) >> BigInt(32)) | 0)
 
-#define BIGINT_FROM_PAIR(lower, upper) \
-    (BigInt(lower) | (BigInt(upper) << BigInt(32)))
 
 #define VARARGS_FLAG 1
 
@@ -93,9 +109,9 @@ ffi_prep_cif_machdep_var(ffi_cif *cif, unsigned nfixedargs, unsigned ntotalargs)
  * A Javascript helper function. This takes an argument typ which is a wasm
  * pointer to an ffi_type object. It returns a pair a type and a type id.
  *
- *    - If it is not a struct, return its type and its typeid field. 
+ *    - If it is not a struct, return its type and its typeid field.
  *    - If it is a struct of size >= 2, return the type and its typeid (which
- *      will be FFI_TYPE_STRUCT) 
+ *      will be FFI_TYPE_STRUCT)
  *    - If it is a struct of size 0, return FFI_TYPE_VOID (????? this is broken)
  *    - If it is a struct of size 1, replace it with the single field and apply
  *      the same logic again to that.
@@ -155,7 +171,8 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 
   // Accumulate a Javascript list of arguments for the Javascript wrapper for
   // the wasm function. The Javascript wrapper does a type conversion from
-  // Javascript to C automatically, here we manually do the inverse conversion.
+  // Javascript to C automatically, here we manually do the inverse conversion
+  // from C to Javascript.
   for (var i = 0; i < nfixedargs; i++) {
     var arg_ptr = DEREF_U32(avalue, i);
     var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
@@ -164,11 +181,6 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
 
     // It's okay here to always use unsigned integers, when passed into a signed
     // slot of the same size they get interpreted correctly.
-    //
-    // Javascript expects BigInts for uint64 and sint64, but without
-    // WASM_BIGINT, we aren't allowed to assume BigUint64Array exists (indeed it
-    // has only just been added to Safari TP). Instead we take a pair of
-    // Uint32's and stitch them together.
     switch (arg_type_id) {
     case FFI_TYPE_INT:
     case FFI_TYPE_SINT32:
@@ -192,21 +204,12 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       break;
     case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
-#if WASM_BIGINT
-      args.push(DEREF_U64(arg_ptr, 0));
-#else
-      args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 0), DEREF_U32(arg_ptr, 1)));
-#endif
+      args.push(LOAD_U64(arg_ptr, 0));
       break;
     case FFI_TYPE_LONGDOUBLE:
       // long double is passed as a pair of BigInts.
-#if WASM_BIGINT
-      args.push(DEREF_U64(arg_ptr, 0));
-      args.push(DEREF_U64(arg_ptr, 1));
-#else
-      args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 0), DEREF_U32(arg_ptr, 1)));
-      args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 2), DEREF_U32(arg_ptr, 3)));
-#endif
+      args.push(LOAD_U64(arg_ptr, 0));
+      args.push(LOAD_U64(arg_ptr, 1));
       break;
     case FFI_TYPE_STRUCT:
       // Nontrivial structs are passed by pointer.
@@ -234,7 +237,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   // have to make any BigInts.
   if (nfixedargs != nargs) {
     var varargs_addr = orig_stack_ptr;
-    for(let i = nargs - 1;  i >= nvarargs; i--){
+    for(let i = nargs - 1;  i >= nfixedargs; i--){
       var arg_ptr = DEREF_U32(avalue, i);
       var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
       var arg_type_ptr = arg_unboxed[0];
@@ -307,7 +310,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   case FFI_TYPE_UINT32:
   case FFI_TYPE_SINT32:
   case FFI_TYPE_POINTER:
-    DEREF_I32(rvalue, 0) = result;
+    DEREF_U32(rvalue, 0) = result;
     break;
   case FFI_TYPE_FLOAT:
     DEREF_F32(rvalue, 0) = result;
@@ -321,16 +324,11 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     break;
   case FFI_TYPE_UINT16:
   case FFI_TYPE_SINT16:
-    DEREF_I16(rvalue, 0) = result;
+    DEREF_U16(rvalue, 0) = result;
     break;
   case FFI_TYPE_UINT64:
   case FFI_TYPE_SINT64:
-#if WASM_BIGINT
-    DEREF_U64(rvalue, 0) = result;
-#else
-    DEREF_U32(rvalue, 0) = BIGINT_LOWER(result);
-    DEREF_I32(rvalue, 1) = BIGINT_UPPER(result);
-#endif
+    STORE_U64(rvalue, 0, result);
     break;
   case FFI_TYPE_COMPLEX:
     throw new Error('complex ret marshalling nyi');
@@ -380,6 +378,9 @@ ffi_prep_closure_loc_helper,
   var rtype_unboxed = unbox_small_structs(CIF__RTYPE(cif));
   var rtype_ptr = rtype_unboxed[0];
   var rtype_id = rtype_unboxed[1];
+
+  // First construct the signature of the wasm function we are going to create.
+  // We can close over this so the trampoline won't have to recompute it.
   var sig = "";
   var ret_by_arg = false;
   switch (rtype_id) {
@@ -388,6 +389,7 @@ ffi_prep_closure_loc_helper,
     break;
   case FFI_TYPE_STRUCT:
   case FFI_TYPE_LONGDOUBLE:
+    // Return via a first pointer argument.
     sig = 'vi';
     ret_by_arg = true;
     break;
@@ -416,12 +418,12 @@ ffi_prep_closure_loc_helper,
   default:
     throw new Error('Unexpected rtype ' + rtype_id);
   }
-  var arg_types_list = [];
+  var unboxed_arg_type_id_list = [];
   for (var i = 0; i < nfixedargs; i++) {
     var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
     var arg_type_ptr = arg_unboxed[0];
     var arg_type_id = arg_unboxed[1];
-    arg_types_list.push(arg_type_id);
+    unboxed_arg_type_id_list.push(arg_type_id);
     switch (arg_type_id) {
     case FFI_TYPE_INT:
     case FFI_TYPE_UINT8:
@@ -441,6 +443,7 @@ ffi_prep_closure_loc_helper,
       sig += 'd';
       break;
     case FFI_TYPE_LONGDOUBLE:
+      // long double passed as two 64 bit params
       sig += 'jj';
       break;
     case FFI_TYPE_UINT64:
@@ -454,6 +457,7 @@ ffi_prep_closure_loc_helper,
     }
   }
   if ( nfixedargs < nargs ) {
+    // extra pointer to varargs stack
     sig += "i";
   }
   function trampoline() {
@@ -473,26 +477,36 @@ ffi_prep_closure_loc_helper,
     var args_ptr = cur_ptr;
     var HEAPU64 = new BigInt64Array(HEAP8.buffer);
     var carg_idx = -1;
+    // Now we have to do a Javascript to C translation.
+    // The varargs have been unpacked by the C to Javascript shim, so they
+    // aren't a special case here.
     while (jsarg_idx < args.length) {
       var cur_arg = args[jsarg_idx++];
-      let arg_type_id = arg_types_list[++carg_idx];
-      if ( arg_type_id === FFI_TYPE_STRUCT ) {
-        cur_ptr -= 4;
-        DEREF_U32(args_ptr, carg_idx) = cur_arg;
-        continue;
-      }
+      let arg_type_id = unboxed_arg_type_id_list[++carg_idx];
       switch (arg_type_id) {
+      case FFI_TYPE_UINT8:
+      case FFI_TYPE_SINT8:
+        STACK_ALLOC(cur_ptr, 1, 1);
+        DEREF_U32(args_ptr, carg_idx) = cur_ptr;
+        DEREF_U8(cur_ptr, 0) = cur_arg;
+        break;
+      case FFI_TYPE_UINT16:
+      case FFI_TYPE_SINT16:
+        STACK_ALLOC(cur_ptr, 2, 2);
+        DEREF_U32(args_ptr, carg_idx) = cur_ptr;
+        DEREF_U16(cur_ptr, 0) = cur_arg;
+        break;
       case FFI_TYPE_INT:
       case FFI_TYPE_UINT32:
       case FFI_TYPE_SINT32:
-      case FFI_TYPE_UINT8:
-      case FFI_TYPE_SINT8:
-      case FFI_TYPE_UINT16:
-      case FFI_TYPE_SINT16:
       case FFI_TYPE_POINTER:
         STACK_ALLOC(cur_ptr, 4, 4);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_U32(cur_ptr, 0) = cur_arg;
+        break;
+      case FFI_TYPE_STRUCT:
+        // cur_arg is already a pointer to struct
+        DEREF_U32(args_ptr, carg_idx) = cur_arg;
         break;
       case FFI_TYPE_FLOAT:
         STACK_ALLOC(cur_ptr, 4, 4);
@@ -508,23 +522,14 @@ ffi_prep_closure_loc_helper,
       case FFI_TYPE_SINT64:
         STACK_ALLOC(cur_ptr, 8, 8);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
-        DEREF_U32(cur_ptr, 0) = BIGINT_LOWER(cur_arg);
-        DEREF_U32(cur_ptr, 1) = BIGINT_UPPER(cur_arg);
+        STORE_U64(cur_ptr, 0, cur_arg);
         break;
       case FFI_TYPE_LONGDOUBLE:
         STACK_ALLOC(cur_ptr, 16, 16);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
-#if WASM_BIGINT
-        DEREF_U64(cur_ptr, 0) = cur_arg;
+        STORE_U64(cur_ptr, 0, cur_arg);
         cur_arg = args[jsarg_idx++];
-        DEREF_U64(cur_ptr, 1) = cur_arg;
-#else
-        DEREF_U32(cur_ptr, 0) = BIGINT_LOWER(cur_arg);
-        DEREF_U32(cur_ptr, 1) = BIGINT_UPPER(cur_arg);
-        cur_arg = args[jsarg_idx++];
-        DEREF_U32(cur_ptr, 2) = BIGINT_LOWER(cur_arg);
-        DEREF_U32(cur_ptr, 3) = BIGINT_UPPER(cur_arg);
-#endif
+        STORE_U64(cur_ptr, 0, cur_arg);
         break;
       }
     }
