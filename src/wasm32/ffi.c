@@ -245,7 +245,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       switch (arg_type_id) {
       case FFI_TYPE_UINT8:
       case FFI_TYPE_SINT8:
-        STACK_ALLOC(varargs_addr);
+        STACK_ALLOC(varargs_addr, 1);
         DEREF_U8(varargs_addr, 0) = DEREF_U8(arg_ptr, 0);
         break;
       case FFI_TYPE_UINT16:
