@@ -34,6 +34,9 @@
 
 #define EM_JS_MACROS(ret, name, args, body...) EM_JS(ret, name, args, body)
 
+#define DEREF_U8(addr, offset) HEAPU8[addr + offset]
+#define DEREF_I8(addr, offset) HEAP8[addr + offset]
+
 #define DEREF_U16(addr, offset) HEAPU16[(addr >> 1) + offset]
 #define DEREF_I16(addr, offset) HEAP16[(addr >> 1) + offset]
 
@@ -61,6 +64,7 @@
 
 #define BIGINT_LOWER(x) (Number((x) & BigInt(0xffffffff)) | 0)
 #define BIGINT_UPPER(x) (Number((x) >> BigInt(32)) | 0)
+
 #define BIGINT_FROM_PAIR(lower, upper) \
     (BigInt(lower) | (BigInt(upper) << BigInt(32)))
 
@@ -85,21 +89,18 @@ ffi_prep_cif_machdep_var(ffi_cif *cif, unsigned nfixedargs, unsigned ntotalargs)
   return FFI_OK;
 }
 
-// Javascript helper functions
-
 /**
- * This takes an argument typ which is a wasm pointer to an ffi_type object. It
- * returns a pair a type and a type id.
+ * A Javascript helper function. This takes an argument typ which is a wasm
+ * pointer to an ffi_type object. It returns a pair a type and a type id.
  *
- * If it is not a struct, return its type and its typeid field. 
+ *    - If it is not a struct, return its type and its typeid field. 
+ *    - If it is a struct of size >= 2, return the type and its typeid (which
+ *      will be FFI_TYPE_STRUCT) 
+ *    - If it is a struct of size 0, return FFI_TYPE_VOID (????? this is broken)
+ *    - If it is a struct of size 1, replace it with the single field and apply
+ *      the same logic again to that.
  *
- * If it is a struct of size >= 2, return the type and its typeid (which will be
- * FFI_TYPE_STRUCT) 
- *
- * If it is a struct of size 0, return FFI_TYPE_VOID (????? this is broken) 
-
- * If it is a struct of size 1, replace it with the single field and apply the
- * same logic again to that.
+ * By always unboxing structs up front, we can avoid messy casework later.
  */
 EM_JS_MACROS(
 void,
@@ -120,71 +121,6 @@ unbox_small_structs, (ffi_type type_ptr), {
   }
   return [type_ptr, type_id];
 })
-
-/**
- * Compute the size and alignment of the struct type.
- *
- * The argument is a wasm pointer to the type. We compute the size and alignment
- * of the struct and return this pair.
- */
-EM_JS_MACROS(
-void,
-ffi_struct_size_and_alignment, (ffi_type type_ptr), {
-  var stored_size = FFI_TYPE__SIZE(type_ptr);
-  if (stored_size) {
-    var stored_align = FFI_TYPE__ALIGN(type_ptr);
-    return [stored_size, stored_align];
-  }
-  var elements = FFI_TYPE__ELEMENTS(type_ptr);
-  var size = 0;
-  var align = 1;
-  for (var idx = 0; DEREF_U32(elements, idx) !== 0; idx++) {
-    var item_size;
-    var item_align;
-    var element = DEREF_U32(elements, idx);
-    switch (FFI_TYPE__TYPEID(element)) {
-    case FFI_TYPE_STRUCT:
-      var item = ffi_struct_size_and_alignment(element);
-      item_size = item[0];
-      item_align = item[1];
-      break;
-    case FFI_TYPE_UINT8:
-    case FFI_TYPE_SINT8:
-      item_size = 1;
-      break;
-    case FFI_TYPE_UINT16:
-    case FFI_TYPE_SINT16:
-      item_size = 2;
-      break;
-    case FFI_TYPE_INT:
-    case FFI_TYPE_UINT32:
-    case FFI_TYPE_SINT32:
-    case FFI_TYPE_POINTER:
-    case FFI_TYPE_FLOAT:
-      item_size = 4;
-      break;
-    case FFI_TYPE_DOUBLE:
-    case FFI_TYPE_UINT64:
-    case FFI_TYPE_SINT64:
-      item_size = 8;
-      break;
-    case FFI_TYPE_LONGDOUBLE:
-      item_size = 16;
-      break;
-    case FFI_TYPE_COMPLEX:
-      throw new Error('complex ret marshalling nyi');
-    default:
-      throw new Error('Unexpected rtype ' + rtype);
-    }
-    item_align = item_align || item_size;
-    FFI_TYPE__SIZE(arg_type_ptr) = item_size;
-    FFI_TYPE__ALIGN(arg_type_ptr) = item_align;
-    size += item_size + PADDING(size, item_align);
-    align = item_align > align ? item_align : align;
-  }
-  return [size, align];
-})
-
 
 EM_JS_MACROS(
 void,
@@ -207,24 +143,38 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   if (rtype_id < 0 || rtype_id > FFI_TYPE_LAST) {
     throw new Error('Unexpected rtype ' + rtype_id);
   }
+  // If the return type is a struct with multiple entries or a long double, the
+  // function takes an extra first argument which is a pointer to return value.
+  // Conveniently, we've already received a pointer to return value, so we can
+  // just use this. We also mark a flag that we don't need to convert the return
+  // value of the dynamic call back to C.
   if (rtype_id === FFI_TYPE_LONGDOUBLE || rtype_id === FFI_TYPE_STRUCT) {
     args.push(rvalue);
     ret_by_arg = true;
   }
 
-  var orig_stack_ptr = stackSave();
-  var structs_addr = orig_stack_ptr;
-  // Accumulate a list of Javascript arguments.
+  // Accumulate a Javascript list of arguments for the Javascript wrapper for
+  // the wasm function. The Javascript wrapper does a type conversion from
+  // Javascript to C automatically, here we manually do the inverse conversion.
   for (var i = 0; i < nfixedargs; i++) {
     var arg_ptr = DEREF_U32(avalue, i);
     var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
     var arg_type_ptr = arg_unboxed[0];
     var arg_type_id = arg_unboxed[1];
 
+    // It's okay here to always use unsigned integers, when passed into a signed
+    // slot of the same size they get interpreted correctly.
+    //
+    // Javascript expects BigInts for uint64 and sint64, but without
+    // WASM_BIGINT, we aren't allowed to assume BigUint64Array exists (indeed it
+    // has only just been added to Safari TP). Instead we take a pair of
+    // Uint32's and stitch them together.
     switch (arg_type_id) {
     case FFI_TYPE_INT:
     case FFI_TYPE_SINT32:
-      args.push(DEREF_I32(arg_ptr, 0));
+    case FFI_TYPE_UINT32:
+    case FFI_TYPE_POINTER:
+      args.push(DEREF_U32(arg_ptr, 0));
       break;
     case FFI_TYPE_FLOAT:
       args.push(DEREF_F32(arg_ptr, 0));
@@ -232,31 +182,13 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     case FFI_TYPE_DOUBLE:
       args.push(DEREF_F64(arg_ptr, 0));
       break;
-    case FFI_TYPE_LONGDOUBLE:
-      // emscripten doesn't define HEAPU64 by default
-#if WASM_BIGINT
-        args.push(DEREF_U64(arg_ptr, 0));
-        args.push(DEREF_U64(arg_ptr, 1));
-#else
-        args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 0), DEREF_U32(arg_ptr, 1)));
-        args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 2), DEREF_U32(arg_ptr, 3)));
-#endif
-      break;
     case FFI_TYPE_UINT8:
-      args.push(HEAPU8[arg_ptr]);
-      break;
     case FFI_TYPE_SINT8:
-      args.push(HEAP8[arg_ptr]);
+      args.push(DEREF_U8(arg_ptr, 0));
       break;
     case FFI_TYPE_UINT16:
-      args.push(DEREF_U16(arg_ptr, 0));
-      break;
     case FFI_TYPE_SINT16:
       args.push(DEREF_U16(arg_ptr, 0));
-      break;
-    case FFI_TYPE_UINT32:
-    case FFI_TYPE_POINTER:
-      args.push(DEREF_U32(arg_ptr, 0));
       break;
     case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
@@ -266,8 +198,19 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 0), DEREF_U32(arg_ptr, 1)));
 #endif
       break;
+    case FFI_TYPE_LONGDOUBLE:
+      // long double is passed as a pair of BigInts.
+#if WASM_BIGINT
+      args.push(DEREF_U64(arg_ptr, 0));
+      args.push(DEREF_U64(arg_ptr, 1));
+#else
+      args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 0), DEREF_U32(arg_ptr, 1)));
+      args.push(BIGINT_FROM_PAIR(DEREF_U32(arg_ptr, 2), DEREF_U32(arg_ptr, 3)));
+#endif
+      break;
     case FFI_TYPE_STRUCT:
-      args.push(DEREF_U32(avalue, i));
+      // Nontrivial structs are passed by pointer.
+      args.push(arg_ptr);
       break;
     case FFI_TYPE_COMPLEX:
       throw new Error('complex marshalling nyi');
@@ -276,32 +219,87 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     }
   }
 
-  var varargs_addr = structs_addr;
-  for (var i = nfixedargs; i < nargs; i++) {
-    var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
-    var arg_type = arg_unboxed[0];
-    var item = ffi_struct_size_and_alignment(arg_type);
-    var item_size = item[0];
-    var item_align = item[1];
-    STACK_ALLOC(varargs_addr, item_size, item_align);
-    var arg_ptr = DEREF_U32(avalue, i);
-    HEAP8.subarray(varargs_addr, varargs_addr + item_size)
-         .set(HEAP8.subarray(arg_ptr, arg_ptr + item_size));
-  }
-
+  var orig_stack_ptr = stackSave();
+  // Wasm functions can't directly manipulate the callstack, so varargs
+  // arguments have to go on a separate stack. A varags function takes one extra
+  // argument which is a pointer to where on the separate stack the args are
+  // located. Because stacks are allocated backwards, we have to loop over the
+  // varargs backwards.
+  //
+  // We don't have any way of knowing how many args were actually passed, so we
+  // just always copy extra nonsense past the end. The ownwards call will know
+  // not to look at it.
+  //
+  // Here the int64 and long double handling is easier because we don't actually
+  // have to make any BigInts.
   if (nfixedargs != nargs) {
-    args = args.push(varargs);
+    var varargs_addr = orig_stack_ptr;
+    for(let i = nargs - 1;  i >= nvarargs; i--){
+      var arg_ptr = DEREF_U32(avalue, i);
+      var arg_unboxed = unbox_small_structs(DEREF_U32(arg_types_ptr, i));
+      var arg_type_ptr = arg_unboxed[0];
+      var arg_type_id = arg_unboxed[1];
+      switch (arg_type_id) {
+      case FFI_TYPE_UINT8:
+      case FFI_TYPE_SINT8:
+        STACK_ALLOC(varargs_addr, 1, 1);
+        DEREF_U8(varargs_addr, 0) = DEREF_U8(arg_ptr, 0);
+        break;
+      case FFI_TYPE_UINT16:
+      case FFI_TYPE_SINT16:
+        STACK_ALLOC(varargs_addr, 2, 2);
+        DEREF_U16(varargs_addr, 0) = DEREF_U16(arg_ptr, 0);
+        break;
+      case FFI_TYPE_INT:
+      case FFI_TYPE_UINT32:
+      case FFI_TYPE_SINT32:
+      case FFI_TYPE_POINTER:
+      case FFI_TYPE_FLOAT:
+        STACK_ALLOC(varargs_addr, 4, 4);
+        DEREF_U32(varargs_addr, 0) = DEREF_U32(arg_ptr, 0);
+        break;
+      case FFI_TYPE_DOUBLE:
+      case FFI_TYPE_UINT64:
+      case FFI_TYPE_SINT64:
+        STACK_ALLOC(varargs_addr, 8, 8);
+        DEREF_U32(varargs_addr, 0) = DEREF_U32(arg_ptr, 0);
+        DEREF_U32(varargs_addr, 1) = DEREF_U32(arg_ptr, 1);
+        break;
+      case FFI_TYPE_LONGDOUBLE:
+        STACK_ALLOC(varargs_addr, 16, 16);
+        DEREF_U32(varargs_addr, 0) = DEREF_U32(arg_ptr, 0);
+        DEREF_U32(varargs_addr, 1) = DEREF_U32(arg_ptr, 1);
+        DEREF_U32(varargs_addr, 2) = DEREF_U32(arg_ptr, 1);
+        DEREF_U32(varargs_addr, 3) = DEREF_U32(arg_ptr, 1);
+        break;
+      case FFI_TYPE_STRUCT:
+        // Again, struct must be passed by pointer.
+        STACK_ALLOC(varargs_addr, 4, 4);
+        DEREF_U32(varargs_addr, 0) = arg_ptr;
+        break;
+      case FFI_TYPE_COMPLEX:
+        throw new Error('complex arg marshalling nyi');
+      default:
+        throw new Error('Unexpected argtype ' + arg_type_id);
+      }
+    }
+    // extra normal argument which is the pointer to the varargs.
+    args = args.push(varargs_addr);
+    stackRestore(varargs_addr);
   }
 
-  stackRestore(varargs_addr);
-  console.log({wasmTable, fn, args});
   var result = wasmTable.get(fn).apply(null, args);
+  // Put the stack pointer back (we moved it if we made a varargs call)
   stackRestore(orig_stack_ptr);
 
+  // If return value was a nontrivial struct or long double, the onwards call
+  // already put the return value in rvalue
   if (ret_by_arg) {
     return;
   }
 
+  // Otherwise, we yet again have the result converted from C into Javascript
+  // and we need to manually convert it back to C.
   switch (rtype_id) {
   case FFI_TYPE_VOID:
     break;

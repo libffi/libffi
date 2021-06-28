@@ -51,7 +51,7 @@ cls_struct_24byte cls_struct_24byte_fn(struct cls_struct_24byte b0,
   CHECK_DOUBLE_EQ(b3.a, 8);
   CHECK_DOUBLE_EQ(b3.b, 6);
   CHECK(b3.c == 1);
-  CHECK_FLOAT_EQ(b3.d, 9);
+  CHECK_FLOAT_EQ(b3.d, 4);
 
   CHECK_DOUBLE_EQ(result.a, 22);
   CHECK_DOUBLE_EQ(result.b, 15);
