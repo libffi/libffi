@@ -552,7 +552,7 @@ ffi_prep_closure_loc_helper,
         return DEREF_U32(ret_ptr, 0);
         break;
       case "j":
-        return DEREF_U64(ret_ptr, 0);
+        return LOAD_U64(ret_ptr, 0);
         break;
       case "d":
         return DEREF_F64(ret_ptr, 0);
