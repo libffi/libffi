@@ -9,7 +9,7 @@
 
 
 
-/* { dg-do run } */
+/* { dg-do run { xfail wasm32*-*-* } } */
 #include "ffitest.h"
 
 static void
