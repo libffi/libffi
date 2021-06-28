@@ -80,6 +80,11 @@
 #define ALIGN_ADDRESS(addr, align) (addr &= (~((align) - 1)))
 #define STACK_ALLOC(stack, size, align) (ALIGN_ADDRESS(stack, align), (stack -= (size)))
 
+#ifndef CALL_FUNC_PTR
+#define CALL_FUNC_PTR(func, args...) \
+  wasmTable.get(func).apply(null, args)
+#endif
+
 #define VARARGS_FLAG 1
 
 ffi_status FFI_HIDDEN
@@ -285,7 +290,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     args.push(varargs_addr);
     stackRestore(varargs_addr);
   }
-  var result = wasmTable.get(fn).apply(null, args);
+  var result = CALL_FUNC_PTR(fn, args);
   // Put the stack pointer back (we moved it if we made a varargs call)
   stackRestore(orig_stack_ptr);
 
@@ -540,10 +545,10 @@ ffi_prep_closure_loc_helper,
       varargs += 4;
     }
     stackRestore(cur_ptr);
-    wasmTable.get(CLOSURE__fun(closure))(
+    CALL_FUNC_PTR(CLOSURE__fun(closure), [
         CLOSURE__cif(closure), ret_ptr, args_ptr,
         CLOSURE__user_data(closure)
-    );
+    ]);
     stackRestore(orig_stack_ptr);
 
     if (!ret_by_arg) {
