@@ -17,8 +17,8 @@ static void cls_ret_T_fn(ffi_cif* cif __UNUSED__, void* resp, void** args,
 
    printf("%d: %d %d\n", (int)*(ffi_arg *)resp, *(T *)args[0], *(T *)args[1]);
    CHECK(*(T *)args[0] == 67);
-   CHECK(*(T *)args[1] == 67);
-   CHECK((int)*(ffi_arg *)resp == 4);
+   CHECK(*(T *)args[1] == 4);
+   CHECK((int)*(ffi_arg *)resp == 67);
  }
 
 typedef T (*cls_ret_T)(T, ...);

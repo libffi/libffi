@@ -290,6 +290,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     args.push(varargs_addr);
     stackRestore(varargs_addr);
   }
+  console.log({wasmTable, fn, args});
   var result = wasmTable.get(fn).apply(null, args);
   // Put the stack pointer back (we moved it if we made a varargs call)
   stackRestore(orig_stack_ptr);
@@ -478,8 +479,7 @@ ffi_prep_closure_loc_helper,
     var args_ptr = cur_ptr;
     var carg_idx = -1;
     // Now we have to do a Javascript to C translation.
-    // The varargs have been unpacked by the C to Javascript shim, so they
-    // aren't a special case here.
+    console.log(args);
     var varargs;
     if(nfixedargs < nargs){
       varargs = args.pop();
@@ -487,6 +487,7 @@ ffi_prep_closure_loc_helper,
     while (jsarg_idx < args.length) {
       var cur_arg = args[jsarg_idx++];
       let arg_type_id = unboxed_arg_type_id_list[++carg_idx];
+      console.log("arg:", {jsarg_idx, cur_arg, arg_type_id});
       switch (arg_type_id) {
       case FFI_TYPE_UINT8:
       case FFI_TYPE_SINT8:
@@ -537,42 +538,18 @@ ffi_prep_closure_loc_helper,
         break;
       }
     }
-    if(varargs){
-      while(carg_idx < nargs){
-        let arg_type_id = unboxed_arg_type_id_list[++carg_idx];
-        switch (arg_type_id) {
-        case FFI_TYPE_UINT8:
-        case FFI_TYPE_SINT8:
-          DEREF_U8(args_ptr, carg_idx) = DEREF_U8(varargs, 0);
-          break;
-        case FFI_TYPE_UINT16:
-        case FFI_TYPE_SINT16:
-          DEREF_U16(args_ptr, carg_idx) = DEREF_U16(varargs, 0);
-          varargs += 2;
-          break;
-        case FFI_TYPE_INT:
-        case FFI_TYPE_UINT32:
-        case FFI_TYPE_SINT32:
-        case FFI_TYPE_POINTER:
-        case FFI_TYPE_STRUCT:
-        case FFI_TYPE_FLOAT:
-          DEREF_U32(args_ptr, carg_idx) = DEREF_U32(varargs, 0);
-          varargs += 4;
-          break;
-        case FFI_TYPE_DOUBLE:
-        case FFI_TYPE_UINT64:
-        case FFI_TYPE_SINT64:
-          DEREF_U32(args_ptr, carg_idx) = DEREF_U32(varargs, 0);
-          DEREF_U32(args_ptr, carg_idx) = DEREF_U32(varargs, 0);
-          varargs += 8;
-          break;
-        case FFI_TYPE_LONGDOUBLE:
-          varargs += 16;
-          break;
-        }
+    for(var carg_idx = nfixedargs; carg_idx < nargs; carg_idx++){
+      let arg_type_id = unboxed_arg_type_id_list[carg_idx];
+      console.log("    vararg", {arg_type_id});
+      if(arg_type_id === FFI_TYPE_STRUCT){
+        DEREF_U32(args_ptr, carg_idx) = DEREF_U32(varargs, 0);
+      } else {
+        DEREF_U32(args_ptr, carg_idx) = varargs;
       }
+      varargs += 4;
     }
     stackRestore(cur_ptr);
+    console.log({wasmTable, fn : CLOSURE__fun(closure), ret_ptr, args_ptr });
     wasmTable.get(CLOSURE__fun(closure))(
         CLOSURE__cif(closure), ret_ptr, args_ptr,
         CLOSURE__user_data(closure)
