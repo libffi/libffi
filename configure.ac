@@ -2,7 +2,7 @@ dnl Process this with autoconf to create configure
 
 AC_PREREQ(2.68)
 
-AC_INIT([libffi], [3.3], [http://github.com/libffi/libffi/issues])
+AC_INIT([libffi], [3.4-rc1], [http://github.com/libffi/libffi/issues])
 AC_CONFIG_HEADERS([fficonfig.h])
 
 AC_CANONICAL_SYSTEM
@@ -40,6 +40,8 @@ AM_PROG_AS
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 AC_CONFIG_MACRO_DIR([m4])
+
+AC_CHECK_TOOL(READELF, readelf)
 
 # Test for 64-bit build.
 AC_CHECK_SIZEOF([size_t])
@@ -271,7 +273,7 @@ if test "x$GCC" = "xyes"; then
   	libffi_cv_ro_eh_frame=yes
   	echo 'extern void foo (void); void bar (void) { foo (); foo (); }' > conftest.c
   	if $CC $CFLAGS -c -fpic -fexceptions $libffi_cv_no_lto -o conftest.o conftest.c > /dev/null 2>&1; then
-	    if readelf -WS conftest.o | grep -q -n 'eh_frame .* WA'; then
+	    if $READELF -WS conftest.o | grep -q -n 'eh_frame .* WA'; then
 	        libffi_cv_ro_eh_frame=no
 	    fi
   	fi
@@ -364,6 +366,10 @@ AC_ARG_ENABLE(raw-api,
     AC_DEFINE(FFI_NO_RAW_API, 1, [Define this if you do not want support for the raw API.])
   fi)
 
+AC_ARG_ENABLE(exec-static-tramp,
+[  --disable-exec-static-tramp  disable use of static exec trampolines (enabled by default)])
+
+if test "$enable_exec_static_tramp" != no; then
 case "$target" in
      *-cygwin*)
      ;;
@@ -372,6 +378,7 @@ case "$target" in
                  [Define this if you want statically defined trampolines])
      ;;
 esac
+fi
 
 AC_ARG_ENABLE(purify-safety,
 [  --enable-purify-safety  purify-safe mode],

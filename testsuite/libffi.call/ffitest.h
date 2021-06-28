@@ -21,7 +21,7 @@
 #define CHECK(x) \
    do { \
       if(!(x)){ \
-         printf("Check failed %s\n", #x); \
+         printf("Check failed:\n%s\n", #x); \
          abort(); \
       } \
    } while(0)
