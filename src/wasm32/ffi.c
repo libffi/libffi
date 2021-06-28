@@ -287,7 +287,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       }
     }
     // extra normal argument which is the pointer to the varargs.
-    args = args.push(varargs_addr);
+    args.push(varargs_addr);
     stackRestore(varargs_addr);
   }
 
