@@ -56,7 +56,8 @@
 #define FFI_TYPE__TYPEID(addr) DEREF_U16(addr + 6, 0)
 #define FFI_TYPE__ELEMENTS(addr) DEREF_U32(addr + 8, 0)
 
-#define PADDING(size, align) align - ((size + align - 1) % align) - 1
+#define ALIGN_ADDRESS(addr, align) (addr &= (~((align) - 1)))
+#define STACK_ALLOC(stack, size, align) (ALIGN_ADDRESS(stack, align), (stack -= (size)))
 
 #define BIGINT_LOWER(x) (Number((x) & BigInt(0xffffffff)) | 0)
 #define BIGINT_UPPER(x) (Number((x) >> BigInt(32)) | 0)
@@ -247,8 +248,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       var item = ffi_struct_size_and_alignment(arg_type_ptr);
       var item_size = item[0];
       var item_align = item[1];
-      structs_addr -= item_size;
-      structs_addr &= (~(item_align - 1));
+      STACK_ALLOC(structs_addr, item_size, item_align);
       args.push(structs_addr);
       var src_ptr = DEREF_U32(avalue, i);
       HEAP8.subarray(structs_addr, structs_addr + item_size)
@@ -267,11 +267,15 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     var arg_type = arg_unboxed[0];
     var item = ffi_struct_size_and_alignment(arg_type);
     var item_size = item[0];
-    varargs_addr -= item_size;
-    args.push(varargs_addr);
+    var item_align = item[1];
+    STACK_ALLOC(varargs_addr, item_size, item_align);
     var arg_ptr = DEREF_U32(avalue, i);
     HEAP8.subarray(varargs_addr, varargs_addr + item_size)
          .set(HEAP8.subarray(arg_ptr, arg_ptr + item_size));
+  }
+
+  if (nfixedargs != nargs) {
+    args = args.push(varargs);
   }
 
   stackRestore(varargs_addr);
@@ -449,8 +453,7 @@ ffi_prep_closure_loc_helper,
     if (ret_by_arg) {
       ret_ptr = args[jsarg_idx++];
     } else {
-      cur_ptr -= 8;
-      cur_ptr &= (~(8 - 1));
+      STACK_ALLOC(cur_ptr, 8, 8);
       ret_ptr = cur_ptr;
     }
     cur_ptr -= 4 * nargs;
@@ -474,32 +477,29 @@ ffi_prep_closure_loc_helper,
       case FFI_TYPE_UINT16:
       case FFI_TYPE_SINT16:
       case FFI_TYPE_POINTER:
-        cur_ptr -= 4;
+        STACK_ALLOC(cur_ptr, 4, 4);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_U32(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_FLOAT:
-        cur_ptr -= 4;
+        STACK_ALLOC(cur_ptr, 4, 4);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_F32(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_DOUBLE:
-        cur_ptr &= ~(8 - 1);
-        cur_ptr -= 8;
+        STACK_ALLOC(cur_ptr, 8, 8);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_F64(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_UINT64:
       case FFI_TYPE_SINT64:
-        cur_ptr &= ~(8 - 1);
-        cur_ptr -= 8;
+        STACK_ALLOC(cur_ptr, 8, 8);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_U32(cur_ptr, 0) = BIGINT_LOWER(cur_arg);
         DEREF_U32(cur_ptr, 1) = BIGINT_UPPER(cur_arg);
         break;
       case FFI_TYPE_LONGDOUBLE:
-        cur_ptr &= ~(16 - 1);
-        cur_ptr -= 16;
+        STACK_ALLOC(cur_ptr, 16, 16);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
 #if WASM_BIGINT
         DEREF_U64(cur_ptr, 0) = cur_arg;
