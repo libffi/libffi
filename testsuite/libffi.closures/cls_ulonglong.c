@@ -15,8 +15,6 @@ static void cls_ret_ulonglong_fn(ffi_cif* cif __UNUSED__, void* resp,
 
   printf("%" PRIuLL ": %" PRIuLL "\n",*(unsigned long long *)args[0],
 	 *(unsigned long long *)(resp));
-  CHECK(*(unsigned long long *)args[0] == 214);
-  CHECK(*(unsigned long long *)(resp) == 8070450533247928831LL);
 }
 typedef unsigned long long (*cls_ret_ulonglong)(unsigned long long);
 
@@ -39,6 +37,7 @@ int main (void)
   /* { dg-output "214: 1152921504606846761" } */
   printf("res: %" PRIdLL "\n", res);
   /* { dg-output "\nres: 1152921504606846761" } */
+  CHECK(res == 1152921504606846761LL);
 
   res = (*((cls_ret_ulonglong)code))(9223372035854775808LL);
   /* { dg-output "\n9223372035854775808: 8070450533247928831" } */
