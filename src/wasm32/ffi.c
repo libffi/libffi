@@ -78,7 +78,7 @@
 #define FFI_TYPE__ELEMENTS(addr) DEREF_U32(addr + 8, 0)
 
 #define ALIGN_ADDRESS(addr, align) (addr &= (~((align) - 1)))
-#define STACK_ALLOC(stack, size) (ALIGN_ADDRESS(stack, size), (stack -= (size)))
+#define STACK_ALLOC(stack, size, align) ((stack -= (size)), ALIGN_ADDRESS(stack, align))
 
 // Pyodide needs to redefine this to support fpcast emulation
 #define CALL_FUNC_PTR_DEFAULT(func, args...) \
@@ -252,12 +252,12 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       switch (arg_type_id) {
       case FFI_TYPE_UINT8:
       case FFI_TYPE_SINT8:
-        STACK_ALLOC(varargs_addr, 1);
+        STACK_ALLOC(varargs_addr, 1, 1);
         DEREF_U8(varargs_addr, 0) = DEREF_U8(arg_ptr, 0);
         break;
       case FFI_TYPE_UINT16:
       case FFI_TYPE_SINT16:
-        STACK_ALLOC(varargs_addr, 2);
+        STACK_ALLOC(varargs_addr, 2, 2);
         DEREF_U16(varargs_addr, 0) = DEREF_U16(arg_ptr, 0);
         break;
       case FFI_TYPE_INT:
@@ -265,18 +265,18 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       case FFI_TYPE_SINT32:
       case FFI_TYPE_POINTER:
       case FFI_TYPE_FLOAT:
-        STACK_ALLOC(varargs_addr, 4);
+        STACK_ALLOC(varargs_addr, 4, 4);
         DEREF_U32(varargs_addr, 0) = DEREF_U32(arg_ptr, 0);
         break;
       case FFI_TYPE_DOUBLE:
       case FFI_TYPE_UINT64:
       case FFI_TYPE_SINT64:
-        STACK_ALLOC(varargs_addr, 8);
+        STACK_ALLOC(varargs_addr, 8, 8);
         DEREF_U32(varargs_addr, 0) = DEREF_U32(arg_ptr, 0);
         DEREF_U32(varargs_addr, 1) = DEREF_U32(arg_ptr, 1);
         break;
       case FFI_TYPE_LONGDOUBLE:
-        STACK_ALLOC(varargs_addr, 16);
+        STACK_ALLOC(varargs_addr, 16, 16);
         DEREF_U32(varargs_addr, 0) = DEREF_U32(arg_ptr, 0);
         DEREF_U32(varargs_addr, 1) = DEREF_U32(arg_ptr, 1);
         DEREF_U32(varargs_addr, 2) = DEREF_U32(arg_ptr, 1);
@@ -284,7 +284,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
         break;
       case FFI_TYPE_STRUCT:
         // Again, struct must be passed by pointer.
-        STACK_ALLOC(varargs_addr, 4);
+        STACK_ALLOC(varargs_addr, 4, 4);
         DEREF_U32(varargs_addr, 0) = arg_ptr;
         break;
       case FFI_TYPE_COMPLEX:
@@ -479,7 +479,8 @@ ffi_prep_closure_loc_helper,
     if (ret_by_arg) {
       ret_ptr = args[jsarg_idx++];
     } else {
-      STACK_ALLOC(cur_ptr, 8);
+      // We might return 4 bytes or 8 bytes, allocate 8 just in case.
+      STACK_ALLOC(cur_ptr, 8, 8);
       ret_ptr = cur_ptr;
     }
     cur_ptr -= 4 * nargs;
@@ -498,13 +499,15 @@ ffi_prep_closure_loc_helper,
       switch (arg_type_id) {
       case FFI_TYPE_UINT8:
       case FFI_TYPE_SINT8:
-        STACK_ALLOC(cur_ptr, 1);
+        // Bad things happen if we don't align to 4 here
+        STACK_ALLOC(cur_ptr, 1, 4);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_U8(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_UINT16:
       case FFI_TYPE_SINT16:
-        STACK_ALLOC(cur_ptr, 2);
+        // Bad things happen if we don't align to 4 here
+        STACK_ALLOC(cur_ptr, 2, 4);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_U16(cur_ptr, 0) = cur_arg;
         break;
@@ -512,7 +515,7 @@ ffi_prep_closure_loc_helper,
       case FFI_TYPE_UINT32:
       case FFI_TYPE_SINT32:
       case FFI_TYPE_POINTER:
-        STACK_ALLOC(cur_ptr, 4);
+        STACK_ALLOC(cur_ptr, 4, 4);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_U32(cur_ptr, 0) = cur_arg;
         break;
@@ -521,23 +524,23 @@ ffi_prep_closure_loc_helper,
         DEREF_U32(args_ptr, carg_idx) = cur_arg;
         break;
       case FFI_TYPE_FLOAT:
-        STACK_ALLOC(cur_ptr, 4);
+        STACK_ALLOC(cur_ptr, 4, 4);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_F32(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_DOUBLE:
-        STACK_ALLOC(cur_ptr, 8);
+        STACK_ALLOC(cur_ptr, 8, 8);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         DEREF_F64(cur_ptr, 0) = cur_arg;
         break;
       case FFI_TYPE_UINT64:
       case FFI_TYPE_SINT64:
-        STACK_ALLOC(cur_ptr, 8);
+        STACK_ALLOC(cur_ptr, 8, 8);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         STORE_U64(cur_ptr, 0, cur_arg);
         break;
       case FFI_TYPE_LONGDOUBLE:
-        STACK_ALLOC(cur_ptr, 16);
+        STACK_ALLOC(cur_ptr, 16, 16);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         STORE_U64(cur_ptr, 0, cur_arg);
         cur_arg = args[jsarg_idx++];
