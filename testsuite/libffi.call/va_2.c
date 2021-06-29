@@ -25,6 +25,8 @@ struct large_tag
   unsigned e;
 };
 
+static char buffer[100];
+
 static int
 test_fn (int n, ...)
 {
@@ -72,7 +74,17 @@ test_fn (int n, ...)
 	  ui, si,
 	  ul, sl,
 	  f, d);
+
+  sprintf (buffer, "%u %u %u %u %u %u %u %u %u uc=%u sc=%d %u %d %u %d %lu %ld %f %f\n",
+	  s1.a, s1.b, l.a, l.b, l.c, l.d, l.e,
+	  s2.a, s2.b,
+	  uc, sc,
+	  us, ss,
+	  ui, si,
+	  ul, sl,
+	  f, d);
   va_end (ap);
+  CHECK(0 == strncmp(buffer, "5 6 10 11 12 13 14 7 8 uc=9 sc=10 11 12 13 14 15 16 2.120000 3.130000", 100));
   return n + 1;
 }
 
@@ -191,6 +203,7 @@ main (void)
   /* { dg-output "5 6 10 11 12 13 14 7 8 uc=9 sc=10 11 12 13 14 15 16 2.120000 3.130000" } */
   printf("res: %d\n", (int) res);
   /* { dg-output "\nres: 42" } */
+  CHECK(res == 42);
 
   return 0;
 }

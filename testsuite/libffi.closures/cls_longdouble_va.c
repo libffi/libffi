@@ -10,6 +10,8 @@
 
 #include "ffitest.h"
 
+static char buffer[50];
+
 static void
 cls_longdouble_va_fn(ffi_cif* cif __UNUSED__, void* resp, 
 		     void** args, void* userdata __UNUSED__)
@@ -18,6 +20,9 @@ cls_longdouble_va_fn(ffi_cif* cif __UNUSED__, void* resp,
 	long double	ldValue	= *(long double*)args[1];
 
 	*(ffi_arg*)resp = printf(format, ldValue);
+	CHECK(*(ffi_arg*)resp == 4);
+	sprintf(buffer, format, ldValue);
+	CHECK(strncmp(buffer, "7.0\n", 5) == 0);
 }
 
 int main (void)
@@ -48,6 +53,7 @@ int main (void)
 	/* { dg-output "7.0" } */
 	printf("res: %d\n", (int) res);
 	/* { dg-output "\nres: 4" } */
+	CHECK(res == 4);
 
 	CHECK(ffi_prep_closure_loc(pcl, &cif, cls_longdouble_va_fn, NULL,
 				   code) == FFI_OK);
@@ -56,6 +62,7 @@ int main (void)
 	/* { dg-output "\n7.0" } */
 	printf("res: %d\n", (int) res);
 	/* { dg-output "\nres: 4" } */
+	CHECK(res == 4);
 
 	exit(0);
 }
