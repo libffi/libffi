@@ -299,11 +299,9 @@ workflows:
           requires:
             - build-libffi-pyodide
         
-
-
-      # - test-node:
-      #     requires:
-      #       - install-emsdk
-      # - test-node-bigint:
-      #     requires:
-      #       - install-emsdk
+      - test-node:
+          requires:
+            - install-emsdk
+      - test-node-bigint:
+          requires:
+            - install-emsdk
