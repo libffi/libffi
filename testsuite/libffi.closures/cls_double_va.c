@@ -20,10 +20,10 @@ cls_double_va_fn(ffi_cif* cif __UNUSED__, void* resp,
 	char*	format		= *(char**)args[0];
 	double	doubleValue	= *(double*)args[1];
 
-	*(ffi_arg*)resp = printf(format, doubleValue);
-	CHECK(*(ffi_arg*)resp == 4);
-	snprintf(buffer, BUF_SIZE, format, doubleValue);
-	CHECK(strncmp(buffer, "7.0\n", BUF_SIZE) == 0);
+	*(ffi_arg*)resp = printf(format, (int)doubleValue);
+	CHECK(*(ffi_arg*)resp == 2);
+	snprintf(buffer, BUF_SIZE, format, (int)doubleValue);
+	CHECK(strncmp(buffer, "7\n", BUF_SIZE) == 0);
 }
 
 int main (void)
@@ -34,7 +34,7 @@ int main (void)
 	void* args[3];
 	ffi_type* arg_types[3];
 
-	char*	format		= "%.1f\n";
+	char*	format		= "%d\n";
 	double	doubleArg	= 7;
 	ffi_arg	res			= 0;
 
@@ -51,19 +51,19 @@ int main (void)
 	args[2] = NULL;
 
 	ffi_call(&cif, FFI_FN(printf), &res, args);
-	/* { dg-output "7.0" } */
+	/* { dg-output "7" } */
 	printf("res: %d\n", (int) res);
-	/* { dg-output "\nres: 4" } */
-	CHECK(res == 4);
+	/* { dg-output "\nres: 2" } */
+	CHECK(res == 2);
 
 	CHECK(ffi_prep_closure_loc(pcl, &cif, cls_double_va_fn, NULL,
 				   code) == FFI_OK);
 
 	res = ((int(*)(char*, ...))(code))(format, doubleArg);
-	/* { dg-output "\n7.0" } */
+	/* { dg-output "\n7" } */
 	printf("res: %d\n", (int) res);
-	/* { dg-output "\nres: 4" } */
-	CHECK(res == 4);
+	/* { dg-output "\nres: 2" } */
+	CHECK(res == 2);
 
 	exit(0);
 }
