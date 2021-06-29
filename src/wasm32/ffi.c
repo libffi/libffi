@@ -85,7 +85,7 @@
   wasmTable.get(func).apply(null, args)
 
 #ifndef CALL_FUNC_PTR
-#if PYODIDE_FP_CAST
+#if PYODIDE_FPCAST
 #define CALL_FUNC_PTR(func, args...) \
   CALL_FUNC_PTR_DEFAULT(dyncallInvokeMap[func] || func, args)
 #else
