@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-emcc_exists="$(command -v emcc)"
-if [ ! "${emcc_exists}" ]; then
-  echo "Emscripten not on path"
+
+if ! [ -x "$(command -v emcc)" ]; then
+  echo "Error: emcc could not be found." >&2
   exit 1
 fi
 

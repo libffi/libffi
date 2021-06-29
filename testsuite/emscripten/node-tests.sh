@@ -3,20 +3,16 @@
 # JS BigInt to Wasm i64 integration, disabled by default
 WASM_BIGINT=false
 
-emcc_exists="$(command -v emcc)"
-if [ ! "${emcc_exists}" ]; then
-  echo "Emscripten not on path"
+if ! [ -x "$(command -v emcc)" ]; then
+  echo "Error: emcc could not be found." >&2
   exit 1
 fi
 
 # Parse arguments
 while [ $# -gt 0 ]; do
   case $1 in
-  --wasm-bigint) WASM_BIGINT=true ;;
-  *)
-    echo "ERROR: Unknown parameter: $1" >&2
-    exit 1
-    ;;
+    --wasm-bigint) WASM_BIGINT=true ;;
+    *) echo "ERROR: Unknown parameter: $1" >&2; exit 1 ;;
   esac
   shift
 done
