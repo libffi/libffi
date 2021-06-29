@@ -25,7 +25,7 @@ static cls_struct_align cls_struct_align_fn(struct cls_struct_align a1,
   printf("%d %g %d %d %g %d: %d %g %d\n", a1.a, (double)a1.b, a1.c, a2.a, (double)a2.b, a2.c, result.a, (double)result.b, result.c);
 
   CHECK(a1.a == 12);
-  CHECK_FLOAT_EQ_FLOAT_EQ(a1.b, 4951);
+  CHECK_FLOAT_EQ(a1.b, 4951);
   CHECK(a1.c == 127);
 
   CHECK(a2.a == 1);

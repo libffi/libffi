@@ -14,7 +14,7 @@ static void cls_ret_sint_fn(ffi_cif* cif __UNUSED__, void* resp, void** args,
   printf("%d: %d\n",*(signed int *)args[0],
 	 (int)*(ffi_arg *)(resp));
   CHECK(*(signed int *)args[0] == 65534);
-  CHECK((int)*(ffi_arg *)(resp)) == 65534);
+  CHECK((int)*(ffi_arg *)(resp) == 65534);
 }
 typedef signed int (*cls_ret_sint)(signed int);
 

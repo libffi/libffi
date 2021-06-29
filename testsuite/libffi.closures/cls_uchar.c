@@ -14,7 +14,7 @@ static void cls_ret_uchar_fn(ffi_cif* cif __UNUSED__, void* resp, void** args,
   printf("%d: %d\n",*(unsigned char *)args[0],
 	 (int)*(ffi_arg *)(resp));
   CHECK(*(unsigned char *)args[0] == 127);
-  CHECK((int)*(ffi_arg *)(resp)) == 127);
+  CHECK((int)*(ffi_arg *)(resp) == 127);
 }
 typedef unsigned char (*cls_ret_uchar)(unsigned char);
 

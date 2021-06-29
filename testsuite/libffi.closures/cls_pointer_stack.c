@@ -69,7 +69,7 @@ void* cls_pointer_fn1(void* a1, void* a2)
                (unsigned int)(intptr_t) a2,
                (unsigned int)(intptr_t) result);
 
-	CHECK((unsigned int)(uintptr_t) a1 == n0x01234567);
+	CHECK((unsigned int)(uintptr_t) a1 == 0x01234567);
 	CHECK((unsigned int)(uintptr_t) a2 == 0x89abcdef);
 	CHECK((unsigned int)(uintptr_t) result == 0x8acf1356);
 

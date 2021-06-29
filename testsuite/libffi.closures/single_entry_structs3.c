@@ -73,7 +73,7 @@ int main (void)
   dbl_arg_types[2] = NULL;
 
   res_dbl = B_fn(e_dbl, f_dbl);
-  printf("0 res: %f\n", res_dbl.y.a);
+  printf("0 res: %d\n", res_dbl.y.a);
   /* { dg-output "0 res: 43750" } */
 
 

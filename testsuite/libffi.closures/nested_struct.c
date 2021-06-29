@@ -72,18 +72,6 @@ static cls_struct_combined cls_struct_combined_fn(struct cls_struct_16byte1 b0,
   return result;
 }
 
-typedef struct cls_struct_16byte1 {
-  double a;
-  float b;
-  int c;
-} cls_struct_16byte1;
-
-typedef struct cls_struct_16byte2 {
-  int ii;
-  double dd;
-  float ff;
-} cls_struct_16byte2;
-
 static void
 cls_struct_combined_gn(ffi_cif* cif __UNUSED__, void* resp, void** args,
 		       void* userdata __UNUSED__)

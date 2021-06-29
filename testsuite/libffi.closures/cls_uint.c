@@ -15,8 +15,8 @@ static void cls_ret_uint_fn(ffi_cif* cif __UNUSED__, void* resp, void** args,
   printf("%d: %d\n",*(unsigned int *)args[0],
 	 (int)*(ffi_arg *)(resp));
 
-  CHECK(*(unsigned char *)args[0] == 2147483647);
-  CHECK((int)*(ffi_arg *)(resp)) == 2147483647);
+  CHECK(*(unsigned int *)args[0] == 2147483647);
+  CHECK((int)*(ffi_arg *)(resp) == 2147483647);
 }
 typedef unsigned int (*cls_ret_uint)(unsigned int);
 
