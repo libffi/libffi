@@ -9,7 +9,7 @@
 static long return_sl(long l1, long l2)
 {
   CHECK(l1 == 1073741823L);
-  CHECK(l1 == 1073741824L);
+  CHECK(l2 == 1073741824L);
   return l1 - l2;
 }
 
