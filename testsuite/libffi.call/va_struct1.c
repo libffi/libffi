@@ -40,7 +40,7 @@ test_fn (int n, ...)
   printf ("%u %u %u %u %u %u %u %u %u\n", s1.a, s1.b, l.a, l.b, l.c, l.d, l.e,
 	  s2.a, s2.b);
   va_end (ap);
-  /* { dg-output "5 6 10 11 12 13 14 7 8" } */
+
   CHECK(s1.a == 5);
   CHECK(s1.b == 6);
 
