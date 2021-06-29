@@ -15,7 +15,7 @@ static void cls_ret_ulonglong_fn(ffi_cif* cif __UNUSED__, void* resp,
 
   printf("%" PRIuLL ": %" PRIuLL "\n",*(unsigned long long *)args[0],
 	 *(unsigned long long *)(resp));
-  CHECK(*(unsigned long long *)args[0] == 9223372035854775808LL);
+  CHECK(*(unsigned long long *)args[0] == 214);
   CHECK(*(unsigned long long *)(resp) == 8070450533247928831LL);
 }
 typedef unsigned long long (*cls_ret_ulonglong)(unsigned long long);
