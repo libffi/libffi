@@ -10,7 +10,8 @@
 
 #include "ffitest.h"
 
-static char buffer[50];
+#define BUF_SIZE 50
+static char buffer[BUF_SIZE];
 
 static void
 cls_longdouble_va_fn(ffi_cif* cif __UNUSED__, void* resp, 
@@ -21,8 +22,8 @@ cls_longdouble_va_fn(ffi_cif* cif __UNUSED__, void* resp,
 
 	*(ffi_arg*)resp = printf(format, ldValue);
 	CHECK(*(ffi_arg*)resp == 4);
-	sprintf(buffer, format, ldValue);
-	CHECK(strncmp(buffer, "7.0\n", 5) == 0);
+	snprintf(buffer, BUF_SIZE, format, ldValue);
+	CHECK(strncmp(buffer, "7.0\n", BUF_SIZE) == 0);
 }
 
 int main (void)
