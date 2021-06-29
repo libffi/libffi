@@ -25,15 +25,15 @@ static cls_struct_align cls_struct_align_fn(struct cls_struct_align a1,
   printf("%d %g %d %d %g %d: %d %g %d\n", a1.a, (double)a1.b, a1.c, a2.a, (double)a2.b, a2.c, result.a, (double)result.b, result.c);
 
   CHECK(a1.a == 12);
-  CHECK(a1.b == 4951);
+  CHECK_FLOAT_EQ_FLOAT_EQ(a1.b, 4951);
   CHECK(a1.c == 127);
 
   CHECK(a2.a == 1);
-  CHECK(a2.b == 9320);
+  CHECK_FLOAT_EQ(a2.b, 9320);
   CHECK(a2.c == 13);
 
   CHECK(result.a == 13);
-  CHECK(result.b == 14271);
+  CHECK_FLOAT_EQ(result.b, 14271);
   CHECK(result.c == 140);
 
   return  result;
@@ -92,7 +92,7 @@ int main (void)
   printf("res: %d %g %d\n", res_dbl.a, (double)res_dbl.b, res_dbl.c);
   /* { dg-output "\nres: 13 14271 140" } */
   CHECK(res_dbl.a == 13);
-  CHECK(res_dbl.b == 14271);
+  CHECK_FLOAT_EQ(res_dbl.b, 14271);
   CHECK(res_dbl.c == 140);
 
   CHECK(ffi_prep_closure_loc(pcl, &cif, cls_struct_align_gn, NULL, code) == FFI_OK);
@@ -102,7 +102,7 @@ int main (void)
   printf("res: %d %g %d\n", res_dbl.a, (double)res_dbl.b, res_dbl.c);
   /* { dg-output "\nres: 13 14271 140" } */
   CHECK(res_dbl.a == 13);
-  CHECK(res_dbl.b == 14271);
+  CHECK_FLOAT_EQ(res_dbl.b, 14271);
   CHECK(res_dbl.c == 140);
 
   exit(0);

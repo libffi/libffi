@@ -27,17 +27,17 @@ cls_struct_3float cls_struct_3float_fn(struct cls_struct_3float a1,
   printf("%g %g %g %g %g %g: %g %g %g\n", a1.f, a1.g, a1.h,
 	 a2.f, a2.g, a2.h, result.f, result.g, result.h);
 
-  CHECK(a1.f == 1);
-  CHECK(a1.g == 2);
-  CHECK(a1.h == 3);
+  CHECK_FLOAT_EQ(a1.f, 1);
+  CHECK_FLOAT_EQ(a1.g, 2);
+  CHECK_FLOAT_EQ(a1.h, 3);
 
-  CHECK(a2.f == 1);
-  CHECK(a2.g == 2);
-  CHECK(a2.h == 3);
+  CHECK_FLOAT_EQ(a2.f, 1);
+  CHECK_FLOAT_EQ(a2.g, 2);
+  CHECK_FLOAT_EQ(a2.h, 3);
 
-  CHECK(result.f == 2);
-  CHECK(result.g == 4);
-  CHECK(result.h == 6);
+  CHECK_FLOAT_EQ(result.f, 2);
+  CHECK_FLOAT_EQ(result.g, 4);
+  CHECK_FLOAT_EQ(result.h, 6);
 
   return result;
 }
@@ -93,9 +93,9 @@ int main (void)
   /* { dg-output "1 2 3 1 2 3: 2 4 6" } */
   printf("res: %g %g %g\n", res_dbl.f, res_dbl.g, res_dbl.h);
   /* { dg-output "\nres: 2 4 6" } */
-  CHECK(res_dbl.f == 2);
-  CHECK(res_dbl.g == 4);
-  CHECK(res_dbl.h == 6);
+  CHECK_FLOAT_EQ(res_dbl.f, 2);
+  CHECK_FLOAT_EQ(res_dbl.g, 4);
+  CHECK_FLOAT_EQ(res_dbl.h, 6);
 
   CHECK(ffi_prep_closure_loc(pcl, &cif, cls_struct_3float_gn, NULL, code) ==
 	FFI_OK);
@@ -105,9 +105,9 @@ int main (void)
   /* { dg-output "\n1 2 3 1 2 3: 2 4 6" } */
   printf("res: %g %g %g\n", res_dbl.f, res_dbl.g, res_dbl.h);
   /* { dg-output "\nres: 2 4 6" } */
-  CHECK(res_dbl.f == 2);
-  CHECK(res_dbl.g == 4);
-  CHECK(res_dbl.h == 6);
+  CHECK_FLOAT_EQ(res_dbl.f, 2);
+  CHECK_FLOAT_EQ(res_dbl.g, 4);
+  CHECK_FLOAT_EQ(res_dbl.h, 6);
 
   exit(0);
 }
