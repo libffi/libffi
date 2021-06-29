@@ -211,13 +211,13 @@ jobs:
       - run:
           name: build
           command: |
-            source ./pyodide/emsdk/emsdk_env.sh
+            source ./pyodide/emsdk/emsdk/emsdk_env.sh
             ./build.sh --pyodide-fpcast
 
       - run:
           name: build tests
           command: |
-            source ./pyodide/emsdk/emsdk_env.sh
+            source ./pyodide/emsdk/emsdk/emsdk_env.sh
             cp -r testsuite/libffi.call testsuite/libffi.call.test
             cp -r testsuite/libffi.closures testsuite/libffi.closures.test
             ./testsuite/emscripten-test-stuff/build-tests.sh testsuite/libffi.call.test
