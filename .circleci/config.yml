@@ -26,13 +26,6 @@ jobs:
             - emsdk
 
   build:
-    parameters:
-      wasm-bigint:
-        description: Should we build with wasm-bigint?
-        type: string
-        default: ""
-    environment:
-      WASM_BIGINT: << parameters.wasm-bigint >>
     <<: *defaults
     steps:
       - checkout
@@ -86,12 +79,6 @@ jobs:
           path: testsuite/emscripten/test-results
 
   test-dejagnu:
-    parameters:
-      params:
-        description: Parameters to node-tests
-        type: string
-        default: ""
-
     <<: *defaults
     steps:
       - checkout
@@ -103,7 +90,7 @@ jobs:
           name: run tests
           command: |
             source ./emsdk/emsdk_env.sh
-            testsuite/emscripten/node-tests.sh << parameters.params >>
+            testsuite/emscripten/node-tests.sh
 
 workflows:
   version: 2
@@ -113,12 +100,6 @@ workflows:
 
       - build:
           name: build
-          requires:
-            - install-emsdk
-
-      - build:
-          name: build-bigint
-          wasm-bigint: "true"
           requires:
             - install-emsdk
 
@@ -133,24 +114,7 @@ workflows:
           requires:
             - build
 
-      - test:
-          name: test-firefox-bigint
-          test-params: -k firefox
-          requires:
-            - build-bigint
-
-      - test:
-          name: test-chrome-bigint
-          test-params: -k chrome
-          requires:
-            - build-bigint
-
       - test-dejagnu:
           name: test-dejagnu
-          requires:
-            - install-emsdk
-      - test-dejagnu:
-          name: test-dejagnu-bigint
-          params: --wasm-bigint
           requires:
             - install-emsdk
