@@ -195,7 +195,7 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
-    3.4.1 Jun-28-21
+    3.4.2 Jun-28-21
         Add static trampoline support for Linux on x86_64 and ARM64.
         Add support for Alibaba's CSKY architecture.
         Add support for Kalray's KVX architecture.
