@@ -48,7 +48,7 @@ else
 	    sudo apt-get install gcc-multilib g++-multilib;
 	    ;;
 	moxie-elf)
-	    echo 'deb https://repos.moxielogic.org:7114/MoxieLogic moxiedev main' | sudo tee -a /etc/apt/sources.list
+	    echo 'deb [trusted=yes] https://repos.moxielogic.org:7114/MoxieLogic moxiedev main' | sudo tee -a /etc/apt/sources.list
 	    sudo apt-get clean # clear the cache
 	    sudo apt-get update ## -qq
 	    sudo apt-get update
