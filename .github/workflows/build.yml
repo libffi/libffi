@@ -22,9 +22,9 @@ jobs:
       matrix:
        include:
          - HOST: "powerpc-eabisim"
-           RUNTESTFLAGS: "--target_board powerpc-eabisim"
+           RUNTESTFLAGS: "-v -v -v -v --target_board powerpc-eabisim"
          - HOST: "or1k-elf"
-           RUNTESTFLAGS: "--target_board or1k-sim"
+           RUNTESTFLAGS: "-v -v -v -v --target_board or1k-sim"
          - MEVAL: "export PATH=/opt/moxielogic/bin:$PATH && CC=moxie-elf-gcc && CXX=moxie-elf-g++"
            HOST: "moxie-elf"
            LDFLAGS: "-Tsim.ld"
