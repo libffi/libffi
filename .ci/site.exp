@@ -1,11 +1,11 @@
-# Copyright (C) 2008, 2010, 2018, 2019  Anthony Green
+# Copyright (C) 2008, 2010, 2018, 2019, 2021  Anthony Green
 
 # Make sure we look in the right place for the board description files.
 if ![info exists boards_dir] {
     set boards_dir {}
 }
 
-lappend boards_dir $::env(TRAVIS_BUILD_DIR)/.travis
+lappend boards_dir $::env(RUNNER_WORKSPACE)/libffi/.ci
 
 verbose "Global Config File: target_triplet is $target_triplet" 2
 global target_list
@@ -24,4 +24,3 @@ case "$target_triplet" in {
 	set target_list "or1k-sim"
     }
 }
-
