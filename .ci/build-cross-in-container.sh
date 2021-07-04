@@ -8,8 +8,8 @@ export PATH=/usr/local/bin:$PATH
 echo $PATH
 
 export DEJAGNU=$(pwd)/.ci/site.exp
-echo $(DEJAGNU)
-ls -l $(DEJAGNU)
+echo $DEJAGNU
+ls -l $DEJAGNU
 pwd
 find .
 ./configure --host=${HOST} || cat */config.log
