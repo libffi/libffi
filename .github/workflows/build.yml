@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-       fail-fast: false
+       fail-fast: no
        include:
          - HOST: "powerpc-eabisim"
            RUNTESTFLAGS: "--target_board powerpc-eabisim"
@@ -55,7 +55,7 @@ jobs:
 
     strategy:
       matrix:
-        fail-fast: false
+        fail-fast: no
         platform: [windows-latest]
 
     steps:
@@ -91,7 +91,7 @@ jobs:
 
     strategy:
       matrix:
-        fail-fast: false
+        fail-fast: no
         platform: [windows-latest]
 
     steps:
