@@ -184,7 +184,7 @@ For iOS builds, the ``libffi.xcodeproj`` Xcode project is available.
 
 Configure has many other options. Use ``configure --help`` to see them all.
 
-Once configure has finished, type *"make"*. Note that you must be using
+Once configure has finished, type *make*. Note that you must be using
 GNU make.  You can ftp GNU make from [ftp.gnu.org:/pub/gnu/make](ftp.gnu.org:/pub/gnu/make) .
 
 To ensure that libffi is working as advertised, type `make check`.
