@@ -52,7 +52,7 @@ else
 	    sudo apt-get clean # clear the cache
 	    sudo apt-get update ## -qq
 	    sudo apt-get update
-	    sudo apt-get install -y --allow-unauthenticated moxielogic-moxie-elf-gcc moxielogic-moxie-elf-gcc-c++ moxielogic-moxie-elf-gcc-libstdc++ moxielogic-moxie-elf-gdb-sim
+	    sudo apt-get install -y --allow-unauthenticated moxielogic-moxie-elf-gcc moxielogic-moxie-elf-gcc-c++ moxielogic-moxie-elf-gcc-libstdc++ moxielogic-moxie-elf-gdb-sim texinfo sharutils texlive dejagnu
 	    ;;
 	x86_64-w64-mingw32)
 	    sudo apt-get install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 wine;
