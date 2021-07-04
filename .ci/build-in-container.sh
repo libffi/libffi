@@ -11,4 +11,4 @@ find .
 ./configure ${HOST+--host=$HOST --disable-shared}
 make
 make dist
-make check RUNTESTFLAGS="-a $RUNTESTFLAGS" || true
+BOARDSDIR=$(pwd)/.ci make check RUNTESTFLAGS="-a $RUNTESTFLAGS" || true

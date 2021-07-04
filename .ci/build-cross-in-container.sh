@@ -15,4 +15,4 @@ find .
 ./configure --host=${HOST} || cat */config.log
 make
 make dist
-make check RUNTESTFLAGS="-a $RUNTESTFLAGS" || true
+BOARDSDIR=$(pwd)/.ci make check RUNTESTFLAGS="-a $RUNTESTFLAGS" || true

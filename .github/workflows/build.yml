@@ -79,7 +79,7 @@ jobs:
           ./configure
           find . -name libtool\*|xargs dos2unix
           make -j 4
-          TERM=none make check || true
+          TERM=none export BOARDSDIR=$(pwd)/.ci make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
           ID=$(./rlgl/rlgl.exe start)
           ./rlgl/rlgl.exe e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
@@ -126,7 +126,7 @@ jobs:
           env
           make
           cp $(find . -name 'libffi-?.dll') x86_64-pc-cygwin/testsuite/
-          TERM=none make check || true
+          TERM=none BOARDSDIR=$(pwd)/.ci make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
           ID=$(./rlgl/rlgl.exe start)
           ./rlgl/rlgl.exe e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)

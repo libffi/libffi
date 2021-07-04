@@ -35,7 +35,7 @@ function build_linux()
     ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS} || cat */config.log
     make
     make dist
-    make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
+    BOARDSDIR=$(pwd)/.ci make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
 
     ./rlgl l --key=${RLGL_KEY} https://rl.gl
     ID=$(./rlgl start)
