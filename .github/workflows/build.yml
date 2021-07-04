@@ -19,8 +19,8 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-       fail-fast: no
        include:
          - HOST: "powerpc-eabisim"
            RUNTESTFLAGS: "--target_board powerpc-eabisim"
@@ -54,8 +54,8 @@ jobs:
     runs-on: windows-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        fail-fast: no
         platform: [windows-latest]
 
     steps:
@@ -90,8 +90,8 @@ jobs:
     runs-on: windows-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        fail-fast: no
         platform: [windows-latest]
 
     steps:
