@@ -7,7 +7,7 @@ echo $PATH
 export PATH=/usr/local/bin:$PATH
 echo $PATH
 
-DEJAGNU=$(pwd)/.ci/site.exp
+export DEJAGNU=$(pwd)/.ci/site.exp
 echo $(DEJAGNU)
 ls -l $(DEJAGNU)
 pwd
