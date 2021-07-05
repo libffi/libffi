@@ -27,8 +27,23 @@ jobs:
            MEVAL: 'export CC="gcc -m32" && CXX="g++ -m32"'
          - CONFIGURE_OPTIONS: "--disable-shared"
          - CONFIGURE_OPTIONS: "--enable-shared"
+         - HOST: "m68k-linux-gnu"
+           MEVAL: 'export CC="m68k-linux-gnu-gcc-8 -mcpu=547x" && CXX="m68k-linux-gnu-g++-8 -mcpu=547x"'
+           CONFIGURE_OPTIONS: '--disable-shared'
+           QEMU_LD_PREFIX: '/usr/m68k-linux-gnu'
+           QEMU_CPU: 'cfv4e'
+         - HOST: "sh4-linux-gnu"
+           CONFIGURE_OPTIONS: "--disable-shared"
+           QEMU_LD_PREFIX: "/usr/sh4-linux-gnu"
+         - HOST: "alpha-linux-gnu"
+           CONFIGURE_OPTIONS: "--disable-shared"
+           QEMU_LD_PREFIX: "/usr/alpha-linux-gnu"
          - HOST: "arm32v7-linux-gnu"
            LIBFFI_TEST_OPTIMIZATION: "-O0"
+         - HOST: "arm32v7-linux-gnu"
+           LIBFFI_TEST_OPTIMIZATION: "-O2"
+         - HOST: "arm32v7-linux-gnu"
+           LIBFFI_TEST_OPTIMIZATION: "-O2 -fomit-frame-pointer"
          - HOST: "powerpc-eabisim"
            RUNTESTFLAGS: "--target_board powerpc-eabisim"
          - HOST: "or1k-elf"
@@ -51,6 +66,8 @@ jobs:
           LDFLAGS: ${{ matrix.LDFLAGS }}
           RUNTESTFLAGS: ${{ matrix.RUNTESTFLAGS }}
           CONFIGURE_OPTIONS: ${{ matrix.CONFIGURE_OPTIONS }}
+          QEMU_LD_PREFIX: ${{ matrix.QEMU_LD_PREFIX }}
+          QEMU_CPU: ${{ matrix.QEMU_CPU }}
         run: |
           if test x"$MEVAL" != x; then eval ${MEVAL}; fi
           ./.ci/install.sh
