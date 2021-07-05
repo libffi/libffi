@@ -24,7 +24,7 @@ jobs:
        include:
          - MEVAL: "export CC=clang && CXX=clang"
          - HOST: "i386-pc-linux-gnu"
-           MEVAL: 'export CC="$CC -m32" && CXX="$CXX -m32"'
+           MEVAL: 'export CC="gcc -m32" && CXX="g++ -m32"'
          - CONFIGURE_OPTIONS: "--disable-shared"
          - CONFIGURE_OPTIONS: "--enable-shared"
          - HOST: "arm32v7-linux-gnu"
