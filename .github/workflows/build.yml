@@ -22,9 +22,9 @@ jobs:
       fail-fast: false
       matrix:
        include:
-         - MEVAL: "CC=clang && CXX=clang"
+         - MEVAL: "export CC=clang && CXX=clang"
          - HOST: "i386-pc-linux-gnu"
-           MEVAL: 'CC="$CC -m32" && CXX="$CXX -m32"'
+           MEVAL: 'export CC="$CC -m32" && CXX="$CXX -m32"'
          - CONFIGURE_OPTIONS: "--disable-shared"
          - CONFIGURE_OPTIONS: "--enable-shared"
          - HOST: "arm32v7-linux-gnu"
