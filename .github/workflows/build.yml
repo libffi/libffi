@@ -35,6 +35,7 @@ jobs:
          - HOST: "sh4-linux-gnu"
            CONFIGURE_OPTIONS: "--disable-shared"
            QEMU_LD_PREFIX: "/usr/sh4-linux-gnu"
+           QEMU_CPU: 'sh7785'
          - HOST: "alpha-linux-gnu"
            CONFIGURE_OPTIONS: "--disable-shared"
            QEMU_LD_PREFIX: "/usr/alpha-linux-gnu"
