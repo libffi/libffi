@@ -36,7 +36,7 @@ if [ "$PYODIDE_FPCAST" = "true" ]; then
 fi
 
 export CXXFLAGS="$CFLAGS"
-export LDFLAGS="-L$TARGET/lib -O3 -s EXPORTED_FUNCTIONS=_main,_malloc,_free -s ALLOW_TABLE_GROWTH"
+export LDFLAGS="-L$TARGET/lib -O3 -s EXPORTED_FUNCTIONS=['_main','_malloc','_free'] -s ALLOW_TABLE_GROWTH"
 if [ "$WASM_BIGINT" = "true" ]; then
   export LDFLAGS+=" -s WASM_BIGINT"
 fi
