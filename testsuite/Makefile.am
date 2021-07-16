@@ -9,7 +9,7 @@ CLEANFILES = *.exe core* *.log *.sum
 EXTRA_DIST = lib/target-libpath.exp lib/libffi.exp lib/wrapper.exp \
 libffi.call/strlen4.c libffi.call/struct10.c libffi.call/many_mixed.c \
 libffi.call/float.c libffi.call/struct5.c libffi.call/return_fl3.c \
-libffi.call/return_fl1.c libffi.call/call.exp libffi.call/pyobjc-tc.c \
+libffi.call/return_fl1.c libffi.call/call.exp libffi.call/pyobjc_tc.c \
 libffi.call/float_va.c libffi.call/struct8.c libffi.call/pr1172638.c \
 libffi.call/return_sc.c libffi.call/va_struct1.c \
 libffi.call/align_stdcall.c libffi.call/struct9.c libffi.call/va_1.c \
