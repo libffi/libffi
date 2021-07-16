@@ -35,7 +35,7 @@ int main (void)
   ffi_call(&cif, FFI_FN(return_sl), &res, values);
   printf("res: %ld, %ld\n", (long)res, l1 - l2);
   /* { dg-output "res: -1, -1" } */
-  CHECK(res == -1);
+  CHECK((long)res == -1);
   CHECK(l1 + 1 == l2);
 
   exit(0);
