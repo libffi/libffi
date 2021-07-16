@@ -38,7 +38,7 @@ int main (void)
   ffi_closure *pcl = ffi_closure_alloc(sizeof(ffi_closure), &code);
   void* args_dbl[3];
   ffi_type* cls_struct_fields[2];
-  ffi_type cls_struct_type, cls_struct_type1;
+  ffi_type cls_struct_type;
   ffi_type* dbl_arg_types[3];
 
   int e_dbl = 12125;
@@ -71,14 +71,14 @@ int main (void)
 
 
   ffi_call(&cif, FFI_FN(A_fn), &res_dbl, args_dbl);
-  printf("1 res: %d \n", res_dbl.a);
+  printf("1 res: %d\n", res_dbl.a);
   /* { dg-output "\n1 res: 43750" } */
   CHECK( res_dbl.a == (e_dbl + f_dbl.a));
 
   CHECK(ffi_prep_closure_loc(pcl, &cif, A_gn, NULL, code) == FFI_OK);
 
   res_dbl = ((A(*)(int, A))(code))(e_dbl, f_dbl);
-  printf("2 res: %d \n", res_dbl.a);
+  printf("2 res: %d\n", res_dbl.a);
   /* { dg-output "\n2 res: 43750" } */
   CHECK( res_dbl.a == (e_dbl + f_dbl.a));
 

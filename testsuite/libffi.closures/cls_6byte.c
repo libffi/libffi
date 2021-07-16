@@ -35,7 +35,7 @@ static cls_struct_6byte cls_struct_6byte_fn(struct cls_struct_6byte a1,
   CHECK(a1.c == 1);
   CHECK(a1.d == 128);
 
-	CHECK(a2.a == 12);
+  CHECK(a2.a == 12);
   CHECK(a2.b == 128);
   CHECK(a2.c == 9);
   CHECK(a2.d == 127);

@@ -44,7 +44,7 @@ static B B_fn(struct A b2, struct B b3, struct C b4)
   CHECK(b3.x.b == 127);
   CHECK(b3.y == 99);
   CHECK(b3.z == 255);
-  CHECK((int)b4.d == 2); 
+  CHECK((int)b4.d == 2);
   CHECK(b4.e == 9);
   CHECK((int)result.x.a == 270);
   CHECK(result.x.b == 242);

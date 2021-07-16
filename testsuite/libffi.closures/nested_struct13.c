@@ -26,8 +26,7 @@ B B_fn(float b0, struct B b1)
 
   printf("%g %g %g %g: %g %g %g\n", b0, b1.x, b1.y.a, b1.y.b,
         result.x, result.y.a, result.y.b);
-  /* { dg-output "12.125 24.75 31.625 32.25: 36.875 43.75 44.375" } */
-  
+
   CHECK_FLOAT_EQ(b0, 12.125);
   CHECK_FLOAT_EQ(b1.x, 24.75);
   CHECK_FLOAT_EQ(b1.y.a, 31.625);

@@ -31,7 +31,7 @@ static cls_struct_5byte cls_struct_5byte_fn(struct cls_struct_5byte a1,
   CHECK(a1.b == 120);
   CHECK(a1.c == 1);
 
-	CHECK(a2.a == 12);
+  CHECK(a2.a == 12);
   CHECK(a2.b == 128);
   CHECK(a2.c == 9);
 

@@ -45,7 +45,7 @@ static cls_struct_combined cls_struct_combined_fn(struct cls_struct_16byte1 b0,
 	 b2.e.ii, b2.e.dd, b2.e.ff,
 	 result.d.a, result.d.b, result.d.c,
 	 result.e.ii, result.e.dd, result.e.ff);
-  // "9 2 6 1 2 3 4 5 6 3 1 8: 15 10 13 10 12 13"
+
   CHECK_DOUBLE_EQ(b0.a, 9);
   CHECK_FLOAT_EQ(b0.b, 2);
   CHECK(b0.c == 6);
@@ -173,4 +173,3 @@ int main (void)
   CHECK_FLOAT_EQ( res_dbl.e.ff, (e_dbl.b + f_dbl.ff + g_dbl.e.ff));
   exit(0);
 }
-

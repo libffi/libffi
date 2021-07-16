@@ -25,7 +25,7 @@ struct large_tag
   unsigned e;
 };
 
-int
+static int
 test_fn (int n, ...)
 {
   va_list ap;

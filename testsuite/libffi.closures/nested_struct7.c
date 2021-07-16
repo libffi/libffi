@@ -39,7 +39,7 @@ static B B_fn(struct A b2, struct B b3)
   CHECK((int)result.x.a == 13);
   CHECK(result.x.b == 233);
   CHECK(result.y == 134);
-  
+
   return result;
 }
 

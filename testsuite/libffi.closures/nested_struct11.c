@@ -48,14 +48,14 @@ static C C_fn (int x, int y, int z, C source, int i, int j, int k)
 	  source.b.b_x, source.b.b_y,
 	  result.a.a_x, result.a.a_y,
 	  result.b.b_x, result.b.b_y);
-  
+
     CHECK_FLOAT_EQ(source.a.a_x, 1.0);
     CHECK_FLOAT_EQ(source.a.a_y, 2.0);
-	  CHECK_FLOAT_EQ(source.b.b_x, 4.0);
+    CHECK_FLOAT_EQ(source.b.b_x, 4.0);
     CHECK_FLOAT_EQ(source.b.b_y, 8.0);
-	  CHECK_FLOAT_EQ(result.a.a_x, 1.0);
+    CHECK_FLOAT_EQ(result.a.a_x, 1.0);
     CHECK_FLOAT_EQ(result.a.a_y, 2.0);
-	  CHECK_FLOAT_EQ(result.b.b_x, 4.0);
+    CHECK_FLOAT_EQ(result.b.b_x, 4.0);
     CHECK_FLOAT_EQ(result.b.b_y, 8.0);
 
   return result;

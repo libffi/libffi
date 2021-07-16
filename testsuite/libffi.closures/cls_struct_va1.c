@@ -31,6 +31,7 @@ test_fn (ffi_cif* cif __UNUSED__, void* resp,
   struct small_tag s1 = * (struct small_tag *) args[1];
   struct large_tag l1 = * (struct large_tag *) args[2];
   struct small_tag s2 = * (struct small_tag *) args[3];
+
   printf ("%d %d %d %d %d %d %d %d %d %d\n", n, s1.a, s1.b,
 	  l1.a, l1.b, l1.c, l1.d, l1.e,
 	  s2.a, s2.b);

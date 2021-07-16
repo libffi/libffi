@@ -33,21 +33,21 @@ static void closure_test_fn3(ffi_cif* cif __UNUSED__, void* resp, void** args,
 	  (int)(*(float *)args[14]), *(int *)args[15], (int)(intptr_t)userdata,
     (int)*(ffi_arg *)resp);
 
-	  CHECK((int)*(float *)args[0] == 1);
+    CHECK((int)*(float *)args[0] == 1);
     CHECK((int)(*(float *)args[1]) == 2);
-	  CHECK((int)(*(float *)args[2]) == 3);
+    CHECK((int)(*(float *)args[2]) == 3);
     CHECK((int)(*(float *)args[3]) == 4);
-	  CHECK((int)(*(float *)args[4]) == 5);
+    CHECK((int)(*(float *)args[4]) == 5);
     CHECK((int)(*(float *)args[5]) == 6);
-	  CHECK((int)*(float *)args[6] == 7);
+    CHECK((int)*(float *)args[6] == 7);
     CHECK((int)(*(float *)args[7]) == 8);
-	  CHECK((int)(*(double *)args[8]) == 9);
+    CHECK((int)(*(double *)args[8]) == 9);
     CHECK((int)*(int *)args[9] == 10);
-	  CHECK((int)(*(float *)args[10]) == 11);
+    CHECK((int)(*(float *)args[10]) == 11);
     CHECK((int)(*(float *)args[11]) == 12);
-	  CHECK((int)*(int *)args[12] == 13);
+    CHECK((int)*(int *)args[12] == 13);
     CHECK((int)(*(float *)args[13]) == 19);
-	  CHECK((int)(*(float *)args[14]) == 21);
+    CHECK((int)(*(float *)args[14]) == 21);
     CHECK(*(int *)args[15] == 1);
     CHECK((int)(intptr_t)userdata == 3);
 
