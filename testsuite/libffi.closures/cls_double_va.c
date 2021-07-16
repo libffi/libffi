@@ -14,7 +14,7 @@
 static char buffer[BUF_SIZE];
 
 static void
-cls_double_va_fn(ffi_cif* cif __UNUSED__, void* resp, 
+cls_double_va_fn(ffi_cif* cif __UNUSED__, void* resp,
 		 void** args, void* userdata __UNUSED__)
 {
 	char*	format		= *(char**)args[0];
@@ -23,7 +23,7 @@ cls_double_va_fn(ffi_cif* cif __UNUSED__, void* resp,
 	*(ffi_arg*)resp = printf(format, doubleValue);
 	CHECK(*(ffi_arg*)resp == 4);
 	snprintf(buffer, BUF_SIZE, format, doubleValue);
-	CHECK(strncmp(buffer, "7.0\n", BUF_SIZE));
+	CHECK(strncmp(buffer, "7.0\n", 4));
 }
 
 int main (void)
