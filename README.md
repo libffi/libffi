@@ -1,7 +1,7 @@
 Status
 ======
 
-libffi-3.4.1 was released on June 28, 2021.  Check the libffi web page
+libffi-3.4.2 was released on June 28, 2021.  Check the libffi web page
 for updates: <URL:http://sourceware.org/libffi/>.
 
 
@@ -194,6 +194,9 @@ History
 =======
 
 See the git log for details at http://github.com/libffi/libffi.
+
+    3.4.3 TBD
+        TBD
 
     3.4.2 Jun-28-21
         Add static trampoline support for Linux on x86_64 and ARM64.
