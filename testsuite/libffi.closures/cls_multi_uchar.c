@@ -85,7 +85,7 @@ int main (void)
   /* { dg-output "1 2 127 125: 255" } */
   printf("res: %d\n", (unsigned char)res_call);
   /* { dg-output "\nres: 255" } */
-  CHECK(res_call == 255);
+  CHECK((unsigned char)res_call == 255);
 
   CHECK(ffi_prep_closure_loc(pcl, &cif, test_func_gn, NULL, code)  == FFI_OK);
 
