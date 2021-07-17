@@ -23,7 +23,7 @@ cls_double_va_fn(ffi_cif* cif __UNUSED__, void* resp,
 	*(ffi_arg*)resp = printf(format, doubleValue);
 	CHECK(*(ffi_arg*)resp == 4);
 	snprintf(buffer, BUF_SIZE, format, doubleValue);
-	CHECK(strncmp(buffer, "7.0\n", 4));
+	CHECK(strncmp(buffer, "7.0\n", 4) == 0);
 }
 
 int main (void)
