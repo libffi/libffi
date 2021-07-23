@@ -505,11 +505,19 @@ C(ffi_closure_unix64_alt):
  * - restore the stack pointer to what it was when the trampoline was invoked.
  */
 #ifdef ENDBR_PRESENT
-#define X86_DATA_OFFSET		4077
-#define X86_CODE_OFFSET		4073
+# define X86_DATA_OFFSET	4077
+# ifdef __ILP32__
+#  define X86_CODE_OFFSET	4069
+# else
+#  define X86_CODE_OFFSET	4073
+# endif
 #else
-#define X86_DATA_OFFSET		4081
-#define X86_CODE_OFFSET		4077
+# define X86_DATA_OFFSET	4081
+# ifdef __ILP32__
+#  define X86_CODE_OFFSET	4073
+# else
+#  define X86_CODE_OFFSET	4077
+# endif
 #endif
 
 	.align	UNIX64_TRAMP_MAP_SIZE
@@ -521,9 +529,17 @@ C(trampoline_code_table):
 	_CET_ENDBR
 	subq	$16, %rsp			/* Make space on the stack */
 	movq	%r10, (%rsp)			/* Save %r10 on stack */
+#ifdef __ILP32__
+	movl	X86_DATA_OFFSET(%rip), %r10d	/* Copy data into %r10 */
+#else
 	movq	X86_DATA_OFFSET(%rip), %r10	/* Copy data into %r10 */
+#endif
 	movq	%r10, 8(%rsp)			/* Save data on stack */
+#ifdef __ILP32__
+	movl	X86_CODE_OFFSET(%rip), %r10d	/* Copy code into %r10 */
+#else
 	movq	X86_CODE_OFFSET(%rip), %r10	/* Copy code into %r10 */
+#endif
 	jmp	*%r10				/* Jump to code */
 	.align	8
 	.endr
