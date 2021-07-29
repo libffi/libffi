@@ -196,7 +196,7 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     3.4.3 TBD
-        TBD
+        Fix x32 static trampolines.
 
     3.4.2 Jun-28-21
         Add static trampoline support for Linux on x86_64 and ARM64.
