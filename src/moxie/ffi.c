@@ -212,10 +212,10 @@ void ffi_closure_eabi (unsigned arg1, unsigned arg2, unsigned arg3,
 	  break;
 	case FFI_TYPE_STRUCT:
           {
-            if (arg_types[i]->type->size > 4)
+            if (arg_types[i]->size > 4)
               {
-                void *copy = alloca(arg_types[i]->type->size);
-                memcpy(copy, *(void**)ptr, arg_types[i]->type->size);
+                void *copy = alloca(arg_types[i]->size);
+                memcpy(copy, *(void**)ptr, arg_types[i]->size);
                 avalue[i] = copy;
               }
             else
