@@ -41,10 +41,13 @@ jobs:
            QEMU_LD_PREFIX: "/usr/alpha-linux-gnu"
          - HOST: "arm32v7-linux-gnu"
            LIBFFI_TEST_OPTIMIZATION: "-O0"
+           QEMU_CPU: 'any'
          - HOST: "arm32v7-linux-gnu"
            LIBFFI_TEST_OPTIMIZATION: "-O2"
+           QEMU_CPU: 'any'
          - HOST: "arm32v7-linux-gnu"
            LIBFFI_TEST_OPTIMIZATION: "-O2 -fomit-frame-pointer"
+           QEMU_CPU: 'any'
          - HOST: "powerpc-eabisim"
            RUNTESTFLAGS: "--target_board powerpc-eabisim"
          - HOST: "or1k-elf"
