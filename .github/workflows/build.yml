@@ -50,7 +50,7 @@ jobs:
          - HOST: "or1k-elf"
            RUNTESTFLAGS: "--target_board or1k-sim"
          - HOST: "m32r-elf"
-           RUNTESTFLAGS: "--target_board m32-sim"
+           RUNTESTFLAGS: "--target_board m32r-sim"
          - HOST: "bfin-elf"
            RUNTESTFLAGS: "--target_board bfin-sim"
          - MEVAL: "export PATH=/opt/moxielogic/bin:$PATH && CC=moxie-elf-gcc && CXX=moxie-elf-g++"
