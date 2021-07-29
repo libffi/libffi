@@ -39,6 +39,7 @@ jobs:
          - HOST: "alpha-linux-gnu"
            CONFIGURE_OPTIONS: "--disable-shared"
            QEMU_LD_PREFIX: "/usr/alpha-linux-gnu"
+           QEMU_CPU: 'ev4-alpha-cpu'
          - HOST: "arm32v7-linux-gnu"
            LIBFFI_TEST_OPTIMIZATION: "-O0"
            QEMU_CPU: 'any'
