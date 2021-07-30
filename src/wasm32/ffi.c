@@ -308,7 +308,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   }
 
   // Otherwise the result was automatically converted from C into Javascript and
-  // we need to manually convert it back to C. 
+  // we need to manually convert it back to C.
   switch (rtype_id) {
   case FFI_TYPE_VOID:
     break;

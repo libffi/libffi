@@ -204,7 +204,7 @@ jobs:
       - run:
           name: install Pyodide patched emscripten
           command: |
-            git clone https://github.com/pyodide/pyodide.git --depth 1 
+            git clone https://github.com/pyodide/pyodide.git --depth 1
             cd pyodide/emsdk
             make
 
@@ -298,7 +298,7 @@ workflows:
       - test-chrome-pyodide:
           requires:
             - build-libffi-pyodide
-        
+
       - test-node:
           requires:
             - install-emsdk
