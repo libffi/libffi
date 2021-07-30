@@ -19,6 +19,7 @@ while [ $# -gt 0 ]; do
   case $1 in
     --enable-wasm-bigint) WASM_BIGINT=true ;;
     --pyodide-fpcast) PYODIDE_FPCAST=true ;;
+    --debug) DEBUG=true ;;
     *) echo "ERROR: Unknown parameter: $1" >&2; exit 1 ;;
   esac
   shift
@@ -33,6 +34,10 @@ fi
 
 if [ "$PYODIDE_FPCAST" = "true" ]; then
   export CFLAGS+=" -DPYODIDE_FPCAST"
+fi
+
+if [ "$DEBUG" = "true" ]; then
+  export CFLAGS+=" -DDEBUG_F"
 fi
 
 export CXXFLAGS="$CFLAGS"

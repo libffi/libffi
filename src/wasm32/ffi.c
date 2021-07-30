@@ -32,6 +32,13 @@
 
 #include <emscripten/emscripten.h>
 
+#ifdef DEBUG_F 
+#define LOG_DEBUG(args...)  \
+  console.warn(`====LIBFFI(line __LINE__)`, args)
+#else
+#define LOG_DEBUG(args...)
+#endif
+
 #define EM_JS_MACROS(ret, name, args, body...) EM_JS(ret, name, args, body)
 
 #define DEREF_U8(addr, offset) HEAPU8[addr + offset]
@@ -297,6 +304,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     args.push(varargs_addr);
     stackRestore(varargs_addr);
   }
+  LOG_DEBUG("CALL_FUNC_PTR", fn, args);
   var result = CALL_FUNC_PTR(fn, args);
   // Put the stack pointer back (we moved it if we made a varargs call)
   stackRestore(orig_stack_ptr);
@@ -467,6 +475,7 @@ ffi_prep_closure_loc_helper,
     // extra pointer to varargs stack
     sig += "i";
   }
+  LOG_DEBUG("CREATE_CLOSURE",  "sig:", sig);
   function trampoline() {
     var args = Array.prototype.slice.call(arguments);
     var size = 0;
@@ -569,6 +578,7 @@ ffi_prep_closure_loc_helper,
       varargs += 4;
     }
     stackRestore(cur_ptr);
+    LOG_DEBUG("CALL_CLOSURE",  "closure:", closure, "fptr", CLOSURE__fun(closure), "cif",  CLOSURE__cif(closure));
     CALL_FUNC_PTR(CLOSURE__fun(closure), [
         CLOSURE__cif(closure), ret_ptr, args_ptr,
         CLOSURE__user_data(closure)
