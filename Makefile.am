@@ -63,7 +63,7 @@ noinst_HEADERS = src/aarch64/ffitarget.h src/aarch64/internal.h		\
 	src/sparc/internal.h src/tile/ffitarget.h src/vax/ffitarget.h	\
 	src/x86/ffitarget.h src/x86/internal.h src/x86/internal64.h	\
 	src/x86/asmnames.h src/xtensa/ffitarget.h src/dlmalloc.c	\
-	src/kvx/ffitarget.h
+	src/kvx/ffitarget.h src/kvx/asm.h
 
 EXTRA_libffi_la_SOURCES = src/aarch64/ffi.c src/aarch64/sysv.S		\
 	src/aarch64/win64_armasm.S src/alpha/ffi.c src/alpha/osf.S	\
