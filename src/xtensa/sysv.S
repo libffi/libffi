@@ -167,7 +167,7 @@ END(ffi_call_SYSV)
 
 ENTRY(ffi_cacheflush)
 
-	entry	a1, 16
+	entry	a1, 32
 
 1:	
 #if XCHAL_DCACHE_SIZE
