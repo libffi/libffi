@@ -187,7 +187,13 @@ END(ffi_cacheflush)
 
 ENTRY(ffi_trampoline)
 
-	entry	a1, 16 + (FFI_REGISTER_NARGS * 4) + (4 * 4)   # [ 0]
+	/* 32 bytes for spill + spill overflow area of a frame that uses
+	   call8,
+	   FFI_REGISTER_NARGS * 4 bytes for arguments passed in registers,
+	   4 * 4 bytes for the result.
+	   This size must be in sync with ffi_closure_SYSV_inner logic.
+	 */
+	entry	a1, 32 + (FFI_REGISTER_NARGS * 4) + (4 * 4)   # [ 0]
 	j	2f                                # [ 3]
 	.align	4                                 # [ 6]
 1:	.long	0                                 # [ 8]

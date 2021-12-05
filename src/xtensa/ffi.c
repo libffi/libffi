@@ -277,15 +277,15 @@ ffi_closure_SYSV_inner(ffi_closure *closure, void **values, void *rvalue)
     if (arg_types[i]->alignment == 8 && (areg & 1) != 0)
       areg++;
 
-    // skip the entry 16,a1 framework, add 16 bytes (4 registers)
+    // skip the entry a1, * framework, see ffi_trampoline
     if (areg == FFI_REGISTER_NARGS)
-      areg += 4;
+      areg += 8;
 
     if (arg_types[i]->type == FFI_TYPE_STRUCT)
     {
       int numregs = ((arg_types[i]->size + 3) & ~3) / 4;
       if (areg < FFI_REGISTER_NARGS && areg + numregs > FFI_REGISTER_NARGS)
-        areg = FFI_REGISTER_NARGS + 4;
+        areg = FFI_REGISTER_NARGS + 8;
     }
 
     avalue[i] = &values[areg];
