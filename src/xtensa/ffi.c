@@ -237,6 +237,9 @@ ffi_prep_closure_loc (ffi_closure* closure,
                       void *user_data,
                       void *codeloc)
 {
+  if (cif->abi != FFI_SYSV)
+    return FFI_BAD_ABI;
+
   /* copye trampoline to stack and patch 'ffi_closure_SYSV' pointer */
   memcpy(closure->tramp, ffi_trampoline, FFI_TRAMPOLINE_SIZE);
   *(unsigned int*)(&closure->tramp[8]) = (unsigned int)ffi_closure_SYSV;
