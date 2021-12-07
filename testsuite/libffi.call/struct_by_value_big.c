@@ -5,6 +5,8 @@
    Originator:	From the original ffitest.c  */
 
 /* { dg-do run } */
+/* { dg-skip-if "structures larger than 16 bytes are passed by reference" { loongarch*-*-* } } */
+
 #include "ffitest.h"
 
 typedef struct
