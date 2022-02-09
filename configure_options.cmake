@@ -87,7 +87,7 @@ elseif(TARGET_PLATFORM MATCHES ARM_WIN64|AARCH64)
         set(CMAKE_ASM_MASM_COMPILER ${COMPILER_DIR}/armasm64.exe)
         set(CMAKE_ASM_COMPILER ${CMAKE_ASM_MASM_COMPILER})
         list(APPEND WIN_ASSEMBLY_LIST src/aarch64/win64_armasm.S)
-        file(COPY src/aarch64/ffitarget.h DESTINATION ${CMAKE_BINARY_DIR}/include)
+        file(COPY src/aarch64/ffitarget.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include)
         enable_language(ASM)
     else()
         list(APPEND SOURCES_LIST src/aarch64/sysv.S)
@@ -100,7 +100,7 @@ elseif(TARGET_PLATFORM MATCHES ARM.*)
         set(CMAKE_ASM_MASM_COMPILER ${COMPILER_DIR}/armasm.exe)
         set(CMAKE_ASM_COMPILER ${CMAKE_ASM_MASM_COMPILER})
         list(APPEND WIN_ASSEMBLY_LIST src/arm/sysv_msvc_arm32.S)
-        file(COPY src/arm/ffitarget.h DESTINATION ${CMAKE_BINARY_DIR}/include)
+        file(COPY src/arm/ffitarget.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include)
         enable_language(ASM)
     else()
         list(APPEND SOURCES_LIST src/arm/sysv.S)
@@ -195,12 +195,12 @@ if (NOT MSVC)
         COMMAND
             sh -c "echo 'extern void foo (void); void bar (void) { foo (); foo (); }' | ${CMAKE_C_COMPILER} ${CMAKE_C_FLAGS} -xc -c -fpic -fexceptions -o conftest.o - 2>&1;
                    ${DUMPTOOL_CMD} conftest.o 2>&1 | ${EH_FRAME_GREP_EXPR}"
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         OUTPUT_VARIABLE IGNORE
         ERROR_VARIABLE IGNORE
         RESULT_VARIABLE HAVE_RO_EH_FRAME_EXITCODE)
 
-    file(REMOVE ${CMAKE_BINARY_DIR}/conftest.*)
+    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/conftest.*)
 
     if(HAVE_RO_EH_FRAME_EXITCODE EQUAL "0")
         set(HAVE_RO_EH_FRAME 1)
@@ -213,12 +213,12 @@ if (NOT MSVC)
 
     execute_process(
         COMMAND sh -c "echo '.text; foo: nop; .data; .long foo-.; .text' | ${CMAKE_C_COMPILER} ${CMAKE_C_FLAGS} -xassembler -c -o conftest.o - 2>&1"
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         OUTPUT_VARIABLE IGNORE
         ERROR_VARIABLE IGNORE
         RESULT_VARIABLE HAVE_AS_X86_PCREL_EXITCODE)
 
-    file(REMOVE ${CMAKE_BINARY_DIR}/conftest.*)
+    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/conftest.*)
 
     if(HAVE_AS_X86_PCREL_EXITCODE EQUAL "0")
         set(HAVE_AS_X86_PCREL 1)
@@ -231,12 +231,12 @@ if (NOT MSVC)
         COMMAND
             sh -c "echo '.text;.globl foo;foo:;jmp bar;.section .eh_frame,\"a\",@unwind;bar:' | ${CMAKE_C_COMPILER} ${CMAKE_C_FLAGS} -xassembler -Wa,--fatal-warnings -c -o conftest.o - 2>&1 &&
                    echo 'extern void foo();int main(){foo();}' | ${CMAKE_C_COMPILER} ${CMAKE_C_FLAGS} conftest.o -xc - 2>&1"
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         OUTPUT_VARIABLE IGNORE
         ERROR_VARIABLE IGNORE
         RESULT_VARIABLE HAVE_AS_X86_64_UNWIND_SECTION_TYPE_EXITCODE)
 
-    file(REMOVE ${CMAKE_BINARY_DIR}/conftest.*)
+    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/conftest.*)
 
     if(HAVE_AS_X86_64_UNWIND_SECTION_TYPE_EXITCODE EQUAL "0")
         set(HAVE_AS_X86_64_UNWIND_SECTION_TYPE 1)
@@ -248,7 +248,7 @@ if (NOT MSVC)
     execute_process(
         COMMAND sh -c "echo 'int __attribute__ ((visibility (\"hidden\"))) foo(void){return 1;}' | ${CMAKE_C_COMPILER} ${CMAKE_C_FLAGS} -xc -Werror -S -o- - 2>&1 |
                        grep -q '\\.hidden.*foo'"
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         OUTPUT_VARIABLE IGNORE
         ERROR_VARIABLE IGNORE
         RESULT_VARIABLE HAVE_HIDDEN_VISIBILITY_ATTRIBUTE_EXITCODE)
@@ -261,12 +261,12 @@ if (NOT MSVC)
     endif()
 endif()
 
-file(WRITE ${CMAKE_BINARY_DIR}/conftest.c "void nm_test_func(){} int main(){nm_test_func();return 0;}")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/conftest.c "void nm_test_func(){} int main(){nm_test_func();return 0;}")
 
 if(MSVC)
     execute_process(
         COMMAND "${CMAKE_C_COMPILER}" ${CMAKE_C_FLAGS} /c conftest.c
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         OUTPUT_VARIABLE IGNORE
         ERROR_VARIABLE IGNORE
         RESULT_VARIABLE SYMBOL_UNDERSCORE_EXITCODE)
@@ -274,7 +274,7 @@ if(MSVC)
     if(SYMBOL_UNDERSCORE_EXITCODE EQUAL "0")
         execute_process(
             COMMAND "${COMPILER_DIR}/dumpbin.exe" /ALL /RAWDATA:NONE conftest.obj | findstr _nm_test_func > NUL
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             OUTPUT_VARIABLE IGNORE
             ERROR_VARIABLE IGNORE
             RESULT_VARIABLE SYMBOL_UNDERSCORE_EXITCODE)
@@ -283,13 +283,13 @@ elseif()
     execute_process(
         COMMAND sh -c "${CMAKE_C_COMPILER} ${CMAKE_C_FLAGS} -xc -c -o conftest.o conftest.c 2>&1;
                        ${DUMPTOOL_CMD} conftest.o 2>&1 | grep -q _nm_test_func"
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         OUTPUT_VARIABLE IGNORE
         ERROR_VARIABLE IGNORE
         RESULT_VARIABLE SYMBOL_UNDERSCORE_EXITCODE)
 endif()
 
-file(REMOVE ${CMAKE_BINARY_DIR}/conftest.*)
+file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/conftest.*)
 
 if(SYMBOL_UNDERSCORE_EXITCODE EQUAL "0")
     set(SYMBOL_UNDERSCORE 1)
@@ -308,30 +308,30 @@ check_c_source_compiles(
     "
     HAVE_AS_CFI_PSEUDO_OP)
 
-configure_file(include/ffi.h.in ${CMAKE_BINARY_DIR}/include/ffi.h)
-configure_file(include/fficonfig.h.in ${CMAKE_BINARY_DIR}/include/fficonfig.h)
+configure_file(include/ffi.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/ffi.h)
+configure_file(include/fficonfig.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/fficonfig.h)
 
 foreach(ASM_PATH IN LISTS WIN_ASSEMBLY_LIST)
     get_filename_component(ASM_FILENAME "${ASM_PATH}" NAME_WE)
     get_filename_component(ASM_DIRNAME "${ASM_PATH}" DIRECTORY)
 
     add_custom_command(
-        COMMAND "${CMAKE_C_COMPILER}" /nologo /P /EP /I. /I"${CMAKE_CURRENT_SOURCE_DIR}/${ASM_DIRNAME}" /Fi"${CMAKE_BINARY_DIR}/${ASM_FILENAME}.asm" /Iinclude
+        COMMAND "${CMAKE_C_COMPILER}" /nologo /P /EP /I. /I"${CMAKE_CURRENT_SOURCE_DIR}/${ASM_DIRNAME}" /Fi"${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.asm" /Iinclude
                 /I"${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/${ASM_PATH}"
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${ASM_PATH}
-        OUTPUT ${CMAKE_BINARY_DIR}/${ASM_FILENAME}.asm
-        COMMENT "Preprocessing ${CMAKE_CURRENT_SOURCE_DIR}/${ASM_PATH}. Outputting to ${CMAKE_BINARY_DIR}/${ASM_FILENAME}.asm")
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.asm
+        COMMENT "Preprocessing ${CMAKE_CURRENT_SOURCE_DIR}/${ASM_PATH}. Outputting to ${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.asm")
 
-    set_source_files_properties("${CMAKE_BINARY_DIR}/${ASM_FILENAME}.asm" PROPERTIES GENERATED TRUE)
+    set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.asm" PROPERTIES GENERATED TRUE)
 
     if(TARGET_PLATFORM MATCHES X86.*)
-        list(APPEND SOURCES_LIST ${CMAKE_BINARY_DIR}/${ASM_FILENAME}.asm)
+        list(APPEND SOURCES_LIST ${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.asm)
     else()
         add_custom_command(
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /Fo "${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.obj" "${CMAKE_BINARY_DIR}/${ASM_FILENAME}.asm"
-            DEPENDS ${CMAKE_BINARY_DIR}/${ASM_FILENAME}.asm
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /Fo "${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.obj" "${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.asm"
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.asm
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.obj
-            COMMENT "Assembling ${CMAKE_BINARY_DIR}/${ASM_FILENAME}.asm")
+            COMMENT "Assembling ${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.asm")
 
         set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${ASM_FILENAME}.obj PROPERTIES EXTERNAL_OBJECT TRUE)
 

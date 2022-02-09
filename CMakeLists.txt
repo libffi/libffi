@@ -16,11 +16,11 @@ endif()
 include(configure_platform.cmake)
 include(configure_options.cmake)
 
-file(COPY ${FFI_CONFIG_FILE} DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY src/${TARGETDIR}/ffitarget.h DESTINATION ${CMAKE_BINARY_DIR}/include)
+file(COPY ${FFI_CONFIG_FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY src/${TARGETDIR}/ffitarget.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include)
 
-include_directories(${CMAKE_BINARY_DIR}/include)
-include_directories(${CMAKE_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(include)
 
 add_definitions(-DFFI_BUILDING)
@@ -51,6 +51,6 @@ install(EXPORT ${PROJECT_NAME}Targets
     DESTINATION share/${PROJECT_NAME})
 
 install(FILES
-    ${CMAKE_BINARY_DIR}/include/ffi.h
-    ${CMAKE_BINARY_DIR}/include/ffitarget.h
+    ${CMAKE_CURRENT_BINARY_DIR}/include/ffi.h
+    ${CMAKE_CURRENT_BINARY_DIR}/include/ffitarget.h
     DESTINATION include)
