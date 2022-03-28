@@ -114,6 +114,16 @@ loadregs:
 
 	REG_L	t6, 3*FFI_SIZEOF_ARG($fp)  # load the flags word into t6.
 
+	# when retval is _Complex long double, $f12/$a0, $f13/$a1 will be skipped
+	# no idea why, but gcc does it.
+	SRL	t4, t6, 8*FFI_FLAG_BITS
+	move	t8, t6
+	bne	t4, FFI_TYPE_COMPLEX_LDLD, loadregs1
+
+	SLL	t8, t6, 2*FFI_FLAG_BITS
+
+
+loadregs1:
 #ifdef __mips_soft_float
 	REG_L	a0, 0*FFI_SIZEOF_ARG(t9)
 	REG_L	a1, 1*FFI_SIZEOF_ARG(t9)
@@ -124,7 +134,7 @@ loadregs:
 	REG_L	a6, 6*FFI_SIZEOF_ARG(t9)
 	REG_L	a7, 7*FFI_SIZEOF_ARG(t9)
 #else
-	and	t4, t6, ((1<<FFI_FLAG_BITS)-1)
+	and	t4, t8, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a0, 0*FFI_SIZEOF_ARG(t9)
 	beqz	t4, arg1_next
 	bne	t4, FFI_TYPE_FLOAT, arg1_doublep
@@ -134,7 +144,7 @@ arg1_doublep:
 	l.d	$f12, 0*FFI_SIZEOF_ARG(t9)
 arg1_next:	
 	
-	SRL	t4, t6, 1*FFI_FLAG_BITS
+	SRL	t4, t8, 1*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a1, 1*FFI_SIZEOF_ARG(t9)
 	beqz	t4, arg2_next
@@ -145,7 +155,7 @@ arg2_doublep:
 	l.d	$f13, 1*FFI_SIZEOF_ARG(t9)	
 arg2_next:	
 	
-	SRL	t4, t6, 2*FFI_FLAG_BITS
+	SRL	t4, t8, 2*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a2, 2*FFI_SIZEOF_ARG(t9)
 	beqz	t4, arg3_next
@@ -156,7 +166,7 @@ arg3_doublep:
 	l.d	$f14, 2*FFI_SIZEOF_ARG(t9)	
 arg3_next:	
 	
-	SRL	t4, t6, 3*FFI_FLAG_BITS
+	SRL	t4, t8, 3*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a3, 3*FFI_SIZEOF_ARG(t9)
 	beqz	t4, arg4_next
@@ -167,7 +177,7 @@ arg4_doublep:
 	l.d	$f15, 3*FFI_SIZEOF_ARG(t9)	
 arg4_next:	
 	
-	SRL	t4, t6, 4*FFI_FLAG_BITS
+	SRL	t4, t8, 4*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a4, 4*FFI_SIZEOF_ARG(t9)
 	beqz	t4, arg5_next
@@ -178,7 +188,7 @@ arg5_doublep:
 	l.d	$f16, 4*FFI_SIZEOF_ARG(t9)	
 arg5_next:	
 	
-	SRL	t4, t6, 5*FFI_FLAG_BITS
+	SRL	t4, t8, 5*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a5, 5*FFI_SIZEOF_ARG(t9)
 	beqz	t4, arg6_next
@@ -189,7 +199,7 @@ arg6_doublep:
 	l.d	$f17, 5*FFI_SIZEOF_ARG(t9)	
 arg6_next:	
 	
-	SRL	t4, t6, 6*FFI_FLAG_BITS
+	SRL	t4, t8, 6*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a6, 6*FFI_SIZEOF_ARG(t9)
 	beqz	t4, arg7_next
@@ -200,7 +210,7 @@ arg7_doublep:
 	l.d	$f18, 6*FFI_SIZEOF_ARG(t9)	
 arg7_next:	
 	
-	SRL	t4, t6, 7*FFI_FLAG_BITS
+	SRL	t4, t8, 7*FFI_FLAG_BITS
 	and	t4, ((1<<FFI_FLAG_BITS)-1)
 	REG_L	a7, 7*FFI_SIZEOF_ARG(t9)
 	beqz	t4, arg8_next
@@ -212,7 +222,7 @@ arg8_doublep:
 arg8_next:	
 #endif
 
-callit:		
+callit:
 	# Load the function pointer
 	REG_L	t9, 5*FFI_SIZEOF_ARG($fp)
 
@@ -263,16 +273,37 @@ retstruct_f:
 	s.s	$f0, 0(t4)
 	b	epilogue
 	
-retstruct_d_d:	
-	bne	t6, FFI_TYPE_STRUCT_DD, retstruct_f_f
+retstruct_d_d:
+	bne	t6, FFI_TYPE_STRUCT_DD, retcomplex_d_d
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
 	s.d	$f0, 0(t4)
 	s.d	$f2, 8(t4)
 	b	epilogue
+
+retcomplex_d_d:
+	bne	t6, FFI_TYPE_COMPLEX_DD, retcomplex_ld_ld
+	jal	t9
+	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
+	s.d	$f0, 0(t4)
+	s.d	$f2, 8(t4)
+	b	epilogue
+
+retcomplex_ld_ld:
+	bne	t6, FFI_TYPE_COMPLEX_LDLD, retstruct_f_f
+	jal	t9
+	b	epilogue
 	
-retstruct_f_f:	
-	bne	t6, FFI_TYPE_STRUCT_FF, retstruct_d_f
+retstruct_f_f:
+	bne	t6, FFI_TYPE_STRUCT_FF, retcomplex_f_f
+	jal	t9
+	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
+	s.s	$f0, 0(t4)
+	s.s	$f2, 4(t4)
+	b	epilogue
+
+retcomplex_f_f:
+	bne	t6, FFI_TYPE_COMPLEX_FF, retstruct_d_f
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
 	s.s	$f0, 0(t4)
@@ -350,13 +381,20 @@ retstruct_small:
 	b	epilogue
 	
 retstruct_small2:	
-	bne	t6, FFI_TYPE_STRUCT_SMALL2, retstruct
+	bne	t6, FFI_TYPE_STRUCT_SMALL2, retcomplex_i_i
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
 	REG_S	v0, 0(t4)
 	REG_S	v1, 8(t4)
 	b	epilogue
 	
+retcomplex_i_i:
+	bne	t6, FFI_TYPE_COMPLEX_II, retstruct
+	jal	t9
+	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
+	REG_S	v0, 0(t4)
+	b	epilogue
+
 retstruct:	
 noretval:	
 	jal	t9
@@ -403,7 +441,7 @@ epilogue:
 	 */
 
 #define SIZEOF_FRAME2	(20 * FFI_SIZEOF_ARG)
-	
+
 #define A7_OFF2		(19 * FFI_SIZEOF_ARG)
 #define A6_OFF2		(18 * FFI_SIZEOF_ARG)
 #define A5_OFF2		(17 * FFI_SIZEOF_ARG)
@@ -485,10 +523,17 @@ ffi_closure_N32:
 
 	# Call ffi_closure_mips_inner_N32 to do the real work.
 	LA	t9, ffi_closure_mips_inner_N32
+#if _MIPS_SIM==_ABIN32
+	lw	a0, 20($12)   # cif
+	lw	a1, 24($12)   # fun
+	lw	a2, 28($12) # user_data
+#else
 	REG_L	a0, 56($12)   # cif
 	REG_L	a1, 64($12)   # fun
 	REG_L	a2, 72($12) # user_data
+#endif
 	ADDU	a3, $sp, V0_OFF2
+	# FIXME: a4 does work, while if ret is _Complex long double, it will overwrite Fn_OFF2
 	ADDU	a4, $sp, A0_OFF2
 	ADDU	a5, $sp, F12_OFF2
 
@@ -544,17 +589,42 @@ cls_retstruct_f:
 	b	cls_epilogue
 	
 cls_retstruct_d_d:	
-	bne	v0, FFI_TYPE_STRUCT_DD, cls_retstruct_f_f
+	bne	v0, FFI_TYPE_STRUCT_DD, cls_retcomplex_d_d
+	l.d	$f0, V0_OFF2($sp)
+	l.d	$f2, V1_OFF2($sp)
+	b	cls_epilogue
+
+cls_retcomplex_d_d:
+	bne	v0, FFI_TYPE_COMPLEX_DD, cls_retcomplex_ld_ld
 	l.d	$f0, V0_OFF2($sp)
 	l.d	$f2, V1_OFF2($sp)
 	b	cls_epilogue
 	
+cls_retcomplex_ld_ld:
+	bne	v0, FFI_TYPE_COMPLEX_LDLD, cls_retstruct_f_f
+	REG_L	t8, A0_OFF2($sp)
+	REG_L	t9, 16($sp)
+	REG_S	t9, 0(t8)
+	REG_L	t9, 24($sp)
+	REG_S	t9, 8(t8)
+	REG_L	t9, 32($sp)
+	REG_S	t9, 16(t8)
+	REG_L	t9, 40($sp)
+	REG_S	t9, 24(t8)
+	b	cls_epilogue
+
 cls_retstruct_f_f:	
-	bne	v0, FFI_TYPE_STRUCT_FF, cls_retstruct_d_f
+	bne	v0, FFI_TYPE_STRUCT_FF, cls_retcomplex_f_f
 	l.s	$f0, V0_OFF2($sp)
 	l.s	$f2, V1_OFF2($sp)
 	b	cls_epilogue
 	
+cls_retcomplex_f_f:
+	bne	v0, FFI_TYPE_COMPLEX_FF, cls_retstruct_d_f
+	l.s	$f0, V0_OFF2($sp)
+	l.s	$f2, (V0_OFF2+4)($sp)
+	b	cls_epilogue
+
 cls_retstruct_d_f:	
 	bne	v0, FFI_TYPE_STRUCT_DF, cls_retstruct_f_d
 	l.d	$f0, V0_OFF2($sp)
