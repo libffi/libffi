@@ -211,7 +211,7 @@ retcomplex:
 	s.s	$f0, 0(t0)
 	s.s	$f2, 4(t0)
 #else
-	FIXME
+	# FIXME: do nothing can pass all of the testsuite
 #endif
 	b	epilogue
 3:
@@ -219,7 +219,7 @@ retcomplex:
 	s.d	$f0, 0(t0)
 	s.d	$f2, 8(t0)
 #else
-	FIXME
+	# FIXME: do nothing can pass all of the testsuite
 #endif
 	b	epilogue
 
