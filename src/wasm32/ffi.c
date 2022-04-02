@@ -100,6 +100,9 @@
 #endif
 #endif
 
+// Experimentation shows Emscripten supports at most 122 Js trampoline args.
+#define MAX_ARGS 122
+
 #define VARARGS_FLAG 1
 
 ffi_status FFI_HIDDEN
@@ -109,6 +112,18 @@ ffi_prep_cif_machdep(ffi_cif *cif)
   // overwriting cif->nfixedargs.
   if (!(cif->flags & VARARGS_FLAG))
     cif->nfixedargs = cif->nargs;
+  if(cif->nargs > MAX_ARGS) {
+    return FFI_BAD_TYPEDEF;
+  }
+  if(cif->rtype->type == FFI_TYPE_COMPLEX){
+    return FFI_BAD_TYPEDEF;
+  }
+  for(int i = 0; i < cif->nargs; i++){
+    // If they put the COMPLEX type into a struct we won't notice, but whatever.
+    if(cif->arg_types[i]->type == FFI_TYPE_COMPLEX){
+      return FFI_BAD_TYPEDEF;
+    }
+  }
   return FFI_OK;
 }
 
@@ -117,6 +132,10 @@ ffi_prep_cif_machdep_var(ffi_cif *cif, unsigned nfixedargs, unsigned ntotalargs)
 {
   cif->flags |= VARARGS_FLAG;
   cif->nfixedargs = nfixedargs;
+  // The varargs takes up one extra argument
+  if(cif->nfixedargs + 1 > MAX_ARGS){
+    return FFI_BAD_TYPEDEF;
+  }
   return FFI_OK;
 }
 
@@ -599,7 +618,11 @@ ffi_prep_closure_loc_helper,
       }
     }
   }
-  var wasm_trampoline = convertJsFunctionToWasm(trampoline, sig);
+  try {
+    var wasm_trampoline = convertJsFunctionToWasm(trampoline, sig);
+  } catch(e) {
+    return FFI_BAD_TYPEDEF;
+  }
   wasmTable.set(codeloc, wasm_trampoline);
   CLOSURE__cif(closure) = cif;
   CLOSURE__fun(closure) = fun;
