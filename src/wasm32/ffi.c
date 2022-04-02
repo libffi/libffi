@@ -283,7 +283,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
         DEREF_U32(varargs_addr, 1) = DEREF_U32(arg_ptr, 1);
         break;
       case FFI_TYPE_LONGDOUBLE:
-        STACK_ALLOC(varargs_addr, 16, 16);
+        STACK_ALLOC(varargs_addr, 16, 8);
         DEREF_U32(varargs_addr, 0) = DEREF_U32(arg_ptr, 0);
         DEREF_U32(varargs_addr, 1) = DEREF_U32(arg_ptr, 1);
         DEREF_U32(varargs_addr, 2) = DEREF_U32(arg_ptr, 1);
@@ -549,7 +549,7 @@ ffi_prep_closure_loc_helper,
         STORE_U64(cur_ptr, 0, cur_arg);
         break;
       case FFI_TYPE_LONGDOUBLE:
-        STACK_ALLOC(cur_ptr, 16, 16);
+        STACK_ALLOC(cur_ptr, 16, 8);
         DEREF_U32(args_ptr, carg_idx) = cur_ptr;
         STORE_U64(cur_ptr, 0, cur_arg);
         cur_arg = args[jsarg_idx++];
