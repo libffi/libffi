@@ -106,6 +106,11 @@
 // Experimentation shows Emscripten supports at most 122 Js trampoline args.
 #define MAX_ARGS 122
 
+#include <stddef.h>
+
+#define MAX_ALIGN 8
+_Static_assert(MAX_ALIGN == __alignof__(max_align_t), "max_align_t must be 8");
+
 #define VARARGS_FLAG 1
 
 ffi_status FFI_HIDDEN
@@ -350,7 +355,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       DEREF_U32(arg_target, 0) = cur_stack_ptr;
     }
   }
-  STACK_ALLOC(cur_stack_ptr, 0, 4);
+  STACK_ALLOC(cur_stack_ptr, 0, MAX_ALIGN);
   stackRestore(cur_stack_ptr);
   LOG_DEBUG("CALL_FUNC_PTR", fn, args);
   var result = CALL_FUNC_PTR(fn, args);
@@ -639,6 +644,7 @@ ffi_prep_closure_loc_helper,
       }
       varargs += 4;
     }
+    STACK_ALLOC(cur_ptr, 0, MAX_ALIGN);
     stackRestore(cur_ptr);
     LOG_DEBUG("CALL_CLOSURE",  "closure:", closure, "fptr", CLOSURE__fun(closure), "cif",  CLOSURE__cif(closure));
     CALL_FUNC_PTR(CLOSURE__fun(closure), [
