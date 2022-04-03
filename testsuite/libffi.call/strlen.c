@@ -7,7 +7,7 @@
 /* { dg-do run } */
 #include "ffitest.h"
 
-static size_t ABI_ATTR my_strlen(char *s)
+static int ABI_ATTR my_strlen(char *s)
 {
   return (strlen(s));
 }
