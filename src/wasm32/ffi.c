@@ -42,8 +42,11 @@
 #define EM_JS_MACROS(ret, name, args, body...) EM_JS(ret, name, args, body)
 
 #define DEREF_U8(addr, offset) HEAPU8[addr + offset]
+#define DEREF_S8(addr, offset) HEAP8[addr + offset]
 #define DEREF_U16(addr, offset) HEAPU16[(addr >> 1) + offset]
+#define DEREF_S16(addr, offset) HEAP16[(addr >> 1) + offset]
 #define DEREF_U32(addr, offset) HEAPU32[(addr >> 2) + offset]
+#define DEREF_S32(addr, offset) HEAP32[(addr >> 2) + offset]
 
 #define DEREF_F32(addr, offset) HEAPF32[(addr >> 2) + offset]
 #define DEREF_F64(addr, offset) HEAPF64[(addr >> 3) + offset]
@@ -231,12 +234,16 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
       args.push(DEREF_F64(arg_ptr, 0));
       break;
     case FFI_TYPE_UINT8:
-    case FFI_TYPE_SINT8:
       args.push(DEREF_U8(arg_ptr, 0));
       break;
+    case FFI_TYPE_SINT8:
+      args.push(DEREF_S8(arg_ptr, 0));
+      break;
     case FFI_TYPE_UINT16:
-    case FFI_TYPE_SINT16:
       args.push(DEREF_U16(arg_ptr, 0));
+      break;
+    case FFI_TYPE_SINT16:
+      args.push(DEREF_S16(arg_ptr, 0));
       break;
     case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
