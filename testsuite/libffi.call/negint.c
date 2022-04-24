@@ -40,8 +40,6 @@ int main (void)
   ss = -12;
   sc = -1;
 
-  checking (si, ss, sc);
-
   ffi_call(&cif, FFI_FN(checking), &rint, values);
 
   printf ("%d vs %d\n", (int)rint, checking (si, ss, sc));
