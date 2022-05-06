@@ -5,7 +5,7 @@
    Originator:	<hos@tamanegi.org> 20031203	 */
 
 /* { dg-do run { xfail strongarm*-*-* xscale*-*-* } } */
-/* { dg-options -mlong-double-128 { target powerpc64*-*-linux* } } */
+/* { dg-options -mlong-double-128 { target powerpc64*-*-linux-gnu* } } */
 
 #include "ffitest.h"
 
