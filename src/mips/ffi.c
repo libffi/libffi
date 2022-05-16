@@ -84,6 +84,8 @@ static void ffi_prep_args(char *stack,
   memset(stack, 0, bytes);
 
 #ifdef FFI_MIPS_N32
+  int soft_float = (ecif->cif->abi == FFI_N32_SOFT_FLOAT
+		    || ecif->cif->abi == FFI_N64_SOFT_FLOAT);
   /* If more than 8 double words are used, the remainder go
      on the stack. We reorder stuff on the stack here to 
      support this easily. */
@@ -149,7 +151,7 @@ static void ffi_prep_args(char *stack,
           if (type == FFI_TYPE_POINTER)
             type = (ecif->cif->abi == FFI_N64
 		    || ecif->cif->abi == FFI_N64_SOFT_FLOAT)
-	      ? FFI_TYPE_SINT64 : FFI_TYPE_SINT32;
+	      ? FFI_TYPE_SINT64 : FFI_TYPE_UINT32;
 
 	if (i < 8 && (ecif->cif->abi == FFI_N32_SOFT_FLOAT
 		      || ecif->cif->abi == FFI_N64_SOFT_FLOAT))
@@ -204,9 +206,10 @@ static void ffi_prep_args(char *stack,
 		/* expand from 4+4 to 8+8 if pass with fpr reg */
 		/* argp will wind back to stack when we process all of reg args */
 		/* all var_args passed with gpr, should be expand */
-	        if((*p_arg)->elements[0]->type == FFI_TYPE_FLOAT
-				&& argp>=argp_f
-				&& i < ecif->cif->mips_nfixedargs)
+	        if(!soft_float
+		    && (*p_arg)->elements[0]->type == FFI_TYPE_FLOAT
+		    && argp>=argp_f
+		    && i < ecif->cif->mips_nfixedargs)
 		  {
 		    *(float *) argp = *(float *)(* p_argv);
 		    argp += z;
@@ -644,7 +647,7 @@ static ffi_status ffi_prep_cif_machdep_int(ffi_cif *cif, unsigned nfixedargs)
 
       case FFI_TYPE_POINTER:
 	if (cif->abi == FFI_N32_SOFT_FLOAT || cif->abi == FFI_N32)
-	  cif->flags += FFI_TYPE_SINT32 << (FFI_FLAG_BITS * 8);
+	  cif->flags += FFI_TYPE_UINT32 << (FFI_FLAG_BITS * 8);
 	else
 	  cif->flags += FFI_TYPE_INT << (FFI_FLAG_BITS * 8);
 	break;
@@ -668,8 +671,9 @@ static ffi_status ffi_prep_cif_machdep_int(ffi_cif *cif, unsigned nfixedargs)
 	   two doubles.  */
 	if (soft_float)
 	  {
-	    cif->flags += FFI_TYPE_STRUCT << (FFI_FLAG_BITS * 8);
-	    cif->flags += FFI_TYPE_SMALLSTRUCT2 << (4 + (FFI_FLAG_BITS * 8));
+	    /* if ret is long double, the ret is given by v0 and a0, no idea why
+	     * Let's us VOID | VOID | LONGDOUBLE for it*/
+	    cif->flags += FFI_TYPE_LONGDOUBLE << (FFI_FLAG_BITS * 8);
  	  }
 	else
 	  {
@@ -694,6 +698,10 @@ static ffi_status ffi_prep_cif_machdep_int(ffi_cif *cif, unsigned nfixedargs)
 		case FFI_TYPE_INT:
 		  type = FFI_TYPE_SMALLSTRUCT2;
 		  break;
+		case FFI_TYPE_LONGDOUBLE:
+		  type = FFI_TYPE_LONGDOUBLE;
+		  break;
+		case FFI_TYPE_FLOAT:
 		default:
 		  type = FFI_TYPE_SMALLSTRUCT;
 		}
@@ -1194,10 +1202,10 @@ ffi_closure_mips_inner_N32 (ffi_cif *cif,
           /* The size of a pointer depends on the ABI */
           if (type == FFI_TYPE_POINTER)
             type = (cif->abi == FFI_N64 || cif->abi == FFI_N64_SOFT_FLOAT)
-	      ? FFI_TYPE_SINT64 : FFI_TYPE_SINT32;
+	      ? FFI_TYPE_SINT64 : FFI_TYPE_UINT32;
 
 	  if (soft_float && type ==  FFI_TYPE_FLOAT)
-	    type = FFI_TYPE_UINT32;
+	    type = FFI_TYPE_SINT32;
 
           switch (type)
             {
