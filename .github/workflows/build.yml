@@ -109,7 +109,7 @@ jobs:
           ./configure
           find . -name libtool\*|xargs dos2unix
           make -j 4
-          TERM=none export DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check
+          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
           ID=$(./rlgl/rlgl.exe start)
           ./rlgl/rlgl.exe e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
