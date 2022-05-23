@@ -97,7 +97,6 @@ jobs:
           packages: wget gcc-core make dejagnu automake autoconf libtool texinfo dos2unix unzip
 
       - run: |
-          set -x
           cd $(cygpath $RUNNER_WORKSPACE)/libffi
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
           unzip rlgl-windows-amd64.zip
