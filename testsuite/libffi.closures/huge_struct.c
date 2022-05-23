@@ -6,7 +6,7 @@
 */
 
 /* { dg-do run { xfail strongarm*-*-* xscale*-*-* wasm32*-*-* } } */
-/* { dg-options -mlong-double-128 { target powerpc64*-*-linux* } } */
+/* { dg-options -mlong-double-128 { target powerpc64*-*-linux-gnu* } } */
 /* { dg-options -Wformat=0 { target moxie*-*-elf or1k-*-* } } */
 
 #include <inttypes.h>
