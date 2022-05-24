@@ -245,7 +245,7 @@ void ffi_closure_eabi (unsigned arg1, unsigned arg2, unsigned arg3,
 	 start looking at the those passed on the stack.  */
       if (ptr == (char *) &register_args[6])
 	ptr = stack_args;
-      else if (ptr == (char *) &register_args[7])
+      else if (ptr == (register_args + sizeof(register_args)))
 	ptr = stack_args + 4;
     }
 
