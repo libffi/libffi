@@ -151,7 +151,7 @@ void ffi_call(ffi_cif *cif,
     {
       ffi_type *at = arg_types[i];
       int size = at->size;
-      if (at->type == FFI_TYPE_STRUCT && size > 16)
+      if (at->type == FFI_TYPE_STRUCT && size > 8)
         {
           char *argcopy = alloca (size);
           memcpy (argcopy, avalue[i], size);
