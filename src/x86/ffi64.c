@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   ffi64.c - Copyright (c) 2011, 2018  Anthony Green
+   ffi64.c - Copyright (c) 2011, 2018, 2022  Anthony Green
              Copyright (c) 2013  The Written Word, Inc.
              Copyright (c) 2008, 2010  Red Hat, Inc.
              Copyright (c) 2002, 2007  Bo Thorsen <bo@suse.de>
@@ -681,6 +681,23 @@ ffi_call_efi64(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue);
 void
 ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 {
+  ffi_type **arg_types = cif->arg_types;
+  int i, nargs = cif->nargs;
+
+  /* If we have any large structure arguments, make a copy so we are passing
+     by value.  */
+  for (i = 0; i < nargs; i++)
+    {
+      ffi_type *at = arg_types[i];
+      int size = at->size;
+      if (at->type == FFI_TYPE_STRUCT && size > 16)
+        {
+          char *argcopy = alloca (size);
+          memcpy (argcopy, avalue[i], size);
+          avalue[i] = argcopy;
+        }
+    }
+
 #ifndef __ILP32__
   if (cif->abi == FFI_EFI64 || cif->abi == FFI_GNUW64)
     {
