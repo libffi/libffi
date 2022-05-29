@@ -311,7 +311,7 @@ allocate_and_copy_struct_to_stack (struct arg_state *state, void *stack,
   size_t dest = state->next_struct_area - size;
 
   /* Round down to the natural alignment of the value.  */
-  dest = ALIGN_DOWN (dest, alignment);
+  dest = FFI_ALIGN_DOWN (dest, alignment);
   state->next_struct_area = dest;
 
   return memcpy ((char *) stack + dest, value, size);
