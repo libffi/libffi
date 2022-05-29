@@ -125,7 +125,6 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   struct win64_call_frame *frame;
   ffi_type **arg_types = cif->arg_types;
   int nargs = cif->nargs;
-  const int max_reg_struct_size = cif->abi == FFI_GNUW64 ? 8 : 16;
 
   FFI_ASSERT(cif->abi == FFI_GNUW64 || cif->abi == FFI_WIN64);
 
@@ -135,7 +134,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
     {
       ffi_type *at = arg_types[i];
       int size = at->size;
-      if (at->type == FFI_TYPE_STRUCT && size > max_reg_struct_size)
+      if (at->type == FFI_TYPE_STRUCT && size > 8)
         {
           char *argcopy = alloca (size);
           memcpy (argcopy, avalue[i], size);
