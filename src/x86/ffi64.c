@@ -807,6 +807,12 @@ out:
   return FFI_OK;
 }
 
+ffi_closure *
+ffi_find_closure_for_code(void *code)
+{
+    return (ffi_closure *) code;
+}
+
 int FFI_HIDDEN
 ffi_closure_unix64_inner(ffi_cif *cif,
 			 void (*fun)(ffi_cif*, void*, void**, void*),
