@@ -103,8 +103,8 @@
 #endif
 #endif
 
-// Experimentation shows Emscripten supports at most 122 Js trampoline args.
-#define MAX_ARGS 122
+// Most wasm runtimes support at most 1000 Js trampoline args.
+#define MAX_ARGS 1000
 
 #include <stddef.h>
 
