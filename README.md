@@ -200,6 +200,7 @@ See the git log for details at http://github.com/libffi/libffi.
         Fix x32 static trampolines.
         All struct args are passed by value, regardless of size.
         Add support for Loongson's LoonArch64 architecture.
+        Fix ILP32 aarch64 support.
 
     3.4.2 Jun-28-21
         Add static trampoline support for Linux on x86_64 and ARM64.

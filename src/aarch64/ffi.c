@@ -1027,9 +1027,18 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
             {
               /* Replace Composite type of size greater than 16 with a
                   pointer.  */
+#ifdef __ILP32__
+             UINT64 avalue_tmp;
+             memcpy (&avalue_tmp,
+                  allocate_int_to_reg_or_stack (context, &state,
+                                               stack, sizeof (void *)),
+                  sizeof (UINT64));
+             avalue[i] = (void *)(UINT32)avalue_tmp;
+#else
               avalue[i] = *(void **)
               allocate_int_to_reg_or_stack (context, &state, stack,
                                          sizeof (void *));
+#endif
             }
           else
             {
