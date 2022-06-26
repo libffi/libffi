@@ -38,7 +38,8 @@ else
 
     set -x
     wget -qO - https://ftpmirror.gnu.org/autoconf/autoconf-2.71.tar.gz | tar -xvzf -
-    (cd autoconf-2.71; ./configure; make; make install)
+    mkdir -p ~/i
+    (cd autoconf-2.71; ./configure --prefix=~/i; make; make install)
 
     case $HOST in
 	mips64el-linux-gnu | sparc64-linux-gnu)
