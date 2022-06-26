@@ -120,18 +120,14 @@ ffi_prep_cif_machdep(ffi_cif *cif)
   // overwriting cif->nfixedargs.
   if (!(cif->flags & VARARGS_FLAG))
     cif->nfixedargs = cif->nargs;
-  if(cif->nargs > MAX_ARGS) {
+  if (cif->nargs > MAX_ARGS)
     return FFI_BAD_TYPEDEF;
-  }
-  if(cif->rtype->type == FFI_TYPE_COMPLEX){
+  if (cif->rtype->type == FFI_TYPE_COMPLEX)
     return FFI_BAD_TYPEDEF;
-  }
-  for(int i = 0; i < cif->nargs; i++){
-    // If they put the COMPLEX type into a struct we won't notice, but whatever.
-    if(cif->arg_types[i]->type == FFI_TYPE_COMPLEX){
+  // If they put the COMPLEX type into a struct we won't notice, but whatever.
+  for (int i = 0; i < cif->nargs; i++)
+    if (cif->arg_types[i]->type == FFI_TYPE_COMPLEX)
       return FFI_BAD_TYPEDEF;
-    }
-  }
   return FFI_OK;
 }
 
@@ -141,9 +137,8 @@ ffi_prep_cif_machdep_var(ffi_cif *cif, unsigned nfixedargs, unsigned ntotalargs)
   cif->flags |= VARARGS_FLAG;
   cif->nfixedargs = nfixedargs;
   // The varargs takes up one extra argument
-  if(cif->nfixedargs + 1 > MAX_ARGS){
+  if (cif->nfixedargs + 1 > MAX_ARGS)
     return FFI_BAD_TYPEDEF;
-  }
   return FFI_OK;
 }
 
@@ -344,7 +339,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     args.push(cur_stack_ptr);
     // TODO: What does this mean?
     // Now allocate variable struct args on stack too.
-    for(var i = 0; i < struct_arg_info.length; i++) {
+    for (var i = 0; i < struct_arg_info.length; i++) {
       var struct_info = struct_arg_info[i];
       var arg_target = struct_info[0];
       var arg_ptr = struct_info[1];
@@ -549,13 +544,13 @@ ffi_prep_closure_loc_helper,
     }
     cur_ptr -= 4 * nargs;
     var args_ptr = cur_ptr;
-    var carg_idx = -1;
+    var carg_idx = 0;
     // Here we either have the actual argument, or a pair of BigInts for long
     // double, or a pointer to struct. We have to store into args_ptr[i] a
     // pointer to the ith argument. If the argument is a struct, just store the
     // pointer. Otherwise allocate stack space and copy the js argument onto the
     // stack.
-    for (var carg_idx = 0; carg_idx < nfixedargs; carg_idx++ ) {
+    for (; carg_idx < nfixedargs; carg_idx++) {
       // jsarg_idx might start out as 0 or 1 depending on ret_by_arg
       // it advances an extra time for long double
       var cur_arg = args[jsarg_idx++];
@@ -627,7 +622,7 @@ ffi_prep_closure_loc_helper,
     // We either have a pointer to the argument if the argument is not a struct
     // or a pointer to pointer to struct. We need to store a pointer to the
     // argument into args_ptr[i]
-    for (var carg_idx = nfixedargs; carg_idx < nargs; carg_idx++) {
+    for (; carg_idx < nargs; carg_idx++) {
       var arg_type_id = unboxed_arg_type_id_list[carg_idx];
       var arg_type_info = unboxed_arg_type_info_list[carg_idx];
       var arg_size = arg_type_info[0];

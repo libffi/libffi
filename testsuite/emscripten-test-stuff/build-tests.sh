@@ -3,12 +3,12 @@ set -e
 cd "$1"
 export CFLAGS="-fPIC -I../../target/include $EXTRA_CFLAGS"
 export LDFLAGS=" \
-    -s EXPORT_ALL=1 \
-    -s MODULARIZE=1 \
-    -s MAIN_MODULE=1 \
+    -sEXPORT_ALL \
+    -sMODULARIZE \
+    -sMAIN_MODULE \
     -L../../target/lib/ -lffi \
-    -s EXPORTED_RUNTIME_METHODS='getTempRet0' \
-    -s STRICT_JS \
+    -sEXPORTED_RUNTIME_METHODS='getTempRet0' \
+    -sSTRICT_JS \
     $EXTRA_LD_FLAGS \
 "
 

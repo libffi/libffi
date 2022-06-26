@@ -19,9 +19,9 @@ if [ "$WASM_BIGINT" = "true" ]; then
   export CFLAGS+=" -DWASM_BIGINT"
 fi
 export CXXFLAGS="$CFLAGS"
-export LDFLAGS="-O3 -s EXPORTED_FUNCTIONS=_main,_malloc,_free -s ALLOW_TABLE_GROWTH"
+export LDFLAGS="-O3 -sEXPORTED_FUNCTIONS=_main,_malloc,_free -sALLOW_TABLE_GROWTH"
 if [ "$WASM_BIGINT" = "true" ]; then
-  export LDFLAGS+=" -s WASM_BIGINT"
+  export LDFLAGS+=" -sWASM_BIGINT"
 fi
 
 # Specific variables for cross-compilation
@@ -29,7 +29,7 @@ export CHOST="wasm32-unknown-linux" # wasm32-unknown-emscripten
 
 autoreconf -fiv
 emconfigure ./configure --host=$CHOST --enable-static --disable-shared \
-  --disable-builddir --disable-multi-os-directory --disable-raw-api || (cat config.log && exit 1)
+  --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs || (cat config.log && exit 1)
 make
 #EMMAKEN_JUST_CONFIGURE=1 emmake make check \
 #  RUNTESTFLAGS="libffi.closures/closure.exp LDFLAGS_FOR_TARGET='$LDFLAGS'" || (cat testsuite/libffi.log && exit 1)
