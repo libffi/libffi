@@ -32,9 +32,10 @@ else
 		tar --strip-components=2 -xvzf - ./rlgl/rlgl;
 	    ;;
     esac
-
+set -x
     sudo apt-get clean # clear the cache
     sudo apt-get update
+    sudo apt-get install autoconf\*
     case $HOST in
 	mips64el-linux-gnu | sparc64-linux-gnu)
         ;;
