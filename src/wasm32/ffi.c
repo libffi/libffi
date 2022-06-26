@@ -113,6 +113,12 @@ _Static_assert(MAX_ALIGN == __alignof__(max_align_t), "max_align_t must be 8");
 
 #define VARARGS_FLAG 1
 
+#define FFI_OK_MACRO 0
+_Static_assert(FFI_OK_MACRO == FFI_OK, "FFI_OK must be 0");
+
+#define FFI_BAD_TYPEDEF_MACRO 1
+_Static_assert(FFI_BAD_TYPEDEF_MACRO == FFI_BAD_TYPEDEF, "FFI_BAD_TYPEDEF must be 1");
+
 ffi_status FFI_HIDDEN
 ffi_prep_cif_machdep(ffi_cif *cif)
 {
@@ -665,13 +671,13 @@ ffi_prep_closure_loc_helper,
   try {
     var wasm_trampoline = convertJsFunctionToWasm(trampoline, sig);
   } catch(e) {
-    return FFI_BAD_TYPEDEF;
+    return FFI_BAD_TYPEDEF_MACRO;
   }
   wasmTable.set(codeloc, wasm_trampoline);
   CLOSURE__cif(closure) = cif;
   CLOSURE__fun(closure) = fun;
   CLOSURE__user_data(closure) = user_data;
-  return 0 /* FFI_OK */;
+  return FFI_OK_MACRO;
 })
 
 // EM_JS does not correctly handle function pointer arguments, so we need a
