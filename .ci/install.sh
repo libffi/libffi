@@ -37,7 +37,7 @@ else
     sudo apt-get update
 
     set -x
-    wget -q0 https://ftpmirror.gnu.org/autoconf/autoconf-2.71.tar.gz | tar -xvzf
+    wget -q0 https://ftpmirror.gnu.org/autoconf/autoconf-2.71.tar.gz | tar -xvzf -
     (cd autoconf-2.17; ./configure; make; make install)
 
     case $HOST in
