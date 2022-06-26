@@ -3,7 +3,7 @@
 set -x
 
 # Special build tools are here...
-export PATH=~/i/bin:$PATH
+export PATH=$HOME/i/bin:$PATH
 
 # This is a policy bound API key.  It can only be used with
 # https://github.com/libffi/rlgl-policy.git.
