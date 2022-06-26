@@ -45,16 +45,16 @@ else
 
    # Unlike /dev/zero, the MAP_ANON(YMOUS) defines can be probed for.
    AC_CACHE_CHECK([for MAP_ANON(YMOUS)], ac_cv_decl_map_anon,
-    [AC_TRY_COMPILE(
-[#include <sys/types.h>
+    [AC_COMPILE_IFELSE(
+[AC_LANG_PROGRAM([[#include <sys/types.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
 #ifndef MAP_ANONYMOUS
 #define MAP_ANONYMOUS MAP_ANON
 #endif
-],
-[int n = MAP_ANONYMOUS;],
+]],
+[[int n = MAP_ANONYMOUS;]])],
     ac_cv_decl_map_anon=yes,
     ac_cv_decl_map_anon=no)])
 
@@ -104,7 +104,7 @@ dnl See docs/html/17_intro/configury.html#enable for documentation.
 dnl
 m4_define([LIBFFI_ENABLE],[dnl
 m4_define([_g_switch],[--enable-$1])dnl
-m4_define([_g_help],[AC_HELP_STRING(_g_switch$3,[$4 @<:@default=$2@:>@])])dnl
+m4_define([_g_help],[AS_HELP_STRING([_g_switch$3],[$4 @<:@default=$2@:>@])])dnl
  AC_ARG_ENABLE($1,_g_help,
   m4_bmatch([$5],
    [^permit ],
@@ -152,7 +152,7 @@ AC_DEFUN([LIBFFI_CHECK_LINKER_FEATURES], [
   # by now (in libtool), but require it now just to be safe...
   test -z "$SECTION_LDFLAGS" && SECTION_LDFLAGS=''
   test -z "$OPT_LDFLAGS" && OPT_LDFLAGS=''
-  AC_REQUIRE([AC_PROG_LD])
+  AC_REQUIRE([LT_PATH_LD])
   AC_REQUIRE([AC_PROG_AWK])
 
   # The name set by libtool depends on the version of libtool.  Shame on us
@@ -205,14 +205,14 @@ AC_DEFUN([LIBFFI_CHECK_LINKER_FEATURES], [
     # .eh_frame and now some of the glibc sections for iconv).
     # Bzzzzt.  Thanks for playing, maybe next time.
     AC_MSG_CHECKING([for ld that supports -Wl,--gc-sections])
-    AC_TRY_RUN([
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
      int main(void)
      {
        try { throw 1; }
        catch (...) { };
        return 0;
      }
-    ], [ac_sectionLDflags=yes],[ac_sectionLDflags=no], [ac_sectionLDflags=yes])
+    ]])],[ac_sectionLDflags=yes],[ac_sectionLDflags=no],[ac_sectionLDflags=yes])
     if test "$ac_test_CFLAGS" = set; then
       CFLAGS="$ac_save_CFLAGS"
     else
@@ -299,7 +299,7 @@ if test $enable_symvers != no; then
   AC_MSG_CHECKING([for shared libgcc])
   ac_save_CFLAGS="$CFLAGS"
   CFLAGS=' -lgcc_s'
-  AC_TRY_LINK(, [return 0;], libat_shared_libgcc=yes, libat_shared_libgcc=no)
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[return 0;]])],[libat_shared_libgcc=yes],[libat_shared_libgcc=no])
   CFLAGS="$ac_save_CFLAGS"
   if test $libat_shared_libgcc = no; then
     cat > conftest.c <<EOF
@@ -314,7 +314,7 @@ changequote([,])dnl
     rm -f conftest.c conftest.so
     if test x${libat_libgcc_s_suffix+set} = xset; then
       CFLAGS=" -lgcc_s$libat_libgcc_s_suffix"
-      AC_TRY_LINK(, [return 0;], libat_shared_libgcc=yes)
+      AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[return 0;]])],[libat_shared_libgcc=yes],[])
       CFLAGS="$ac_save_CFLAGS"
     fi
   fi

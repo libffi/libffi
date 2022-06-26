@@ -1,11 +1,11 @@
 dnl Process this with autoconf to create configure
 
-AC_PREREQ(2.68)
+AC_PREREQ([2.71])
 
-AC_INIT([libffi], [3.4.2], [http://github.com/libffi/libffi/issues])
+AC_INIT([libffi],[3.4.2],[http://github.com/libffi/libffi/issues])
 AC_CONFIG_HEADERS([fficonfig.h])
 
-AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET
 target_alias=${target_alias-$host_alias}
 
 case "${host}" in
@@ -39,7 +39,7 @@ AC_SUBST(CFLAGS)
 AM_PROG_AS
 AM_PROG_CC_C_O
 AC_PROG_EGREP
-AC_PROG_LIBTOOL
+LT_INIT
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_CHECK_TOOL(READELF, readelf)
@@ -89,7 +89,15 @@ fi
 AC_SUBST(AM_RUNTESTFLAGS)
 AC_SUBST(AM_LTLDFLAGS)
 
-AC_HEADER_STDC
+m4_warn([obsolete],
+[The preprocessor macro `STDC_HEADERS' is obsolete.
+  Except in unusual embedded environments, you can safely include all
+  ISO C90 headers unconditionally.])dnl
+# Autoupdate added the next two lines to ensure that your configure
+# script's behavior did not change.  They are probably safe to remove.
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 AC_CHECK_FUNCS(memcpy)
 AC_FUNC_ALLOCA
 
@@ -126,9 +134,7 @@ case "$TARGET" in
 	save_LDFLAGS="$LDFLAGS"
 	CFLAGS="$CFLAGS -fpic"
 	LDFLAGS="$LDFLAGS -shared"
-	AC_TRY_LINK([asm (".text; foo: nop; .data; .align 4; .byte 0; .uaword %r_disp32(foo); .text");],,
-		    [libffi_cv_as_sparc_ua_pcrel=yes],
-		    [libffi_cv_as_sparc_ua_pcrel=no])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[asm (".text; foo: nop; .data; .align 4; .byte 0; .uaword %r_disp32(foo); .text");]], [[]])],[libffi_cv_as_sparc_ua_pcrel=yes],[libffi_cv_as_sparc_ua_pcrel=no])
 	CFLAGS="$save_CFLAGS"
 	LDFLAGS="$save_LDFLAGS"])
     if test "x$libffi_cv_as_sparc_ua_pcrel" = xyes; then
@@ -140,9 +146,7 @@ case "$TARGET" in
        libffi_cv_as_register_pseudo_op, [
        libffi_cv_as_register_pseudo_op=unknown
        # Check if we have .register
-       AC_TRY_COMPILE(,[asm (".register %g2, #scratch");],
-		       [libffi_cv_as_register_pseudo_op=yes],
-		       [libffi_cv_as_register_pseudo_op=no])
+       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[asm (".register %g2, #scratch");]])],[libffi_cv_as_register_pseudo_op=yes],[libffi_cv_as_register_pseudo_op=no])
     ])
     if test "x$libffi_cv_as_register_pseudo_op" = xyes; then
        AC_DEFINE(HAVE_AS_REGISTER_PSEUDO_OP, 1,
@@ -186,7 +190,7 @@ esac
 AC_CACHE_CHECK([whether compiler supports pointer authentication],
    libffi_cv_as_ptrauth, [
    libffi_cv_as_ptrauth=unknown
-   AC_TRY_COMPILE(,[
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
 #ifdef __clang__
 # if __has_feature(ptrauth_calls)
 #  define HAVE_PTRAUTH 1
@@ -196,9 +200,7 @@ AC_CACHE_CHECK([whether compiler supports pointer authentication],
 #ifndef HAVE_PTRAUTH
 # error Pointer authentication not supported
 #endif
-		   ],
-		   [libffi_cv_as_ptrauth=yes],
-		   [libffi_cv_as_ptrauth=no])
+		   ]])],[libffi_cv_as_ptrauth=yes],[libffi_cv_as_ptrauth=no])
 ])
 if test "x$libffi_cv_as_ptrauth" = xyes; then
     AC_DEFINE(HAVE_PTRAUTH, 1,
@@ -308,8 +310,7 @@ if test "x$GCC" = "xyes"; then
 fi
 
 AC_ARG_ENABLE(docs,
-              AC_HELP_STRING([--disable-docs],
-                             [Disable building of docs (default: no)]),
+              AS_HELP_STRING([--disable-docs],[Disable building of docs (default: no)]),
               [enable_docs=no],
               [enable_docs=yes])
 AM_CONDITIONAL(BUILD_DOCS, [test x$enable_docs = xyes])
