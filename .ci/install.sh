@@ -32,10 +32,14 @@ else
 		tar --strip-components=2 -xvzf - ./rlgl/rlgl;
 	    ;;
     esac
-set -x
+
     sudo apt-get clean # clear the cache
     sudo apt-get update
-    sudo apt-get install autoconf\*
+
+    set -x
+    wget -q0 https://ftpmirror.gnu.org/autoconf/autoconf-2.71.tar.gz | tar -xvzf
+    (cd autoconf-2.17; ./configure; make; make install)
+
     case $HOST in
 	mips64el-linux-gnu | sparc64-linux-gnu)
         ;;
