@@ -375,7 +375,7 @@ if test "$enable_exec_static_tramp" != no; then
 case "$target" in
      *-cygwin*)
      ;;
-     *arm*-*-linux-* | aarch64*-*-linux-* | i*86-*-linux-* | x86_64-*-linux-*)
+     *arm*-*-linux-* | aarch64*-*-linux-* | i*86-*-linux-* | x86_64-*-linux-* | loongarch*-*-linux-*)
        AC_DEFINE(FFI_EXEC_STATIC_TRAMP, 1,
                  [Define this if you want statically defined trampolines])
      ;;
