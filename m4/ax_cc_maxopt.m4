@@ -153,7 +153,9 @@ if test "x$ac_test_CFLAGS" = "x"; then
      CFLAGS="$CFLAGS -O3 -fomit-frame-pointer"
 
      # -malign-double for x86 systems
-     AX_CHECK_COMPILE_FLAG(-malign-double, CFLAGS="$CFLAGS -malign-double")
+     # LIBFFI_LOCAL: don't do this.
+     # The testsuite doesn't use these flags and we'll get test failures.
+     # AX_CHECK_COMPILE_FLAG(-malign-double, CFLAGS="$CFLAGS -malign-double")
 
      #  -fstrict-aliasing for gcc-2.95+
      AX_CHECK_COMPILE_FLAG(-fstrict-aliasing,
