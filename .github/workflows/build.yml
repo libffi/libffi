@@ -22,13 +22,13 @@ jobs:
       fail-fast: false
       matrix:
        include:
-         - MEVAL: "export CC=clang && CXX=clang"
+         - MEVAL: "export CC=clang CXX=clang"
          - HOST: "i386-pc-linux-gnu"
-           MEVAL: 'export CC="gcc -m32" && CXX="g++ -m32"'
+           MEVAL: 'export CC="gcc -m32" CXX="g++ -m32"'
          - CONFIGURE_OPTIONS: "--disable-shared"
          - CONFIGURE_OPTIONS: "--enable-shared"
          - HOST: "m68k-linux-gnu"
-           MEVAL: 'export CC="m68k-linux-gnu-gcc-8 -mcpu=547x" && CXX="m68k-linux-gnu-g++-8 -mcpu=547x"'
+           MEVAL: 'export CC="m68k-linux-gnu-gcc-8 -mcpu=547x" CXX="m68k-linux-gnu-g++-8 -mcpu=547x"'
            CONFIGURE_OPTIONS: '--disable-shared'
            QEMU_LD_PREFIX: '/usr/m68k-linux-gnu'
            QEMU_CPU: 'cfv4e'
@@ -57,7 +57,7 @@ jobs:
            RUNTESTFLAGS: "--target_board m32r-sim"
          - HOST: "bfin-elf"
            RUNTESTFLAGS: "--target_board bfin-sim"
-         - MEVAL: "export PATH=/opt/moxielogic/bin:$PATH && CC=moxie-elf-gcc && CXX=moxie-elf-g++"
+         - MEVAL: "export PATH=/opt/moxielogic/bin:$PATH CC=moxie-elf-gcc CXX=moxie-elf-g++"
            HOST: "moxie-elf"
            LDFLAGS: "-Tsim.ld"
            RUNTESTFLAGS: "--target_board moxie-sim"
