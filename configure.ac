@@ -124,7 +124,22 @@ AC_SUBST(HAVE_LONG_DOUBLE_VARIANT)
 
 AC_C_BIGENDIAN
 
-GCC_AS_CFI_PSEUDO_OP
+AC_CACHE_CHECK([compiler generates .cfi pseudo-ops],
+  gcc_cv_as_cfi_pseudo_op, [
+	gcc_cv_as_cfi_pseudo_op=no
+	echo 'void foo(void) { foo(); }' > conftest.c
+	if $CC $CFLAGS -S conftest.c > /dev/null 2>&1; then
+	    if grep -q cfi_startproc conftest.s; then
+	        gcc_cv_as_cfi_pseudo_op=yes
+            fi
+	fi
+	])
+if test "x$gcc_cv_as_cfi_pseudo_op" = xyes; then
+   AC_DEFINE(HAVE_AS_CFI_PSEUDO_OP, 1,
+      [Define if your assembler supports .cfi_* directives.])
+else
+   GCC_AS_CFI_PSEUDO_OP
+fi
 
 case "$TARGET" in
   SPARC)
@@ -391,7 +406,7 @@ AC_ARG_ENABLE(purify-safety,
 AC_ARG_ENABLE(multi-os-directory,
 [  --disable-multi-os-directory
                           disable use of gcc --print-multi-os-directory to change the library installation directory])
-                          
+
 # These variables are only ever used when we cross-build to X86_WIN32.
 # And we only support this with GCC, so...
 if test "x$GCC" = "xyes"; then
