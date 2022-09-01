@@ -431,6 +431,16 @@ else
 fi
 AC_SUBST(toolexeclibdir)
 
+# Conditionalize the makefile for this target machine.
+tmake_file_=
+for f in ${tmake_file}; do
+  if test -f ${srcdir}/src/$TARGETDIR/$f; then
+     tmake_file_="${tmake_file_} \$(srcdir)/src/$TARGETDIR/$f"
+  fi
+done
+tmake_file="${tmake_file_}"
+AC_SUBST(tmake_file)
+
 # Check linker support.
 LIBFFI_ENABLE_SYMVERS
 

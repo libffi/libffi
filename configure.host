@@ -212,6 +212,8 @@ case "${host}" in
 	;;
   powerpc-*-aix* | rs6000-*-aix*)
 	TARGET=POWERPC_AIX; TARGETDIR=powerpc
+	# Create AIX-style "FAT" libraries.
+	tmake_file="t-aix"
 	;;
   powerpc-*-freebsd* | powerpc-*-openbsd* | powerpc-*-netbsd*)
 	TARGET=POWERPC_FREEBSD; TARGETDIR=powerpc
