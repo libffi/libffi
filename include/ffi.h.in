@@ -345,6 +345,9 @@ typedef struct {
   ffi_cif   *cif;
   void     (*fun)(ffi_cif*,void*,void**,void*);
   void      *user_data;
+#if defined(_MSC_VER) && defined(_M_IX86)
+  void      *padding;
+#endif
 } ffi_closure
 #ifdef __GNUC__
     __attribute__((aligned (8)))
