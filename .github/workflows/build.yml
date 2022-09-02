@@ -78,6 +78,22 @@ jobs:
           ./.ci/install.sh
           ./.ci/build.sh
 
+  build-aarch64:
+    name: Build & test on Aarch64
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+    steps
+      - name: SSH Remote Commands
+        uses: appleboy/ssh-action@v0.1.5
+        host: ${{ secrets.AARCH_HOST }}
+        username: ${{ secrets.CFARM_USERNAME }}
+        key: ${{ secrets.CFARM_KEY }}
+        port: ${{ secrets.AARCH_PORT }}
+        script: whoami
+
   build:
     name: Build & test with Cygwin
     runs-on: windows-latest
