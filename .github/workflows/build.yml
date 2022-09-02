@@ -95,7 +95,14 @@ jobs:
           username: ${{ secrets.CFARM_USERNAME }}
           key: ${{ secrets.CFARM_KEY }}
           port: ${{ secrets.AARCH_PORT }}
-          script: whoami
+          script: |
+            ls -l
+            rm -rf libffi
+            git clone https://github.com/libffi/libffi
+            cd libffi
+            ./configure
+            make
+            make check
 
   build:
     name: Build & test with Cygwin
