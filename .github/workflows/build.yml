@@ -84,6 +84,8 @@ jobs:
 
     strategy:
       fail-fast: false
+      matrix:
+        platform: [ubuntu-latest]
 
     steps:
       - name: SSH Remote Commands
