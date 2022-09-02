@@ -85,7 +85,7 @@ jobs:
     strategy:
       fail-fast: false
 
-    steps
+    steps:
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v0.1.5
         host: ${{ secrets.AARCH_HOST }}
