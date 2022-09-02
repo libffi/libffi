@@ -90,11 +90,12 @@ jobs:
     steps:
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v0.1.5
-        host: ${{ secrets.AARCH_HOST }}
-        username: ${{ secrets.CFARM_USERNAME }}
-        key: ${{ secrets.CFARM_KEY }}
-        port: ${{ secrets.AARCH_PORT }}
-        script: whoami
+        with:
+          host: ${{ secrets.AARCH_HOST }}
+          username: ${{ secrets.CFARM_USERNAME }}
+          key: ${{ secrets.CFARM_KEY }}
+          port: ${{ secrets.AARCH_PORT }}
+          script: whoami
 
   build:
     name: Build & test with Cygwin
