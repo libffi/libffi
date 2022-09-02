@@ -93,20 +93,30 @@ jobs:
 
       - run: |
           set -x
-          pwd
-          ls -l
           wget -qO - https://ftpmirror.gnu.org/autoconf/autoconf-2.71.tar.gz | tar -xvzf -
           mkdir -p ~/i
           (cd autoconf-2.71; ./configure --prefix=$HOME/i; make; make install)
           rm -rf autoconf-2.71
           PATH=$HOME/i/bin:$PATH ./autogen.sh
 
+      - name: SSH Remote Commands
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.AARCH_HOST }}
+          username: ${{ secrets.CFARM_USERNAME }}
+          key: ${{ secrets.CFARM_KEY }}
+          port: ${{ secrets.AARCH_PORT }}
+          script: |
+            rm -rf actions
+            mkdir actions
+            pwd
+
       - name: copy files for remote Aarch64 server
         uses: burnett01/rsync-deployments@5.2.1
         with:
           switches: -avzr --delete
           path: .
-          remote_path: /home/green
+          remote_path: /home/green/actions
           remote_host: ${{ secrets.AARCH_HOST }}
           remote_user: ${{ secrets.CFARM_USERNAME }}
           remote_key: ${{ secrets.CFARM_KEY }}
@@ -120,6 +130,7 @@ jobs:
           port: ${{ secrets.AARCH_PORT }}
           script: |
             ls -l
+            cd actions
             ./configure
             make
             make check
