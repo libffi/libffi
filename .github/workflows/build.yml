@@ -125,17 +125,19 @@ jobs:
           key: ${{ secrets.CFARM_KEY }}
           port: ${{ matrix.CFARM_PORT }}
           script: |
-            mkdir -p ga/${{ env.GITHUB_RUN_NUMBER }}
+            env
+            mkdir -p new/${{ env.GITHUB_RUN_NUMBER }}
 
       - name: Copy source to remote server
-        uses: appleboy/scp-action@master
+        uses: nicklasfrahm/scp-action@main
         with:
+          direction: upload
           host: ${{ matrix.CFARM_HOST }}
           username: ${{ secrets.CFARM_USERNAME }}
           key: ${{ secrets.CFARM_KEY }}
           port: ${{ matrix.CFARM_PORT }}
           source: "*"
-          target: "ga/${{ env.GITHUB_RUN_NUMBER }}"
+          target: "new/${{ env.GITHUB_RUN_NUMBER }}"
 
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v0.1.5
@@ -146,7 +148,7 @@ jobs:
           port: ${{ matrix.CFARM_PORT }}
           script: |
             ls -l
-            cd ga/${{ env.GITHUB_RUN_NUMBER }}
+            cd new/${{ env.GITHUB_RUN_NUMBER }}
             ./configure
             make
             make check
