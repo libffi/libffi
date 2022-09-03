@@ -86,20 +86,20 @@ jobs:
       fail-fast: false
       matrix:
        include:
-         - CFARM_HOST: ${{ secrets.AARCH_HOST }}
-           CFARM_PORT: ${{ secrets.AARCH_PORT }}
+         - CFARM_HOST: gcc117.fsffrance.org
+           CFARM_PORT: 22
            CFARM_ARCH: Aarch64
-         - CFARM_HOST: ${{ secrets.LOONGARCH64_HOST }}
-           CFARM_PORT: ${{ secrets.LOONGARCH64_PORT }}
+         - CFARM_HOST: gcc400.fsffrance.org
+           CFARM_PORT: 225465
            CFARM_ARCH: Loongarch64
-         - CFARM_HOST: ${{ secrets.MIPS64_HOST }}
-           CFARM_PORT: ${{ secrets.MIPS64_PORT }}
+         - CFARM_HOST: gcc230.fsffrance.org
+           CFARM_PORT: 22
            CFARM_ARCH: MIPS64
-         - CFARM_HOST: ${{ secrets.SPARC64_HOST }}
-           CFARM_PORT: ${{ secrets.SPARC64_PORT }}
+         - CFARM_HOST: gcc102.fsffrance.org
+           CFARM_PORT: 22
            CFARM_ARCH: SPARC64
-         - CFARM_HOST: ${{ secrets.RISCV64_HOST }}
-           CFARM_PORT: ${{ secrets.RISCV64_PORT }}
+         - CFARM_HOST: gcc91.fsffrance.org
+           CFARM_PORT: 22
            CFARM_ARCH: RISCV64
 
     steps:
