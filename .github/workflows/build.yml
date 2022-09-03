@@ -78,14 +78,29 @@ jobs:
           ./.ci/install.sh
           ./.ci/build.sh
 
-  build-aarch64:
-    name: Build & test on Aarch64
+  build-cfarm:
+    name: Build & test on the GCC Compiler Farm
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest]
+       include:
+         - CFARM_HOST: ${{ secrets.AARCH_HOST }}
+           CFARM_PORT: ${{ secrets.AARCH_PORT }}
+           CFARM_ARCH: Aarch64
+         - CFARM_HOST: ${{ secrets.LOONGARCH64_HOST }}
+           CFARM_PORT: ${{ secrets.LOONGARCH64_PORT }}
+           CFARM_ARCH: Loongarch64
+         - CFARM_HOST: ${{ secrets.MIPS64_HOST }}
+           CFARM_PORT: ${{ secrets.MIPS64_PORT }}
+           CFARM_ARCH: MIPS64
+         - CFARM_HOST: ${{ secrets.SPARC64_HOST }}
+           CFARM_PORT: ${{ secrets.SPARC64_PORT }}
+           CFARM_ARCH: SPARC64
+         - CFARM_HOST: ${{ secrets.RISCV64_HOST }}
+           CFARM_PORT: ${{ secrets.RISCV64_PORT }}
+           CFARM_ARCH: RISCV64
 
     steps:
 
@@ -102,33 +117,31 @@ jobs:
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v0.1.5
         with:
-          host: ${{ secrets.AARCH_HOST }}
+          host: ${CFARM_HOST}
           username: ${{ secrets.CFARM_USERNAME }}
           key: ${{ secrets.CFARM_KEY }}
-          port: ${{ secrets.AARCH_PORT }}
+          port: ${CFARM_PORT}
           script: |
             rm -rf actions
             mkdir actions
-            ls -l
-            pwd
 
       - name: Copy source to remote server
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.AARCH_HOST }}
+          host: ${CFARM_HOST}
           username: ${{ secrets.CFARM_USERNAME }}
           key: ${{ secrets.CFARM_KEY }}
-          port: ${{ secrets.AARCH_PORT }}
+          port: ${CFARM_PORT}
           source: "*"
           target: "actions"
 
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v0.1.5
         with:
-          host: ${{ secrets.AARCH_HOST }}
+          host: ${CFARM_HOST}
           username: ${{ secrets.CFARM_USERNAME }}
           key: ${{ secrets.CFARM_KEY }}
-          port: ${{ secrets.AARCH_PORT }}
+          port: ${CFARM_PORT}
           script: |
             ls -l
             cd actions
