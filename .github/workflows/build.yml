@@ -113,7 +113,7 @@ jobs:
             pwd
 
       - name: Copy source to remote server
-        uses: appleboy/scp-action@v0.1.5
+        uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.AARCH_HOST }}
           username: ${{ secrets.CFARM_USERNAME }}
