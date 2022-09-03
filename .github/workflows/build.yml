@@ -87,27 +87,27 @@ jobs:
       matrix:
        include:
          - CFARM_HOST: gcc117.fsffrance.org
-           CFARM_FINGERPRINT: SHA256:5Xr73//kUDfpr/mhEtBHBt2Kot2NmRnbyiawCg2ybTc
+           CFARM_FINGERPRINT: SHA256:iIjIHyiHkXGQG12/U8O6F+hhWvIC2IyZex0Praa5+Uc
            CFARM_PORT: 22
            CFARM_ARCH: Aarch64
          - CFARM_HOST: gcc400.fsffrance.org
-           CFARM_FINGERPRINT: SHA256:IOF1dfd1tP3o9cuR4J4/ihk3p/gvRuIv37LjDyrcMUY
+           CFARM_FINGERPRINT: SHA256:EzZ1GCRWSfHNHrZGehMsT6e1AMaSRhErCNssA/OwzVs
            CFARM_PORT: 25465
            CFARM_ARCH: Loongarch64
          - CFARM_HOST: gcc230.fsffrance.org
-           CFARM_FINGERPRINT: SHA256:VGOA5Kr1N55488b53gDAYckrXqTQdWB83jDxnUapuZc
+           CFARM_FINGERPRINT: SHA256:34HKrM8madBDngzbhC6cRKoKiIIFRnTYBjiJOh+VE6c
            CFARM_PORT: 22
            CFARM_ARCH: MIPS64
          - CFARM_HOST: gcc102.fsffrance.org
-           CFARM_FINGERPRINT: SHA256:ppHPbbXUrQoGx5K8mmzj0SuaeP9f+erscA82Nb2941c
+           CFARM_FINGERPRINT: SHA256:FkoYZwaelTrNPmCiZk0us5Y/toIt+4CpVxEMBhY3DPU
            CFARM_PORT: 22
            CFARM_ARCH: SPARC64
          - CFARM_HOST: gcc91.fsffrance.org
-           CFARM_FINGERPRINT: SHA256:NjcSb5ZDe+enBk+Ia5Mtw41f2ROU2lt/g7UwMt4fbdY
+           CFARM_FINGERPRINT: SHA256:vZ0hdeeB8LZfdpjdBEvFjkTlitUyj2/bTN79AAtRgoM
            CFARM_PORT: 22
            CFARM_ARCH: RISCV64
          - CFARM_HOST: gcc103.fsffrance.org
-           CFARM_FINGERPRINT: SHA256:hGeUg4QHl4wvqBTia5OLr8DeV+iNmf78rl85PqX8BBU
+           CFARM_FINGERPRINT: SHA256:EPtff2r1+IGO3ql8G5jM5YE7kRh2mFxbSltxlLpnuk8
            CFARM_PORT: 22
            CFARM_ARCH: Aarch64 M1
 
