@@ -115,7 +115,7 @@ jobs:
       - name: copy files for remote Aarch64 server
         uses: burnett01/rsync-deployments@5.2.1
         with:
-          switches: -avvvzr
+          switches: -avzr
           path: .
           remote_path: actions/
           remote_host: ${{ secrets.AARCH_HOST }}
