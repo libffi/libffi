@@ -87,27 +87,21 @@ jobs:
       matrix:
        include:
          - CFARM_HOST: gcc117.fsffrance.org
-           CFARM_FINGERPRINT: l7+4azKiVsA+xWqKut6NG2ohZ5UEkJaDi3hG/7Ek4/g
            CFARM_PORT: 22
            CFARM_ARCH: Aarch64
          - CFARM_HOST: gcc400.fsffrance.org
-           CFARM_FINGERPRINT: zsmFZBbWun/JUd5neBhCerQXiWp1Y48hraU/n7SOAvY
            CFARM_PORT: 25465
            CFARM_ARCH: Loongarch64
          - CFARM_HOST: gcc230.fsffrance.org
-           CFARM_FINGERPRINT: VWwO92GkxL+VgGOG1gTlMZ+Vb0od7+j24f54LOjY4TA
            CFARM_PORT: 22
            CFARM_ARCH: MIPS64
          - CFARM_HOST: gcc102.fsffrance.org
-           CFARM_FINGERPRINT: 0HfYa5TBrhDnFclXzmBGIF33VLGx3UZ2Yea99LPdOOk
            CFARM_PORT: 22
            CFARM_ARCH: SPARC64
          - CFARM_HOST: gcc91.fsffrance.org
-           CFARM_FINGERPRINT: NjcSb5ZDe+enBk+Ia5Mtw41f2ROU2lt/g7UwMt4fbdY
            CFARM_PORT: 22
            CFARM_ARCH: RISCV64
          - CFARM_HOST: gcc103.fsffrance.org
-           CFARM_FINGERPRINT: HVwI9PG2ZIeTYl8VFFLMdof45kaHvCNNUXKHO9sCT9M
            CFARM_PORT: 22
            CFARM_ARCH: Aarch64 M1
 
@@ -125,9 +119,9 @@ jobs:
           chmod go-rw /tmp/cfk
           ls -l /tmp/cfk
           ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
-          rsync -avrz -e "ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }}" * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
+          scp -o StrictHostKeyChecking=no -i /tmp/cfk -P ${{ matrix.CFARM_PORT }}" -a * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
           ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; ./configure; make; make check)"
-          rsync -avrz -e "ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }}" ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER/*/testsuite/*.log .
+          scp -o StrictHostKeyChecking=no -i /tmp/cfk -P ${{ matrix.CFARM_PORT }}" ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER/*/testsuite/*.log .
 
   build:
     name: Build & test with Cygwin
