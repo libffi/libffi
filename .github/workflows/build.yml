@@ -79,7 +79,7 @@ jobs:
           ./.ci/build.sh
 
   build-cfarm:
-    name: Build & test on the GCC Compiler Farm
+    name: Build & test on the GCC Compile Farm
     runs-on: ubuntu-latest
 
     strategy:
@@ -101,6 +101,9 @@ jobs:
          - CFARM_HOST: gcc91.fsffrance.org
            CFARM_PORT: 22
            CFARM_ARCH: RISCV64
+         - CFARM_HOST: gcc103.fsffrance.org
+           CFARM_PORT: 22
+           CFARM_ARCH: Aarch64 M1
 
     steps:
 
@@ -117,10 +120,10 @@ jobs:
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v0.1.5
         with:
-          host: ${CFARM_HOST}
+          host: ${{ matrix.CFARM_HOST }}
           username: ${{ secrets.CFARM_USERNAME }}
           key: ${{ secrets.CFARM_KEY }}
-          port: ${CFARM_PORT}
+          port: ${{ matrix.CFARM_PORT }}
           script: |
             rm -rf actions
             mkdir actions
@@ -128,20 +131,20 @@ jobs:
       - name: Copy source to remote server
         uses: appleboy/scp-action@master
         with:
-          host: ${CFARM_HOST}
+          host: ${{ matrix.CFARM_HOST }}
           username: ${{ secrets.CFARM_USERNAME }}
           key: ${{ secrets.CFARM_KEY }}
-          port: ${CFARM_PORT}
+          port: ${{ matrix.CFARM_PORT }}
           source: "*"
           target: "actions"
 
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v0.1.5
         with:
-          host: ${CFARM_HOST}
+          host: ${{ matrix.CFARM_HOST }}
           username: ${{ secrets.CFARM_USERNAME }}
           key: ${{ secrets.CFARM_KEY }}
-          port: ${CFARM_PORT}
+          port: ${{ matrix.CFARM_PORT }}
           script: |
             ls -l
             cd actions
