@@ -109,14 +109,15 @@ jobs:
           script: |
             rm -rf actions
             mkdir actions
+            ls -l
             pwd
 
       - name: copy files for remote Aarch64 server
         uses: burnett01/rsync-deployments@5.2.1
         with:
-          switches: -avzr --delete
+          switches: -avzr
           path: .
-          remote_path: /home/green/actions
+          remote_path: /home/green/actions/
           remote_host: ${{ secrets.AARCH_HOST }}
           remote_user: ${{ secrets.CFARM_USERNAME }}
           remote_key: ${{ secrets.CFARM_KEY }}
