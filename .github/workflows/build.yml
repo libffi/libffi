@@ -134,17 +134,15 @@ jobs:
             env
             mkdir -p new/${{ env.GITHUB_RUN_NUMBER }}
 
-      - name: Copy source to remote server
-        uses: nicklasfrahm/scp-action@main
+      - name: copy files for remote Aarch64 server
+        uses: burnett01/rsync-deployments@5.2.1
         with:
-          direction: upload
-          host: ${{ matrix.CFARM_HOST }}
-          fingerprint: $${{ matrix.CFARM_FINGERPRINT }}
-          username: ${{ secrets.CFARM_USERNAME }}
-          key: ${{ secrets.CFARM_KEY }}
-          port: ${{ matrix.CFARM_PORT }}
-          source: "*"
-          target: "new/${{ env.GITHUB_RUN_NUMBER }}"
+          switches: -avzr
+          path: .
+          remote_path: new/${{ env.GITHUB_RUN_NUMBER }}
+          remote_host: ${{ secrets.AARCH_HOST }}
+          remote_user: ${{ secrets.CFARM_USERNAME }}
+          remote_key: ${{ secrets.CFARM_KEY }}
 
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v0.1.5
