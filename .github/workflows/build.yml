@@ -139,7 +139,7 @@ jobs:
         with:
           direction: upload
           host: ${{ matrix.CFARM_HOST }}
-          fingerprint: ${{ matrix.CFARM_FINGERPRINT }}
+          insecure_ignore_fingerprint: true
           username: ${{ secrets.CFARM_USERNAME }}
           key: ${{ secrets.CFARM_KEY }}
           port: ${{ matrix.CFARM_PORT }}
