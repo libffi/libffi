@@ -117,7 +117,7 @@ jobs:
         with:
           switches: -avzr
           path: .
-          remote_path: /home/green/actions/
+          remote_path: actions
           remote_host: ${{ secrets.AARCH_HOST }}
           remote_user: ${{ secrets.CFARM_USERNAME }}
           remote_key: ${{ secrets.CFARM_KEY }}
