@@ -124,9 +124,9 @@ jobs:
           echo "${{ secrets.CFARM_KEY }}" > /tmp/cfk
           chmod go-rw /tmp/cfk
           ls -l /tmp/cfk
-          ssh -o StrictHostKeyChecking=no -i /tmp/cfk ${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
-          rsync -avrz -e "ssh -o StrictHostKeyChecking=no -i /tmp/cfk" * ${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
-          ssh -o StrictHostKeyChecking=no -i /tmp/cfk ${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; ./configure; make; make check)"
+          ssh -o StrictHostKeyChecking=no -i /tmp/cfk ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
+          rsync -avrz -e "ssh -o StrictHostKeyChecking=no -i /tmp/cfk" * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
+          ssh -o StrictHostKeyChecking=no -i /tmp/cfk ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; ./configure; make; make check)"
 
 
   build:
