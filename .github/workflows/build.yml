@@ -122,6 +122,7 @@ jobs:
           rm -rf autoconf-2.71
           PATH=$HOME/i/bin:$PATH ./autogen.sh
           echo "${{ secrets.CFARM_KEY }}" > /tmp/cfk
+          chmod go-rw /tmp/cfk
           ls -l /tmp/cfk
           ssh -o StrictHostKeyChecking=no -i /tmp/cfk ${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
           rsync -avrz -e "ssh -o StrictHostKeyChecking=no -i /tmp/cfk" * ${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
