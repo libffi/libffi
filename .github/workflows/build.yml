@@ -119,9 +119,9 @@ jobs:
           chmod go-rw /tmp/cfk
           ls -l /tmp/cfk
           ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
-          scp -o StrictHostKeyChecking=no -i /tmp/cfk -P ${{ matrix.CFARM_PORT }}" -a * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
+          scp -o StrictHostKeyChecking=no -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} -a * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
           ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; ./configure; make; make check)"
-          scp -o StrictHostKeyChecking=no -i /tmp/cfk -P ${{ matrix.CFARM_PORT }}" ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER/*/testsuite/*.log .
+          scp -o StrictHostKeyChecking=no -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER/*/testsuite/*.log .
 
   build:
     name: Build & test with Cygwin
