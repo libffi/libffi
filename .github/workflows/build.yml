@@ -103,7 +103,7 @@ jobs:
            CFARM_PORT: 22
            CFARM_ARCH: SPARC64
          - CFARM_HOST: gcc91.fsffrance.org
-           CFARM_FINGERPRINT: SHA256:zVerliPLaCi7nQsSn8a2UwQNVh3vOmrZtJdw661CGUU
+           CFARM_FINGERPRINT: SHA256:NjcSb5ZDe+enBk+Ia5Mtw41f2ROU2lt/g7UwMt4fbdY
            CFARM_PORT: 22
            CFARM_ARCH: RISCV64
          - CFARM_HOST: gcc103.fsffrance.org
