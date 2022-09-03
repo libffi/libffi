@@ -90,7 +90,7 @@ jobs:
            CFARM_PORT: 22
            CFARM_ARCH: Aarch64
          - CFARM_HOST: gcc400.fsffrance.org
-           CFARM_PORT: 225465
+           CFARM_PORT: 25465
            CFARM_ARCH: Loongarch64
          - CFARM_HOST: gcc230.fsffrance.org
            CFARM_PORT: 22
@@ -125,8 +125,7 @@ jobs:
           key: ${{ secrets.CFARM_KEY }}
           port: ${{ matrix.CFARM_PORT }}
           script: |
-            rm -rf actions
-            mkdir actions
+            mkdir -p github/$GITHUB_RUN_NUMBER
 
       - name: Copy source to remote server
         uses: appleboy/scp-action@master
@@ -136,7 +135,7 @@ jobs:
           key: ${{ secrets.CFARM_KEY }}
           port: ${{ matrix.CFARM_PORT }}
           source: "*"
-          target: "actions"
+          target: "github/$GITHUB_RUN_NUMBER"
 
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v0.1.5
@@ -147,7 +146,7 @@ jobs:
           port: ${{ matrix.CFARM_PORT }}
           script: |
             ls -l
-            cd actions
+            cd github/$GITHUB_RUN_NUMBER
             ./configure
             make
             make check
