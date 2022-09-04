@@ -89,21 +89,27 @@ jobs:
          - CFARM_HOST: gcc117.fsffrance.org
            CFARM_PORT: 22
            CFARM_ARCH: Aarch64
+           CFARM_TRIPLE: aarch64-unknown-linux-gnu
          - CFARM_HOST: gcc400.fsffrance.org
            CFARM_PORT: 25465
            CFARM_ARCH: Loongarch64
+           CFARM_TRIPLE: loongarch64-unknown-linux-gnu
          - CFARM_HOST: gcc230.fsffrance.org
            CFARM_PORT: 22
            CFARM_ARCH: MIPS64
+           CFARM_TRIPLE: sparc64-unknown-linux-gnu
          - CFARM_HOST: gcc102.fsffrance.org
            CFARM_PORT: 22
            CFARM_ARCH: SPARC64
+           CFARM_TRIPLE: sparc64-unknown-linux-gnu
          - CFARM_HOST: gcc91.fsffrance.org
            CFARM_PORT: 22
            CFARM_ARCH: RISCV64
+           CFARM_TRIPLE: riscv64-unknown-linux-gnu
          - CFARM_HOST: gcc103.fsffrance.org
            CFARM_PORT: 22
            CFARM_ARCH: Aarch64 M1
+           CFARM_TRIPLE: aarch64-m1-linux-gnu
 
     steps:
 
@@ -119,7 +125,7 @@ jobs:
           chmod go-rw /tmp/cfk
           ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
           scp -o StrictHostKeyChecking=no -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} -r * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
-          ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; ./configure; make; make check) || true"
+          ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; ./configure --host=$CFARM_TRIPLE; make; make check) || true"
           scp -o StrictHostKeyChecking=no -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER/*/testsuite/*.log .
           ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "rm -rf t/$GITHUB_RUN_NUMBER"
           wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
