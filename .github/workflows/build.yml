@@ -123,11 +123,11 @@ jobs:
           PATH=$HOME/i/bin:$PATH ./autogen.sh
           echo "${{ secrets.CFARM_KEY }}" > /tmp/cfk
           chmod go-rw /tmp/cfk
-          ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
-          scp -o StrictHostKeyChecking=no -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} -r * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
-          ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; ./configure --host=$CFARM_TRIPLE; make; make check) || true"
-          scp -o StrictHostKeyChecking=no -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER/*/testsuite/*.log .
-          ssh -o StrictHostKeyChecking=no -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "rm -rf t/$GITHUB_RUN_NUMBER"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} -r * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; ./configure --host=$CFARM_TRIPLE; make; make check) || true"
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER/*/testsuite/*.log .
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "rm -rf t/$GITHUB_RUN_NUMBER"
           wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
                tar --strip-components=2 -xvzf - ./rlgl/rlgl;
           ./rlgl l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
