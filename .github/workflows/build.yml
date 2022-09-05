@@ -172,8 +172,7 @@ jobs:
           wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
                tar --strip-components=2 -xvzf - ./rlgl/rlgl;
           ./rlgl l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ID=$(./rlgl start)
-          ./rlgl e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git libffi.log
+          ./rlgl e --id=${GITHUB_SHA:0:8} --policy=https://github.com/libffi/rlgl-policy.git libffi.log
           exit $?
 
   build:
@@ -209,8 +208,7 @@ jobs:
           make -j 4
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ID=$(./rlgl/rlgl.exe start)
-          ./rlgl/rlgl.exe e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
+          ./rlgl/rlgl.exe e --id=${GITHUB_SHA:0:8} --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
 
   build-msvc:
@@ -252,6 +250,5 @@ jobs:
           cp $(find . -name 'libffi-?.dll') x86_64-pc-cygwin/testsuite/
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ID=$(./rlgl/rlgl.exe start)
-          ./rlgl/rlgl.exe e --id=$ID --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
+          ./rlgl/rlgl.exe e --id=${GITHUB_SHA:0:8} --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
