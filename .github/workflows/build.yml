@@ -129,7 +129,7 @@ jobs:
         run: |
           set +e
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
-          if test $? -eq 255; then
+          if test $? -ne 0; then
             echo "Remote host is unavailable."
             exit 0
           fi
