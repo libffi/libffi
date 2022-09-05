@@ -172,7 +172,7 @@ jobs:
           wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
                tar --strip-components=2 -xvzf - ./rlgl/rlgl;
           ./rlgl l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ./rlgl e --id=${GITHUB_SHA:0:8} --policy=https://github.com/libffi/rlgl-policy.git libffi.log
+          ./rlgl e --id=${GITHUB_SHA:0:7} --policy=https://github.com/libffi/rlgl-policy.git libffi.log
           exit $?
 
   build:
@@ -185,6 +185,8 @@ jobs:
         platform: [windows-latest]
 
     steps:
+      - run: git config --global core.autocrlf input
+
       - uses: actions/checkout@v2
 
       - name: Set up Cygwin
@@ -198,17 +200,12 @@ jobs:
           cd $(cygpath $RUNNER_WORKSPACE)/libffi
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
           unzip rlgl-windows-amd64.zip
-          find . -name \*.m4|xargs dos2unix
-          find . -name \*.ac|xargs dos2unix
-          find . -name \*.am|xargs dos2unix
-          find . -name \*.host|xargs dos2unix
           autoreconf -f -v -i
           ./configure
-          find . -name libtool\*|xargs dos2unix
           make -j 4
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ./rlgl/rlgl.exe e --id=${GITHUB_SHA:0:8} --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
+          ./rlgl/rlgl.exe e --id=${GITHUB_SHA:0:7} --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
 
   build-msvc:
@@ -221,6 +218,7 @@ jobs:
         platform: [windows-latest]
 
     steps:
+      - run: git config --global core.autocrlf input
       - uses: actions/checkout@v2
       - uses: egor-tensin/setup-cygwin@v3
         with:
@@ -231,24 +229,16 @@ jobs:
 
       - name: Build and test
         run: |
-          dos2unix $(cygpath $RUNNER_WORKSPACE)/libffi/.ci/msvs-detect
           # $(cygpath $RUNNER_WORKSPACE)/libffi/.ci/msvs-detect --arch=x64 --with-assembler
           export PATH=$PATH:"/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.16.27023/bin/HostX64/x64"
           cd $(cygpath $RUNNER_WORKSPACE)/libffi
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
           unzip rlgl-windows-amd64.zip
-          find . -name \*.sh|xargs dos2unix
-          find . -name \*.m4|xargs dos2unix
-          find . -name \*.ac|xargs dos2unix
-          find . -name \*.am|xargs dos2unix
-          find . -name \*.host|xargs dos2unix
-          dos2unix .ci/ar-lib
           autoreconf -f -v -i
           ./configure CC="$(pwd)/msvcc.sh -m64" CXX="$(pwd)/msvcc.sh -m64" LD='link' CPP='cl -nologo -EP' CXXCPP='cl -nologo -EP' CPPFLAGS='-DFFI_BUILDING_DLL' AR='$(pwd)/.ci/ar-lib lib' NM='dumpbin -symbols' STRIP=':' --build=$BUILD --host=$HOST $DEBUG_ARG $SHARED_ARG || cat */config.log
-          find . -name libtool\*|xargs dos2unix
           make
           cp $(find . -name 'libffi-?.dll') x86_64-pc-cygwin/testsuite/
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ./rlgl/rlgl.exe e --id=${GITHUB_SHA:0:8} --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
+          ./rlgl/rlgl.exe e --id=${GITHUB_SHA:0:7} --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
