@@ -133,13 +133,16 @@ jobs:
           if test $? -ne 0; then
             echo "Remote host is unavailable."
             echo "::set-output name=HOST_OK::false"
+          else
+            echo "Remote host is available."
+            echo "::set-output name=HOST_OK::true"
           fi
-          echo "::set-output name=HOST_OK::true"
           set -e
 
       - name: Copy source to remote host
         if: steps.check-host.output.HOST_OK == true
         run: |
+          echo ${{ steps.check-host.output.HOST_OK }}
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} -r * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
 
       - name: Run configure and make
