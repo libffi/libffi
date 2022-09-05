@@ -88,25 +88,25 @@ jobs:
        include:
          - CFARM_HOST: gcc117.fsffrance.org
            CFARM_PORT: 22
-           CFARM_TRIPLE: aarch64-unknown-linux-gnu
+           CFARM_TRIPLE: aarch64-linux-gnu
          - CFARM_HOST: gcc400.fsffrance.org
            CFARM_PORT: 25465
-           CFARM_TRIPLE: loongarch64-unknown-linux-gnu
+           CFARM_TRIPLE: loongarch64-linux-gnu
          - CFARM_HOST: gcc230.fsffrance.org
            CFARM_PORT: 22
-           CFARM_TRIPLE: sparc64-unknown-linux-gnu
+           CFARM_TRIPLE: mips-linux-gnu
          - CFARM_HOST: gcc102.fsffrance.org
            CFARM_PORT: 22
-           CFARM_TRIPLE: sparc64-unknown-linux-gnu
+           CFARM_TRIPLE: sparc64-linux-gnu
          - CFARM_HOST: gcc91.fsffrance.org
            CFARM_PORT: 22
-           CFARM_TRIPLE: riscv64-unknown-linux-gnu
+           CFARM_TRIPLE: riscv64-linux-gnu
          - CFARM_HOST: gcc103.fsffrance.org
            CFARM_PORT: 22
            CFARM_TRIPLE: aarch64-m1-linux-gnu
          - CFARM_HOST: gcc112.fsffrance.org
            CFARM_PORT: 22
-           CFARM_TRIPLE: powerpc64le-unknown-linux-gnu
+           CFARM_TRIPLE: powerpc64le-linux-gnu
          - CFARM_HOST: gcc111.fsffrance.org
            CFARM_PORT: 22
            CFARM_TRIPLE: powerpc-ibm-aix7.1.5.0
