@@ -115,8 +115,8 @@ jobs:
 
       - uses: actions/checkout@v2
 
-      - run: |
-          set -x
+      - name: Run autogen
+        run: |
           wget -qO - https://ftpmirror.gnu.org/autoconf/autoconf-2.71.tar.gz | tar -xvzf -
           mkdir -p ~/i
           (cd autoconf-2.71; ./configure --prefix=$HOME/i; make; make install)
@@ -124,6 +124,9 @@ jobs:
           PATH=$HOME/i/bin:$PATH ./autogen.sh
           echo "${{ secrets.CFARM_KEY }}" > /tmp/cfk
           chmod go-rw /tmp/cfk
+
+      - name: Check for host availability
+        run: |
           set +e
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
           if test $? -eq 255; then
@@ -131,12 +134,27 @@ jobs:
             exit 0
           fi
           set -e
+
+      - name: Copy source to remote host
+        run: |
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} -r * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
+
+      - name: Run configure and make
+        run: |
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; if test -f ~/.profile; then source ~/.profile; fi; ./configure --host=${{ matrix.CFARM_TRIPLE }}) || true; exit 0"
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; if test -f ~/.profile; then source ~/.profile; fi; make;) || true; exit 0"
+
+      - name: Run tests
+        run: |
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; if test -f ~/.profile; then source ~/.profile; fi; make check > out.txt 2>&1; cat out.txt) || true; exit 0"
+
+      - name: Copy results and clean up
+        run: |
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER/*/testsuite/*.log .
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "rm -rf t/$GITHUB_RUN_NUMBER"
+
+      - name: Install rlgl and run
+        run: |
           wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
                tar --strip-components=2 -xvzf - ./rlgl/rlgl;
           ./rlgl l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
