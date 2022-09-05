@@ -126,34 +126,41 @@ jobs:
           chmod go-rw /tmp/cfk
 
       - name: Check for host availability
+        id: check-host
         run: |
           set +e
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
           if test $? -ne 0; then
             echo "Remote host is unavailable."
-            exit 0
+            echo "::set-output name=HOST_OK::false"
           fi
+          echo "::set-output name=HOST_OK::true"
           set -e
 
       - name: Copy source to remote host
+        if: steps.check-host.output.HOST_OK == "true"
         run: |
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} -r * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
 
       - name: Run configure and make
+        if: steps.check-host.output.HOST_OK == "true"
         run: |
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; if test -f ~/.profile; then source ~/.profile; fi; ./configure --host=${{ matrix.CFARM_TRIPLE }}) || true; exit 0"
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; if test -f ~/.profile; then source ~/.profile; fi; make;) || true; exit 0"
 
       - name: Run tests
+        if: steps.check-host.output.HOST_OK == "true"
         run: |
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; if test -f ~/.profile; then source ~/.profile; fi; make check & CHECKPID=\$!; while kill -0 \$CHECKPID 2>/dev/null; do echo 'Waiting for tests to finish'; sleep 5; done;)"
 
       - name: Copy results and clean up
+        if: steps.check-host.output.HOST_OK == "true"
         run: |
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER/*/testsuite/*.log .
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "rm -rf t/$GITHUB_RUN_NUMBER"
 
       - name: Install rlgl and run
+        if: steps.check-host.output.HOST_OK == "true"
         run: |
           wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
                tar --strip-components=2 -xvzf - ./rlgl/rlgl;
