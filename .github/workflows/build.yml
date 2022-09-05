@@ -146,7 +146,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; if test -f ~/.profile; then source ~/.profile; fi; make check &; CHECKPID=\$!; while kill -0 \$CHECKPID 2>/dev/null; do echo "Waiting for tests to finish"; sleep 15; done;"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; if test -f ~/.profile; then source ~/.profile; fi; make check & CHECKPID=\$!; while kill -0 \$CHECKPID 2>/dev/null; do echo "Waiting for tests to finish"; sleep 5; done;"
 
       - name: Copy results and clean up
         run: |
