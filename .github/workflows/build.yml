@@ -139,6 +139,10 @@ jobs:
           fi
           set -e
 
+      - name: Show host availability
+        run: |
+          echo ${{ steps.check-host.output.HOST_OK }}
+
       - name: Copy source to remote host
         if: steps.check-host.output.HOST_OK == true
         run: |
