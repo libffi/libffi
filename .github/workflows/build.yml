@@ -224,7 +224,7 @@ jobs:
       - run: ./.ci/install.sh
       - run: ${{ matrix.compilers }} ./.ci/build.sh
 
-build-msvc:
+  build-msvc:
     name: Build & test with Visual C++
     runs-on: windows-latest
 
