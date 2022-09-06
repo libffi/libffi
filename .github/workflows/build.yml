@@ -208,7 +208,23 @@ jobs:
           ./rlgl/rlgl.exe e --id=${GITHUB_SHA:0:7} --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
 
-  build-msvc:
+  build-macos:
+    name: Build & test on macOS
+    runs-on: ${{ matrix.platform }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-11, macos-12]
+        compilers: [CC=gcc CXX=g++, CC=clang CXX=clang]
+
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v2
+      - run: ./.ci/install.sh
+      - run: ${{ matrix.compilers }} ./.ci/build.sh
+
+build-msvc:
     name: Build & test with Visual C++
     runs-on: windows-latest
 
