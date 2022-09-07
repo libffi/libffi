@@ -177,7 +177,7 @@ jobs:
       - name: Run configure and make
         if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
         run: |
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd ${{ env.BUILD_DIR }}; if test -f ~/.profile; then source ~/.profile; fi; CC=${{ matrix.CFARM_CC }} CXX=${{ matrix.CFARM_CXX }} ./configure --host=${{ matrix.CFARM_TRIPLE }}) || true; exit 0"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd ${{ env.BUILD_DIR }}; if test -f ~/.profile; then source ~/.profile; fi; CC="${{ matrix.CFARM_CC }}" CXX="${{ matrix.CFARM_CXX }}" ./configure --host=${{ matrix.CFARM_TRIPLE }}) || true; exit 0"
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd ${{ env.BUILD_DIR }}; if test -f ~/.profile; then source ~/.profile; fi; make;) || true; exit 0"
 
       - name: Run tests
