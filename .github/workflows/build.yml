@@ -149,7 +149,7 @@ jobs:
       - name: Generate build dir name
         id: build-dir
         run: |
-          echo '::set-output name=BUILD_DIR=t/$GITHUB_RUN_NUMBER-$RANDOM'
+          echo '::set-output name=BUILD_DIR::t/$GITHUB_RUN_NUMBER-$RANDOM'
 
       - name: Check for host availability
         id: check-host
