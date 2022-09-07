@@ -12,6 +12,9 @@ case "${host}" in
   frv*-elf)
     LDFLAGS=`echo $LDFLAGS | sed "s/\-B[^ ]*libgloss\/frv\///"`\ -B`pwd`/../libgloss/frv/
     ;;
+  sparc64-unknown-linux-gnu)
+    LDFLAGS=$(LDFLAGS) --no-warn-rwx-segments
+    ;;
 esac
 
 AX_ENABLE_BUILDDIR
