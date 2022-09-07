@@ -89,27 +89,48 @@ jobs:
          - CFARM_HOST: gcc117.fsffrance.org
            CFARM_PORT: 22
            CFARM_TRIPLE: aarch64-linux-gnu
+           CFARM_CC: "gcc"
+           CFARM_CXX: "g++"
          - CFARM_HOST: gcc400.fsffrance.org
            CFARM_PORT: 25465
            CFARM_TRIPLE: loongarch64-linux-gnu
+           CFARM_CC: "gcc"
+           CFARM_CXX: "g++"
          - CFARM_HOST: gcc230.fsffrance.org
            CFARM_PORT: 22
            CFARM_TRIPLE: mips-linux-gnu
+           CFARM_CC: "gcc"
+           CFARM_CXX: "g++"
          - CFARM_HOST: gcc102.fsffrance.org
            CFARM_PORT: 22
            CFARM_TRIPLE: sparc64-linux-gnu
+           CFARM_CC: "gcc"
+           CFARM_CXX: "g++"
+         - CFARM_HOST: gcc102.fsffrance.org
+           CFARM_PORT: 22
+           CFARM_TRIPLE: sparc64-linux-gnu
+           CFARM_CC: "gcc -m32"
+           CFARM_CXX: "g++ -m32"
          - CFARM_HOST: gcc91.fsffrance.org
            CFARM_PORT: 22
            CFARM_TRIPLE: riscv64-linux-gnu
+           CFARM_CC: "gcc"
+           CFARM_CXX: "g++"
          - CFARM_HOST: gcc103.fsffrance.org
            CFARM_PORT: 22
            CFARM_TRIPLE: aarch64-m1-linux-gnu
+           CFARM_CC: "gcc"
+           CFARM_CXX: "g++"
          - CFARM_HOST: gcc112.fsffrance.org
            CFARM_PORT: 22
            CFARM_TRIPLE: powerpc64le-linux-gnu
+           CFARM_CC: "gcc"
+           CFARM_CXX: "g++"
          - CFARM_HOST: gcc111.fsffrance.org
            CFARM_PORT: 22
            CFARM_TRIPLE: powerpc-ibm-aix7.1.5.0
+           CFARM_CC: "gcc"
+           CFARM_CXX: "g++"
 
     steps:
 
@@ -125,11 +146,16 @@ jobs:
           echo "${{ secrets.CFARM_KEY }}" > /tmp/cfk
           chmod go-rw /tmp/cfk
 
+      - name: Generate build dir name
+        id: build-dir
+        run: |
+          echo '::set-output name=BUILD_DIR=t/$GITHUB_RUN_NUMBER-$RANDOM'
+
       - name: Check for host availability
         id: check-host
         run: |
           set +e
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p t/$GITHUB_RUN_NUMBER"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p ${{ steps.build-dir.outputs.BUILD_DIR }}"
           if test $? -ne 0; then
             echo "Remote host is unavailable."
             echo '::set-output name=HOST_OK::NO'
@@ -147,24 +173,24 @@ jobs:
         if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
         run: |
           echo ${{ steps.check-host.outputs.HOST_OK }}
-          scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} -r * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} -r * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:${{ steps.build-dir.outputs.BUILD_DIR }}
 
       - name: Run configure and make
         if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
         run: |
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; if test -f ~/.profile; then source ~/.profile; fi; ./configure --host=${{ matrix.CFARM_TRIPLE }}) || true; exit 0"
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; if test -f ~/.profile; then source ~/.profile; fi; make;) || true; exit 0"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd ${{ steps.build-dir.outputs.BUILD_DIR }}; if test -f ~/.profile; then source ~/.profile; fi; CC=${{ matrix.CFARM_CC }} CXX=${{ matrix.CFARM_CXX }} ./configure --host=${{ matrix.CFARM_TRIPLE }}) || true; exit 0"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd ${{ steps.build-dir.outputs.BUILD_DIR }}; if test -f ~/.profile; then source ~/.profile; fi; make;) || true; exit 0"
 
       - name: Run tests
         if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
         run: |
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd t/$GITHUB_RUN_NUMBER; if test -f ~/.profile; then source ~/.profile; fi; make check & CHECKPID=\$!; while kill -0 \$CHECKPID 2>/dev/null; do echo 'Waiting for tests to finish'; sleep 5; done;)"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd ${{ steps.build-dir.outputs.BUILD_DIR }}; if test -f ~/.profile; then source ~/.profile; fi; make check & CHECKPID=\$!; while kill -0 \$CHECKPID 2>/dev/null; do echo 'Waiting for tests to finish'; sleep 5; done;)"
 
       - name: Copy results and clean up
         if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
         run: |
-          scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:t/$GITHUB_RUN_NUMBER/*/testsuite/*.log .
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "rm -rf t/$GITHUB_RUN_NUMBER"
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:${{ steps.build-dir.outputs.BUILD_DIR }}/*/testsuite/*.log .
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "rm -rf ${{ steps.build-dir.outputs.BUILD_DIR }}"
 
       - name: Install rlgl and run
         if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
