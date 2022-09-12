@@ -392,6 +392,12 @@ AC_ARG_ENABLE(exec-static-tramp,
 if test "$enable_exec_static_tramp" != no; then
 case "$target" in
      *-cygwin*)
+       # Only define static trampolines if we are using the cygwin runtime.
+       # Will this need to be changed for mingw?
+       if test "x$GCC" = "xyes"; then
+         AC_DEFINE(FFI_EXEC_STATIC_TRAMP, 1,
+                   [Define this if you want statically defined trampolines])
+       fi
      ;;
      *arm*-*-linux-* | aarch64*-*-linux-* | i*86-*-linux-* | x86_64-*-linux-* | loongarch*-*-linux-*)
        AC_DEFINE(FFI_EXEC_STATIC_TRAMP, 1,

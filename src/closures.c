@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   closures.c - Copyright (c) 2019 Anthony Green
+   closures.c - Copyright (c) 2019, 2022 Anthony Green
                 Copyright (c) 2007, 2009, 2010 Red Hat, Inc.
                 Copyright (C) 2007, 2009, 2010 Free Software Foundation, Inc
                 Copyright (c) 2011 Plausible Labs Cooperative, Inc.
@@ -133,7 +133,7 @@ ffi_tramp_is_present (__attribute__((unused)) void *ptr)
 #  define FFI_MMAP_EXEC_WRIT 1
 #  define HAVE_MNTENT 1
 # endif
-# if defined(_WIN32) || defined(__OS2__)
+# if defined(__CYGWIN__) || defined(_WIN32) || defined(__OS2__)
 /* Windows systems may have Data Execution Protection (DEP) enabled,
    which requires the use of VirtualMalloc/VirtualFree to alloc/free
    executable memory. */
