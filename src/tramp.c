@@ -52,7 +52,7 @@
 #include <linux/types.h>
 #endif
 #ifdef __CYGWIN__
-#include <linux/limits.h>
+#include <limits.h>
 #endif
 #endif
 
