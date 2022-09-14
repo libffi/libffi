@@ -7,10 +7,10 @@
 #include "ffitest.h"
 #include "ffi_common.h"
 
-static long ABI_ATTR align_arguments(UINT32 l1,
-                                     UINT64 l2)
+static UINT32 ABI_ATTR align_arguments(UINT32 l1,
+				       UINT64 l2)
 {
-  return l1 + l2;
+  return l1 + (UINT32) l2;
 }
 
 int main(void)
@@ -20,7 +20,8 @@ int main(void)
     &ffi_type_uint32,
     &ffi_type_uint64
   };
-  UINT32 lr1, lr2, l1 = 1;
+  ffi_arg lr1, lr2;
+  UINT32 l1 = 1;
   UINT64 l2 = 2;
   void *values[2] = {&l1, &l2};
 
