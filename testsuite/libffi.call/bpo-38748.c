@@ -7,8 +7,8 @@
 #include "ffitest.h"
 #include "ffi_common.h"
 
-static long ABI_ATTR align_arguments(long l1,
-                                     long long l2)
+static long ABI_ATTR align_arguments(UINT32 l1,
+                                     UINT64 l2)
 {
   return l1 + l2;
 }
