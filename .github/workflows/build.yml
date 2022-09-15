@@ -265,7 +265,7 @@ jobs:
 
       - run: |
           echo $PATH
-          ls -l /cygdrive/c/msys64/mingw32/bin
+          find /cygdrive/c -name mingw\*
           i686-w64-mingw32-gcc --version
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
 
