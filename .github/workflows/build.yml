@@ -258,6 +258,13 @@ jobs:
           platform: x64
           packages: wget make dejagnu automake autoconf libtool texinfo dos2unix unzip
 
+      - name: add mingw32 to path
+         shell: bash
+         run: |
+           echo "C:\msys64\mingw32\bin" >> $GITHUB_PATH
+
+      - run: i686-w64-mingw32-gcc --version
+
       - run: |
           set -x
           cd $(cygpath $RUNNER_WORKSPACE)/libffi
