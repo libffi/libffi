@@ -238,7 +238,7 @@ jobs:
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
 
-  build:
+  build-mingw32:
     name: Build & test with MingW32
     runs-on: windows-latest
 
