@@ -239,34 +239,38 @@ jobs:
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
 
   build-msys2:
-    name: Build & test with MingW32
+
     runs-on: windows-latest
 
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows-latest]
+        include:
+          - MSYSTEM: MINGW32
+            MSYS2_ARCH: i686
+          - MSYSTEM: MINGW64
+            MSYS2_ARCH: x86_64
+    name: ${{ matrix.MSYSTEM }}
 
     steps:
       - run: git config --global core.autocrlf input
-
       - uses: actions/checkout@v2
 
       - uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW32
+          msystem: ${{ matrix.MSYSTEM }}
           update: true
           install: >-
-            base-devel
-            autoconf-wrapper
-            autoconf
-            automake
-            libtool
-            make
-            dejagnu
-            mingw-w64-i686-gcc
-            mingw-w64-i686-gcc-libs
-            unzip
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-base-devel
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-autoconf-wrapper
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-autoconf
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-automake
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-libtool
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-make
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-dejagnu
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc-libs
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-unzip
 
       - run: |
           set -x
@@ -274,18 +278,17 @@ jobs:
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
           unzip rlgl-windows-amd64.zip
           autoreconf -f -v -i
-          CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ ./configure
+          CC=${{ matrix.MSYS2_ARCH }}-w64-mingw32-gcc CXX=${{ matrix.MSYS2_ARCH }}-w64-mingw32-g++ ./configure
           make
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
           ./rlgl/rlgl.exe e \
                           -l project=libffi \
                           -l sha=${GITHUB_SHA:0:7} \
-                          -l CC=i686-w64-mingw32-gcc \
+                          -l CC=${{ matrix.MSYS2_ARCH }}-w64-mingw32-gcc \
                           -l host=x86_64-pc-cygwin \
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: msys2 {0}
-
 
   build-macos:
     name: Build & test on macOS
