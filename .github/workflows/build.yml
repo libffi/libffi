@@ -265,8 +265,8 @@ jobs:
             autoconf-wrapper
             autoconf
             automake
-            mingw-w64-${{ matrix.MSYS2_ARCH }}-libtool
-            mingw-w64-${{ matrix.MSYS2_ARCH }}-make
+            libtool
+            make
             dejagnu
             mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc
             mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc-libs
