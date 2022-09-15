@@ -261,16 +261,16 @@ jobs:
           msystem: ${{ matrix.MSYSTEM }}
           update: true
           install: >-
-            mingw-w64-${{ matrix.MSYS2_ARCH }}-base-devel
-            mingw-w64-${{ matrix.MSYS2_ARCH }}-autoconf-wrapper
-            mingw-w64-${{ matrix.MSYS2_ARCH }}-autoconf
-            mingw-w64-${{ matrix.MSYS2_ARCH }}-automake
+            base-devel
+            autoconf-wrapper
+            autoconf
+            automake
             mingw-w64-${{ matrix.MSYS2_ARCH }}-libtool
             mingw-w64-${{ matrix.MSYS2_ARCH }}-make
-            mingw-w64-${{ matrix.MSYS2_ARCH }}-dejagnu
+            dejagnu
             mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc
             mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc-libs
-            mingw-w64-${{ matrix.MSYS2_ARCH }}-unzip
+            unzip
 
       - run: |
           set -x
