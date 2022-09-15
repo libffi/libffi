@@ -89,7 +89,7 @@
 #endif
 
 /* msvc kludge.  */
-#if defined _MSC_VER
+#if defined(_MSC_VER)
 #define PRIdLL "I64d"
 #define PRIuLL "I64u"
 #else
