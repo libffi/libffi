@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   ffi.c - Copyright (c) 2017  Anthony Green
+   ffi.c - Copyright (c) 2017, 2022  Anthony Green
            Copyright (c) 1996, 1998, 1999, 2001, 2007, 2008  Red Hat, Inc.
            Copyright (c) 2002  Ranjit Mathew
            Copyright (c) 2002  Bo Thorsen
@@ -182,7 +182,12 @@ ffi_prep_cif_machdep(ffi_cif *cif)
     {
       ffi_type *t = cif->arg_types[i];
 
-      bytes = FFI_ALIGN (bytes, t->alignment);
+#if defined(X86_WIN32)
+      if (cabi == FFI_STDCALL)
+        bytes = FFI_ALIGN (bytes, FFI_SIZEOF_ARG);
+      else
+#endif
+        bytes = FFI_ALIGN (bytes, t->alignment);
       bytes += FFI_ALIGN (t->size, FFI_SIZEOF_ARG);
     }
   cif->bytes = bytes;
@@ -378,7 +383,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	     cases.  */
 	  if (t == FFI_TYPE_STRUCT && ty->alignment >= 16)
 	    align = 16;
-	    
+
 	  if (dir < 0)
 	    {
 	      /* ??? These reverse argument ABIs are probably too old
