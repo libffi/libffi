@@ -238,7 +238,7 @@ jobs:
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
 
-  build-mingw32:
+  build-msys2:
     name: Build & test with MingW32
     runs-on: windows-latest
 
@@ -247,27 +247,29 @@ jobs:
       matrix:
         platform: [windows-latest]
 
+    defaults:
+      run:
+        shell: msys2 {0}
+
     steps:
       - run: git config --global core.autocrlf input
 
       - uses: actions/checkout@v2
 
-      - name: Set up Cygwin
-        uses: egor-tensin/setup-cygwin@v3
+      - uses: msys2/setup-msys2@v2
         with:
-          platform: x64
-          packages: wget make dejagnu automake autoconf libtool texinfo dos2unix unzip
-
-      - name: add mingw32 to path
-        shell: bash
-        run: |
-          echo "C:\msys64\mingw32\bin" >> $GITHUB_PATH
-
-      - run: |
-          export PATH=/cygdrive/c/msys64/mingw32/bin:$PATH
-          ls -l /cygdrive/c/msys64/mingw32/bin
-          i686-w64-mingw32-gcc --version
-        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+          msystem: MINGW32
+          update: true
+          install: >-
+            base-devel
+            autoconf-wrapper
+            autoconf
+            automake
+            libtool
+            make
+            dejagnu
+            mingw-w64-i686-gcc
+            mingw-w64-i686-gcc-libs
 
       - run: |
           set -x
@@ -285,7 +287,7 @@ jobs:
                           -l CC=i686-w64-mingw32-gcc \
                           -l host=x86_64-pc-cygwin \
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
-        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+
 
   build-macos:
     name: Build & test on macOS
