@@ -263,7 +263,10 @@ jobs:
         run: |
           echo "C:\msys64\mingw32\bin" >> $GITHUB_PATH
 
-      - run: i686-w64-mingw32-gcc --version
+      - run:
+        shell: bash
+        run: |
+          i686-w64-mingw32-gcc --version
 
       - run: |
           set -x
