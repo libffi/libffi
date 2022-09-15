@@ -247,10 +247,6 @@ jobs:
       matrix:
         platform: [windows-latest]
 
-    defaults:
-      run:
-        shell: msys2 {0}
-
     steps:
       - run: git config --global core.autocrlf input
 
@@ -287,6 +283,7 @@ jobs:
                           -l CC=i686-w64-mingw32-gcc \
                           -l host=x86_64-pc-cygwin \
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
+        shell: msys2 {0}
 
 
   build-macos:
