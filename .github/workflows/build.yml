@@ -201,44 +201,6 @@ jobs:
           exit $?
 
   build:
-    name: Build & test with MingW32
-    runs-on: windows-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [windows-latest]
-
-    steps:
-      - run: git config --global core.autocrlf input
-
-      - uses: actions/checkout@v2
-
-      - name: Set up Cygwin
-        uses: egor-tensin/setup-cygwin@v3
-        with:
-          platform: x64
-          packages: wget make dejagnu automake autoconf libtool texinfo dos2unix unzip
-
-      - run: |
-          set -x
-          cd $(cygpath $RUNNER_WORKSPACE)/libffi
-          wget https://rl.gl/cli/rlgl-windows-amd64.zip
-          unzip rlgl-windows-amd64.zip
-          autoreconf -f -v -i
-          CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ ./configure
-          make
-          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
-          ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ./rlgl/rlgl.exe e \
-                          -l project=libffi \
-                          -l sha=${GITHUB_SHA:0:7} \
-                          -l CC=i686-w64-mingw32-gcc \
-                          -l host=x86_64-pc-cygwin \
-                          --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
-        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
-
-  build:
     name: Build & test with Cygwin
     runs-on: windows-latest
 
@@ -272,6 +234,44 @@ jobs:
                           -l project=libffi \
                           -l sha=${GITHUB_SHA:0:7} \
                           -l CC=gcc \
+                          -l host=x86_64-pc-cygwin \
+                          --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
+        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+
+  build:
+    name: Build & test with MingW32
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest]
+
+    steps:
+      - run: git config --global core.autocrlf input
+
+      - uses: actions/checkout@v2
+
+      - name: Set up Cygwin
+        uses: egor-tensin/setup-cygwin@v3
+        with:
+          platform: x64
+          packages: wget make dejagnu automake autoconf libtool texinfo dos2unix unzip
+
+      - run: |
+          set -x
+          cd $(cygpath $RUNNER_WORKSPACE)/libffi
+          wget https://rl.gl/cli/rlgl-windows-amd64.zip
+          unzip rlgl-windows-amd64.zip
+          autoreconf -f -v -i
+          CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ ./configure
+          make
+          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
+          ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
+          ./rlgl/rlgl.exe e \
+                          -l project=libffi \
+                          -l sha=${GITHUB_SHA:0:7} \
+                          -l CC=i686-w64-mingw32-gcc \
                           -l host=x86_64-pc-cygwin \
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
