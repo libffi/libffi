@@ -832,14 +832,14 @@ ffi_prep_closure_loc (ffi_closure *closure,
     start = ffi_closure_SYSV;
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
-#ifdef __MACH__
-#ifdef HAVE_PTRAUTH
+# ifdef __MACH__
+#  ifdef HAVE_PTRAUTH
   codeloc = ptrauth_auth_data(codeloc, ptrauth_key_function_pointer, 0);
-#endif
+#  endif
   void **config = (void **)((uint8_t *)codeloc - PAGE_MAX_SIZE);
   config[0] = closure;
   config[1] = start;
-#endif
+# endif
 #else
   static const unsigned char trampoline[16] = {
     0x90, 0x00, 0x00, 0x58,	/* ldr	x16, tramp+16	*/
@@ -848,7 +848,7 @@ ffi_prep_closure_loc (ffi_closure *closure,
   };
   char *tramp = closure->tramp;
 
-#if defined(FFI_EXEC_STATIC_TRAMP)
+# if defined(FFI_EXEC_STATIC_TRAMP)
   if (ffi_tramp_is_present(closure))
     {
       /* Initialize the static trampoline's parameters. */
@@ -859,7 +859,7 @@ ffi_prep_closure_loc (ffi_closure *closure,
       ffi_tramp_set_parms (closure->ftramp, start, closure);
       goto out;
     }
-#endif
+# endif
 
   /* Initialize the dynamic trampoline. */
   memcpy (tramp, trampoline, sizeof(trampoline));
@@ -869,15 +869,17 @@ ffi_prep_closure_loc (ffi_closure *closure,
   ffi_clear_cache(tramp, tramp + FFI_TRAMPOLINE_SIZE);
 
   /* Also flush the cache for code mapping.  */
-#ifdef _WIN32
+# ifdef _WIN32
   // Not using dlmalloc.c for Windows ARM64 builds
   // so calling ffi_data_to_code_pointer() isn't necessary
   unsigned char *tramp_code = tramp;
-  #else
+# else
   unsigned char *tramp_code = ffi_data_to_code_pointer (tramp);
-  #endif
+# endif
   ffi_clear_cache (tramp_code, tramp_code + FFI_TRAMPOLINE_SIZE);
+# if defined(FFI_EXEC_STATIC_TRAMP)
 out:
+# endif
 #endif
 
   closure->cif = cif;
