@@ -538,7 +538,9 @@ ffi_prep_closure_loc (ffi_closure *closure, ffi_cif *cif,
 
   __builtin___clear_cache (codeloc, codeloc + FFI_TRAMPOLINE_SIZE);
 
+#if defined(FFI_EXEC_STATIC_TRAMP)
 out:
+#endif
   closure->cif = cif;
   closure->fun = fun;
   closure->user_data = user_data;

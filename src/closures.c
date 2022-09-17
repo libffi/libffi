@@ -27,7 +27,7 @@
    DEALINGS IN THE SOFTWARE.
    ----------------------------------------------------------------------- */
 
-#if defined __linux__ && !defined _GNU_SOURCE
+#if (defined __linux__ || defined __CYGWIN__) && !defined _GNU_SOURCE
 #define _GNU_SOURCE 1
 #endif
 
@@ -142,17 +142,17 @@ ffi_tramp_is_present (__attribute__((unused)) void *ptr)
 #endif
 
 #if FFI_MMAP_EXEC_WRIT && defined(__linux__) && !defined(__ANDROID__)
-#  if !defined FFI_MMAP_EXEC_SELINUX
-/*   When defined to 1 check for SELinux and if SELinux is active,
-     don't attempt PROT_EXEC|PROT_WRITE mapping at all, as that
-     might cause audit messages.  */
-#    define FFI_MMAP_EXEC_SELINUX 1
+# if !defined FFI_MMAP_EXEC_SELINUX
+/* When defined to 1 check for SELinux and if SELinux is active,
+   don't attempt PROT_EXEC|PROT_WRITE mapping at all, as that
+   might cause audit messages.  */
+#  define FFI_MMAP_EXEC_SELINUX 1
 # endif /* !defined FFI_MMAP_EXEC_SELINUX */
 # if !defined FFI_MMAP_PAX
-/*   Also check for PaX MPROTECT */
-#   define FFI_MMAP_PAX 1
+/* Also check for PaX MPROTECT */
+#  define FFI_MMAP_PAX 1
 # endif /* !defined FFI_MMAP_PAX */
-#endif FFI_MMAP_EXEC_WRIT && defined(__linux__) && !defined(__ANDROID__)
+#endif /* FFI_MMAP_EXEC_WRIT && defined(__linux__) && !defined(__ANDROID__) */
 
 #if FFI_CLOSURES
 
