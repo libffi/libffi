@@ -117,34 +117,37 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       flags = X86_RET_INT64;
       break;
     case FFI_TYPE_STRUCT:
-#ifndef X86
-      if (cif->rtype->size == 1)
-	flags = X86_RET_STRUCT_1B;
-      else if (cif->rtype->size == 2)
-	flags = X86_RET_STRUCT_2B;
-      else if (cif->rtype->size == 4)
-	flags = X86_RET_INT32;
-      else if (cif->rtype->size == 8)
-	flags = X86_RET_INT64;
-      else
+      {
+#ifdef X86_WIN32
+        size_t size = cif->rtype->size;
+        if (size == 1)
+          flags = X86_RET_STRUCT_1B;
+        else if (size == 2)
+          flags = X86_RET_STRUCT_2B;
+        else if (size == 4)
+          flags = X86_RET_INT32;
+        else if (size == 8)
+          flags = X86_RET_INT64;
+        else
 #endif
-	{
-	do_struct:
-	  switch (cabi)
-	    {
-	    case FFI_THISCALL:
-	    case FFI_FASTCALL:
-	    case FFI_STDCALL:
-	    case FFI_MS_CDECL:
-	      flags = X86_RET_STRUCTARG;
-	      break;
-	    default:
-	      flags = X86_RET_STRUCTPOP;
-	      break;
-	    }
-	  /* Allocate space for return value pointer.  */
-	  bytes += FFI_ALIGN (sizeof(void*), FFI_SIZEOF_ARG);
-	}
+          {
+          do_struct:
+            switch (cabi)
+              {
+              case FFI_THISCALL:
+              case FFI_FASTCALL:
+              case FFI_STDCALL:
+              case FFI_MS_CDECL:
+                flags = X86_RET_STRUCTARG;
+                break;
+              default:
+                flags = X86_RET_STRUCTPOP;
+                break;
+              }
+            /* Allocate space for return value pointer.  */
+            bytes += FFI_ALIGN (sizeof(void*), FFI_SIZEOF_ARG);
+          }
+      }
       break;
     case FFI_TYPE_COMPLEX:
       switch (cif->rtype->elements[0]->type)
