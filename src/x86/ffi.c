@@ -117,8 +117,6 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       flags = X86_RET_INT64;
       break;
     case FFI_TYPE_STRUCT:
-#ifndef X86
-      /* ??? This should be a different ABI rather than an ifdef.  */
       if (cif->rtype->size == 1)
 	flags = X86_RET_STRUCT_1B;
       else if (cif->rtype->size == 2)
@@ -128,7 +126,6 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       else if (cif->rtype->size == 8)
 	flags = X86_RET_INT64;
       else
-#endif
 	{
 	do_struct:
 	  switch (cabi)
