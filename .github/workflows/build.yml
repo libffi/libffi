@@ -22,11 +22,14 @@ jobs:
       fail-fast: false
       matrix:
        include:
-         - MEVAL: "export CC=clang CXX=clang"
+         - HOST: "x86_64-pc-linux-gnu"
+           MEVAL: "export CC=clang CXX=clang"
          - HOST: "i386-pc-linux-gnu"
            MEVAL: 'export CC="gcc -m32" CXX="g++ -m32"'
-         - CONFIGURE_OPTIONS: "--disable-shared"
-         - CONFIGURE_OPTIONS: "--enable-shared"
+         - HOST: "x86_64-pc-linux-gnu"
+           CONFIGURE_OPTIONS: "--disable-shared"
+         - HOST: "x86_64-pc-linux-gnu"
+           CONFIGURE_OPTIONS: "--enable-shared"
          - HOST: "m68k-linux-gnu"
            MEVAL: 'export CC="m68k-linux-gnu-gcc-8 -mcpu=547x" CXX="m68k-linux-gnu-g++-8 -mcpu=547x"'
            CONFIGURE_OPTIONS: '--disable-shared'
