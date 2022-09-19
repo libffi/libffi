@@ -15,7 +15,7 @@ on:
 jobs:
 
   build-sim:
-    name: Build & test
+    name: ${{ matrix.HOST }} ${{ matrix.CONFIGURE_OPTIONS }} ${{ matrix.MEVAL }} ${{ matrix.LIBFFI_TEST_OPTIMIZATION }}
     runs-on: ubuntu-latest
 
     strategy:
