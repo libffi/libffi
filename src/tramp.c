@@ -32,7 +32,7 @@
 
 /* -------------------------- Headers and Definitions ---------------------*/
 /*
- * Add support for other OSes later. For now, it is just Linux.
+ * Add support for other OSes later. For now, it is just Linux and Cygwin.
  */
 
 #if defined (__linux__) || defined (__CYGWIN__)
