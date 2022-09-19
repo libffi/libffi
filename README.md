@@ -1,7 +1,7 @@
 Status
 ======
 
-libffi-3.4.3 was released on September 19, 2022.  Check the libffi web
+libffi-3.4.4 will be released on TBD.  Check the libffi web
 page for updates: <URL:http://sourceware.org/libffi/>.
 
 
@@ -196,6 +196,8 @@ History
 =======
 
 See the git log for details at http://github.com/libffi/libffi.
+
+    3.4.4 TBD
 
     3.4.3 Sep-19-22
         All struct args are passed by value, regardless of size, as per ABIs.

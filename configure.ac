@@ -2,7 +2,7 @@ dnl Process this with autoconf to create configure
 
 AC_PREREQ([2.71])
 
-AC_INIT([libffi],[3.4.3],[http://github.com/libffi/libffi/issues])
+AC_INIT([libffi],[3.4.4-experimental],[http://github.com/libffi/libffi/issues])
 AC_CONFIG_HEADERS([fficonfig.h])
 
 AC_CANONICAL_TARGET
