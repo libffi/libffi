@@ -79,7 +79,7 @@ jobs:
           ./.ci/build.sh
 
   build-cfarm:
-    name: Build & test on the GCC Compile Farm
+    name: ${{ matrix.CFARM_TRIPLE }} ${{ matrix.CFARM_CC }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -201,7 +201,7 @@ jobs:
           exit $?
 
   build:
-    name: Build & test with Cygwin
+    name: Cygwin 64-bit
     runs-on: windows-latest
 
     strategy:
@@ -291,7 +291,6 @@ jobs:
         shell: msys2 {0}
 
   build-macos:
-    name: Build & test on macOS
     runs-on: ${{ matrix.platform }}
 
     strategy:
@@ -300,6 +299,8 @@ jobs:
         platform: [macos-11, macos-12]
         compilers: [CC=gcc CXX=g++, CC=clang CXX=clang]
 
+    name: ${{ matrix.platform }} ${{ matrix.compilers }}
+
     steps:
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v2
@@ -307,7 +308,7 @@ jobs:
       - run: ${{ matrix.compilers }} ./.ci/build.sh
 
   build-msvc:
-    name: Build & test with Visual C++
+    name: Windows 64-bit Visual C++
     runs-on: windows-latest
 
     strategy:
