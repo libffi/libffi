@@ -253,20 +253,14 @@ ffi_tramp_get_libffi (void)
 
 #if defined (__linux__) || defined (__CYGWIN__)
 
-#if defined HAVE_MKSTEMP
-
 static int
 ffi_tramp_get_temp_file (void)
 {
-  char template[12] = "/tmp/XXXXXX";
   ssize_t count;
 
   tramp_globals.offset = 0;
-  tramp_globals.fd = mkstemp (template);
-  if (tramp_globals.fd == -1)
-    return 0;
+  tramp_globals.fd = open_temp_exec_file ();
 
-  unlink (template);
   /*
    * Write the trampoline code table into the temporary file and allocate a
    * trampoline table to make sure that the temporary file can be mapped.
@@ -279,24 +273,6 @@ ffi_tramp_get_temp_file (void)
   tramp_globals.fd = -1;
   return 0;
 }
-
-#else /* !defined HAVE_MKSTEMP */
-
-/*
- * TODO:
- * src/closures.c contains code for finding temp file that has EXEC
- * permissions. May be, some of that code can be shared with static
- * trampolines.
- */
-static int
-ffi_tramp_get_temp_file (void)
-{
-  tramp_globals.offset = 0;
-  tramp_globals.fd = -1;
-  return 0;
-}
-
-#endif /* defined HAVE_MKSTEMP */
 
 #endif /* defined (__linux__) || defined (__CYGWIN__) */
 
