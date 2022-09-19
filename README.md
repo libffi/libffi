@@ -197,10 +197,11 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     3.4.3 TBD
-        Fix x32 static trampolines.
-        Enable static trampolines for Cygwin.
         All struct args are passed by value, regardless of size, as per ABIs.
+        Enable static trampolines for Cygwin.
         Add support for Loongson's LoonArch64 architecture.
+        Fix x32 static trampolines.
+        Fix 32-bit x86 stdcall stack corruption.
         Fix ILP32 aarch64 support.
 
     3.4.2 Jun-28-21
