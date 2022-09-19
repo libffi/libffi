@@ -200,7 +200,7 @@ See the git log for details at http://github.com/libffi/libffi.
     3.4.3 Sep-19-22
         All struct args are passed by value, regardless of size, as per ABIs.
         Enable static trampolines for Cygwin.
-        Add support for Loongson's LoonArch64 architecture.
+        Add support for Loongson's LoongArch64 architecture.
         Fix x32 static trampolines.
         Fix 32-bit x86 stdcall stack corruption.
         Fix ILP32 aarch64 support.
