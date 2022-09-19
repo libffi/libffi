@@ -75,6 +75,7 @@ tested:
 | Moxie           | Bare metal       | GCC                     |
 | Nios II         | Linux            | GCC                     |
 | OpenRISC        | Linux            | GCC                     |
+| PowerPC 32-bit  | AIX              | GCC                     |
 | PowerPC 32-bit  | AIX              | IBM XL C                |
 | PowerPC 64-bit  | AIX              | IBM XL C                |
 | PowerPC         | AMIGA            | GCC                     |
