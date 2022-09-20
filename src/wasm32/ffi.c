@@ -90,19 +90,6 @@
 #define ALIGN_ADDRESS(addr, align) (addr &= (~((align) - 1)))
 #define STACK_ALLOC(stack, size, align) ((stack -= (size)), ALIGN_ADDRESS(stack, align))
 
-// Pyodide needs to redefine this to support fpcast emulation
-#define CALL_FUNC_PTR_DEFAULT(func, args...) \
-  wasmTable.get(func).apply(null, args)
-
-#ifndef CALL_FUNC_PTR
-#if PYODIDE_FPCAST
-#define CALL_FUNC_PTR(func, args...) \
-  CALL_FUNC_PTR_DEFAULT(dyncallInvokeMap[func] || func, args)
-#else
-#define CALL_FUNC_PTR CALL_FUNC_PTR_DEFAULT
-#endif
-#endif
-
 // Most wasm runtimes support at most 1000 Js trampoline args.
 #define MAX_ARGS 1000
 
@@ -359,7 +346,7 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
   STACK_ALLOC(cur_stack_ptr, 0, MAX_ALIGN);
   stackRestore(cur_stack_ptr);
   LOG_DEBUG("CALL_FUNC_PTR", fn, args);
-  var result = CALL_FUNC_PTR(fn, args);
+  var result = wasmTable.get(fn).apply(null, args);
   // Put the stack pointer back (we moved it if we made a varargs call)
   stackRestore(orig_stack_ptr);
 
@@ -648,10 +635,10 @@ ffi_prep_closure_loc_helper,
     STACK_ALLOC(cur_ptr, 0, MAX_ALIGN);
     stackRestore(cur_ptr);
     LOG_DEBUG("CALL_CLOSURE",  "closure:", closure, "fptr", CLOSURE__fun(closure), "cif",  CLOSURE__cif(closure));
-    CALL_FUNC_PTR(CLOSURE__fun(closure), [
+    wasmTable.get(CLOSURE__fun(closure))(
         CLOSURE__cif(closure), ret_ptr, args_ptr,
         CLOSURE__user_data(closure)
-    ]);
+    );
     stackRestore(orig_stack_ptr);
 
     // If we aren't supposed to return by argument, figure out what to return.

@@ -18,7 +18,6 @@ WASM_BIGINT=false
 while [ $# -gt 0 ]; do
   case $1 in
     --enable-wasm-bigint) WASM_BIGINT=true ;;
-    --pyodide-fpcast) PYODIDE_FPCAST=true ;;
     --debug) DEBUG=true ;;
     *) echo "ERROR: Unknown parameter: $1" >&2; exit 1 ;;
   esac
@@ -31,15 +30,9 @@ if [ "$WASM_BIGINT" = "true" ]; then
   # We need to detect WASM_BIGINT support at compile time
   export CFLAGS+=" -DWASM_BIGINT"
 fi
-
-if [ "$PYODIDE_FPCAST" = "true" ]; then
-  export CFLAGS+=" -DPYODIDE_FPCAST"
-fi
-
 if [ "$DEBUG" = "true" ]; then
   export CFLAGS+=" -DDEBUG_F"
 fi
-
 export CXXFLAGS="$CFLAGS"
 export LDFLAGS="-L$TARGET/lib -O3 -sEXPORTED_FUNCTIONS=_main,_malloc,_free -sALLOW_TABLE_GROWTH"
 if [ "$WASM_BIGINT" = "true" ]; then
