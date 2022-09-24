@@ -186,7 +186,7 @@ jobs:
       - name: Run tests
         if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
         run: |
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd ${{ env.BUILD_DIR }}; if test -f ~/.profile; then source ~/.profile; fi; make check & CHECKPID=\$!; while kill -0 \$CHECKPID 2>/dev/null; do echo 'Waiting for tests to finish'; sleep 5; done;)"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd ${{ env.BUILD_DIR }}; if test -f ~/.profile; then source ~/.profile; fi; GCC_COLORS= make check & CHECKPID=\$!; while kill -0 \$CHECKPID 2>/dev/null; do echo 'Waiting for tests to finish'; sleep 5; done;)"
 
       - name: Copy results and clean up
         if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
@@ -231,7 +231,7 @@ jobs:
           autoreconf -f -v -i
           ./configure
           make -j 4
-          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
+          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
           ./rlgl/rlgl.exe e \
                           -l project=libffi \
@@ -283,7 +283,7 @@ jobs:
           autoreconf -f -v -i
           CC=${{ matrix.MSYS2_ARCH }}-w64-mingw32-gcc CXX=${{ matrix.MSYS2_ARCH }}-w64-mingw32-g++ ./configure
           make
-          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
+          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
           ./rlgl/rlgl.exe e \
                           -l project=libffi \
@@ -340,7 +340,7 @@ jobs:
           ./configure CC="$(pwd)/msvcc.sh -m64" CXX="$(pwd)/msvcc.sh -m64" LD='link' CPP='cl -nologo -EP' CXXCPP='cl -nologo -EP' CPPFLAGS='-DFFI_BUILDING_DLL' AR='$(pwd)/.ci/ar-lib lib' NM='dumpbin -symbols' STRIP=':' --build=$BUILD --host=$HOST $DEBUG_ARG $SHARED_ARG || cat */config.log
           make
           cp $(find . -name 'libffi-?.dll') x86_64-pc-cygwin/testsuite/
-          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
+          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
           ./rlgl/rlgl.exe e \
                           -l project=libffi \
