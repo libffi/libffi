@@ -349,3 +349,36 @@ jobs:
                           -l host=x86_64-pc-cygwin \
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+
+  build-android:
+    name: Android ${{ matrix.host }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [armv7a-linux-androideabi, aarch64-linux-android, i686-linux-android, x86_64-linux-android]
+
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v2
+      - run: ./.ci/install.sh
+      - env:
+          HOST: ${{ matrix.HOST }}
+          ANDROID_API_LEVEL: 23
+          CONFIGURE_OPTIONS: "--disable-shared --disable-multi-os-directory" # fixes warning about unsupported -print-multi-os-directory with clang
+        run: |
+          # Relevant documentation:
+          # https://developer.android.com/ndk/guides/other_build_systems
+          # https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
+          export TOOLCHAIN="${ANDROID_NDK_ROOT}"/toolchains/llvm/prebuilt/linux-x86_64
+          export CC="${TOOLCHAIN}"/bin/${HOST}${ANDROID_API_LEVEL}-clang
+          export CXX="${TOOLCHAIN}"/bin/${HOST}${ANDROID_API_LEVEL}-clang++
+          export LD="${TOOLCHAIN}"/bin/ld.lld
+          export AR="${TOOLCHAIN}"/bin/llvm-ar
+          export AS="${CC}"
+          export RANLIB="${TOOLCHAIN}"/bin/llvm-ranlib
+          export STRIP="${TOOLCHAIN}"/bin/llvm-strip
+          export NM="${TOOLCHAIN}"/bin/llvm-nm
+          export OBJDUMP="${TOOLCHAIN}"/bin/llvm-objdump
+          ./.ci/build.sh
