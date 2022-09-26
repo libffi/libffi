@@ -397,20 +397,23 @@ proc libffi_target_compile { source dest type options } {
 
     lappend options "libs= -lffi"
 
-    if { [string match "aarch64*-*-linux*" $target_triplet] } {
-	lappend options "libs= -lpthread"
-    }
+    if { ![string match "*android*" $target_triplet] } {
 
-    # this may be required for g++, but just confused clang.
-    if { [string match "*.cc" $source] } {
-        lappend options "c++"
-      if { [string match "*-*-darwin*" $target_triplet] } {
-  	  lappend options "libs= -lc++"
-      }
-    }
+        if { [string match "aarch64*-*-linux*" $target_triplet] } {
+            lappend options "libs= -lpthread"
+        }
 
-    if { [string match "arc*-*-linux*" $target_triplet] } {
-	lappend options "libs= -lpthread"
+        # this may be required for g++, but just confused clang.
+        if { [string match "*.cc" $source] } {
+            lappend options "c++"
+            if { [string match "*-*-darwin*" $target_triplet] } {
+                lappend options "libs= -lc++"
+            }
+        }
+
+        if { [string match "arc*-*-linux*" $target_triplet] } {
+            lappend options "libs= -lpthread"
+        }
     }
 
     verbose "options: $options"
