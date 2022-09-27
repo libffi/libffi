@@ -96,7 +96,7 @@ jobs:
            CFARM_CXX: "g++"
          - CFARM_HOST: gcc117.fsffrance.org
            CFARM_PORT: 22
-           CFARM_TRIPLE: aarch64-linux-gnu
+           CFARM_TRIPLE: aarch64-lto-linux-gnu
            CFARM_CC: "gcc -flto"
            CFARM_CXX: "g++ -flto"
          - CFARM_HOST: gcc400.fsffrance.org
