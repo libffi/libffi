@@ -317,13 +317,17 @@ jobs:
       - run: ${{ matrix.compilers }} ./.ci/build.sh
 
   build-msvc:
-    name: Windows 64-bit Visual C++
+    name: Windows ${{ matrix.width }}-bit Visual C++
     runs-on: windows-latest
 
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows-latest]
+        include:
+          - host: i686-pc-cygwin
+            width: 32
+          - host: x86_64-pc-cygwin
+            width: 64
 
     steps:
       - run: git config --global core.autocrlf input
@@ -343,16 +347,16 @@ jobs:
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
           unzip rlgl-windows-amd64.zip
           autoreconf -f -v -i
-          ./configure CC="$(pwd)/msvcc.sh -m64" CXX="$(pwd)/msvcc.sh -m64" LD='link' CPP='cl -nologo -EP' CXXCPP='cl -nologo -EP' CPPFLAGS='-DFFI_BUILDING_DLL' AR='$(pwd)/.ci/ar-lib lib' NM='dumpbin -symbols' STRIP=':' --build=$BUILD --host=$HOST $DEBUG_ARG $SHARED_ARG || cat */config.log
+          ./configure --host=${{ matrix.host }} CC="$(pwd)/msvcc.sh -m${{ matrix.width }}" CXX="$(pwd)/msvcc.sh -m${{ matrix.width }}" LD='link' CPP='cl -nologo -EP' CXXCPP='cl -nologo -EP' CPPFLAGS='-DFFI_BUILDING_DLL' AR='$(pwd)/.ci/ar-lib lib' NM='dumpbin -symbols' STRIP=':' $DEBUG_ARG $SHARED_ARG || cat */config.log
           make
-          cp $(find . -name 'libffi-?.dll') x86_64-pc-cygwin/testsuite/
+          cp $(find . -name 'libffi-?.dll') ${{ matrix.host }}/testsuite/
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
           ./rlgl/rlgl.exe e \
                           -l project=libffi \
                           -l sha=${GITHUB_SHA:0:7} \
                           -l CC=msvcc.sh \
-                          -l host=x86_64-pc-cygwin \
+                          -l host=${{ matrix.host }} \
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
 
