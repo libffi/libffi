@@ -326,8 +326,10 @@ jobs:
         include:
           - host: i686-pc-cygwin
             width: 32
+            arch: x86
           - host: x86_64-pc-cygwin
             width: 64
+            arch: x64
 
     steps:
       - run: git config --global core.autocrlf input
@@ -339,9 +341,12 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1.8.1
       - uses: microsoft/setup-msbuild@v1.0.2
 
+      - name: Detect tools
+        run: |
+          $(cygpath $RUNNER_WORKSPACE)/libffi/.ci/msvs-detect --arch=${{ matrix.arch }} --with-assembler
+
       - name: Build and test
         run: |
-          # $(cygpath $RUNNER_WORKSPACE)/libffi/.ci/msvs-detect --arch=x64 --with-assembler
           export PATH=$PATH:"/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.16.27023/bin/HostX64/x64"
           cd $(cygpath $RUNNER_WORKSPACE)/libffi
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
