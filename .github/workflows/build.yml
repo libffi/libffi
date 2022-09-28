@@ -327,9 +327,11 @@ jobs:
           - host: i686-pc-cygwin
             width: 32
             arch: x86
+            tools: amd64_x86
           - host: x86_64-pc-cygwin
             width: 64
             arch: x64
+            tools: amd64
 
     steps:
       - run: git config --global core.autocrlf input
@@ -339,7 +341,8 @@ jobs:
           platform: x64
           packages: wget make dejagnu automake autoconf libtool texinfo unzip dos2unix
       - uses: ilammy/msvc-dev-cmd@v1.8.1
-      - uses: microsoft/setup-msbuild@v1.0.2
+        with:
+          arch: ${{ matrix.tools }}
 
       - name: Detect tools
         run: |
