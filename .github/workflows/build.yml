@@ -344,13 +344,9 @@ jobs:
         with:
           arch: ${{ matrix.tools }}
 
-      - name: Detect tools
-        run: |
-          $(cygpath $RUNNER_WORKSPACE)/libffi/.ci/msvs-detect --arch=${{ matrix.arch }} --with-assembler
-        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
-
       - name: Build and test
         run: |
+          find /cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.16.27023/bin
           export PATH=$PATH:"/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.16.27023/bin/HostX64/x64"
           cd $(cygpath $RUNNER_WORKSPACE)/libffi
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
