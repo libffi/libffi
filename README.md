@@ -198,10 +198,10 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     3.4.4 TBD
-        Fix aarch64 linux builds with Link Time Optimization (-flto)
-        Fix x86 stdcall stack alignment
-        Fix x86 Windows msvc assembler compatibility
-        Fix moxie and or1k small structure args
+        Fix aarch64 linux builds with Link Time Optimization (-flto).
+        Fix x86 stdcall stack alignment.
+        Fix x86 Windows msvc assembler compatibility.
+        Fix moxie and or1k small structure args.
 
     3.4.3 Sep-19-22
         All struct args are passed by value, regardless of size, as per ABIs.
