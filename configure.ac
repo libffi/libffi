@@ -124,20 +124,7 @@ AC_SUBST(HAVE_LONG_DOUBLE_VARIANT)
 
 AC_C_BIGENDIAN
 
-AC_CACHE_CHECK([compiler generates .cfi pseudo-ops],
-  gcc_cv_cc_cfi_pseudo_op, [
-	gcc_cv_cc_cfi_pseudo_op=no
-	echo 'void foo(void) { foo(); }' > conftest.c
-	if $CC $CFLAGS -S conftest.c > /dev/null 2>&1; then
-	    if grep -q cfi_startproc conftest.s; then
-	        gcc_cv_cc_cfi_pseudo_op=yes
-            fi
-	fi
-	])
-if test "x$gcc_cv_cc_cfi_pseudo_op" = xyes; then
-   AC_DEFINE(HAVE_AS_CFI_PSEUDO_OP, 1,
-      [Define if your assembler supports .cfi_* directives.])
-fi
+GCC_AS_CFI_PSEUDO_OP
 
 case "$TARGET" in
   SPARC)
