@@ -96,6 +96,11 @@ jobs:
            CFARM_CXX: "g++"
          - CFARM_HOST: gcc117.fsffrance.org
            CFARM_PORT: 22
+           CFARM_TRIPLE: aarch64-linux-gnu
+           CFARM_CC: "/home/green/gcc12/bin/gcc"
+           CFARM_CXX: "/home/green/gcc12/bin/g++"
+         - CFARM_HOST: gcc117.fsffrance.org
+           CFARM_PORT: 22
            CFARM_TRIPLE: aarch64-lto-linux-gnu
            CFARM_CC: "gcc -flto"
            CFARM_CXX: "g++ -flto"
@@ -295,6 +300,59 @@ jobs:
                           -l project=libffi \
                           -l sha=${GITHUB_SHA:0:7} \
                           -l CC=${{ matrix.MSYS2_ARCH }}-w64-mingw32-gcc \
+                          -l host=x86_64-pc-cygwin \
+                          --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
+        shell: msys2 {0}
+
+  build-msys2-clang:
+
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - MSYSTEM: MINGW32
+            MSYS2_ARCH: i686
+          - MSYSTEM: MINGW64
+            MSYS2_ARCH: x86_64
+    name: ${{ matrix.MSYSTEM }}
+
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v2
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.MSYSTEM }}
+          update: true
+          install: >-
+            base-devel
+            autoconf-wrapper
+            autoconf
+            automake
+            libtool
+            make
+            dejagnu
+            clang
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc-libs
+            unzip
+
+      - run: |
+          set -x
+          cd $(cygpath $RUNNER_WORKSPACE)/libffi
+          wget https://rl.gl/cli/rlgl-windows-amd64.zip
+          unzip rlgl-windows-amd64.zip
+          autoreconf -f -v -i
+          CC=clang CXX=clang ./configure
+          make
+          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
+          ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
+          ./rlgl/rlgl.exe e \
+                          -l project=libffi \
+                          -l sha=${GITHUB_SHA:0:7} \
+                          -l CC=clang \
                           -l host=x86_64-pc-cygwin \
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: msys2 {0}
