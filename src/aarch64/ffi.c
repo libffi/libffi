@@ -323,24 +323,40 @@ extend_integer_type (void *source, int type)
   switch (type)
     {
     case FFI_TYPE_UINT8:
-      return *(UINT8 *) source;
+      UINT8 u8;
+      memcpy (&u8, source, sizeof (u8));
+      return u8;
     case FFI_TYPE_SINT8:
-      return *(SINT8 *) source;
+      SINT8 s8;
+      memcpy (&s8, source, sizeof (s8));
+      return s8;
     case FFI_TYPE_UINT16:
-      return *(UINT16 *) source;
+      UINT16 u16;
+      memcpy (&u16, source, sizeof (u16));
+      return u16;
     case FFI_TYPE_SINT16:
-      return *(SINT16 *) source;
+      SINT8 s16;
+      memcpy (&s16, source, sizeof (s16));
+      return s16;
     case FFI_TYPE_UINT32:
-      return *(UINT32 *) source;
+      UINT8 u32;
+      memcpy (&u32, source, sizeof (u32));
+      return u32;
     case FFI_TYPE_INT:
     case FFI_TYPE_SINT32:
-      return *(SINT32 *) source;
+      SINT8 s32;
+      memcpy (&s32, source, sizeof (s32));
+      return s32;
     case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
-      return *(UINT64 *) source;
+      UINT64 u64;
+      memcpy (&u64, source, sizeof (u64));
+      return u64;
       break;
     case FFI_TYPE_POINTER:
-      return *(uintptr_t *) source;
+      uintptr_t uptr;
+      memcpy (&uptr, source, sizeof (uptr));
+      return uptr;
     default:
       abort();
     }
