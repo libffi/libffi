@@ -215,13 +215,17 @@ jobs:
           exit $?
 
   build:
-    name: Cygwin 64-bit
+    name: Cygwin ${{ matrix.arch }}
     runs-on: windows-latest
 
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows-latest]
+        include:
+          - host: i686-pc-cygwin
+            arch: x86
+          - host: x86_64-pc-cygwin
+            arch: x64
 
     steps:
       - run: git config --global core.autocrlf input
@@ -231,7 +235,7 @@ jobs:
       - name: Set up Cygwin
         uses: egor-tensin/setup-cygwin@v3
         with:
-          platform: x64
+          platform: ${{ matrix.arch }}
           packages: wget gcc-core make dejagnu automake autoconf libtool texinfo dos2unix unzip
 
       - run: |
@@ -248,7 +252,7 @@ jobs:
                           -l project=libffi \
                           -l sha=${GITHUB_SHA:0:7} \
                           -l CC=gcc \
-                          -l host=x86_64-pc-cygwin \
+                          -l host=${{ matrix.host }} \
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
 
