@@ -1,0 +1,20 @@
+# Toggle this if you want extra debugging
+option('ffi-debug', type : 'boolean', value : false)
+# Toggle this if you do not want support for aggregate types
+option('structs', type : 'boolean', value : true)
+# Toggle this if you do not want support for the raw API
+option('raw_api', type : 'boolean', value : true)
+# Toggle this if you are using Purify and want to suppress spurious messages
+option('purify_safety', type : 'boolean', value : false)
+# Toggle this if you want to enable pax emulated trampolines for PaX kernels
+# On PaX enable kernels that have MPROTECT enabled we can't use PROT_EXEC
+option('pax_emutramp', type : 'boolean', value : false)
+# Toggle this if you don't want the versioned build
+option('ffi-build-versioned', type : 'boolean', value : true)
+# Toggle this to disable use of static exec trampolines
+option('exe_static_tramp', type : 'boolean', value : true)
+# Toggle to build documentation (needs makeinfo)
+option('doc', type : 'boolean', value : false)
+# Toggle this if you don't want to run testsuite
+option('tests', type : 'boolean', value : true)
+option('tests_optimizations', type : 'array', value : [])
