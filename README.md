@@ -198,7 +198,8 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     3.4.4 TBD
-        Fix aarch64 linux builds with Link Time Optimization (-flto).
+        Important aarch64 fixes, including support for linux builds
+          with Link Time Optimization (-flto).
         Fix x86 stdcall stack alignment.
         Fix x86 Windows msvc assembler compatibility.
         Fix moxie and or1k small structure args.
