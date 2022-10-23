@@ -342,20 +342,20 @@ extend_integer_type (void *source, int type)
       }
     case FFI_TYPE_SINT16:
       {
-        SINT8 s16;
+        SINT16 s16;
         memcpy (&s16, source, sizeof (s16));
         return s16;
       }
     case FFI_TYPE_UINT32:
       {
-        UINT8 u32;
+        UINT32 u32;
         memcpy (&u32, source, sizeof (u32));
         return u32;
       }
     case FFI_TYPE_INT:
     case FFI_TYPE_SINT32:
       {
-        SINT8 s32;
+        SINT32 s32;
         memcpy (&s32, source, sizeof (s32));
         return s32;
       }
