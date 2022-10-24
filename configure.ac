@@ -70,10 +70,6 @@ AM_MAINTAINER_MODE
 AC_CHECK_HEADERS(sys/memfd.h)
 AC_CHECK_FUNCS([memfd_create])
 
-AC_CHECK_HEADERS(sys/mman.h)
-AC_CHECK_FUNCS([mmap mkostemp mkstemp])
-AC_FUNC_MMAP_BLACKLIST
-
 dnl The -no-testsuite modules omit the test subdir.
 AM_CONDITIONAL(TESTSUBDIR, test -d $srcdir/testsuite)
 
@@ -99,7 +95,7 @@ AC_CHECK_INCLUDES_DEFAULT
 AC_PROG_EGREP
 
 AC_CHECK_FUNCS(memcpy)
-AC_FUNC_ALLOCA
+AC_CHECK_HEADERS(alloca.h)
 
 AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(long double)
