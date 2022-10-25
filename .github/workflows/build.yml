@@ -23,7 +23,7 @@ jobs:
       matrix:
        include:
          - HOST: "x86_64-pc-linux-gnu"
-           MEVAL: "export CC=clang CXX=clang"
+           MEVAL: "export CC=clang CXX=clang++"
          - HOST: "i386-pc-linux-gnu"
            MEVAL: 'export CC="gcc -m32" CXX="g++ -m32"'
          - HOST: "x86_64-pc-linux-gnu"
@@ -79,6 +79,7 @@ jobs:
         run: |
           if test x"$MEVAL" != x; then eval ${MEVAL}; fi
           ./.ci/install.sh
+          ./.ci/meson-build.sh
           ./.ci/build.sh
 
   build-cfarm:
@@ -187,6 +188,12 @@ jobs:
           echo ${{ steps.check-host.outputs.HOST_OK }}
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} -r * ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:${{ env.BUILD_DIR }}
 
+      - name: Run meson
+        if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "${{ matrix.CFARM_CC }} --version"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "(cd ${{ env.BUILD_DIR }}; if test -f ~/.profile; then source ~/.profile; fi; CC='${{ matrix.CFARM_CC }}' CXX='${{ matrix.CFARM_CXX }}' ./.ci/meson-build.sh;) || true; exit 0"
+
       - name: Run configure and make
         if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
         run: |
@@ -203,11 +210,13 @@ jobs:
         if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
         run: |
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:${{ env.BUILD_DIR }}/*/testsuite/*.log .
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -P ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }}:${{ env.BUILD_DIR }}/builddir/meson-logs/testlog.txt .
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "rm -rf ${{ env.BUILD_DIR }}"
 
       - name: Install rlgl and run
         if: ${{ steps.check-host.outputs.HOST_OK == 'YES' }}
         run: |
+          ./.ci/meson-check-testlog.py testlog.txt
           wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
                tar --strip-components=2 -xvzf - ./rlgl/rlgl;
           ./rlgl l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
@@ -236,7 +245,7 @@ jobs:
         uses: egor-tensin/setup-cygwin@v3
         with:
           platform: ${{ matrix.arch }}
-          packages: wget gcc-core make dejagnu automake autoconf libtool texinfo dos2unix unzip
+          packages: wget gcc-core make dejagnu automake autoconf libtool texinfo dos2unix unzip python39-pip
 
       - run: |
           set -x
@@ -244,6 +253,7 @@ jobs:
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
           unzip rlgl-windows-amd64.zip
           autoreconf -f -v -i
+          CC=gcc ./.ci/meson-build.sh
           ./configure
           make -j 4
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
@@ -270,6 +280,11 @@ jobs:
             MSYS2_ARCH: x86_64
     name: ${{ matrix.MSYSTEM }} gcc
 
+    env:
+      # XXX: For some reason enabling jit debugging "fixes" random python crashes
+      # see https://github.com/msys2/MINGW-packages/issues/11864
+      MSYS: "winjitdebug"
+
     steps:
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v3
@@ -288,7 +303,10 @@ jobs:
             dejagnu
             mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc
             mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc-libs
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-python3-pip
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-ninja
             unzip
+            git
 
       - run: |
           set -x
@@ -296,6 +314,7 @@ jobs:
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
           unzip rlgl-windows-amd64.zip
           autoreconf -f -v -i
+          CC=${{ matrix.MSYS2_ARCH }}-w64-mingw32-gcc CXX=${{ matrix.MSYS2_ARCH }}-w64-mingw32-g++ ./.ci/meson-build.sh --ignore-tests-errors
           CC=${{ matrix.MSYS2_ARCH }}-w64-mingw32-gcc CXX=${{ matrix.MSYS2_ARCH }}-w64-mingw32-g++ ./configure
           make
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
@@ -322,6 +341,11 @@ jobs:
             MSYS2_ARCH: x86_64
     name: ${{ matrix.MSYSTEM }} clang
 
+    env:
+      # XXX: For some reason enabling jit debugging "fixes" random python crashes
+      # see https://github.com/msys2/MINGW-packages/issues/11864
+      MSYS: "winjitdebug"
+
     steps:
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v3
@@ -338,10 +362,11 @@ jobs:
             libtool
             make
             dejagnu
-            clang
-            mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc
-            mingw-w64-${{ matrix.MSYS2_ARCH }}-gcc-libs
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-clang
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-python3-pip
+            mingw-w64-${{ matrix.MSYS2_ARCH }}-ninja
             unzip
+            git
 
       - run: |
           set -x
@@ -349,7 +374,8 @@ jobs:
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
           unzip rlgl-windows-amd64.zip
           autoreconf -f -v -i
-          CC=clang CXX=clang ./configure
+          CC=clang CXX=clang++ ./.ci/meson-build.sh --ignore-tests-errors
+          CC=clang CXX=clang++ ./configure
           make
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
@@ -368,7 +394,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [macos-11, macos-12]
-        compilers: [CC=gcc CXX=g++, CC=clang CXX=clang]
+        compilers: [CC=gcc CXX=g++, CC=clang CXX=clang++]
 
     name: ${{ matrix.platform }} ${{ matrix.compilers }}
 
@@ -376,6 +402,7 @@ jobs:
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v3
       - run: ./.ci/install.sh
+      - run: ${{ matrix.compilers }} ./.ci/meson-build.sh
       - run: ${{ matrix.compilers }} ./.ci/build.sh
 
   build-msvc:
@@ -444,6 +471,7 @@ jobs:
           ANDROID_API_LEVEL: 23
           CONFIGURE_OPTIONS: "--disable-shared --disable-multi-os-directory" # fixes warning about unsupported -print-multi-os-directory with clang
         run: |
+          ./.ci/meson-build.sh
           # Relevant documentation:
           # https://developer.android.com/ndk/guides/other_build_systems
           # https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
@@ -458,3 +486,28 @@ jobs:
           export NM="${TOOLCHAIN}"/bin/llvm-nm
           export OBJDUMP="${TOOLCHAIN}"/bin/llvm-objdump
           ./.ci/build.sh
+
+  # This Meson job is separated from build-msvc job because it does not use
+  # cygwin which is only supported by Meson.
+  build-meson-msvc:
+    name: Meson Windows ${{ matrix.width }}-bit Visual C++
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - width: 32
+            tools: amd64_x86
+          - width: 64
+            tools: amd64
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1.8.1
+        with:
+          arch: ${{ matrix.tools }}
+      - name: Build and test
+        run: |
+          pip3 install meson ninja
+          python3 ./.ci/meson-build.py
