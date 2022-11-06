@@ -44,7 +44,7 @@ typedef enum ffi_abi {
   FFI_WASM32, // "raw", no structures or varargs
   FFI_WASM32_EMSCRIPTEN, // structures, varargs, and split 64-bit params
   FFI_LAST_ABI,
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
   FFI_DEFAULT_ABI = FFI_WASM32_EMSCRIPTEN
 #else
   FFI_DEFAULT_ABI = FFI_WASM32
