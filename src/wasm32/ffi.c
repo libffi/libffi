@@ -170,7 +170,7 @@ unbox_small_structs, (ffi_type type_ptr), {
 
 EM_JS_MACROS(
 void,
-ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
+ffi_call_helper, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
 {
   var abi = CIF__ABI(cif);
   var nargs = CIF__NARGS(cif);
@@ -391,6 +391,10 @@ ffi_call, (ffi_cif * cif, ffi_fp fn, void *rvalue, void **avalue),
     throw new Error('Unexpected rtype ' + rtype_id);
   }
 });
+
+void ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue) {
+  ffi_call_helper(cif, fn, rvalue, avalue);
+}
 
 #define CLOSURE__wrapper(addr) DEREF_U32(addr, 0)
 #define CLOSURE__cif(addr) DEREF_U32(addr, 1)
