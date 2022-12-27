@@ -234,7 +234,7 @@ jobs:
           no_output_timeout: 1200
           command: |
             source ./emsdk/emsdk_env.sh
-            sed -i'.old' "/^NODE_JS = /s/emsdk.*/\[&, '--experimental-wasm-bigint'\]/" $EM_CONFIG
+            sed -i'.old' "/^NODE_JS = /s/emsdk.*/\[&, '--experimental-wasm-bigint'\]/" $EMSDK/.emscripten
             testsuite/emscripten-test-stuff/node-tests.sh --enable-wasm-bigint
 
 workflows:
