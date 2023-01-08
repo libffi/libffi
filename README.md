@@ -107,14 +107,14 @@ tested:
 | X86             | Solaris          | GCC                     |
 | X86             | Solaris          | Oracle Solaris Studio C |
 | X86             | Windows/Cygwin   | GCC                     |
-| X86             | Windows/MingW    | GCC                     |
+| X86             | Windows/MinGW    | GCC                     |
 | X86-64          | FreeBSD          | GCC                     |
 | X86-64          | Linux            | GCC                     |
 | X86-64          | Linux/x32        | GCC                     |
 | X86-64          | OpenBSD          | GCC                     |
 | X86-64          | Solaris          | Oracle Solaris Studio C |
 | X86-64          | Windows/Cygwin   | GCC                     |
-| X86-64          | Windows/MingW    | GCC                     |
+| X86-64          | Windows/MinGW    | GCC                     |
 | X86-64          | Mac OSX          | GCC                     |
 | Xtensa          | Linux            | GCC                     |
 
