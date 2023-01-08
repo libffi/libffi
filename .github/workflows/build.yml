@@ -66,7 +66,7 @@ jobs:
            RUNTESTFLAGS: "--target_board moxie-sim"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - env:
           MEVAL: ${{ matrix.MEVAL }}
@@ -147,7 +147,7 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Run autogen
         run: |
@@ -230,7 +230,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf input
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Cygwin
         uses: egor-tensin/setup-cygwin@v3
@@ -272,7 +272,7 @@ jobs:
 
     steps:
       - run: git config --global core.autocrlf input
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: msys2/setup-msys2@v2
         with:
@@ -324,7 +324,7 @@ jobs:
 
     steps:
       - run: git config --global core.autocrlf input
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: msys2/setup-msys2@v2
         with:
@@ -374,7 +374,7 @@ jobs:
 
     steps:
       - run: git config --global core.autocrlf input
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: ./.ci/install.sh
       - run: ${{ matrix.compilers }} ./.ci/build.sh
 
@@ -397,7 +397,7 @@ jobs:
 
     steps:
       - run: git config --global core.autocrlf input
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: egor-tensin/setup-cygwin@v3
         with:
           platform: x64
@@ -437,7 +437,7 @@ jobs:
 
     steps:
       - run: git config --global core.autocrlf input
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: ./.ci/install.sh
       - env:
           HOST: ${{ matrix.HOST }}
