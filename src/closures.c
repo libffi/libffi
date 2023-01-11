@@ -137,6 +137,7 @@ ffi_tramp_is_present (__attribute__((unused)) void *ptr)
 /* Windows systems may have Data Execution Protection (DEP) enabled,
    which requires the use of VirtualMalloc/VirtualFree to alloc/free
    executable memory. */
+#  undef FFI_MMAP_EXEC_WRIT
 #  define FFI_MMAP_EXEC_WRIT 1
 # endif
 #endif
