@@ -347,7 +347,7 @@ ffi_call_helper, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
   STACK_ALLOC(cur_stack_ptr, 0, MAX_ALIGN);
   stackRestore(cur_stack_ptr);
   LOG_DEBUG("CALL_FUNC_PTR", fn, args);
-  var result = wasmTable.get(fn).apply(null, args);
+  var result = getWasmTableEntry(fn).apply(null, args);
   // Put the stack pointer back (we moved it if we made a varargs call)
   stackRestore(orig_stack_ptr);
 
@@ -640,7 +640,7 @@ ffi_prep_closure_loc_helper,
     STACK_ALLOC(cur_ptr, 0, MAX_ALIGN);
     stackRestore(cur_ptr);
     LOG_DEBUG("CALL_CLOSURE",  "closure:", closure, "fptr", CLOSURE__fun(closure), "cif",  CLOSURE__cif(closure));
-    wasmTable.get(CLOSURE__fun(closure))(
+    getWasmTableEntry(CLOSURE__fun(closure))(
         CLOSURE__cif(closure), ret_ptr, args_ptr,
         CLOSURE__user_data(closure)
     );
@@ -665,7 +665,7 @@ ffi_prep_closure_loc_helper,
   } catch(e) {
     return FFI_BAD_TYPEDEF_MACRO;
   }
-  wasmTable.set(codeloc, wasm_trampoline);
+  setWasmTableEntry(codeloc, wasm_trampoline);
   CLOSURE__cif(closure) = cif;
   CLOSURE__fun(closure) = fun;
   CLOSURE__user_data(closure) = user_data;
