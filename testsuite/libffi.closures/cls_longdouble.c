@@ -7,7 +7,7 @@
 /* This test is known to PASS on armv7l-unknown-linux-gnueabihf, so I have
    remove the xfail for arm*-*-* below, until we know more.  */
 /* { dg-do run { xfail strongarm*-*-* xscale*-*-* } } */
-/* { dg-options -mlong-double-128 { target powerpc64*-*-linux* } } */
+/* { dg-options -mlong-double-128 { target powerpc64*-*-linux-gnu* } } */
 
 #include "ffitest.h"
 

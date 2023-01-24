@@ -442,7 +442,9 @@ ffi_status ffi_prep_closure_loc(ffi_closure *closure, ffi_cif *cif, void (*fun)(
     closure->fun = fun;
     closure->user_data = user_data;
 
+#if !defined(__FreeBSD__)
     __builtin___clear_cache(codeloc, codeloc + FFI_TRAMPOLINE_SIZE);
+#endif
 
     return FFI_OK;
 }

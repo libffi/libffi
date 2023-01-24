@@ -6,7 +6,7 @@
 */
 
 /* { dg-do run { xfail strongarm*-*-* } } */
-/* { dg-options -mlong-double-128 { target powerpc64*-*-linux* } } */
+/* { dg-options -mlong-double-128 { target powerpc64*-*-linux-gnu* } } */
 
 #include "ffitest.h"
 

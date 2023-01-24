@@ -1,8 +1,8 @@
 Status
 ======
 
-libffi-3.4.2 was released on June 28, 2021.  Check the libffi web page
-for updates: <URL:http://sourceware.org/libffi/>.
+libffi-3.4.4 will be released on TBD.  Check the libffi web
+page for updates: <URL:http://sourceware.org/libffi/>.
 
 
 What is libffi?
@@ -61,6 +61,7 @@ tested:
 | HPPA            | HPUX             | GCC                     |
 | KVX             | Linux            | GCC                     |
 | IA-64           | Linux            | GCC                     |
+| LoongArch64     | Linux            | GCC                     |
 | M68K            | FreeMiNT         | GCC                     |
 | M68K            | Linux            | GCC                     |
 | M68K            | RTEMS            | GCC                     |
@@ -74,6 +75,7 @@ tested:
 | Moxie           | Bare metal       | GCC                     |
 | Nios II         | Linux            | GCC                     |
 | OpenRISC        | Linux            | GCC                     |
+| PowerPC 32-bit  | AIX              | GCC                     |
 | PowerPC 32-bit  | AIX              | IBM XL C                |
 | PowerPC 64-bit  | AIX              | IBM XL C                |
 | PowerPC         | AMIGA            | GCC                     |
@@ -195,8 +197,15 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
-    3.4.3 TBD
+    3.4.4 TBD
+
+    3.4.3 Sep-19-22
+        All struct args are passed by value, regardless of size, as per ABIs.
+        Enable static trampolines for Cygwin.
+        Add support for Loongson's LoongArch64 architecture.
         Fix x32 static trampolines.
+        Fix 32-bit x86 stdcall stack corruption.
+        Fix ILP32 aarch64 support.
 
     3.4.2 Jun-28-21
         Add static trampoline support for Linux on x86_64 and ARM64.
@@ -447,6 +456,8 @@ developers:
     frv                 Anthony Green
     ia64                Hans Boehm
     kvx                 Yann Sionneau
+    loongarch64         Cheng Lulu, Xi Ruoyao, Xu Hao,
+                        Zhang Wenlong, Pan Xuefeng
     m32r                Kazuhiro Inaoka
     m68k                Andreas Schwab
     m88k                Miod Vallat

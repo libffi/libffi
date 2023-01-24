@@ -236,12 +236,19 @@ callit:
 	# Shift the return type flag over
 	SRL	t6, 8*FFI_FLAG_BITS
 
-	beq	t6, FFI_TYPE_SINT32, retint	
-	bne     t6, FFI_TYPE_INT, retfloat
+	beq	t6, FFI_TYPE_SINT32, retint
+	bne     t6, FFI_TYPE_INT, retuint32
 retint:
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
 	REG_S	v0, 0(t4)
+	b	epilogue
+
+retuint32:
+	bne     t6, FFI_TYPE_UINT32, retfloat
+	jal	t9
+	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
+	sw	v0, 0(t4)
 	b	epilogue
 
 retfloat:
@@ -259,7 +266,7 @@ retdouble:
 	s.d	$f0, 0(t4)
 	b	epilogue
 
-retstruct_d:	
+retstruct_d:
 	bne	t6, FFI_TYPE_STRUCT_D, retstruct_f
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
@@ -346,7 +353,7 @@ retstruct_d_d_soft:
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
 	sd	v0, 0(t4)
-	sd	v1, 8(t4)
+	sd	a0, 8(t4) # not typo, it is a0, I have no idea, gcc does do it
 	b	epilogue
 	
 retstruct_f_f_soft:	
@@ -370,7 +377,7 @@ retstruct_f_d_soft:
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
 	sw	v0, 0(t4)
-	sd	v1, 8(t4)
+	sd	a0, 8(t4) # not typo, it is a0, I have no idea, gcc does do it
 	b	epilogue
 	
 retstruct_small:	
@@ -381,21 +388,37 @@ retstruct_small:
 	b	epilogue
 	
 retstruct_small2:	
-	bne	t6, FFI_TYPE_STRUCT_SMALL2, retcomplex_i_i
+	bne	t6, FFI_TYPE_STRUCT_SMALL2, retlongdouble_soft
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
 	REG_S	v0, 0(t4)
 	REG_S	v1, 8(t4)
 	b	epilogue
 	
-retcomplex_i_i:
-	bne	t6, FFI_TYPE_COMPLEX_II, retstruct
+retlongdouble_soft:
+	bne	t6, FFI_TYPE_LONGDOUBLE, retcomplex_small
+	jal	t9
+	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
+	REG_S	v0, 0(t4)
+	REG_S	a0, 8(t4) # not typo, it is a0, I have no idea, gcc does do it
+	b	epilogue
+
+retcomplex_small:
+	bne	t6, FFI_TYPE_COMPLEX_SMALL, retcomplex_small2
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
 	REG_S	v0, 0(t4)
 	b	epilogue
 
-retstruct:	
+retcomplex_small2:
+	bne	t6, FFI_TYPE_COMPLEX_SMALL2, retstruct
+	jal	t9
+	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
+	REG_S	v0, 0(t4)
+	REG_S	v1, 8(t4)
+	b	epilogue
+
+retstruct:
 noretval:	
 	jal	t9
 	
@@ -489,8 +512,13 @@ ffi_go_closure_N32:
 
 	# Call ffi_closure_mips_inner_N32 to do the real work.
 	LA	t9, ffi_closure_mips_inner_N32
+#if _MIPS_SIM==_ABIN32
+	lw	a0, 4($15)   # cif
+	lw	a1, 8($15) # fun
+#else
 	REG_L	a0, 8($15)   # cif
 	REG_L	a1, 16($15) # fun
+#endif
 	move	a2, t7                     # userdata=closure
 	ADDU	a3, $sp, V0_OFF2           # rvalue
 	ADDU	a4, $sp, A0_OFF2           # ar
@@ -558,8 +586,13 @@ $do_closure:
 	jalr	t9
 
 	# Return flags are in v0
-	bne     v0, FFI_TYPE_SINT32, cls_retint
+	bne     v0, FFI_TYPE_SINT32, cls_retuint32
 	lw	v0, V0_OFF2($sp)
+	b	cls_epilogue
+
+cls_retuint32:
+	bne     v0, FFI_TYPE_UINT32, cls_retint
+	lwu	v0, V0_OFF2($sp)
 	b	cls_epilogue
 
 cls_retint:
@@ -595,25 +628,12 @@ cls_retstruct_d_d:
 	b	cls_epilogue
 
 cls_retcomplex_d_d:
-	bne	v0, FFI_TYPE_COMPLEX_DD, cls_retcomplex_ld_ld
+	bne	v0, FFI_TYPE_COMPLEX_DD, cls_retcomplex_f_f
 	l.d	$f0, V0_OFF2($sp)
 	l.d	$f2, V1_OFF2($sp)
 	b	cls_epilogue
 	
-cls_retcomplex_ld_ld:
-	bne	v0, FFI_TYPE_COMPLEX_LDLD, cls_retstruct_f_f
-	REG_L	t8, A0_OFF2($sp)
-	REG_L	t9, 16($sp)
-	REG_S	t9, 0(t8)
-	REG_L	t9, 24($sp)
-	REG_S	t9, 8(t8)
-	REG_L	t9, 32($sp)
-	REG_S	t9, 16(t8)
-	REG_L	t9, 40($sp)
-	REG_S	t9, 24(t8)
-	b	cls_epilogue
-
-cls_retstruct_f_f:	
+cls_retstruct_f_f:
 	bne	v0, FFI_TYPE_STRUCT_FF, cls_retcomplex_f_f
 	l.s	$f0, V0_OFF2($sp)
 	l.s	$f2, V1_OFF2($sp)
@@ -632,12 +652,31 @@ cls_retstruct_d_f:
 	b	cls_epilogue
 	
 cls_retstruct_f_d:	
-	bne	v0, FFI_TYPE_STRUCT_FD, cls_retstruct_small2
+	bne	v0, FFI_TYPE_STRUCT_FD, cls_retcomplex_ld_ld
 	l.s	$f0, V0_OFF2($sp)
 	l.d	$f2, V1_OFF2($sp)
 	b	cls_epilogue
+#else
+cls_longdouble_soft:
+	bne	v0, FFI_TYPE_LONGDOUBLE, cls_retcomplex_ld_ld
+	REG_L	v0, V0_OFF2($sp)
+	REG_L	a0, V1_OFF2($sp) # not typo, it is a0, I have no idea, gcc does do it
+	b	cls_epilogue
 #endif
-	
+
+cls_retcomplex_ld_ld:
+	bne	v0, FFI_TYPE_COMPLEX_LDLD, cls_retstruct_small2
+	REG_L	t8, A0_OFF2($sp)
+	REG_L	t9, 16($sp)
+	REG_S	t9, 0(t8)
+	REG_L	t9, 24($sp)
+	REG_S	t9, 8(t8)
+	REG_L	t9, 32($sp)
+	REG_S	t9, 16(t8)
+	REG_L	t9, 40($sp)
+	REG_S	t9, 24(t8)
+	b	cls_epilogue
+
 cls_retstruct_small2:	
 	REG_L	v0, V0_OFF2($sp)
 	REG_L	v1, V1_OFF2($sp)

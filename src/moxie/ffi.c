@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   ffi.c - Copyright (C) 2012, 2013, 2018, 2021  Anthony Green
+   ffi.c - Copyright (C) 2012, 2013, 2018, 2021, 2022  Anthony Green
 
    Moxie Foreign Function Interface
 
@@ -128,6 +128,8 @@ void ffi_call(ffi_cif *cif,
 	      void **avalue)
 {
   extended_cif ecif;
+  ffi_type **arg_types = cif->arg_types;
+  int i, nargs = cif->nargs;
 
   ecif.cif = cif;
   ecif.avalue = avalue;
@@ -142,6 +144,20 @@ void ffi_call(ffi_cif *cif,
     }
   else
     ecif.rvalue = rvalue;
+
+  /* If we have any large structure arguments, make a copy so we are passing
+     by value.  */
+  for (i = 0; i < nargs; i++)
+    {
+      ffi_type *at = arg_types[i];
+      int size = at->size;
+      if (at->type == FFI_TYPE_STRUCT && size > 4)
+        {
+          char *argcopy = alloca (size);
+          memcpy (argcopy, avalue[i], size);
+          avalue[i] = argcopy;
+        }
+    }
 
   switch (cif->abi)
     {
