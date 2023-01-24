@@ -33,6 +33,15 @@ jobs:
             ./emsdk install latest
             ./emsdk activate latest
 
+      - run:
+          name: install autoconf 2.71
+          command: |
+            wget https://mirrors.sarata.com/gnu/autoconf/autoconf-2.71.tar.xz
+            tar -xf autoconf-2.71.tar.xz
+            cd autoconf-2.71
+            ./configure
+            make install
+
       - persist_to_workspace:
           root: .
           paths:
