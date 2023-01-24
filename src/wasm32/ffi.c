@@ -41,6 +41,8 @@
 
 #define EM_JS_MACROS(ret, name, args, body...) EM_JS(ret, name, args, body)
 
+EM_JS_DEPS(libffi, "$getWasmTableEntry,$setWasmTableEntry,$getEmptyTableSlot");
+
 #define DEREF_U8(addr, offset) HEAPU8[addr + offset]
 #define DEREF_S8(addr, offset) HEAP8[addr + offset]
 #define DEREF_U16(addr, offset) HEAPU16[(addr >> 1) + offset]
