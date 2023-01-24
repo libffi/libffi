@@ -71,6 +71,7 @@
     BIGINT_FROM_PAIR(DEREF_U32(addr, offset*2), DEREF_U32(addr, offset*2 + 1))
 
 #define STORE_U64(addr, offset, val) (  \
+  (console.log("store_u64", val)),        \
   (DEREF_U32(addr, offset*2) = BIGINT_LOWER(val)), \
   (DEREF_U32(addr, offset*2+1) = BIGINT_UPPER(val)) \
 )
@@ -312,8 +313,8 @@ ffi_call_helper, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
         STACK_ALLOC(cur_stack_ptr, 16, 8);
         DEREF_U32(cur_stack_ptr, 0) = DEREF_U32(arg_ptr, 0);
         DEREF_U32(cur_stack_ptr, 1) = DEREF_U32(arg_ptr, 1);
-        DEREF_U32(cur_stack_ptr, 2) = DEREF_U32(arg_ptr, 1);
-        DEREF_U32(cur_stack_ptr, 3) = DEREF_U32(arg_ptr, 1);
+        DEREF_U32(cur_stack_ptr, 2) = DEREF_U32(arg_ptr, 2);
+        DEREF_U32(cur_stack_ptr, 3) = DEREF_U32(arg_ptr, 3);
         break;
       case FFI_TYPE_STRUCT:
         // Again, struct must be passed by pointer.
