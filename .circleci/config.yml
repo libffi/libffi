@@ -33,15 +33,6 @@ jobs:
             ./emsdk install latest
             ./emsdk activate latest
 
-      - run:
-          name: install autoconf 2.71
-          command: |
-            wget https://mirrors.sarata.com/gnu/autoconf/autoconf-2.71.tar.xz
-            tar -xf autoconf-2.71.tar.xz
-            cd autoconf-2.71
-            ./configure
-            make install
-
       - persist_to_workspace:
           root: .
           paths:
@@ -53,6 +44,16 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
+
+      - run:
+          name: install autoconf 2.71
+          command: |
+            wget https://mirrors.sarata.com/gnu/autoconf/autoconf-2.71.tar.xz
+            tar -xf autoconf-2.71.tar.xz
+            cd autoconf-2.71
+            ./configure
+            make install
+            cp /usr/local/bin/autoconf /usr/bin/autoconf
 
       - run:
           name: build
@@ -81,6 +82,16 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
+
+      - run:
+          name: install autoconf 2.71
+          command: |
+            wget https://mirrors.sarata.com/gnu/autoconf/autoconf-2.71.tar.xz
+            tar -xf autoconf-2.71.tar.xz
+            cd autoconf-2.71
+            ./configure
+            make install
+            cp /usr/local/bin/autoconf /usr/bin/autoconf
 
       - run:
           name: build
@@ -184,6 +195,16 @@ jobs:
           at: .
 
       - run:
+          name: install autoconf 2.71
+          command: |
+            wget https://mirrors.sarata.com/gnu/autoconf/autoconf-2.71.tar.xz
+            tar -xf autoconf-2.71.tar.xz
+            cd autoconf-2.71
+            ./configure
+            make install
+            cp /usr/local/bin/autoconf /usr/bin/autoconf
+
+      - run:
           name: run tests
           no_output_timeout: 1200
           command: |
@@ -197,6 +218,16 @@ jobs:
 
       - attach_workspace:
           at: .
+
+      - run:
+          name: install autoconf 2.71
+          command: |
+            wget https://mirrors.sarata.com/gnu/autoconf/autoconf-2.71.tar.xz
+            tar -xf autoconf-2.71.tar.xz
+            cd autoconf-2.71
+            ./configure
+            make install
+            cp /usr/local/bin/autoconf /usr/bin/autoconf
 
       - run:
           name: run tests
