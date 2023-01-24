@@ -64,7 +64,7 @@ int main (void)
   /* { dg-output "2 125: 127" } */
   printf("res: %d\n", (signed char)res_call);
   /* { dg-output "\nres: 127" } */
-  CHECK(res_call == 127);
+  CHECK((signed char)res_call == 127);
 
   CHECK(ffi_prep_closure_loc(pcl, &cif, test_func_gn, NULL, code)  == FFI_OK);
 
