@@ -2,7 +2,7 @@ dnl Process this with autoconf to create configure
 
 AC_PREREQ([2.71])
 
-AC_INIT([libffi],[3.4.4-experimental],[http://github.com/libffi/libffi/issues])
+AC_INIT([libffi],[3.4.4],[http://github.com/libffi/libffi/issues])
 AC_CONFIG_HEADERS([fficonfig.h])
 
 AC_CANONICAL_TARGET
@@ -70,10 +70,6 @@ AM_MAINTAINER_MODE
 AC_CHECK_HEADERS(sys/memfd.h)
 AC_CHECK_FUNCS([memfd_create])
 
-AC_CHECK_HEADERS(sys/mman.h)
-AC_CHECK_FUNCS([mmap mkostemp mkstemp])
-AC_FUNC_MMAP_BLACKLIST
-
 dnl The -no-testsuite modules omit the test subdir.
 AM_CONDITIONAL(TESTSUBDIR, test -d $srcdir/testsuite)
 
@@ -99,7 +95,7 @@ AC_CHECK_INCLUDES_DEFAULT
 AC_PROG_EGREP
 
 AC_CHECK_FUNCS(memcpy)
-AC_FUNC_ALLOCA
+AC_CHECK_HEADERS(alloca.h)
 
 AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(long double)
@@ -124,20 +120,7 @@ AC_SUBST(HAVE_LONG_DOUBLE_VARIANT)
 
 AC_C_BIGENDIAN
 
-AC_CACHE_CHECK([compiler generates .cfi pseudo-ops],
-  gcc_cv_cc_cfi_pseudo_op, [
-	gcc_cv_cc_cfi_pseudo_op=no
-	echo 'void foo(void) { foo(); }' > conftest.c
-	if $CC $CFLAGS -S conftest.c > /dev/null 2>&1; then
-	    if grep -q cfi_startproc conftest.s; then
-	        gcc_cv_cc_cfi_pseudo_op=yes
-            fi
-	fi
-	])
-if test "x$gcc_cv_cc_cfi_pseudo_op" = xyes; then
-   AC_DEFINE(HAVE_AS_CFI_PSEUDO_OP, 1,
-      [Define if your assembler supports .cfi_* directives.])
-fi
+GCC_AS_CFI_PSEUDO_OP
 
 case "$TARGET" in
   SPARC)

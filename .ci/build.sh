@@ -36,7 +36,7 @@ function build_foreign_linux()
     ${DOCKER} run --rm -t -v $(pwd):/opt ${SET_QEMU_CPU} -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.ci/build-in-container.sh
 
     ./rlgl l --key=${RLGL_KEY} https://rl.gl
-    ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='$CC' ${HOST+-l host=$HOST} --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
+    ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC="$CC" ${HOST+-l host=$HOST} --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
     exit $?
 }
 
@@ -45,7 +45,7 @@ function build_cross_linux()
     ${DOCKER} run --rm -t -v $(pwd):/opt ${SET_QEMU_CPU} -e HOST="${HOST}" -e CC="${HOST}-gcc-8 ${GCC_OPTIONS}" -e CXX="${HOST}-g++-8 ${GCC_OPTIONS}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" quay.io/moxielogic/cross-ci-build-container:latest bash -c /opt/.ci/build-in-container.sh
 
     ./rlgl l --key=${RLGL_KEY} https://rl.gl
-    ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='${HOST}-gcc-8 ${GCC_OPTIONS}' -l host=${HOST} --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
+    ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC="${HOST}-gcc-8 ${GCC_OPTIONS}" -l host=${HOST} --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
     exit $?
 }
 
@@ -55,7 +55,7 @@ function build_cross()
     ${DOCKER} run --rm -t -v $(pwd):/opt -e HOST="${HOST}" -e CC="${HOST}-gcc ${GCC_OPTIONS}" -e CXX="${HOST}-g++ ${GCC_OPTIONS}" -e RUNNER_WORKSPACE=/opt -e RUNTESTFLAGS="-vv ${RUNTESTFLAGS}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" quay.io/moxielogic/libffi-ci-${HOST} bash -c /opt/.ci/build-cross-in-container.sh
 
     ./rlgl l --key=${RLGL_KEY} https://rl.gl
-    ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='${HOST}-gcc' -l host=$HOST --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
+    ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC="${HOST}-gcc" -l host=$HOST --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
     exit $?
 }
 

@@ -743,20 +743,23 @@ ENDF(ffi_closure_raw_THISCALL)
 # define COMDAT(X)
 #endif
 
-/* #if defined(__PIC__) */
-/* 	COMDAT(C(__x86.get_pc_thunk.bx)) */
-/* C(__x86.get_pc_thunk.bx): */
-/* 	movl	(%esp), %ebx */
-/* 	ret */
-/* ENDF(C(__x86.get_pc_thunk.bx)) */
-/* # if defined X86_DARWIN || defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE */
-/* 	COMDAT(C(__x86.get_pc_thunk.dx)) */
-/* C(__x86.get_pc_thunk.dx): */
-/* 	movl	(%esp), %edx */
-/* 	ret */
-/* ENDF(C(__x86.get_pc_thunk.dx)) */
-/* #endif /* DARWIN || HIDDEN */ */
-/* #endif /* __PIC__ */ */
+#if 0
+#if defined(__PIC__)
+	COMDAT(C(__x86.get_pc_thunk.bx))
+C(__x86.get_pc_thunk.bx):
+	movl	(%esp), %ebx
+	ret
+ENDF(C(__x86.get_pc_thunk.bx))
+# if defined X86_DARWIN || defined HAVE_HIDDEN_VISIBILITY_ATTRIBUTE
+	COMDAT(C(__x86.get_pc_thunk.dx))
+C(__x86.get_pc_thunk.dx):
+	movl	(%esp), %edx
+	ret
+ENDF(C(__x86.get_pc_thunk.dx))
+#endif /* DARWIN || HIDDEN */
+#endif /* __PIC__ */
+#endif
+
 
 #if 0
 /* Sadly, OSX cctools-as doesn't understand .cfi directives at all.  */

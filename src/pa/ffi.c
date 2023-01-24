@@ -376,9 +376,25 @@ extern void ffi_call_pa32(void (*)(UINT32 *, extended_cif *, unsigned),
 void ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 {
   extended_cif ecif;
+  size_t i, nargs = cif->nargs;
+  ffi_type **arg_types = cif->arg_types;
 
   ecif.cif = cif;
   ecif.avalue = avalue;
+
+  /* If we have any large structure arguments, make a copy so we are passing
+     by value.  */
+  for (i = 0; i < nargs; i++)
+    {
+      ffi_type *at = arg_types[i];
+      int size = at->size;
+      if (at->type == FFI_TYPE_STRUCT && size > 8)
+	{
+	  char *argcopy = alloca (size);
+	  memcpy (argcopy, avalue[i], size);
+	  avalue[i] = argcopy;
+	}
+    }
 
   /* If the return value is a struct and we don't have a return
      value address then we need to make one.  */
