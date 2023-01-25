@@ -73,7 +73,6 @@ EM_JS_DEPS(libffi, "$getWasmTableEntry,$setWasmTableEntry,$getEmptyTableSlot,$co
     BIGINT_FROM_PAIR(DEREF_U32(addr, offset*2), DEREF_U32(addr, offset*2 + 1))
 
 #define STORE_U64(addr, offset, val) (  \
-  (console.log("store_u64", val)),        \
   (DEREF_U32(addr, offset*2) = BIGINT_LOWER(val)), \
   (DEREF_U32(addr, offset*2+1) = BIGINT_UPPER(val)) \
 )
