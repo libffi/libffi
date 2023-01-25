@@ -34,4 +34,4 @@ make
 #EMMAKEN_JUST_CONFIGURE=1 emmake make check \
 #  RUNTESTFLAGS="libffi.closures/closure.exp LDFLAGS_FOR_TARGET='$LDFLAGS'" || (cat testsuite/libffi.log && exit 1)
 EMMAKEN_JUST_CONFIGURE=1 emmake make check \
-  RUNTESTFLAGS="LDFLAGS_FOR_TARGET='$LDFLAGS'" || (cat testsuite/libffi.log && exit 1)
+  RUNTESTFLAGS="LDFLAGS_FOR_TARGET='$LDFLAGS' -v -v -v" || (cat testsuite/libffi.log && exit 1)
