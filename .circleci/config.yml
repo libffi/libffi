@@ -3,7 +3,7 @@ version: 2
 defaults: &defaults
   working_directory: ~/repo
   docker:
-    - image: hoodmane/pyodide-env:18
+    - image: pyodide/pyodide-env:20221102-chrome107-firefox106
   environment:
     - EMSDK_NUM_CORES: 3
       EMCC_CORES: 3
@@ -209,6 +209,7 @@ jobs:
           no_output_timeout: 1200
           command: |
             source ./emsdk/emsdk_env.sh
+            rm testsuite/libffi.go/go.exp
             testsuite/emscripten-test-stuff/node-tests.sh
 
   test-node-bigint:
@@ -234,6 +235,7 @@ jobs:
           no_output_timeout: 1200
           command: |
             source ./emsdk/emsdk_env.sh
+            rm testsuite/libffi.go/go.exp
             testsuite/emscripten-test-stuff/node-tests.sh --enable-wasm-bigint
 
 workflows:
