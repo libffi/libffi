@@ -19,7 +19,7 @@ if [ "$WASM_BIGINT" = "true" ]; then
   export CFLAGS+=" -DWASM_BIGINT"
 fi
 export CXXFLAGS="$CFLAGS"
-export LDFLAGS="-sEXPORTED_FUNCTIONS=_main,_malloc,_free -sALLOW_TABLE_GROWTH -v -v -sASSERTIONS"
+export LDFLAGS="-sEXPORTED_FUNCTIONS=_main,_malloc,_free -sALLOW_TABLE_GROWTH -sASSERTIONS"
 if [ "$WASM_BIGINT" = "true" ]; then
   export LDFLAGS+=" -sWASM_BIGINT"
 fi
@@ -34,4 +34,4 @@ make
 #EMMAKEN_JUST_CONFIGURE=1 emmake make check \
 #  RUNTESTFLAGS="libffi.closures/closure.exp LDFLAGS_FOR_TARGET='$LDFLAGS'" || (cat testsuite/libffi.log && exit 1)
 EMMAKEN_JUST_CONFIGURE=1 emmake make check \
-  RUNTESTFLAGS="LDFLAGS_FOR_TARGET='$LDFLAGS'" || (cat testsuite/libffi.log && exit 1)
+  RUNTESTFLAGS="LDFLAGS_FOR_TARGET='$LDFLAGS' -v -v" || (cat testsuite/libffi.log && exit 1)
