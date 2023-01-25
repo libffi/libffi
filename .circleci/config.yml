@@ -235,6 +235,10 @@ jobs:
           command: |
             source ./emsdk/emsdk_env.sh
             sed -i'.old' "/^NODE_JS = /s/emsdk.*/\[&, '--experimental-wasm-bigint'\]/" $EMSDK/.emscripten
+            echo "Updated .emscripten file:"
+            cat $EMSDK/.emscripten
+            echo "================================="
+            echo "\n\n\n"
             testsuite/emscripten-test-stuff/node-tests.sh --enable-wasm-bigint
 
 workflows:
