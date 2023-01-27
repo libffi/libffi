@@ -56,3 +56,4 @@ emconfigure ./configure --host=$CHOST --prefix=$TARGET --enable-static --disable
   --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs
 make install
 cp fficonfig.h target/include/
+cp include/ffi_common.h target/include/
