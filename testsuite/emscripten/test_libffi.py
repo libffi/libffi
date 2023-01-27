@@ -6,6 +6,7 @@ TEST_PATH = pathlib.Path(__file__).parents[1].resolve()
 
 xfails = {}
 
+
 def libffi_tests(self, selenium, libffi_test):
     if libffi_test in xfails:
         pytest.xfail(f'known failure with code "{xfails[libffi_test]}"')
@@ -29,9 +30,11 @@ def libffi_tests(self, selenium, libffi_test):
         """
     )
 
+
 class TestCall:
     TEST_BUILD_DIR = "libffi.call.test"
     test_call = libffi_tests
+
 
 class TestClosures:
     TEST_BUILD_DIR = "libffi.closures.test"
@@ -42,6 +45,7 @@ def pytest_generate_tests(metafunc):
     test_build_dir = metafunc.cls.TEST_BUILD_DIR
     test_names = [x.stem for x in (TEST_PATH / test_build_dir).glob("*.o")]
     metafunc.parametrize("libffi_test", test_names)
+
 
 if __name__ == "__main__":
     subprocess.call(["build-tests.sh", "libffi.call"])
