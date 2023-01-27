@@ -40,10 +40,20 @@ if { ![string match $compiler_vendor "microsoft"] && ![string match $compiler_ve
 
 set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/test-call.c]]
 
-
 # Hack around https://github.com/emscripten-core/emscripten/issues/18607
+set wasmbigint "false"
+if { [info exists ::env(WASM_BIGINT) ] } {
+    set wasmbigint "$::env(WASM_BIGINT)"
+}
+
 set should_xfail_emscripten_firsttest false
 proc check_effective_target_emscripten_firsttest { } {
+    # If WASM_BIGINT is true, then we don't need to xfail the -O0 test.
+    global optflag
+    global wasmbigint
+    if { $wasmbigint == "true" && $optflag == "-O0" } {
+        return false
+    }
     global should_xfail_emscripten_firsttest
     return $should_xfail_emscripten_firsttest
 }
