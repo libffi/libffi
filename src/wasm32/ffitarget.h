@@ -41,7 +41,7 @@ typedef void (*ffi_fp)(void);
 
 typedef enum ffi_abi {
   FFI_FIRST_ABI = 0,
-  FFI_WASM32, // "raw", no structures or varargs
+  FFI_WASM32, // "raw", no structures, varargs, or closures (not implemented!)
   FFI_WASM32_EMSCRIPTEN, // structures, varargs, and split 64-bit params
   FFI_LAST_ABI,
 #ifdef __EMSCRIPTEN__
@@ -52,9 +52,9 @@ typedef enum ffi_abi {
 } ffi_abi;
 
 #define FFI_CLOSURES 1
-#define FFI_GO_CLOSURES 0
+// #define FFI_GO_CLOSURES 0
 #define FFI_TRAMPOLINE_SIZE 4
-#define FFI_NATIVE_RAW_API 0
+// #define FFI_NATIVE_RAW_API 0
 #define FFI_TARGET_SPECIFIC_VARIADIC 1
 #define FFI_EXTRA_CIF_FIELDS  unsigned int nfixedargs
 

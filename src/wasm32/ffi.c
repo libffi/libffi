@@ -450,6 +450,8 @@ ffi_call_helper, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
 });
 
 void ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue) {
+  if (cif->abi != FFI_WASM32_EMSCRIPTEN)
+    return FFI_BAD_ABI;
   ffi_call_helper(cif, fn, rvalue, avalue);
 }
 

@@ -4,6 +4,8 @@
 *.lo
 *.wasm
 *.js
+*.test
+*.log
 .dirstamp
 *.la
 Makefile
@@ -38,11 +40,7 @@ darwin_*/
 src/arm/trampoline.S
 **/texinfo.tex
 target/
-testsuite/libffi.call/*.wasm
-testsuite/libffi.call/*.js
 __pycache__
 .docker_home
 emsdk
-*.test
-*.log
 test-results
