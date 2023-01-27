@@ -9,16 +9,14 @@ set -e
 
 cd "$1"
 export CFLAGS="-fPIC -O2 -I../../target/include $EXTRA_CFLAGS"
-export CXXFLAGS="-fPIC -I../../target/include -sNO_DISABLE_EXCEPTION_CATCHING -g3 $EXTRA_CFLAGS"
+export CXXFLAGS="$CFLAGS -sNO_DISABLE_EXCEPTION_CATCHING $EXTRA_CXXFLAGS"
 export LDFLAGS=" \
+    -L../../target/lib/ -lffi \
     -sEXPORT_ALL \
     -sMODULARIZE \
     -sMAIN_MODULE \
-    -L../../target/lib/ -lffi \
-    -sEXPORTED_RUNTIME_METHODS='getTempRet0' \
     -sSTRICT_JS \
     -sNO_DISABLE_EXCEPTION_CATCHING \
-    -g3 \
     $EXTRA_LD_FLAGS \
 "
 
@@ -26,6 +24,8 @@ export LDFLAGS=" \
 # WASM_BIGINT whose contents are empty. Don't use +x.
 if [ -n "${WASM_BIGINT}" ] ; then
   export LDFLAGS+=" -sWASM_BIGINT"
+else
+  LDFLAGS+=" -sEXPORTED_RUNTIME_METHODS='getTempRet0,setTempRet0'"
 fi
 
 # Rename main functions to test__filename so we can link them together

@@ -22,12 +22,12 @@ while [ $# -gt 0 ]; do
 done
 
 # Common compiler flags
-export CFLAGS="-fPIC"
+export CFLAGS="-fPIC $EXTRA_CFLAGS"
 if [ "$WASM_BIGINT" = "true" ]; then
   # We need to detect WASM_BIGINT support at compile time
   export CFLAGS+=" -DWASM_BIGINT"
 fi
-export CXXFLAGS="$CFLAGS -sNO_DISABLE_EXCEPTION_CATCHING"
+export CXXFLAGS="$CFLAGS -sNO_DISABLE_EXCEPTION_CATCHING $EXTRA_CXXFLAGS"
 export LDFLAGS="-sEXPORTED_FUNCTIONS=_main,_malloc,_free -sALLOW_TABLE_GROWTH -sASSERTIONS -sNO_DISABLE_EXCEPTION_CATCHING"
 if [ "$WASM_BIGINT" = "true" ]; then
   export LDFLAGS+=" -sWASM_BIGINT"

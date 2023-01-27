@@ -463,7 +463,7 @@ ffi_call_js, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
     DEREF_U64(rvalue, 0) = result;
     #else
     DEREF_U32(rvalue, 0) = result;
-    DEREF_U32(rvalue, 1) = Module.getTempRet0();
+    DEREF_U32(rvalue, 1) = getTempRet0();
     #endif
     break;
   case FFI_TYPE_COMPLEX:
