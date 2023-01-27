@@ -3,6 +3,9 @@ Prevent emcc from printing info level logging
 
 dejagnu will fail tests because of these log statements and the messages depend
 on emscripten cache state so xfailing the right tests is very hard.
+
+See emscripten issue:
+https://github.com/emscripten-core/emscripten/issues/18607
 """
 
 from pathlib import Path
