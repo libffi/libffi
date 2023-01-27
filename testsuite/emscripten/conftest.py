@@ -76,6 +76,5 @@ def selenium(selenium_class_scope, request):
 
 @fixture(scope="session")
 def web_server_main(request):
-    """Web server that serves files in the build/ directory"""
     with spawn_web_server(TEST_PATH) as output:
         yield output

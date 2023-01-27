@@ -9,12 +9,14 @@ if [ ! "${emcc_exists}" ]; then
   exit 1
 fi
 
-
 # Parse arguments
 while [ $# -gt 0 ]; do
   case $1 in
-    --enable-wasm-bigint) WASM_BIGINT=true ;;
-    *) echo "ERROR: Unknown parameter: $1" >&2; exit 1 ;;
+  --enable-wasm-bigint) WASM_BIGINT=true ;;
+  *)
+    echo "ERROR: Unknown parameter: $1" >&2
+    exit 1
+    ;;
   esac
   shift
 done
@@ -37,11 +39,10 @@ fi
 export CHOST="wasm32-unknown-linux" # wasm32-unknown-emscripten
 
 autoreconf -fiv
-emconfigure ./configure --prefix="`pwd`/target" --host=$CHOST --enable-static --disable-shared \
-  --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs \
-  || (cat config.log && exit 1)
+emconfigure ./configure --prefix="$(pwd)/target" --host=$CHOST --enable-static --disable-shared \
+  --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs ||
+  (cat config.log && exit 1)
 make
-
 
 EMMAKEN_JUST_CONFIGURE=1 emmake make check \
   RUNTESTFLAGS="LDFLAGS_FOR_TARGET='$LDFLAGS'" || (cat testsuite/libffi.log && exit 1)
