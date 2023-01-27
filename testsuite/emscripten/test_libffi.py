@@ -2,7 +2,7 @@ import subprocess
 import pathlib
 import pytest
 
-TEST_PATH = pathlib.Path(__file__).parents[0].resolve()
+TEST_PATH = pathlib.Path(__file__).parents[1].resolve()
 
 xfails = {}
 
@@ -40,8 +40,10 @@ class TestClosures:
 
 def pytest_generate_tests(metafunc):
     test_build_dir = metafunc.cls.TEST_BUILD_DIR
+    print(TEST_PATH / test_build_dir)
     test_names = [x.stem for x in (TEST_PATH / test_build_dir).glob("*.o")]
+    print("test_names", test_names)
     metafunc.parametrize("libffi_test", test_names)
 
 if __name__ == "__main__":
-    subprocess.call(["emscripten-test-stuff/build-tests.sh", "libffi.call"])
+    subprocess.call(["build-tests.sh", "libffi.call"])

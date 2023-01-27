@@ -31,4 +31,4 @@ ls *.cc | sed 's/\(.*\)\.cc/em++ $CXXFLAGS -c \1.cc -o \1.o /g' | bash
 
 # Link
 em++ $LDFLAGS *.o -o test.js
-cp ../emscripten-test-stuff/test.html .
+cp ../emscripten/test.html .

@@ -15,8 +15,7 @@ import shutil
 
 import pytest
 
-ROOT_PATH = pathlib.Path(__file__).parents[0].resolve()
-TEST_PATH = ROOT_PATH / "testsuite"
+TEST_PATH = pathlib.Path(__file__).parents[1].resolve()
 
 
 @contextlib.contextmanager

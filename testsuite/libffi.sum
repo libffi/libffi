@@ -1,0 +1,150 @@
+Test run by hood on Thu Jan 26 17:40:07 2023
+Target is wasm32-unknown-linux-gnu
+Host   is wasm32-unknown-linux-gnu
+Build  is x86_64-pc-linux-gnu
+
+		=== libffi tests ===
+
+Schedule of variations:
+    unix
+
+Running target unix
+WARNING: Assuming target board is the local machine (which is probably wrong).
+You may need to set your DEJAGNU environment variable.
+Running ./libffi.bhaible/bhaible.exp ...
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=1 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=1 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=1 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=1 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=2 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=2 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=2 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=2 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=3 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=3 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=3 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=3 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=4 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=4 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=4 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=4 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=5 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=5 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=5 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=5 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=6 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=6 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=6 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=6 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=7 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=7 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=7 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=7 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=8 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=8 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=8 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=8 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=9 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=9 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=9 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=9 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=10 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=10 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=10 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=10 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=11 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=11 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=11 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=11 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=12 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=12 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=12 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=12 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=13 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=13 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=13 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=13 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=14 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=14 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=14 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=14 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=15 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=15 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=15 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=15 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=16 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=16 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=16 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=16 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=17 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=17 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=17 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=17 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=18 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=18 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=18 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=18 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=19 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=19 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=19 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=19 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=20 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=20 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=20 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=20 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=21 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=21 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=21 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=21 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=22 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=22 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=22 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=22 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=23 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=23 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=23 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=23 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=24 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=24 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=24 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=24 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=25 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=25 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=25 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=25 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=26 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=26 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=26 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=26 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=27 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=27 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=27 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=27 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=28 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=28 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=28 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=28 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=29 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=29 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=29 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=29 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=30 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=30 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=30 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=30 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=31 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=31 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=31 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=31 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=32 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=32 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=32 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=32 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=33 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=33 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=33 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=33 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
+PASS: libffi.bhaible/test-call.c -W -Wall -DDGTEST=34 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 (test for excess errors)
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=34 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O0 execution test
+FAIL: libffi.bhaible/test-call.c -W -Wall -DDGTEST=34 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 (test for excess errors)
+UNRESOLVED: libffi.bhaible/test-call.c -W -Wall -DDGTEST=34 -Wno-unused-variable -Wno-unused-parameter -Wno-uninitialized -O2 compilation failed to produce executable
