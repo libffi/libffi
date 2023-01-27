@@ -21,8 +21,8 @@ jobs:
           command: |
             git clone https://github.com/emscripten-core/emsdk.git --depth=1
             cd emsdk
-            ./emsdk install latest
-            ./emsdk activate latest
+            ./emsdk install 3.1.30
+            ./emsdk activate 3.1.30
 
       - persist_to_workspace:
           root: .
