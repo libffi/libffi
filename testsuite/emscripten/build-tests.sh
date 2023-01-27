@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 emcc_exists="$(command -v emcc)"
 if [ ! "${emcc_exists}" ]; then
   echo "Emscripten not on path"
@@ -21,6 +21,10 @@ export LDFLAGS=" \
     -g3 \
     $EXTRA_LD_FLAGS \
 "
+
+if [ -n "${WASM_BIGINT}" ] ; then
+  export LDFLAGS+=" -sWASM_BIGINT"
+fi
 
 # Rename main functions to test__filename so we can link them together
 ls *c | sed 's!\(.*\)\.c!sed -i "s/main/test__\1/g" \0!g' | bash

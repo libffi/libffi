@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 defaults: &defaults
   working_directory: ~/repo
@@ -29,7 +29,14 @@ jobs:
           paths:
             - emsdk
 
-  build-libffi:
+  build:
+    parameters:
+      wasm-bigint:
+        description: Should we build with wasm-bigint?
+        type: string
+        default: ""
+    environment:
+      WASM_BIGINT: << parameters.wasm-bigint >>
     <<: *defaults
     steps:
       - checkout
@@ -57,36 +64,11 @@ jobs:
             - target
             - testsuite
 
-  build-libffi-bigint:
-    <<: *defaults
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: build
-          command: |
-            source ./emsdk/emsdk_env.sh
-            ./testsuite/emscripten/build.sh --enable-wasm-bigint
-
-      - run:
-          name: build tests
-          command: |
-            source ./emsdk/emsdk_env.sh
-            cp -r testsuite/libffi.call testsuite/libffi.call.test
-            cp -r testsuite/libffi.closures testsuite/libffi.closures.test
-            export EXTRA_LD_FLAGS="-s WASM_BIGINT"
-            ./testsuite/emscripten/build-tests.sh testsuite/libffi.call.test
-            ./testsuite/emscripten/build-tests.sh testsuite/libffi.closures.test
-
-      - persist_to_workspace:
-          root: .
-          paths:
-            - target
-            - testsuite
-
-  test-firefox:
+  test:
+    parameters:
+      test-params:
+        description: The tests to run.
+        type: string
     <<: *defaults
     steps:
       - checkout
@@ -101,68 +83,19 @@ jobs:
             git reset --hard
             cd testsuite/emscripten/
             mkdir test-results
-            pytest --junitxml=test-results/junit.xml -k firefox test_libffi.py
+            pytest \
+              --junitxml=test-results/junit.xml \
+               test_libffi.py \
+               << parameters.test-params >>
       - store_test_results:
           path: testsuite/emscripten/test-results
 
-  test-chrome:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: run tests
-          no_output_timeout: 1200
-          command: |
-            git reset --hard
-            cd testsuite/emscripten/
-            mkdir test-results
-            pytest --junitxml=test-results/junit.xml -k chrome test_libffi.py
-      - store_test_results:
-          path: testsuite/emscripten/test-results
-
-  test-firefox-bigint:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: run tests
-          no_output_timeout: 1200
-          command: |
-            git reset --hard
-            cd testsuite/emscripten/
-            mkdir test-results
-            pytest --junitxml=test-results/junit.xml -k firefox test_libffi.py
-      - store_test_results:
-          path: testsuite/emscripten/test-results
-
-  test-chrome-bigint:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: run tests
-          no_output_timeout: 1200
-          command: |
-            git reset --hard
-            cd testsuite/emscripten/
-            mkdir test-results
-            pytest --junitxml=test-results/junit.xml -k chrome test_libffi.py
-      - store_test_results:
-          path: testsuite/emscripten/test-results
-
-  test-node:
+  test-dejagnu:
+    parameters:
+      params:
+        description: Parameters to node-tests
+        type: string
+        default: ""
     <<: *defaults
     steps:
       - checkout
@@ -176,23 +109,7 @@ jobs:
           command: |
             source ./emsdk/emsdk_env.sh
             rm testsuite/libffi.go/go.exp
-            testsuite/emscripten/node-tests.sh
-
-  test-node-bigint:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: run tests
-          no_output_timeout: 1200
-          command: |
-            source ./emsdk/emsdk_env.sh
-            rm testsuite/libffi.go/go.exp
-            testsuite/emscripten/node-tests.sh --enable-wasm-bigint
+            testsuite/emscripten/node-tests.sh << parameters.params >>
 
 workflows:
   version: 2
@@ -200,30 +117,46 @@ workflows:
     jobs:
       - install-emsdk
 
-      - build-libffi:
-          requires:
-            - install-emsdk
-      - build-libffi-bigint:
+      - build:
+          name: build
           requires:
             - install-emsdk
 
-      - test-firefox:
-          requires:
-            - build-libffi
-      - test-chrome:
-          requires:
-            - build-libffi
-
-      - test-firefox-bigint:
-          requires:
-            - build-libffi-bigint
-      - test-chrome-bigint:
-          requires:
-            - build-libffi-bigint
-
-      - test-node:
+      - build:
+          name: build-bigint
+          wasm-bigint: "true"
           requires:
             - install-emsdk
-      - test-node-bigint:
+
+      - test:
+          name: test-firefox
+          test-params: -k firefox
+          requires:
+            - build
+      - test:
+          name: test-chrome
+          test-params: -k chrome
+          requires:
+            - build
+
+      - test:
+          name: test-firefox-bigint
+          test-params: -k firefox
+          requires:
+            - build-bigint
+
+      - test:
+          name: test-chrome-bigint
+          test-params: -k chrome
+          requires:
+            - build-bigint
+
+      - test-dejagnu:
+          name: test-dejagnu
+          requires:
+            - install-emsdk
+      - test-dejagnu:
+          name: test-dejagnu-bigint
+          params: --enable-wasm-bigint
           requires:
             - install-emsdk
