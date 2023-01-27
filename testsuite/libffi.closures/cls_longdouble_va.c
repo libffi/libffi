@@ -37,7 +37,7 @@ cls_longdouble_va_fn(ffi_cif* cif __UNUSED__, void* resp,
 	CHECK(strncmp(buffer, "7.0\n", BUF_SIZE) == 0);
 }
 
-int test__cls_longdouble_va (void)
+int main (void)
 {
 	ffi_cif cif;
         void *code;
