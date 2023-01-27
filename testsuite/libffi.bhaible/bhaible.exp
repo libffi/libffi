@@ -40,7 +40,21 @@ if { ![string match $compiler_vendor "microsoft"] && ![string match $compiler_ve
 
 set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/test-call.c]]
 
+
+# Hack around https://github.com/emscripten-core/emscripten/issues/18607
+set should_xfail_emscripten_firsttest false
+proc check_effective_target_emscripten_firsttest { } {
+    global should_xfail_emscripten_firsttest
+    return $should_xfail_emscripten_firsttest
+}
+
+proc set_emscripten_firsttest { i } {
+    global should_xfail_emscripten_firsttest
+    set should_xfail_emscripten_firsttest [ expr { $i == 1 && [ istarget "wasm32-*-*" ] } ]
+}
+
 for {set i 1} {$i < 82} {incr i} {
+    set_emscripten_firsttest $i
     run-many-tests $tlist [format "-DDGTEST=%d %s" $i $warning_options]
 }
 

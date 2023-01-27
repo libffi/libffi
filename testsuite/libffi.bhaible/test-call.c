@@ -16,6 +16,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
+// Hack around https://github.com/emscripten-core/emscripten/issues/18607
+// See handling code in bhaible.exp
+/* { dg-excess-errors "fails" { target emscripten_firsttest } } */
 /* { dg-do run { xfail gccbug } } */
 
 #include <stdio.h>
