@@ -7,9 +7,6 @@
    Originator:	<andreast@gcc.gnu.org> 20030828	 */
 
 
-
-
-/* { dg-do run { xfail wasm32*-*-* } } */
 #include "ffitest.h"
 
 static void
