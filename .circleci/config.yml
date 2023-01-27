@@ -40,7 +40,7 @@ jobs:
           name: build
           command: |
             source ./emsdk/emsdk_env.sh
-            ./build.sh
+            ./testsuite/emscripten/build.sh
 
       - run:
           name: build tests
@@ -68,7 +68,7 @@ jobs:
           name: build
           command: |
             source ./emsdk/emsdk_env.sh
-            ./build.sh --enable-wasm-bigint
+            ./testsuite/emscripten/build.sh --enable-wasm-bigint
 
       - run:
           name: build tests
