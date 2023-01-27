@@ -12,6 +12,8 @@ mkdir -p $TARGET
 # Define default arguments
 
 # JS BigInt to Wasm i64 integration, disabled by default
+# This needs to test false if there exists an environment variable called
+# WASM_BIGINT whose contents are empty. Don't use +x.
 if [ -n "${WASM_BIGINT}" ] ; then
   WASM_BIGINT=true
 else

@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   ffi.c - Copyright (c) 2018  Brion Vibber
+   ffi.c - Copyright (c) 2018-2023  Hood Chatham, Brion Vibber, Kleis Auke Wolthuizen, and others.
 
    wasm32/emscripten Foreign Function Interface
 
@@ -75,11 +75,28 @@ EM_JS_DEPS(libffi, "$getWasmTableEntry,$setWasmTableEntry,$getEmptyTableSlot,$co
 #define DEREF_U64(addr, offset) HEAPU64[(addr >> 3) + offset]
 #endif
 
+
+#define CHECK_FIELD_OFFSET(struct, field, offset)                                  \
+  _Static_assert(                                                                  \
+    offsetof(struct, field) == offset,                                             \
+    "Memory layout of '" #struct "' has changed: '" #field "' is in an unexpected location");
+
+CHECK_FIELD_OFFSET(ffi_cif, abi, 4*0);
+CHECK_FIELD_OFFSET(ffi_cif, nargs, 4*1);
+CHECK_FIELD_OFFSET(ffi_cif, arg_types, 4*2);
+CHECK_FIELD_OFFSET(ffi_cif, rtype, 4*3);
+CHECK_FIELD_OFFSET(ffi_cif, nfixedargs, 4*6);
+
 #define CIF__ABI(addr) DEREF_U32(addr, 0)
 #define CIF__NARGS(addr) DEREF_U32(addr, 1)
 #define CIF__ARGTYPES(addr) DEREF_U32(addr, 2)
 #define CIF__RTYPE(addr) DEREF_U32(addr, 3)
 #define CIF__NFIXEDARGS(addr) DEREF_U32(addr, 6)
+
+CHECK_FIELD_OFFSET(ffi_type, size, 0);
+CHECK_FIELD_OFFSET(ffi_type, alignment, 4);
+CHECK_FIELD_OFFSET(ffi_type, type, 6);
+CHECK_FIELD_OFFSET(ffi_type, elements, 8);
 
 #define FFI_TYPE__SIZE(addr) DEREF_U32(addr, 0)
 #define FFI_TYPE__ALIGN(addr) DEREF_U16(addr + 4, 0)
@@ -105,6 +122,8 @@ _Static_assert(FFI_BAD_TYPEDEF_MACRO == FFI_BAD_TYPEDEF, "FFI_BAD_TYPEDEF must b
 ffi_status FFI_HIDDEN
 ffi_prep_cif_machdep(ffi_cif *cif)
 {
+  if (cif->abi != FFI_WASM32_EMSCRIPTEN)
+    return FFI_BAD_ABI;
   // This is called after ffi_prep_cif_machdep_var so we need to avoid
   // overwriting cif->nfixedargs.
   if (!(cif->flags & VARARGS_FLAG))
@@ -243,8 +262,9 @@ ffi_call_helper, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
     var arg_type_ptr = arg_unboxed[0];
     var arg_type_id = arg_unboxed[1];
 
-    // It's okay here to always use unsigned integers, when passed into a signed
-    // slot of the same size they get interpreted correctly.
+    // It's okay here to always use unsigned integers as long as the size is 32
+    // or 64 bits. Smaller sizes get extended to 32 bits differently according
+    // to whether they are signed or unsigned.
     switch (arg_type_id) {
     case FFI_TYPE_INT:
     case FFI_TYPE_SINT32:
@@ -383,7 +403,6 @@ ffi_call_helper, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
     }
     // extra normal argument which is the pointer to the varargs.
     args.push(cur_stack_ptr);
-    // TODO: What does this mean?
     // Now allocate variable struct args on stack too.
     for (var i = 0; i < struct_arg_info.length; i++) {
       var struct_info = struct_arg_info[i];
@@ -399,7 +418,8 @@ ffi_call_helper, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
   stackRestore(cur_stack_ptr);
   stackAlloc(0); // stackAlloc enforces alignment invariants on the stack pointer
   var result = CALL_FUNCTION_POINTER(fn, args);
-  // Put the stack pointer back (we moved it if we made a varargs call)
+  // Put the stack pointer back (we moved it if there were any struct args or we
+  // made a varargs call)
   stackRestore(orig_stack_ptr);
 
   // We need to return by argument. If return value was a nontrivial struct or
@@ -450,10 +470,13 @@ ffi_call_helper, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
 });
 
 void ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue) {
-  if (cif->abi != FFI_WASM32_EMSCRIPTEN)
-    return FFI_BAD_ABI;
   ffi_call_helper(cif, fn, rvalue, avalue);
 }
+
+CHECK_FIELD_OFFSET(ffi_closure, ftramp, 4*0);
+CHECK_FIELD_OFFSET(ffi_closure, cif, 4*1);
+CHECK_FIELD_OFFSET(ffi_closure, fun, 4*2);
+CHECK_FIELD_OFFSET(ffi_closure, user_data, 4*3);
 
 #define CLOSURE__wrapper(addr) DEREF_U32(addr, 0)
 #define CLOSURE__cif(addr) DEREF_U32(addr, 1)

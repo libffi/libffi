@@ -1,5 +1,6 @@
 /* -----------------------------------------------------------------*-C-*-
-   ffitarget.h - Copyright (c) 2018  Brion Vibber
+   ffitarget.h - Copyright (c) 2018-2023  Hood Chatham, Brion Vibber, Kleis Auke Wolthuizen, and others.
+
    Target configuration macros for wasm32.
 
    Permission is hereby granted, free of charge, to any person obtaining

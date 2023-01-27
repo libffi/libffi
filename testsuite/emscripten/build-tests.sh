@@ -22,6 +22,8 @@ export LDFLAGS=" \
     $EXTRA_LD_FLAGS \
 "
 
+# This needs to test false if there exists an environment variable called
+# WASM_BIGINT whose contents are empty. Don't use +x.
 if [ -n "${WASM_BIGINT}" ] ; then
   export LDFLAGS+=" -sWASM_BIGINT"
 fi
