@@ -97,9 +97,6 @@ EM_JS_DEPS(libffi, "$getWasmTableEntry,$setWasmTableEntry,$getEmptyTableSlot,$co
 
 #include <stddef.h>
 
-#define MAX_ALIGN 8
-_Static_assert(MAX_ALIGN == __alignof__(max_align_t), "max_align_t must be 8");
-
 #define VARARGS_FLAG 1
 
 #define FFI_OK_MACRO 0
@@ -345,8 +342,8 @@ ffi_call_helper, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
       DEREF_U32(arg_target, 0) = cur_stack_ptr;
     }
   }
-  STACK_ALLOC(cur_stack_ptr, 0, MAX_ALIGN);
   stackRestore(cur_stack_ptr);
+  stackAlloc(0); // stackAlloc enforces alignment invariants on the stack pointer
   LOG_DEBUG("CALL_FUNC_PTR", fn, args);
   var result = getWasmTableEntry(fn).apply(null, args);
   // Put the stack pointer back (we moved it if we made a varargs call)
@@ -638,8 +635,8 @@ ffi_prep_closure_loc_helper,
       }
       varargs += 4;
     }
-    STACK_ALLOC(cur_ptr, 0, MAX_ALIGN);
     stackRestore(cur_ptr);
+    stackAlloc(0); // stackAlloc enforces alignment invariants on the stack pointer
     LOG_DEBUG("CALL_CLOSURE",  "closure:", closure, "fptr", CLOSURE__fun(closure), "cif",  CLOSURE__cif(closure));
     getWasmTableEntry(CLOSURE__fun(closure))(
         CLOSURE__cif(closure), ret_ptr, args_ptr,
