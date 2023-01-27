@@ -185,7 +185,7 @@ unbox_small_structs, (ffi_type type_ptr), {
 
 EM_JS_MACROS(
 void,
-ffi_call_helper, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
+ffi_call_js, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
 {
   var abi = CIF__ABI(cif);
   var nargs = CIF__NARGS(cif);
@@ -470,7 +470,7 @@ ffi_call_helper, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
 });
 
 void ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue) {
-  ffi_call_helper(cif, fn, rvalue, avalue);
+  ffi_call_js(cif, fn, rvalue, avalue);
 }
 
 CHECK_FIELD_OFFSET(ffi_closure, ftramp, 4*0);
@@ -483,7 +483,7 @@ CHECK_FIELD_OFFSET(ffi_closure, user_data, 4*3);
 #define CLOSURE__fun(addr) DEREF_U32(addr, 2)
 #define CLOSURE__user_data(addr) DEREF_U32(addr, 3)
 
-EM_JS_MACROS(void *, ffi_closure_alloc_helper, (size_t size, void **code), {
+EM_JS_MACROS(void *, ffi_closure_alloc_js, (size_t size, void **code), {
   var closure = _malloc(size);
   var index = getEmptyTableSlot();
   DEREF_U32(code, 0) = index;
@@ -493,10 +493,10 @@ EM_JS_MACROS(void *, ffi_closure_alloc_helper, (size_t size, void **code), {
 
 void * __attribute__ ((visibility ("default")))
 ffi_closure_alloc(size_t size, void **code) {
-  return ffi_closure_alloc_helper(size, code);
+  return ffi_closure_alloc_js(size, code);
 }
 
-EM_JS_MACROS(void, ffi_closure_free_helper, (void *closure), {
+EM_JS_MACROS(void, ffi_closure_free_js, (void *closure), {
   var index = CLOSURE__wrapper(closure);
   freeTableIndexes.push(index);
   _free(closure);
@@ -504,7 +504,7 @@ EM_JS_MACROS(void, ffi_closure_free_helper, (void *closure), {
 
 void __attribute__ ((visibility ("default")))
 ffi_closure_free(void *closure) {
-  return ffi_closure_free_helper(closure);
+  return ffi_closure_free_js(closure);
 }
 
 #if !WASM_BIGINT
@@ -646,8 +646,8 @@ EM_JS(void, createLegalizerWrapper, (int trampoline, int sig), {
 
 EM_JS_MACROS(
 ffi_status,
-ffi_prep_closure_loc_helper,
-(ffi_closure * closure, ffi_cif *cif, void *fun, void *user_data, void *codeloc),
+ffi_prep_closure_loc_js,
+(ffi_closure *closure, ffi_cif *cif, void *fun, void *user_data, void *codeloc),
 {
   var abi = CIF__ABI(cif);
   var nargs = CIF__NARGS(cif);
@@ -931,6 +931,6 @@ ffi_status ffi_prep_closure_loc(ffi_closure *closure, ffi_cif *cif,
                                 void *user_data, void *codeloc) {
   if (cif->abi != FFI_WASM32_EMSCRIPTEN)
     return FFI_BAD_ABI;
-  return ffi_prep_closure_loc_helper(closure, cif, (void *)fun, user_data,
+  return ffi_prep_closure_loc_js(closure, cif, (void *)fun, user_data,
                                      codeloc);
 }
