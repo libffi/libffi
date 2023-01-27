@@ -561,10 +561,6 @@ proc run-many-tests { testcases extra_flags } {
             set abis { "" }
         }
         foreach opt $optimizations {
-            # Globally expose optflag so that hack around emscripten info works.
-            global optflag
-            set optflag $opt
-
             foreach abi $abis {
                 set options [concat $common $opt $abi]
 		set has_gccbug false;
