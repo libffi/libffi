@@ -281,7 +281,7 @@ if test "x$GCC" = "xyes"; then
 	        libffi_cv_ro_eh_frame=no
 	    fi
   	fi
-  	rm -f conftest.c conftest.o conftest.s
+  	rm -f conftest.*
       ])
   if test "x$libffi_cv_ro_eh_frame" = xyes; then
       AC_DEFINE(HAVE_RO_EH_FRAME, 1,
@@ -302,7 +302,7 @@ if test "x$GCC" = "xyes"; then
   		libffi_cv_hidden_visibility_attribute=yes
   	    fi
   	fi
-  	rm -f conftest.c conftest.o conftest.s
+  	rm -f conftest.*
       ])
   if test $libffi_cv_hidden_visibility_attribute = yes; then
       AC_DEFINE(HAVE_HIDDEN_VISIBILITY_ATTRIBUTE, 1,
