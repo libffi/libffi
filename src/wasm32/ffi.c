@@ -46,11 +46,15 @@ EM_JS_DEPS(libffi, "$getWasmTableEntry,$setWasmTableEntry,$getEmptyTableSlot,$co
 #define CALL_FUNCTION_POINTER(ptr, args...) \
   (LOG_DEBUG("CALL_FUNC_PTR", ptr, args),   \
   getWasmTableEntry(ptr).apply(null, args))
+
+#define JS_FUNCTION_TO_WASM convertJsFunctionToWasm
 #else
 EM_JS_DEPS(libffi, "$getWasmTableEntry,$setWasmTableEntry,$getEmptyTableSlot,$convertJsFunctionToWasm,$dynCall,$generateFuncType,$uleb128Encode");
 #define CALL_FUNCTION_POINTER(ptr, args...)     \
   (LOG_DEBUG("CALL_FUNC_PTR", sig, ptr, args),  \
   dynCall(sig, ptr, args))
+
+#define JS_FUNCTION_TO_WASM createLegalizerWrapper
 #endif
 
 // Signature calculations are not needed if WASM_BIGINT is present.
@@ -516,10 +520,13 @@ ffi_closure_free(void *closure) {
 // arguments and then calls the JavaScript trampoline, then the JavaScript
 // trampoline reassembles them, calls the closure, then splits the result (if
 // it's a 64 bit integer) and the adaptor puts it back together.
-// 
+//
 // This is basically the reverse of the Emscripten function
 // createDyncallWrapper.
 EM_JS(void, createLegalizerWrapper, (int trampoline, int sig), {
+  if(!sig.includes("j")) {
+    return convertJsFunctionToWasm(trampoline, sig);
+  }
   var sections = [];
   var prelude = [
     0x00, 0x61, 0x73, 0x6d, // magic ("\0asm")
@@ -904,16 +911,7 @@ ffi_prep_closure_loc_js,
     }
   }
   try {
-    #if WASM_BIGINT
-    var wasm_trampoline = convertJsFunctionToWasm(trampoline, sig);
-    #else
-    var wasm_trampoline;
-    if(sig.includes("j")) {
-      wasm_trampoline = createLegalizerWrapper(trampoline, sig);
-    } else {
-      wasm_trampoline = convertJsFunctionToWasm(trampoline, sig);
-    }
-    #endif
+    var wasm_trampoline = JS_FUNCTION_TO_WASM(trampoline, sig);
   } catch(e) {
     return FFI_BAD_TYPEDEF_MACRO;
   }
