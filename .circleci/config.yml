@@ -3,7 +3,9 @@ version: 2
 defaults: &defaults
   working_directory: ~/repo
   docker:
-    - image: pyodide/pyodide-env:20221102-chrome107-firefox106
+    # Built from:
+    # https://github.com/pyodide/pyodide/blob/2ab4b0ab6aefe99fd994bb4f9ab086e5c0aebb7b/Dockerfile
+    - image: pyodide/pyodide-env:20230126-chrome109-firefox109-py311
   environment:
     - EMSDK_NUM_CORES: 3
       EMCC_CORES: 3
@@ -35,16 +37,6 @@ jobs:
           at: .
 
       - run:
-          name: install autoconf 2.71
-          command: |
-            wget https://mirrors.sarata.com/gnu/autoconf/autoconf-2.71.tar.xz
-            tar -xf autoconf-2.71.tar.xz
-            cd autoconf-2.71
-            ./configure
-            make install
-            cp /usr/local/bin/autoconf /usr/bin/autoconf
-
-      - run:
           name: build
           command: |
             source ./emsdk/emsdk_env.sh
@@ -71,16 +63,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-
-      - run:
-          name: install autoconf 2.71
-          command: |
-            wget https://mirrors.sarata.com/gnu/autoconf/autoconf-2.71.tar.xz
-            tar -xf autoconf-2.71.tar.xz
-            cd autoconf-2.71
-            ./configure
-            make install
-            cp /usr/local/bin/autoconf /usr/bin/autoconf
 
       - run:
           name: build
@@ -189,16 +171,6 @@ jobs:
           at: .
 
       - run:
-          name: install autoconf 2.71
-          command: |
-            wget https://mirrors.sarata.com/gnu/autoconf/autoconf-2.71.tar.xz
-            tar -xf autoconf-2.71.tar.xz
-            cd autoconf-2.71
-            ./configure
-            make install
-            cp /usr/local/bin/autoconf /usr/bin/autoconf
-
-      - run:
           name: run tests
           no_output_timeout: 1200
           command: |
@@ -213,16 +185,6 @@ jobs:
 
       - attach_workspace:
           at: .
-
-      - run:
-          name: install autoconf 2.71
-          command: |
-            wget https://mirrors.sarata.com/gnu/autoconf/autoconf-2.71.tar.xz
-            tar -xf autoconf-2.71.tar.xz
-            cd autoconf-2.71
-            ./configure
-            make install
-            cp /usr/local/bin/autoconf /usr/bin/autoconf
 
       - run:
           name: run tests
