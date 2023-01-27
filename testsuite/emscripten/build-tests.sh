@@ -25,7 +25,7 @@ export LDFLAGS=" \
 if [ -n "${WASM_BIGINT}" ] ; then
   export LDFLAGS+=" -sWASM_BIGINT"
 else
-  LDFLAGS+=" -sEXPORTED_RUNTIME_METHODS='getTempRet0,setTempRet0'"
+  export LDFLAGS+=" -sEXPORTED_RUNTIME_METHODS='getTempRet0,setTempRet0'"
 fi
 
 # Rename main functions to test__filename so we can link them together
