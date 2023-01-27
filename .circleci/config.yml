@@ -103,7 +103,7 @@ jobs:
           name: run tests
           command: |
             source ./emsdk/emsdk_env.sh
-            python3 testsuite/emscripten/patch_emcc.py
+            python3 testsuite/emscripten/quiet_emcc_info.py
             rm testsuite/libffi.go/go.exp
             testsuite/emscripten/node-tests.sh << parameters.params >>
 
