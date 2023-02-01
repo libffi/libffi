@@ -234,7 +234,7 @@ ffi_status ffi_prep_cif_var(ffi_cif *cif,
 {
   ffi_status rc;
   size_t int_size = ffi_type_sint.size;
-  int i;
+  unsigned int i;
 
   rc = ffi_prep_cif_core(cif, abi, 1, nfixedargs, ntotalargs, rtype, atypes);
 
