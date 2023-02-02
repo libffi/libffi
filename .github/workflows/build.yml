@@ -170,10 +170,10 @@ jobs:
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 -i /tmp/cfk -p ${{ matrix.CFARM_PORT }} ${{ secrets.CFARM_USERNAME }}@${{ matrix.CFARM_HOST }} "mkdir -p ${{ env.BUILD_DIR }}"
           if test $? -ne 0; then
             echo "Remote host is unavailable."
-            echo '::set-output name=HOST_OK::NO'
+            echo "HOST_OK=NO" >> $GITHUB_OUTPUT
           else
             echo "Remote host is available."
-            echo '::set-output name=HOST_OK::YES'
+            echo "HOST_OK=YES" >> $GITHUB_OUTPUT
           fi
           set -e
 
@@ -402,7 +402,7 @@ jobs:
         with:
           platform: x64
           packages: wget make dejagnu automake autoconf libtool texinfo unzip dos2unix
-      - uses: ilammy/msvc-dev-cmd@v1.8.1
+      - uses: ilammy/msvc-dev-cmd@v1.12.0
         with:
           arch: ${{ matrix.tools }}
 
