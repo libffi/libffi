@@ -103,7 +103,6 @@ jobs:
           name: run tests
           command: |
             source ./emsdk/emsdk_env.sh
-            python3 testsuite/emscripten/quiet_emcc_info.py
             testsuite/emscripten/node-tests.sh << parameters.params >>
 
 workflows:
