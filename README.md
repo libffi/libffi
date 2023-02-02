@@ -200,6 +200,7 @@ See the git log for details at http://github.com/libffi/libffi.
 
     TBD - TBD
         Add support for HPPA64.
+        Many HPPA fixes.
         Many x86 Darwin fixes.
 
     3.4.4 Oct-23-2022
