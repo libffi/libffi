@@ -98,6 +98,8 @@ tested:
 | SPARC64         | Solaris          | Oracle Solaris Studio C |
 | TILE-Gx/TILEPro | Linux            | GCC                     |
 | VAX             | OpenBSD/vax      | GCC                     |
+| WASM32          | Chrome           | GCC                     |
+| WASM32          | Firefox          | GCC                     |
 | X86             | FreeBSD          | GCC                     |
 | X86             | GNU HURD         | GCC                     |
 | X86             | Interix          | GCC                     |
@@ -199,6 +201,7 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     TBD - TBD
+        Add support for wasm32.
         Add support for HPPA64.
         Many HPPA fixes.
         Many x86 Darwin fixes.
@@ -491,6 +494,7 @@ developers:
     sparc               Anthony Green, Gordon Irlam
     tile-gx/tilepro     Walter Lee
     vax                 Miod Vallat
+    wasm32              Hood Chatham, Brion Vibber, Kleis Auke Wolthuizen
     x86                 Anthony Green, Jon Beniston
     x86-64              Bo Thorsen
     xtensa              Chris Zankel
