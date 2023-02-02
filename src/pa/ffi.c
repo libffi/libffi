@@ -445,7 +445,6 @@ ffi_status ffi_closure_inner_pa32(ffi_closure *closure, UINT32 *stack)
   int i, avn;
   unsigned int slot = FIRST_ARG_SLOT;
   register UINT32 r28 asm("r28");
-  ffi_closure *c = (ffi_closure *)FFI_RESTORE_PTR (closure);
 
   cif = closure->cif;
 
@@ -548,7 +547,7 @@ ffi_status ffi_closure_inner_pa32(ffi_closure *closure, UINT32 *stack)
     }
 
   /* Invoke the closure.  */
-  (c->fun) (cif, rvalue, avalue, c->user_data);
+  (closure->fun) (cif, rvalue, avalue, closure->user_data);
 
   debug(3, "after calling function, ret[0] = %08x, ret[1] = %08x\n", u.ret[0],
 	u.ret[1]);
@@ -649,8 +648,6 @@ ffi_prep_closure_loc (ffi_closure* closure,
 		      void *user_data,
 		      void *codeloc)
 {
-  ffi_closure *c = (ffi_closure *)FFI_RESTORE_PTR (closure);
-
   /* The layout of a function descriptor.  A function pointer with the PLABEL
      bit set points to a function descriptor.  */
   struct pa32_fd
@@ -676,14 +673,14 @@ ffi_prep_closure_loc (ffi_closure* closure,
   fd = (struct pa32_fd *)((UINT32)ffi_closure_pa32 & ~3);
 
   /* Setup trampoline.  */
-  tramp = (struct ffi_pa32_trampoline_struct *)c->tramp;
+  tramp = (struct ffi_pa32_trampoline_struct *)closure->tramp;
   tramp->code_pointer = fd->code_pointer;
   tramp->fake_gp = (UINT32)codeloc & ~3;
   tramp->real_gp = fd->gp;
 
-  c->cif  = cif;
-  c->user_data = user_data;
-  c->fun  = fun;
+  closure->cif  = cif;
+  closure->user_data = user_data;
+  closure->fun  = fun;
 
   return FFI_OK;
 }

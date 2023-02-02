@@ -993,23 +993,23 @@ ffi_closure_alloc (size_t size, void **code)
   if (!code)
     return NULL;
 
-  ptr = FFI_CLOSURE_PTR (dlmalloc (size));
+  ptr = dlmalloc (size);
 
   if (ptr)
     {
       msegmentptr seg = segment_holding (gm, ptr);
 
-      *code = add_segment_exec_offset (ptr, seg);
+      *code = FFI_FN (add_segment_exec_offset (ptr, seg));
       if (!ffi_tramp_is_supported ())
         return ptr;
 
       ftramp = ffi_tramp_alloc (0);
       if (ftramp == NULL)
       {
-        dlfree (FFI_RESTORE_PTR (ptr));
+        dlfree (ptr);
         return NULL;
       }
-      *code = ffi_tramp_get_addr (ftramp);
+      *code = FFI_FN (ffi_tramp_get_addr (ftramp));
       ((ffi_closure *) ptr)->ftramp = ftramp;
     }
 
@@ -1050,7 +1050,7 @@ ffi_closure_free (void *ptr)
   if (ffi_tramp_is_supported ())
     ffi_tramp_free (((ffi_closure *) ptr)->ftramp);
 
-  dlfree (FFI_RESTORE_PTR (ptr));
+  dlfree (ptr);
 }
 
 int
@@ -1070,16 +1070,20 @@ ffi_tramp_is_present (void *ptr)
 void *
 ffi_closure_alloc (size_t size, void **code)
 {
+  void *c;
+
   if (!code)
     return NULL;
 
-  return *code = FFI_CLOSURE_PTR (malloc (size));
+  c = malloc (size);
+  *code = FFI_FN (c);
+  return c;
 }
 
 void
 ffi_closure_free (void *ptr)
 {
-  free (FFI_RESTORE_PTR (ptr));
+  free (ptr);
 }
 
 void *

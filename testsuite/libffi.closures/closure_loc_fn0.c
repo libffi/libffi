@@ -85,7 +85,7 @@ int main (void)
 
 #ifndef FFI_EXEC_STATIC_TRAMP
   /* With static trampolines, the codeloc does not point to closure */
-  CHECK(memcmp(pcl, codeloc, sizeof(*pcl)) == 0);
+  CHECK(memcmp(pcl, FFI_CL(codeloc), sizeof(*pcl)) == 0);
 #endif
 
   res = (*((closure_loc_test_type0)codeloc))

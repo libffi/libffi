@@ -361,14 +361,6 @@ typedef struct {
 FFI_API void *ffi_closure_alloc (size_t size, void **code);
 FFI_API void ffi_closure_free (void *);
 
-#if defined(PA_LINUX) || defined(PA_HPUX)
-#define FFI_CLOSURE_PTR(X) ((void *)((unsigned int)(X) | 2))
-#define FFI_RESTORE_PTR(X) ((void *)((unsigned int)(X) & ~3))
-#else
-#define FFI_CLOSURE_PTR(X) (X)
-#define FFI_RESTORE_PTR(X) (X)
-#endif
-
 FFI_API ffi_status
 ffi_prep_closure (ffi_closure*,
 		  ffi_cif *,
@@ -515,8 +507,14 @@ FFI_API
 ffi_status ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type,
 				   size_t *offsets);
 
-/* Useful for eliminating compiler warnings.  */
+/* Convert between closure and function pointers.  */
+#if defined(PA_LINUX) || defined(PA_HPUX)
+#define FFI_FN(f) ((void (*)(void))((unsigned int)(f) | 2))
+#define FFI_CL(f) ((void *)((unsigned int)(f) & ~3))
+#else
 #define FFI_FN(f) ((void (*)(void))f)
+#define FFI_CL(f) ((void *)(f))
+#endif
 
 /* ---- Definitions shared with assembly code ---------------------------- */
 
