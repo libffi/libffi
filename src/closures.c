@@ -795,7 +795,7 @@ open_temp_exec_file (void)
 static int
 allocate_space (int fd, off_t offset, off_t len)
 {
-  static size_t page_size;
+  static long page_size;
 
   /* Obtain system page size. */
   if (!page_size)

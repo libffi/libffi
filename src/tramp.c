@@ -266,7 +266,7 @@ ffi_tramp_get_temp_file (void)
    * trampoline table to make sure that the temporary file can be mapped.
    */
   count = write(tramp_globals.fd, tramp_globals.text, tramp_globals.map_size);
-  if (count == tramp_globals.map_size && tramp_table_alloc ())
+  if (count >=0 && (size_t)count == tramp_globals.map_size && tramp_table_alloc ())
     return 1;
 
   close (tramp_globals.fd);
@@ -374,6 +374,8 @@ tramp_table_unmap (struct tramp_table *table)
 static int
 ffi_tramp_init (void)
 {
+  long page_size;
+
   if (tramp_globals.status == TRAMP_GLOBALS_PASSED)
     return 1;
 
@@ -396,7 +398,8 @@ ffi_tramp_init (void)
     &tramp_globals.map_size);
   tramp_globals.ntramp = tramp_globals.map_size / tramp_globals.size;
 
-  if (sysconf (_SC_PAGESIZE) > tramp_globals.map_size)
+  page_size = sysconf (_SC_PAGESIZE);
+  if (page_size >= 0 && (size_t)page_size > tramp_globals.map_size)
     return 0;
 
   if (ffi_tramp_init_os ())
