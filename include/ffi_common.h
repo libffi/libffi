@@ -128,6 +128,10 @@ void *ffi_data_to_code_pointer (void *data) FFI_HIDDEN;
    static trampoline. */
 int ffi_tramp_is_present (void *closure) FFI_HIDDEN;
 
+/* Return a file descriptor of a temporary zero-sized file in a
+   writable and executable filesystem. */
+int open_temp_exec_file(void) FFI_HIDDEN;
+
 /* Extended cif, used in callback from assembly routine */
 typedef struct
 {
