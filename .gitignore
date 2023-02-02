@@ -2,6 +2,10 @@
 .deps
 *.o
 *.lo
+*.wasm
+*.js
+*.test
+*.log
 .dirstamp
 *.la
 Makefile
@@ -35,3 +39,8 @@ build_*/
 darwin_*/
 src/arm/trampoline.S
 **/texinfo.tex
+target/
+__pycache__
+.docker_home
+emsdk
+test-results

@@ -9,9 +9,20 @@
 /* { dg-output "" { xfail mips-sgi-irix6* } } PR libffi/46660 */
 
 #include "ffitest.h"
+#include <stdarg.h>
 
 #define BUF_SIZE 50
 static char buffer[BUF_SIZE];
+
+static int
+wrap_printf(char* fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	long double ldArg = va_arg(ap, long double);
+	va_end(ap);
+	CHECK((int)ldArg == 7);
+	return printf(fmt, ldArg);	
+}
 
 static void
 cls_longdouble_va_fn(ffi_cif* cif __UNUSED__, void* resp,
@@ -50,7 +61,7 @@ int main (void)
 	args[1] = &ldArg;
 	args[2] = NULL;
 
-	ffi_call(&cif, FFI_FN(printf), &res, args);
+	ffi_call(&cif, FFI_FN(wrap_printf), &res, args);
 	/* { dg-output "7.0" } */
 	printf("res: %d\n", (int) res);
 	/* { dg-output "\nres: 4" } */

@@ -265,6 +265,11 @@ case "${host}" in
 	SOURCES="ffi.c elfbsd.S"
 	;;
 
+  wasm32-*-*)
+	TARGET=wasm32; TARGETDIR=wasm32
+	SOURCES="ffi.c"
+	;;
+
   xtensa*-*)
 	TARGET=XTENSA; TARGETDIR=xtensa
 	SOURCES="ffi.c sysv.S"
