@@ -278,6 +278,8 @@ proc libffi-dg-prune { target_triplet text } {
     regsub -all "(^|\n)\[^\n\]*unable to perform all requested operations" $text "" text
     # We get this from sparc64 linux systems
     regsub -all "(^|\n)\[^\n\]*warning: .* has a LOAD segment with RWX permissions" $text "" text
+    # Ignore Emscripten INFO messages
+    regsub -all "(^|\n)(cache|shared):INFO:\[^\n\]*" $text "" text
     return $text
 }
 
