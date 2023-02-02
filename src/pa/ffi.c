@@ -56,27 +56,12 @@ static inline int ffi_struct_type(ffi_type *t)
   size_t sz = t->size;
 
   /* Small structure results are passed in registers,
-     larger ones are passed by pointer.  Note that
-     small structures of size 2, 4 and 8 differ from
-     the corresponding integer types in that they have
-     different alignment requirements.  */
+     larger ones are passed by pointer.  Note that small
+     structures differ from the corresponding integer
+     types in that they have different alignment requirements.  */
 
-  if (sz <= 1)
-    return FFI_TYPE_UINT8;
-  else if (sz == 2)
-    return FFI_TYPE_SMALL_STRUCT2;
-  else if (sz == 3)
-    return FFI_TYPE_SMALL_STRUCT3;
-  else if (sz == 4)
-    return FFI_TYPE_SMALL_STRUCT4;
-  else if (sz == 5)
-    return FFI_TYPE_SMALL_STRUCT5;
-  else if (sz == 6)
-    return FFI_TYPE_SMALL_STRUCT6;
-  else if (sz == 7)
-    return FFI_TYPE_SMALL_STRUCT7;
-  else if (sz <= 8)
-    return FFI_TYPE_SMALL_STRUCT8;
+  if (sz <= 8)
+    return -sz;
   else
     return FFI_TYPE_STRUCT; /* else, we pass it by pointer.  */
 }
@@ -556,16 +541,16 @@ ffi_status ffi_closure_inner_pa32(ffi_closure *closure, UINT32 *stack)
   switch (cif->flags)
     {
     case FFI_TYPE_UINT8:
-      *(stack - FIRST_ARG_SLOT) = (UINT8)(u.ret[0] >> 24);
+      *(stack - FIRST_ARG_SLOT) = (UINT8)u.ret[0];
       break;
     case FFI_TYPE_SINT8:
-      *(stack - FIRST_ARG_SLOT) = (SINT8)(u.ret[0] >> 24);
+      *(stack - FIRST_ARG_SLOT) = (SINT8)u.ret[0];
       break;
     case FFI_TYPE_UINT16:
-      *(stack - FIRST_ARG_SLOT) = (UINT16)(u.ret[0] >> 16);
+      *(stack - FIRST_ARG_SLOT) = (UINT16)u.ret[0];
       break;
     case FFI_TYPE_SINT16:
-      *(stack - FIRST_ARG_SLOT) = (SINT16)(u.ret[0] >> 16);
+      *(stack - FIRST_ARG_SLOT) = (SINT16)u.ret[0];
       break;
     case FFI_TYPE_INT:
     case FFI_TYPE_SINT32:
@@ -590,6 +575,7 @@ ffi_status ffi_closure_inner_pa32(ffi_closure *closure, UINT32 *stack)
       /* Don't need a return value, done by caller.  */
       break;
 
+    case FFI_TYPE_SMALL_STRUCT1:
     case FFI_TYPE_SMALL_STRUCT2:
     case FFI_TYPE_SMALL_STRUCT3:
     case FFI_TYPE_SMALL_STRUCT4:

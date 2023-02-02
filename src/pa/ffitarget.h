@@ -73,11 +73,22 @@ typedef enum ffi_abi {
 #define FFI_TRAMPOLINE_SIZE 12
 #endif
 
-#define FFI_TYPE_SMALL_STRUCT2 -1
-#define FFI_TYPE_SMALL_STRUCT3 -2
-#define FFI_TYPE_SMALL_STRUCT4 -3
-#define FFI_TYPE_SMALL_STRUCT5 -4
-#define FFI_TYPE_SMALL_STRUCT6 -5
-#define FFI_TYPE_SMALL_STRUCT7 -6
-#define FFI_TYPE_SMALL_STRUCT8 -7
+#define FFI_TYPE_SMALL_STRUCT1 -1
+#define FFI_TYPE_SMALL_STRUCT2 -2
+#define FFI_TYPE_SMALL_STRUCT3 -3
+#define FFI_TYPE_SMALL_STRUCT4 -4
+#define FFI_TYPE_SMALL_STRUCT5 -5
+#define FFI_TYPE_SMALL_STRUCT6 -6
+#define FFI_TYPE_SMALL_STRUCT7 -7
+#define FFI_TYPE_SMALL_STRUCT8 -8
+
+/* linux.S and hpux32.S expect FFI_TYPE_COMPLEX is the last generic type.  */
+#define FFI_PA_TYPE_LAST FFI_TYPE_COMPLEX
+
+/* If new generic types are added, the jump tables in linux.S and hpux32.S
+   likely need updating.  */
+#if FFI_TYPE_LAST != FFI_PA_TYPE_LAST
+# error "You likely have broken jump tables"
+#endif
+
 #endif
