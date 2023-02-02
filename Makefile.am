@@ -81,7 +81,7 @@ EXTRA_libffi_la_SOURCES = src/aarch64/ffi.c src/aarch64/sysv.S		\
 	src/mips/n32.S src/moxie/ffi.c src/moxie/eabi.S			\
 	src/nios2/ffi.c src/nios2/sysv.S src/or1k/ffi.c			\
 	src/or1k/sysv.S src/pa/ffi.c src/pa/linux.S src/pa/hpux32.S	\
-	src/powerpc/ffi.c src/powerpc/ffi_sysv.c			\
+	src/pa/hpux64.S src/powerpc/ffi.c src/powerpc/ffi_sysv.c	\
 	src/powerpc/ffi_linux64.c src/powerpc/sysv.S			\
 	src/powerpc/linux64.S src/powerpc/linux64_closure.S		\
 	src/powerpc/ppc_closure.S src/powerpc/aix.S			\

@@ -59,6 +59,7 @@ tested:
 | Blackfin        | uClinux          | GCC                     |
 | CSKY            | Linux            | GCC                     |
 | HPPA            | HPUX             | GCC                     |
+| HPPA64          | HPUX             | GCC                     |
 | KVX             | Linux            | GCC                     |
 | IA-64           | Linux            | GCC                     |
 | LoongArch64     | Linux            | GCC                     |
@@ -196,6 +197,10 @@ History
 =======
 
 See the git log for details at http://github.com/libffi/libffi.
+
+    TBD - TBD
+        Add support for HPPA64.
+        Many x86 Darwin fixes.
 
     3.4.4 Oct-23-2022
         Important aarch64 fixes, including support for linux builds
@@ -474,6 +479,7 @@ developers:
     nios ii             Sandra Loosemore
     openrisc            Sebastian Macke
     pa                  Randolph Chung, Dave Anglin, Andreas Tobler
+    pa64                Dave Anglin
     powerpc             Geoffrey Keating, Andreas Tobler,
                         David Edelsohn, John Hornkvist
     powerpc64           Jakub Jelinek

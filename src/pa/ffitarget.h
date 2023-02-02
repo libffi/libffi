@@ -54,7 +54,6 @@ typedef enum ffi_abi {
 #endif
 
 #ifdef PA64_HPUX
-#error "PA64_HPUX FFI is not yet implemented"
   FFI_PA64,
   FFI_LAST_ABI,
   FFI_DEFAULT_ABI = FFI_PA64
@@ -68,7 +67,11 @@ typedef enum ffi_abi {
 
 #define FFI_CLOSURES 1
 #define FFI_NATIVE_RAW_API 0
+#if defined(PA64_HPUX)
+#define FFI_TRAMPOLINE_SIZE 32
+#else
 #define FFI_TRAMPOLINE_SIZE 12
+#endif
 
 #define FFI_TYPE_SMALL_STRUCT2 -1
 #define FFI_TYPE_SMALL_STRUCT3 -2

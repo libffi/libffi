@@ -73,6 +73,7 @@ case "${host}" in
 	;;
   hppa*64-*-hpux*)
 	TARGET=PA64_HPUX; TARGETDIR=pa
+	SOURCES="ffi64.c hpux64.S"
 	;;
   hppa*-*-hpux*)
 	TARGET=PA_HPUX; TARGETDIR=pa
