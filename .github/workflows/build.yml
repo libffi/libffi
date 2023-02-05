@@ -211,7 +211,7 @@ jobs:
           wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
                tar --strip-components=2 -xvzf - ./rlgl/rlgl;
           ./rlgl l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='${{ matrix.CFARM_CC }}' -l host=${{ matrix.CFARM_TRIPLE }} --policy=https://github.com/libffi/rlgl-policy.git libffi.log
+          ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='${{ matrix.CFARM_CC }}' -l build-host=${{ matrix.CFARM_TRIPLE }} --policy=https://github.com/libffi/rlgl-policy.git libffi.log
           exit $?
 
   build:
