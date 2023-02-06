@@ -151,6 +151,6 @@ workflows:
             - install-emsdk
       - test-dejagnu:
           name: test-dejagnu-bigint
-          params: --enable-wasm-bigint
+          params: --wasm-bigint
           requires:
             - install-emsdk

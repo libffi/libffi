@@ -12,7 +12,7 @@ fi
 # Parse arguments
 while [ $# -gt 0 ]; do
   case $1 in
-  --enable-wasm-bigint) WASM_BIGINT=true ;;
+  --wasm-bigint) WASM_BIGINT=true ;;
   *)
     echo "ERROR: Unknown parameter: $1" >&2
     exit 1
