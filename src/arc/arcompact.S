@@ -153,3 +153,58 @@ ENTRY(ffi_closure_asm)
         j_s     [blink]
         .cfi_endproc
         .size ffi_closure_asm, .-ffi_closure_asm
+
+/*
+  ffi_go_closure_asm.  Expects address of the passed-in ffi_go_closure in r12.
+  void ffi_closure_inner (ffi_cif *cif,
+		          void (*fun) (ffi_cif *, void *, void **, void *),
+		          void *user_data,
+		          size_t *stackargs, struct call_context *regargs)
+*/
+
+ENTRY(ffi_go_closure_asm)
+        .cfi_startproc
+
+        ADDPTR  sp, sp, -FRAME_LEN
+        .cfi_def_cfa_offset FRAME_LEN
+
+        /* make a frame */
+        SARG    fp, [sp, FRAME_LEN-2*PTRS]
+        .cfi_offset fp, -2*PTRS
+        SARG    blink, [sp, FRAME_LEN-1*PTRS]
+        .cfi_offset blink, -1*PTRS
+        ADDPTR  fp, sp, FRAME_LEN
+
+        /* save arguments */
+        SARG    r0, [sp, 0*PTRS]
+        SARG    r1, [sp, 1*PTRS]
+        SARG    r2, [sp, 2*PTRS]
+        SARG    r3, [sp, 3*PTRS]
+        SARG    r4, [sp, 4*PTRS]
+        SARG    r5, [sp, 5*PTRS]
+        SARG    r6, [sp, 6*PTRS]
+        SARG    r7, [sp, 7*PTRS]
+
+        /* enter C */
+        LARG    r0, [r12, 1*PTRS]
+        LARG    r1, [r12, 2*PTRS]
+        MOVPTR  r2, r12
+        ADDPTR  r3, sp, FRAME_LEN
+        MOVPTR  r4, sp
+
+        bl      ffi_closure_inner
+
+        /* Return values. */
+        LARG    r0, [sp, 0*PTRS]
+        LARG    r1, [sp, 1*PTRS]
+
+
+        LARG    blink, [sp, FRAME_LEN-1*PTRS]
+        .cfi_restore blink
+        LARG    fp, [sp, FRAME_LEN-2*PTRS]
+        .cfi_restore fp
+        ADDPTR  sp, sp, FRAME_LEN
+        .cfi_def_cfa_offset 0
+        j_s     [blink]
+        .cfi_endproc
+        .size ffi_go_closure_asm, .-ffi_go_closure_asm

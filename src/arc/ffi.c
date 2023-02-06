@@ -333,6 +333,13 @@ ffi_call (ffi_cif *cif, void (*fn) (void), void *rvalue, void **avalue)
   ffi_call_int(cif, fn, rvalue, avalue, NULL);
 }
 
+void
+ffi_call_go (ffi_cif *cif, void (*fn) (void), void *rvalue,
+	     void **avalue, void *closure)
+{
+  ffi_call_int(cif, fn, rvalue, avalue, closure);
+}
+
 extern void ffi_closure_asm(void) FFI_HIDDEN;
 
 ffi_status
@@ -372,6 +379,22 @@ ffi_prep_closure_loc (ffi_closure * closure, ffi_cif * cif,
   closure->fun = fun;
   closure->user_data = user_data;
   cacheflush (codeloc, FFI_TRAMPOLINE_SIZE, BCACHE);
+
+  return FFI_OK;
+}
+
+extern void ffi_go_closure_asm (void) FFI_HIDDEN;
+
+ffi_status
+ffi_prep_go_closure (ffi_go_closure *closure, ffi_cif *cif,
+		     void (*fun) (ffi_cif *, void *, void **, void *))
+{
+  if (cif->abi <= FFI_FIRST_ABI || cif->abi >= FFI_LAST_ABI)
+    return FFI_BAD_ABI;
+
+  closure->tramp = (void *) ffi_go_closure_asm;
+  closure->cif = cif;
+  closure->fun = fun;
 
   return FFI_OK;
 }

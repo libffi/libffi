@@ -55,7 +55,7 @@ typedef enum ffi_abi
 #endif
 
 #define FFI_CLOSURES 		1
-
+#define FFI_GO_CLOSURES 1
 #if __SIZEOF_POINTER__ == 8
 #define FFI_TRAMPOLINE_SIZE	24
 #else
