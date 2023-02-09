@@ -80,7 +80,7 @@ jobs:
           wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
                tar --strip-components=2 -xvzf - ./rlgl/rlgl;
           ./rlgl l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='emcc' -l host=wasm32-emscripten --policy=https://github.com/libffi/rlgl-policy.git testsuite/libffi.log
+          ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='emcc' -l host=wasm32-unknown-linux --policy=https://github.com/libffi/rlgl-policy.git testsuite/libffi.log
           exit $?
 
   build:
@@ -167,5 +167,5 @@ jobs:
           wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
                tar --strip-components=2 -xvzf - ./rlgl/rlgl;
           ./rlgl l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='emscripten' -l build-host=${{ matrix.browser }} --policy=https://github.com/libffi/rlgl-policy.git testsuite/emscripten/test-results/junit.xml
+          ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='emcc' -l host=${{ matrix.browser }} --policy=https://github.com/libffi/rlgl-policy.git testsuite/emscripten/test-results/junit.xml
           exit $?
