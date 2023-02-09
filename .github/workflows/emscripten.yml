@@ -124,7 +124,7 @@ jobs:
           name: built-tests
           path: |
             ./testsuite/libffi.c*/
-  
+
   test:
     strategy:
       matrix:
@@ -161,17 +161,11 @@ jobs:
               -k ${{ matrix.browser }} \
               -s
 
-      - name: Test Report
-        uses: dorny/test-reporter@v1
+      - name: Install rlgl and run
         if: success() || failure()
-        with:
-          name: pytest results ${{ matrix.bigint }}  ${{ matrix.browser }}
-          path: testsuite/emscripten/test-results/junit.xml
-          reporter: java-junit
-
-      - name: Store test results
-        uses: actions/upload-artifact@v3
-        if: success() || failure()
-        with:
-          name: test-results
-          path: testsuite/emscripten/test-results
+        run: |
+          wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
+               tar --strip-components=2 -xvzf - ./rlgl/rlgl;
+          ./rlgl l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
+          ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='emscripten' -l build-host=${{ matrix.browser }} --policy=https://github.com/libffi/rlgl-policy.git testsuite/emscripten/test-results/junit.xml
+          exit $?
