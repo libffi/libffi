@@ -52,6 +52,8 @@ tested:
 | Alpha           | Linux            | GCC                     |
 | Alpha           | Tru64            | GCC                     |
 | ARC             | Linux            | GCC                     |
+| ARC32           | Linux            | GCC                     |
+| ARC64           | Linux            | GCC                     |
 | ARM             | Linux            | GCC                     |
 | ARM             | iOS              | GCC                     |
 | ARM             | Windows          | MSVC                    |
@@ -202,8 +204,8 @@ See the git log for details at http://github.com/libffi/libffi.
 
     TBD - TBD
         Add support for wasm32.
-        Add support for HPPA64.
-        Many HPPA fixes.
+        Add support for HPPA64, and many HPPA fixes.
+        Add support for ARCv3: ARC32 & ARC64.
         Many x86 Darwin fixes.
 
     3.4.4 Oct-23-2022
