@@ -100,8 +100,7 @@ tested:
 | SPARC64         | Solaris          | Oracle Solaris Studio C |
 | TILE-Gx/TILEPro | Linux            | GCC                     |
 | VAX             | OpenBSD/vax      | GCC                     |
-| WASM32          | Chrome           | GCC                     |
-| WASM32          | Firefox          | GCC                     |
+| WASM32          | Emscripten       | EMCC                    |
 | X86             | FreeBSD          | GCC                     |
 | X86             | GNU HURD         | GCC                     |
 | X86             | Interix          | GCC                     |
