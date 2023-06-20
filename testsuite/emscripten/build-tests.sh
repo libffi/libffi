@@ -30,7 +30,6 @@ export LDFLAGS=" \
     -sEXPORT_ALL \
     -sMODULARIZE \
     -sMAIN_MODULE \
-    -sSTRICT_JS \
     -sNO_DISABLE_EXCEPTION_CATCHING \
     $EXTRA_LD_FLAGS \
 "
