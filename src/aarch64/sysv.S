@@ -40,6 +40,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #endif
 #endif
 
+#ifdef __APPLE__
+# define L(X)     CONCAT1(L, X)
+#else
+# define L(X)     CONCAT1(.L, X)
+#endif
+
 #ifdef __AARCH64EB__
 # define BE(X)	X
 #else
@@ -288,7 +294,7 @@ CNAME(ffi_closure_SYSV):
 	ldp	PTR_REG(0), PTR_REG(1), [x17, #FFI_TRAMPOLINE_CLOSURE_OFFSET]	/* load cif, fn */
 	ldr	PTR_REG(2), [x17, #FFI_TRAMPOLINE_CLOSURE_OFFSET+PTR_SIZE*2]	/* load user_data */
 #ifdef FFI_GO_CLOSURES
-.Ldo_closure:
+L(do_closure):
 #endif
 	add	x3, sp, #16				/* load context */
 	add	x4, sp, #ffi_closure_SYSV_FS		/* load stack */
@@ -518,7 +524,7 @@ CNAME(ffi_go_closure_SYSV):
 	/* Load ffi_closure_inner arguments.  */
 	ldp	PTR_REG(0), PTR_REG(1), [x18, #PTR_SIZE]/* load cif, fn */
 	mov	x2, x18					/* load user_data */
-	b	.Ldo_closure
+	b	L(do_closure)
 	cfi_endproc
 
 	.globl	CNAME(ffi_go_closure_SYSV)
