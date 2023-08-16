@@ -126,6 +126,12 @@ elif (host_cpu_family in ['hppa', 'hppa64'] and host_system in ['linux', 'openbs
   target = 'PA_LINUX'
   targetdir = 'pa'
   asm_sources = ['linux.S']
+elif host_cpu_family == 'hppa64' and host_system in ['hpux']
+  # FIXME: hppa family is missing in Meson
+  target = 'PA64_HPUX'
+  targetdir = 'pa'
+  c_sources = ['ffi64.c']
+  asm_sources = ['hpux64.S']
 elif host_cpu_family == 'hppa' and host_system in ['hpux']
   # FIXME: hppa family is missing in Meson
   target = 'PA_HPUX'
@@ -274,6 +280,9 @@ elif host_cpu_family == 'vax'
   # FIXME: vax family is missing in Meson
   target = 'VAX'
   asm_sources = ['elfbsd.S']
+elif host_cpu_family == 'wasm32'
+  target = 'wasm32'
+  asm_sources = []
 elif host_cpu_family == 'xtensa'
   # FIXME: xtensa family is missing in Meson
   target = 'XTENSA'
