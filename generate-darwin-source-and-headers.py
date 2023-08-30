@@ -48,7 +48,6 @@ class armv7_platform(Platform):
 
 
 class ios_simulator_i386_platform(i386_platform):
-    triple = 'i386-apple-darwin11'
     target = 'i386-apple-ios-simulator'
     directory = 'darwin_ios'
     sdk = 'iphonesimulator'
@@ -56,7 +55,6 @@ class ios_simulator_i386_platform(i386_platform):
 
 
 class ios_simulator_x86_64_platform(x86_64_platform):
-    triple = 'x86_64-apple-darwin13'
     target = 'x86_64-apple-ios-simulator'
     directory = 'darwin_ios'
     sdk = 'iphonesimulator'
@@ -64,7 +62,6 @@ class ios_simulator_x86_64_platform(x86_64_platform):
 
 
 class ios_simulator_arm64_platform(arm64_platform):
-    triple = 'aarch64-apple-darwin20'
     target = 'arm64-apple-ios-simulator'
     directory = 'darwin_ios'
     sdk = 'iphonesimulator'
@@ -72,7 +69,6 @@ class ios_simulator_arm64_platform(arm64_platform):
 
 
 class ios_device_armv7_platform(armv7_platform):
-    triple = 'arm-apple-darwin11'
     target = 'armv7-apple-ios'
     directory = 'darwin_ios'
     sdk = 'iphoneos'
@@ -80,7 +76,6 @@ class ios_device_armv7_platform(armv7_platform):
 
 
 class ios_device_arm64_platform(arm64_platform):
-    triple = 'aarch64-apple-darwin13'
     target = 'arm64-apple-ios'
     directory = 'darwin_ios'
     sdk = 'iphoneos'
@@ -88,7 +83,6 @@ class ios_device_arm64_platform(arm64_platform):
 
 
 class desktop_x86_64_platform(x86_64_platform):
-    triple = 'x86_64-apple-darwin10'
     target = 'x86_64-apple-macos'
     directory = 'darwin_osx'
     sdk = 'macosx'
@@ -96,7 +90,6 @@ class desktop_x86_64_platform(x86_64_platform):
 
 
 class desktop_arm64_platform(arm64_platform):
-    triple = 'aarch64-apple-darwin20'
     target = 'arm64-apple-macos'
     directory = 'darwin_osx'
     sdk = 'macosx'
@@ -104,7 +97,6 @@ class desktop_arm64_platform(arm64_platform):
 
 
 class tvos_simulator_x86_64_platform(x86_64_platform):
-    triple = 'x86_64-apple-darwin13'
     target = 'x86_64-apple-tvos-simulator'
     directory = 'darwin_tvos'
     sdk = 'appletvsimulator'
@@ -112,7 +104,6 @@ class tvos_simulator_x86_64_platform(x86_64_platform):
 
 
 class tvos_simulator_arm64_platform(arm64_platform):
-    triple = 'aarch64-apple-darwin20'
     target = 'arm64-apple-tvos-simulator'
     directory = 'darwin_tvos'
     sdk = 'appletvsimulator'
@@ -120,7 +111,6 @@ class tvos_simulator_arm64_platform(arm64_platform):
 
 
 class tvos_device_arm64_platform(arm64_platform):
-    triple = 'aarch64-apple-darwin13'
     target = 'arm64-apple-tvos'
     directory = 'darwin_tvos'
     sdk = 'appletvos'
@@ -128,7 +118,6 @@ class tvos_device_arm64_platform(arm64_platform):
 
 
 class watchos_simulator_i386_platform(i386_platform):
-    triple = 'i386-apple-darwin11'
     target = 'i386-apple-watchos-simulator'
     directory = 'darwin_watchos'
     sdk = 'watchsimulator'
@@ -136,7 +125,6 @@ class watchos_simulator_i386_platform(i386_platform):
 
 
 class watchos_simulator_x86_64_platform(x86_64_platform):
-    triple = 'x86_64-apple-darwin13'
     target = 'x86_64-apple-watchos-simulator'
     directory = 'darwin_watchos'
     sdk = 'watchsimulator'
@@ -144,7 +132,6 @@ class watchos_simulator_x86_64_platform(x86_64_platform):
 
 
 class watchos_simulator_arm64_platform(arm64_platform):
-    triple = 'aarch64-apple-darwin20'
     target = 'arm64-apple-watchos-simulator'
     directory = 'darwin_watchos'
     sdk = 'watchsimulator'
@@ -152,7 +139,6 @@ class watchos_simulator_arm64_platform(arm64_platform):
 
 
 class watchos_device_armv7k_platform(armv7_platform):
-    triple = 'arm-apple-darwin11'
     target = 'armv7k-apple-watchos'
     directory = 'darwin_watchos'
     sdk = 'watchos'
@@ -161,7 +147,6 @@ class watchos_device_armv7k_platform(armv7_platform):
 
 
 class watchos_device_arm64_32_platform(arm64_platform):
-    triple = 'aarch64-apple-darwin13'
     target = 'arm64_32-apple-watchos'
     directory = 'darwin_watchos'
     sdk = 'watchos'
@@ -229,7 +214,15 @@ def build_target(platform, platform_headers):
     working_dir = os.getcwd()
     try:
         os.chdir(build_dir)
-        subprocess.check_call(['../configure', '-host', platform.triple], env=env)
+        subprocess.check_call(
+            [
+                "../configure",
+                f"--host={platform.target}",
+            ] + (
+                [] if platform.sdk == "macosx" else [f"--build={os.uname().machine}-apple-darwin"]
+            ),
+            env=env
+        )
     finally:
         os.chdir(working_dir)
 
