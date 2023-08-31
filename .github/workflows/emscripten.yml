@@ -13,7 +13,7 @@ on:
 
 
 env:
-  PYODIDE_VERSION: 0.22.1
+  PYODIDE_VERSION: 0.52.1
   # PYTHON_VERSION and EMSCRIPTEN_VERSION are determined by PYODIDE_VERSION.
   # The appropriate versions can be found in the Pyodide repodata.json
   # "info" field, or in Makefile.envs:
