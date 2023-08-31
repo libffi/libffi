@@ -145,11 +145,11 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: pyodide-env
-          python-version: "3.11"
+          python-version: ${{ env.PYTHON_VERSION }}
           channels: conda-forge
       - name: Install test dependencies
         run: |
-          pip install pytest-pyodide==0.23.2
+          pip install pytest-pyodide==${{ env.PYODIDE_VERSION }}
 
       - name:
         run: |
