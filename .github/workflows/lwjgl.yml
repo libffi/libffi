@@ -60,11 +60,11 @@ jobs:
     name: Linux Cross
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:18.04
+      image: ubuntu:22.04
     strategy:
       fail-fast: false
       matrix:
-        ARCH: [arm32, arm64, mips64]
+        ARCH: [arm32, arm64, mips64, ppc64le]
         include:
           - ARCH: arm32
             PACKAGES: gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
@@ -78,6 +78,10 @@ jobs:
             PACKAGES: gcc-mips64el-linux-gnuabi64 libc6-dev-mips64el-cross
             GCC: mips64el-linux-gnuabi64-gcc
             HOST: mips64el-unknown-linux-gnu
+          - ARCH: ppc64le
+            PACKAGES: gcc-powerpc64le-linux-gnu libc6-dev-ppc64el-cross
+            GCC: powerpc64le-linux-gnu-gcc
+            HOST: powerpc64le-unknown-linux-gnu
     steps:
       - run: |
           apt-get -y update
@@ -95,14 +99,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - run: apt-get install -yq m4 make automake libtool texinfo ${{matrix.PACKAGES}}
+      - run: apt-get install -yq m4 make automake autoconf libtool texinfo ${{matrix.PACKAGES}}
         name: Install dependencies
-      - run: |
-          wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 0 -qO - https://ftpmirror.gnu.org/autoconf/autoconf-2.71.tar.gz | tar -xvzf -
-          mkdir -p ~/i
-          (cd autoconf-2.71; ./configure --prefix=$HOME/i; make; make install)
-          rm -rf autoconf-2.71
-        name: Install autoconf 2.71
       - run: |
           PATH=$HOME/i/bin:$PATH ./autogen.sh
           ./configure --disable-shared --with-pic CC=${{matrix.GCC}} --host=${{matrix.HOST}} || cat */config.log
