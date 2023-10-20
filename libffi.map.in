@@ -33,7 +33,10 @@ LIBFFI_BASE_8.0 {
 	ffi_raw_to_ptrarray;
 	ffi_raw_size;
 
+#if !FFI_NATIVE_RAW_API
 	ffi_java_raw_call;
+#endif
+
 	ffi_java_ptrarray_to_raw;
 	ffi_java_raw_to_ptrarray;
 	ffi_java_raw_size;
@@ -62,8 +65,10 @@ LIBFFI_CLOSURE_8.0 {
 	ffi_prep_closure_loc;
 	ffi_prep_raw_closure;
 	ffi_prep_raw_closure_loc;
+#if !FFI_NATIVE_RAW_API
 	ffi_prep_java_raw_closure;
 	ffi_prep_java_raw_closure_loc;
+#endif
 } LIBFFI_BASE_8.0;
 #endif
 
