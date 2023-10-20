@@ -382,13 +382,19 @@ ffi_prep_args_v9(ffi_cif *cif, unsigned long *argp, void *rvalue, void **avalue)
 	  *argp++ = *(SINT32 *)a;
 	  break;
 	case FFI_TYPE_UINT32:
-	case FFI_TYPE_FLOAT:
 	  *argp++ = *(UINT32 *)a;
 	  break;
 	case FFI_TYPE_SINT64:
 	case FFI_TYPE_UINT64:
 	case FFI_TYPE_POINTER:
+	  *argp++ = *(UINT64 *)a;
+	  break;
+	case FFI_TYPE_FLOAT:
+	  flags |= SPARC_FLAG_FP_ARGS;
+	  *argp++ = *(UINT32 *)a;
+	  break;
 	case FFI_TYPE_DOUBLE:
+	  flags |= SPARC_FLAG_FP_ARGS;
 	  *argp++ = *(UINT64 *)a;
 	  break;
 
