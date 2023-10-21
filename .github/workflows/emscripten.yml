@@ -129,7 +129,8 @@ jobs:
     strategy:
       matrix:
         bigint: ["--wasm-bigint", ""]
-        browser: ["firefox", "chrome"]
+        browser: ["chrome"]
+        # FIXME: selenium can't find gecko driver for "firefox"
     runs-on: ubuntu-22.04
     needs: [build]
     steps:
