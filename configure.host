@@ -205,7 +205,7 @@ case "${host}" in
   powerpc-*-eabi*)
 	TARGET=POWERPC; TARGETDIR=powerpc
 	;;
-  powerpc-*-beos*)
+  powerpc-*-beos* | powerpc-*-haiku*)
 	TARGET=POWERPC; TARGETDIR=powerpc
 	;;
   powerpc-*-darwin* | powerpc64-*-darwin*)
