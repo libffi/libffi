@@ -3,6 +3,8 @@ from pytest import fixture
 from pytest_pyodide.server import spawn_web_server
 from pytest_pyodide import runner
 
+import logging
+
 TEST_PATH = Path(__file__).parents[1].resolve()
 
 
@@ -47,6 +49,10 @@ RUNNER_DICT = {x.browser: x for x in [FirefoxRunner, ChromeRunner]}
 def selenium_class_scope(request, web_server_main):
     server_hostname, server_port, server_log = web_server_main
     assert request.param in RUNNER_DICT
+
+    logger = logging.getLogger('selenium')
+    logger.setLevel(logging.DEBUG)
+
     cls = RUNNER_DICT[request.param]
     selenium = cls(
         test_dir=request.cls.TEST_BUILD_DIR,
