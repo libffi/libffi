@@ -31,7 +31,6 @@
 #include <ffi_common.h>
 
 #include <stdlib.h>
-#include <stdbool.h>
 
 extern void ffi_closure_ASM (void);
 
@@ -625,18 +624,17 @@ darwin_adjust_aggregate_sizes (ffi_type *s)
 
 /* Adjust the size of S to be correct for AIX.
    Word-align double unless it is the first member of a structure recursively.
-   Return true if we found a recursive first member aggregate of interest. */
+   Return non-zero if we found a recursive first member aggregate of interest. */
 
-static bool
-aix_adjust_aggregate_sizes (ffi_type *s, bool outer_most_type_or_first_member)
+static int
+aix_adjust_aggregate_sizes (ffi_type *s, int outer_most_type_or_first_member)
 {
-  int i;
+  int i, nested_first_member=0, final_align, rc=0;
 
   if (s->type != FFI_TYPE_STRUCT)
-    return false;
+    return 0;
 
   s->size = 0;
-  bool nested_first_member = false;
   for (i = 0; s->elements[i] != NULL; i++)
     {
       ffi_type p;
@@ -647,26 +645,26 @@ aix_adjust_aggregate_sizes (ffi_type *s, bool outer_most_type_or_first_member)
       if (i == 0)
         nested_first_member = aix_adjust_aggregate_sizes(&p, outer_most_type_or_first_member);
       else
-        aix_adjust_aggregate_sizes(&p, false);
+        aix_adjust_aggregate_sizes(&p, 0);
       align = p.alignment;
-      if (p.type == FFI_TYPE_DOUBLE
-          && (!outer_most_type_or_first_member || i != 0))
-	    align = 4;
+      if (p.type == FFI_TYPE_DOUBLE && i != 0)
+	      align = 4;
       s->size = FFI_ALIGN(s->size, align) + p.size;
     }
-  
-  s->size = FFI_ALIGN(s->size, s->alignment);
-  
-  if (outer_most_type_or_first_member
-      && (s->elements[0]->type == FFI_TYPE_UINT64
+
+  final_align=s->alignment;
+  if ((s->elements[0]->type == FFI_TYPE_UINT64
           || s->elements[0]->type == FFI_TYPE_SINT64
           || s->elements[0]->type == FFI_TYPE_DOUBLE
           || s->elements[0]->alignment == 8 || nested_first_member)) {
-      s->alignment = s->alignment > 8 ? s->alignment : 8;
-      return true;
+      final_align = s->alignment > 8 ? s->alignment : 8;
+      rc=1;
+      if (outer_most_type_or_first_member)
+        s->alignment=final_align;
   }
-  return false;
-  /* Do not add additional tail padding.  */
+
+  s->size = FFI_ALIGN(s->size, final_align);
+  return rc;
 }
 
 /* Perform machine dependent cif processing.  */
@@ -694,9 +692,9 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 
   if (cif->abi == FFI_AIX)
     {
-      aix_adjust_aggregate_sizes (cif->rtype, true);
+      aix_adjust_aggregate_sizes (cif->rtype, 1);
       for (i = 0; i < cif->nargs; i++)
-	aix_adjust_aggregate_sizes (cif->arg_types[i], true);
+	aix_adjust_aggregate_sizes (cif->arg_types[i], 1);
     }
 
   /* Space for the frame pointer, callee's LR, CR, etc, and for
