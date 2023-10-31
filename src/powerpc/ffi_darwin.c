@@ -636,7 +636,7 @@ aix_adjust_aggregate_sizes (ffi_type *s, bool outer_most_type_or_first_member)
     return false;
 
   s->size = 0;
-  bool nested_first_member=false;
+  bool nested_first_member = false;
   for (i = 0; s->elements[i] != NULL; i++)
     {
       ffi_type p;
@@ -645,7 +645,7 @@ aix_adjust_aggregate_sizes (ffi_type *s, bool outer_most_type_or_first_member)
       /* nested aggregates layout differently on AIX, so take a copy of the type */
       p = *(s->elements[i]);
       if (i == 0)
-        nested_first_member=aix_adjust_aggregate_sizes(&p, outer_most_type_or_first_member);
+        nested_first_member = aix_adjust_aggregate_sizes(&p, outer_most_type_or_first_member);
       else
         aix_adjust_aggregate_sizes(&p, false);
       align = p.alignment;
