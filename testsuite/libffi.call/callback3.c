@@ -107,6 +107,7 @@ int main (void)
   CHECK(ts12_result->s[0] == 7.77 + 1);
   CHECK(ts12_result->s[1] == 8.88 + 1);
   CHECK(i == 5 + 1);
+  CHECK(ts12_type.size == sizeof(test_structure_12));
 
   free (ts12_result);
   exit(0);
