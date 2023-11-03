@@ -659,6 +659,8 @@ aix_adjust_aggregate_sizes (ffi_type *s, int outer_most_type_or_first_member)
           || s->elements[0]->alignment == 8 || nested_first_member)) {
       final_align = s->alignment > 8 ? s->alignment : 8;
       rc=1;
+      /* still use the adjusted alignment to calculate tail padding, but don't adjust the types alignment if
+         we aren't in the recursive first position */
       if (outer_most_type_or_first_member)
         s->alignment=final_align;
   }
