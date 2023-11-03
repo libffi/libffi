@@ -647,8 +647,8 @@ aix_adjust_aggregate_sizes (ffi_type *s, int outer_most_type_or_first_member)
       else
         aix_adjust_aggregate_sizes(&p, 0);
       align = p.alignment;
-      if (p.type == FFI_TYPE_DOUBLE && i != 0)
-	      align = 4;
+      if (i != 0 && p.type == FFI_TYPE_DOUBLE)
+        align = 4;
       s->size = FFI_ALIGN(s->size, align) + p.size;
     }
 
