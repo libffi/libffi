@@ -203,9 +203,10 @@ See the git log for details at http://github.com/libffi/libffi.
 
     TBD - TBD
         Add support for wasm32.
-        Add support for HPPA64, and many HPPA fixes.
+        Add support for aarch64 branch target identification (bti).
         Add support for ARCv3: ARC32 & ARC64.
-        Many x86 Darwin fixes.
+        Add support for HPPA64, and many HPPA fixes.
+        Fixes for AIX, sparc64, and x86 Darwin fixes.
 
     3.4.4 Oct-23-2022
         Important aarch64 fixes, including support for linux builds
