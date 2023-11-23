@@ -298,7 +298,7 @@ if test "x$GCC" = "xyes"; then
   	echo 'int __attribute__ ((visibility ("hidden"))) foo (void) { return 1  ; }' > conftest.c
   	libffi_cv_hidden_visibility_attribute=no
   	if AC_TRY_COMMAND(${CC-cc} -Werror -S conftest.c -o conftest.s 1>&AS_MESSAGE_LOG_FD); then
-  	    if $EGREP '(\.hidden|\.private_extern).*foo' conftest.s >/dev/null; then
+  	    if $EGREP '(\.hidden|\.private_extern).*foo|foo.*,hidden' conftest.s >/dev/null; then
   		libffi_cv_hidden_visibility_attribute=yes
   	    fi
   	fi
