@@ -64,6 +64,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #define PTR_SIZE	8
 #endif
 
+#define BTI_C hint #34
+#define BTI_J hint #36
+
 	.text
 	.align 4
 
@@ -84,7 +87,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 
 	cfi_startproc
 CNAME(ffi_call_SYSV):
-	bti	c
+	BTI_C
 	/* Sign the lr with x1 since that is where it will be stored */
 	SIGN_LR_WITH_REG(x1)
 
@@ -153,15 +156,15 @@ CNAME(ffi_call_SYSV):
 	   and therefore we want to extend to 64 bits; these types
 	   have two consecutive entries allocated for them.  */
 	.align	4
-0:	bti	j			/* VOID */
+0:	BTI_J				/* VOID */
 	b 99f
 	nop 
 	nop
-1:	bti	j			/* INT64 */
+1:	BTI_J				/* INT64 */
 	str	x0, [x3]
 	b 99f
 	nop
-2:	bti	j			/* INT128 */
+2:	BTI_J				/* INT128 */
 	stp	x0, x1, [x3]
 	b 99f
 	nop
@@ -185,55 +188,55 @@ CNAME(ffi_call_SYSV):
 	b 99f
 	nop
 	nop
-8:	bti	j			/* S4 */
+8:	BTI_J				/* S4 */
 	st4	{ v0.s, v1.s, v2.s, v3.s }[0], [x3]
 	b 99f
 	nop
-9:	bti	j			/* S3 */
+9:	BTI_J				/* S3 */
 	st3	{ v0.s, v1.s, v2.s }[0], [x3]
 	b 99f
 	nop
-10:	bti	j			/* S2 */
+10:	BTI_J				/* S2 */
 	stp	s0, s1, [x3]
 	b 99f
 	nop
-11:	bti	j
+11:	BTI_J
 	str	s0, [x3]		/* S1 */
 	b 99f
 	nop
-12:	bti	j			/* D4 */
+12:	BTI_J				/* D4 */
 	st4	{ v0.d, v1.d, v2.d, v3.d }[0], [x3]
 	b 99f
 	nop
-13:	bti	j			/* D3 */
+13:	BTI_J				/* D3 */
 	st3	{ v0.d, v1.d, v2.d }[0], [x3]
 	b 99f
 	nop
-14:	bti	j			/* D2 */
+14:	BTI_J				/* D2 */
 	stp	d0, d1, [x3]
 	b 99f
 	nop
-15:	bti	j			/* D1 */
+15:	BTI_J				/* D1 */
 	str	d0, [x3]
 	b 99f
 	nop
-16:	bti	j			/* Q4 */
+16:	BTI_J				/* Q4 */
 	str	q3, [x3, #48]
 	nop
 	nop
-17:	bti	j			/* Q3 */
+17:	BTI_J				/* Q3 */
 	str	q2, [x3, #32]
 	nop
 	nop
-18:	bti	j			/* Q2 */
+18:	BTI_J				/* Q2 */
 	stp	q0, q1, [x3]
 	b 99f
 	nop
-19:	bti	j			/* Q1 */
+19:	BTI_J				/* Q1 */
 	str	q0, [x3]
 	b 99f
 	nop
-20:	bti	j			/* UINT8 */
+20:	BTI_J				/* UINT8 */
 	uxtb	w0, w0
 	str	x0, [x3]
 	nop
@@ -241,7 +244,7 @@ CNAME(ffi_call_SYSV):
 	nop
 	nop
 	nop
-22:	bti	j			/* UINT16 */
+22:	BTI_J				/* UINT16 */
 	uxth	w0, w0
 	str	x0, [x3]
 	nop
@@ -249,7 +252,7 @@ CNAME(ffi_call_SYSV):
 	nop
 	nop
 	nop
-24:	bti	j			/* UINT32 */
+24:	BTI_J				/* UINT32 */
 	mov	w0, w0
 	str	x0, [x3]
 	nop
@@ -257,7 +260,7 @@ CNAME(ffi_call_SYSV):
 	nop
 	nop
 	nop
-26:	bti	j			/* SINT8 */
+26:	BTI_J				/* SINT8 */
 	sxtb	x0, w0
 	str	x0, [x3]
 	nop
@@ -265,7 +268,7 @@ CNAME(ffi_call_SYSV):
 	nop
 	nop
 	nop
-28:	bti	j			/* SINT16 */
+28:	BTI_J				/* SINT16 */
 	sxth	x0, w0
 	str	x0, [x3]
 	nop
@@ -273,7 +276,7 @@ CNAME(ffi_call_SYSV):
 	nop
 	nop
 	nop
-30:	bti	j			/* SINT32 */
+30:	BTI_J				/* SINT32 */
 	sxtw	x0, w0
 	str	x0, [x3]
 	nop
@@ -317,7 +320,7 @@ CNAME(ffi_call_SYSV):
 	.align 4
 CNAME(ffi_closure_SYSV_V):
 	cfi_startproc
-	bti	c
+	BTI_C
 	SIGN_LR
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
@@ -342,7 +345,7 @@ CNAME(ffi_closure_SYSV_V):
 	.align	4
 	cfi_startproc
 CNAME(ffi_closure_SYSV):
-	bti	c
+	BTI_C
 	SIGN_LR
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
@@ -378,15 +381,15 @@ L(do_closure):
 
 	/* Note that each table entry is 4 insns, and thus 16 bytes.  */
 	.align	4
-0:	bti	j			/* VOID */
+0:	BTI_J				/* VOID */
 	b	99f
 	nop
 	nop
-1:	bti	j			/* INT64 */
+1:	BTI_J				/* INT64 */
 	ldr	x0, [x3]
 	b	99f
 	nop
-2:	bti	j			/* INT128 */
+2:	BTI_J				/* INT128 */
 	ldp	x0, x1, [x3]
 	b	99f
 	nop
@@ -410,55 +413,55 @@ L(do_closure):
 	nop
 	nop
 	nop
-8:	bti	j			/* S4 */
+8:	BTI_J				/* S4 */
 	ldr	s3, [x3, #12]
 	nop
 	nop
-9:	bti	j			/* S3 */
+9:	BTI_J				/* S3 */
 	ldr	s2, [x3, #8]
 	nop
 	nop
-10:	bti	j			/* S2 */
+10:	BTI_J				/* S2 */
 	ldp	s0, s1, [x3]
 	b	99f
 	nop
-11:	bti	j			/* S1 */
+11:	BTI_J				/* S1 */
 	ldr	s0, [x3]
 	b	99f
 	nop
-12:	bti	j			/* D4 */
+12:	BTI_J				/* D4 */
 	ldr	d3, [x3, #24]
 	nop
 	nop
-13:	bti	j			/* D3 */
+13:	BTI_J				/* D3 */
 	ldr	d2, [x3, #16]
 	nop
 	nop
-14:	bti	j			/* D2 */
+14:	BTI_J				/* D2 */
 	ldp	d0, d1, [x3]
 	b	99f
 	nop
-15:	bti	j			/* D1 */
+15:	BTI_J				/* D1 */
 	ldr	d0, [x3]
 	b	99f
 	nop
-16:	bti	j			/* Q4 */
+16:	BTI_J				/* Q4 */
 	ldr	q3, [x3, #48]
 	nop
 	nop
-17:	bti	j			/* Q3 */
+17:	BTI_J				/* Q3 */
 	ldr	q2, [x3, #32]
 	nop
 	nop
-18:	bti	j			/* Q2 */
+18:	BTI_J				/* Q2 */
 	ldp	q0, q1, [x3]
 	b	99f
 	nop
-19:	bti	j			/* Q1 */
+19:	BTI_J				/* Q1 */
 	ldr	q0, [x3]
 	b	99f
 	nop
-20:	bti	j			/* UINT8 */
+20:	BTI_J				/* UINT8 */
 	ldrb	w0, [x3, #BE(7)]
 	b	99f
 	nop
@@ -466,7 +469,7 @@ L(do_closure):
 	nop
 	nop
 	nop
-22:	bti	j			/* UINT16 */
+22:	BTI_J				/* UINT16 */
 	ldrh	w0, [x3, #BE(6)]
 	b	99f
 	nop
@@ -474,7 +477,7 @@ L(do_closure):
 	nop
 	nop
 	nop
-24:	bti	j			/* UINT32 */
+24:	BTI_J				/* UINT32 */
 	ldr	w0, [x3, #BE(4)]
 	b	99f
 	nop
@@ -482,7 +485,7 @@ L(do_closure):
 	nop
 	nop
 	nop
-26:	bti	j			/* SINT8 */
+26:	BTI_J				/* SINT8 */
 	ldrsb	x0, [x3, #BE(7)]
 	b	99f
 	nop
@@ -490,7 +493,7 @@ L(do_closure):
 	nop
 	nop
 	nop
-28:	bti	j			/* SINT16 */
+28:	BTI_J				/* SINT16 */
 	ldrsh	x0, [x3, #BE(6)]
 	b	99f
 	nop
@@ -498,7 +501,7 @@ L(do_closure):
 	nop
 	nop
 	nop
-30:	bti	j			/* SINT32 */
+30:	BTI_J				/* SINT32 */
 	ldrsw	x0, [x3, #BE(4)]
 	nop
 	nop
@@ -614,7 +617,7 @@ CNAME(ffi_closure_trampoline_table_page):
 	.align 4
 CNAME(ffi_go_closure_SYSV_V):
 	cfi_startproc
-	bti	c
+	BTI_C
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
 	cfi_rel_offset (x29, 0)
@@ -638,7 +641,7 @@ CNAME(ffi_go_closure_SYSV_V):
 	.align	4
 	cfi_startproc
 CNAME(ffi_go_closure_SYSV):
-	bti	c
+	BTI_C
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
 	cfi_rel_offset (x29, 0)
