@@ -386,55 +386,56 @@ extend_hfa_type (void *dest, void *src, int h)
   ssize_t f = h - AARCH64_RET_S4;
   void *x0;
 
+#define BTI_J "hint #36"
   asm volatile (
 	"adr	%0, 0f\n"
 "	add	%0, %0, %1\n"
 "	br	%0\n"
-"0:	bti	j\n"			/* S4 */
+"0:	"BTI_J"\n"			/* S4 */
 "	ldp	s16, s17, [%3]\n"
 "	ldp	s18, s19, [%3, #8]\n"
 "	b	4f\n"
-"	bti	j\n"			/* S3 */
+"	"BTI_J"\n"			/* S3 */
 "	ldp	s16, s17, [%3]\n"
 "	ldr	s18, [%3, #8]\n"
 "	b	3f\n"
-"	bti	j\n"			/* S2 */
+"	"BTI_J"\n"			/* S2 */
 "	ldp	s16, s17, [%3]\n"
 "	b	2f\n"
 "	nop\n"
-"	bti	j\n"			/* S1 */
+"	"BTI_J"\n"			/* S1 */
 "	ldr	s16, [%3]\n"
 "	b	1f\n"
 "	nop\n"
-"	bti	j\n"			/* D4 */
+"	"BTI_J"\n"			/* D4 */
 "	ldp	d16, d17, [%3]\n"
 "	ldp	d18, d19, [%3, #16]\n"
 "	b	4f\n"
-"	bti	j\n"			/* D3 */
+"	"BTI_J"\n"			/* D3 */
 "	ldp	d16, d17, [%3]\n"
 "	ldr	d18, [%3, #16]\n"
 "	b	3f\n"
-"	bti	j\n"			/* D2 */
+"	"BTI_J"\n"			/* D2 */
 "	ldp	d16, d17, [%3]\n"
 "	b	2f\n"
 "	nop\n"
-"	bti	j\n"			/* D1 */
+"	"BTI_J"\n"			/* D1 */
 "	ldr	d16, [%3]\n"
 "	b	1f\n"
 "	nop\n"
-"	bti	j\n"			/* Q4 */
+"	"BTI_J"\n"			/* Q4 */
 "	ldp	q16, q17, [%3]\n"
 "	ldp	q18, q19, [%3, #32]\n"
 "	b	4f\n"
-"	bti	j\n"			/* Q3 */
+"	"BTI_J"\n"			/* Q3 */
 "	ldp	q16, q17, [%3]\n"
 "	ldr	q18, [%3, #32]\n"
 "	b	3f\n"
-"	bti	j\n"			/* Q2 */
+"	"BTI_J"\n"			/* Q2 */
 "	ldp	q16, q17, [%3]\n"
 "	b	2f\n"
 "	nop\n"
-"	bti	j\n"			/* Q1 */
+"	"BTI_J"\n"			/* Q1 */
 "	ldr	q16, [%3]\n"
 "	b	1f\n"
 "4:	str	q19, [%2, #48]\n"
