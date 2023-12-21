@@ -9,7 +9,7 @@
 
 int i=5;
 
-void callback() { i++; }
+void callback(void) { i++; }
 
 typedef struct
 {
