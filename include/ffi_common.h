@@ -49,8 +49,10 @@ extern "C" {
 #  endif
 # endif
 # define MAYBE_UNUSED __attribute__((__unused__))
+# define NORETURN __attribute__((__noreturn__))
 #else
 # define MAYBE_UNUSED
+# define NORETURN
 # if HAVE_ALLOCA_H
 #  include <alloca.h>
 # else
@@ -82,9 +84,9 @@ char *alloca ();
 #endif
 
 #ifdef FFI_DEBUG
-void ffi_assert(char *expr, char *file, int line);
+NORETURN void ffi_assert(const char *expr, const char *file, int line);
 void ffi_stop_here(void);
-void ffi_type_test(ffi_type *a, char *file, int line);
+void ffi_type_test(ffi_type *a, const char *file, int line);
 
 #define FFI_ASSERT(x) ((x) ? (void)0 : ffi_assert(#x, __FILE__,__LINE__))
 #define FFI_ASSERT_AT(x, f, l) ((x) ? 0 : ffi_assert(#x, (f), (l)))

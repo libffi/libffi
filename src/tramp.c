@@ -307,7 +307,7 @@ ffi_tramp_lock(void)
 }
 
 static void
-ffi_tramp_unlock()
+ffi_tramp_unlock(void)
 {
   pthread_mutex_unlock (&tramp_globals_mutex);
 }

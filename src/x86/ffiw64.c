@@ -227,7 +227,7 @@ EFI64(ffi_prep_closure_loc)(ffi_closure* closure,
 		      ffi_cif* cif,
 		      void (*fun)(ffi_cif*, void*, void**, void*),
 		      void *user_data,
-		      void *codeloc)
+		      void *codeloc MAYBE_UNUSED)
 {
   static const unsigned char trampoline[FFI_TRAMPOLINE_SIZE - 8] = {
     /* endbr64 */
