@@ -599,7 +599,7 @@ open_temp_exec_file_memfd (const char *name)
 
 /* Open a temporary file name, and immediately unlink it.  */
 static int
-open_temp_exec_file_name (char *name, int flags)
+open_temp_exec_file_name (char *name, int flags MAYBE_UNUSED)
 {
   int fd;
 
@@ -795,7 +795,7 @@ open_temp_exec_file (void)
    Failure to allocate the space will cause SIGBUS to be thrown when
    the mapping is subsequently written to.  */
 static int
-allocate_space (int fd, off_t offset, off_t len)
+allocate_space (int fd, off_t len)
 {
   static long page_size;
 
@@ -838,7 +838,7 @@ dlmmap_locked (void *start, size_t length, int prot, int flags, off_t offset)
 
   offset = execsize;
 
-  if (allocate_space (execfd, offset, length))
+  if (allocate_space (execfd, length))
     return MFAIL;
 
   flags &= ~(MAP_PRIVATE | MAP_ANONYMOUS);
