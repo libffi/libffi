@@ -20,7 +20,9 @@ LIBFFI_BASE_8.0 {
 	ffi_type_sint64;
 	ffi_type_float;
 	ffi_type_double;
+#ifdef HAVE_LONG_DOUBLE
 	ffi_type_longdouble;
+#endif
 	ffi_type_pointer;
 
 	/* Exported functions.  */
@@ -52,7 +54,9 @@ LIBFFI_COMPLEX_8.0 {
 	/* Exported data variables.  */
 	ffi_type_complex_float;
 	ffi_type_complex_double;
+#ifdef HAVE_LONG_DOUBLE
 	ffi_type_complex_longdouble;
+#endif
 } LIBFFI_BASE_8.0;
 #endif
 
