@@ -190,8 +190,9 @@ Configure has many other options. Use ``configure --help`` to see them all.
 Once configure has finished, type "make". Note that you must be using
 GNU make.  You can ftp GNU make from ftp.gnu.org:/pub/gnu/make .
 
-To ensure that libffi is working as advertised, type "make check".
-This will require that you have DejaGNU installed.
+To ensure that libffi is working as advertised, run the test suite by
+typing "make check".  This will require that you have DejaGNU installed.
+The output will be written to a path like x86_64-pc-linux-gnu/testsuite/libffi.log
 
 To install the library and header files, type ``make install``.
 
