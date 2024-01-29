@@ -172,6 +172,19 @@ void,
 unbox_small_structs, (ffi_type type_ptr), {
   var type_id = FFI_TYPE__TYPEID(type_ptr);
   while (type_id === FFI_TYPE_STRUCT) {
+    // Don't unbox single element structs if they are bigger than 16 bytes. This
+    // is a work around for the fact that Python will give incorrect values for
+    // the size of the field in these cases: it says that the struct has pointer
+    // size and alignment and are of type pointer, even though it is more
+    // accurately a struct and has a larger size. Keeping it as a struct here
+    // will let us get the ABI right (which is in fact that the true argument is
+    // a pointer to the stack... so maybe Python issn't so wrong??)
+    //
+    // See the Python comment here:
+    // https://github.com/python/cpython/blob/a16a9f978f42b8a09297c1efbf33877f6388c403/Modules/_ctypes/stgdict.c#L718-L779
+    if (FFI_TYPE__SIZE(type_ptr) > 16) {
+      break;
+    }
     var elements = FFI_TYPE__ELEMENTS(type_ptr);
     var first_element = DEREF_U32(elements, 0);
     if (first_element === 0) {
