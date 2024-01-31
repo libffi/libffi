@@ -66,7 +66,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 
 #define BTI_C hint #34
 #define BTI_J hint #36
-
+/*
+ * The ELF Notes section needs to indicate if BTI is supported, as the first ELF loaded that doesn't
+ * declare this support disables it for the whole process.
+ */
+# define GNU_PROPERTY_AARCH64_BTI (1 << 0)         /* Has Branch Target Identification */
 	.text
 	.align 4
 
@@ -673,5 +677,17 @@ CNAME(ffi_go_closure_SYSV):
 
 #if defined __ELF__ && defined __linux__
 	.section .note.GNU-stack,"",%progbits
+
+	.pushsection .note.gnu.property, "a";
+	.balign 8;
+	.long 4;
+	.long 0x10;
+	.long 0x5;
+	.asciz "GNU";
+	.long 0xc0000000; /* GNU_PROPERTY_AARCH64_FEATURE_1_AND */
+	.long 4;
+	.long GNU_PROPERTY_AARCH64_BTI;
+	.long 0;
+	.popsection;
 #endif
 
