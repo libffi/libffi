@@ -14,6 +14,30 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
 
+  build-warp:
+    name: ${{ matrix.HOST }} ${{ matrix.CONFIGURE_OPTIONS }} ${{ matrix.MEVAL }} ${{ matrix.LIBFFI_TEST_OPTIMIZATION }}
+    runs-on: warp-ubuntu-latest-arm64-2x
+
+    strategy:
+      fail-fast: false
+      matrix:
+       include:
+         - HOST: "aarch64-linux-gnu"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - env:
+          MEVAL: ${{ matrix.MEVAL }}
+          HOST: ${{ matrix.HOST }}
+          LDFLAGS: ${{ matrix.LDFLAGS }}
+          RUNTESTFLAGS: ${{ matrix.RUNTESTFLAGS }}
+          CONFIGURE_OPTIONS: ${{ matrix.CONFIGURE_OPTIONS }}
+        run: |
+          if test x"$MEVAL" != x; then eval ${MEVAL}; fi
+          ./.ci/install.sh
+          ./.ci/build.sh
+
   build-sim:
     name: ${{ matrix.HOST }} ${{ matrix.CONFIGURE_OPTIONS }} ${{ matrix.MEVAL }} ${{ matrix.LIBFFI_TEST_OPTIMIZATION }}
     runs-on: ubuntu-latest
