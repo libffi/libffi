@@ -40,7 +40,7 @@ libffi.call/strlen.c libffi.call/va_3.c                                 \
 libffi.call/struct_by_value_2.c libffi.call/struct_by_value_3.c         \
 libffi.call/struct_by_value_4.c libffi.closures/closure.exp             \
 libffi.call/struct_by_value_3f.c libffi.call/struct_by_value_4f.c       \
-libffi.call/s55.c libffi.call/bpo-38748.c                               \
+libffi.call/s55.c libffi.call/bpo_38748.c                               \
 libffi.closures/closure_fn0.c libffi.closures/closure_fn1.c             \
 libffi.closures/closure_fn2.c libffi.closures/closure_fn3.c             \
 libffi.closures/closure_fn4.c libffi.closures/closure_fn5.c             \
