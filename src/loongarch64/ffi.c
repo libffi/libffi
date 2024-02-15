@@ -28,6 +28,7 @@
 
 #include <ffi.h>
 #include <ffi_common.h>
+#include <tramp.h>
 
 #include <stdlib.h>
 #include <stdint.h>
