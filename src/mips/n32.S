@@ -236,19 +236,54 @@ callit:
 	# Shift the return type flag over
 	SRL	t6, 8*FFI_FLAG_BITS
 
-	beq	t6, FFI_TYPE_SINT32, retint
-	bne     t6, FFI_TYPE_INT, retuint32
-retint:
+	bne     t6, FFI_TYPE_UINT64, retsint32
+
+retuint64:
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
-	REG_S	v0, 0(t4)
+	sd	v0, 0(t4)
 	b	epilogue
 
-retuint32:
-	bne     t6, FFI_TYPE_UINT32, retfloat
+retsint32:
+	bne	t6, FFI_TYPE_SINT32, retuint16
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
-	sw	v0, 0(t4)
+	sll	v0, v0, 0
+	sd	v0, 0(t4)
+	b	epilogue
+
+retuint16:
+	bne	t6, FFI_TYPE_UINT16, retsint16
+	jal	t9
+	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
+	andi	v0, v0, 0xffff
+	sd	v0, 0(t4)
+	b	epilogue
+
+retsint16:
+	bne	t6, FFI_TYPE_SINT16, retuint8
+	jal	t9
+	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
+	dsll	v0, v0, 48
+	dsra	v0, v0, 48
+	sd	v0, 0(t4)
+	b	epilogue
+
+retuint8:
+	bne	t6, FFI_TYPE_UINT8, retsint8
+	jal	t9
+	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
+	andi	v0, v0, 0xff
+	sd	v0, 0(t4)
+	b	epilogue
+
+retsint8:
+	bne	t6, FFI_TYPE_SINT8, retfloat
+	jal	t9
+	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
+	sd	v0, 0(t4)
+	dsll	v0, v0, 56
+	dsra	v0, v0, 56
 	b	epilogue
 
 retfloat:
@@ -585,19 +620,35 @@ $do_closure:
 
 	jalr	t9
 
+cls_retuint64:
 	# Return flags are in v0
-	bne     v0, FFI_TYPE_SINT32, cls_retuint32
+	bne     v0, FFI_TYPE_UINT64, cls_retsint32
+	ld	v0, V0_OFF2($sp)
+	b	cls_epilogue
+
+cls_retsint32:
+	bne     v0, FFI_TYPE_SINT32, cls_retsint16
 	lw	v0, V0_OFF2($sp)
 	b	cls_epilogue
 
-cls_retuint32:
-	bne     v0, FFI_TYPE_UINT32, cls_retint
-	lwu	v0, V0_OFF2($sp)
+cls_retsint16:
+	bne     v0, FFI_TYPE_SINT16, cls_retuint16
+	lh	v0, V0_OFF2($sp)
 	b	cls_epilogue
 
-cls_retint:
-	bne     v0, FFI_TYPE_INT, cls_retfloat
-	REG_L	v0, V0_OFF2($sp)
+cls_retuint16:
+	bne     v0, FFI_TYPE_UINT16, cls_retsint8
+	lhu	v0, V0_OFF2($sp)
+	b	cls_epilogue
+
+cls_retsint8:
+	bne     v0, FFI_TYPE_SINT8, cls_retuint8
+	lb	v0, V0_OFF2($sp)
+	b	cls_epilogue
+
+cls_retuint8:
+	bne     v0, FFI_TYPE_UINT8, cls_retfloat
+	lbu	v0, V0_OFF2($sp)
 	b	cls_epilogue
 
 cls_retfloat:

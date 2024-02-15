@@ -647,9 +647,9 @@ static ffi_status ffi_prep_cif_machdep_int(ffi_cif *cif, unsigned nfixedargs)
 
       case FFI_TYPE_POINTER:
 	if (cif->abi == FFI_N32_SOFT_FLOAT || cif->abi == FFI_N32)
-	  cif->flags += FFI_TYPE_UINT32 << (FFI_FLAG_BITS * 8);
+	  cif->flags += FFI_TYPE_SINT32 << (FFI_FLAG_BITS * 8);
 	else
-	  cif->flags += FFI_TYPE_INT << (FFI_FLAG_BITS * 8);
+	  cif->flags += FFI_TYPE_UINT64 << (FFI_FLAG_BITS * 8);
 	break;
 
       case FFI_TYPE_FLOAT:
@@ -661,7 +661,7 @@ static ffi_status ffi_prep_cif_machdep_int(ffi_cif *cif, unsigned nfixedargs)
 	/* else fall through */
       case FFI_TYPE_DOUBLE:
 	if (soft_float)
-	  cif->flags += FFI_TYPE_INT << (FFI_FLAG_BITS * 8);
+	  cif->flags += FFI_TYPE_UINT64 << (FFI_FLAG_BITS * 8);
 	else
 	  cif->flags += cif->rtype->type << (FFI_FLAG_BITS * 8);
 	break;
@@ -715,8 +715,16 @@ static ffi_status ffi_prep_cif_machdep_int(ffi_cif *cif, unsigned nfixedargs)
 	    }
 	  break;
 	}
+      case FFI_TYPE_UINT32:
+	/* In the N32 or N64 ABI unsigned 32-bit integer should be
+	   *sign*-extended.  */
+	cif->flags += FFI_TYPE_SINT32 << (FFI_FLAG_BITS * 8);
+	break;
+      case FFI_TYPE_SINT64:
+	cif->flags += FFI_TYPE_UINT64 << (FFI_FLAG_BITS * 8);
+	break;
       default:
-	cif->flags += FFI_TYPE_INT << (FFI_FLAG_BITS * 8);
+	cif->flags += cif->rtype->type << (FFI_FLAG_BITS * 8);
 	break;
       }
   }
