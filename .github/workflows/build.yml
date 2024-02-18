@@ -133,12 +133,12 @@ jobs:
            CFARM_TRIPLE: mips-linux-gnu
            CFARM_CC: "gcc"
            CFARM_CXX: "g++"
-         - CFARM_HOST: cfarm102.cfarm.net
+         - CFARM_HOST: cfarm211.cfarm.net
            CFARM_PORT: 22
            CFARM_TRIPLE: sparc64-linux-gnu
            CFARM_CC: "gcc"
            CFARM_CXX: "g++"
-         - CFARM_HOST: cfarm102.cfarm.net
+         - CFARM_HOST: cfarm211.cfarm.net
            CFARM_PORT: 22
            CFARM_TRIPLE: sparc64-linux-gnu
            CFARM_CC: "gcc -m32"
