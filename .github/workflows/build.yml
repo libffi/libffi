@@ -113,57 +113,52 @@ jobs:
       fail-fast: false
       matrix:
        include:
-         - CFARM_HOST: gcc117.fsffrance.org
+         - CFARM_HOST: cfarm185.cfarm.net
            CFARM_PORT: 22
            CFARM_TRIPLE: aarch64-linux-gnu
            CFARM_CC: "gcc"
            CFARM_CXX: "g++"
-         - CFARM_HOST: gcc117.fsffrance.org
-           CFARM_PORT: 22
-           CFARM_TRIPLE: aarch64-linux-gnu
-           CFARM_CC: "/home/green/gcc12/bin/gcc"
-           CFARM_CXX: "/home/green/gcc12/bin/g++"
-         - CFARM_HOST: gcc117.fsffrance.org
+         - CFARM_HOST: cfarm185.fsffrance.org
            CFARM_PORT: 22
            CFARM_TRIPLE: aarch64-lto-linux-gnu
            CFARM_CC: "gcc -flto"
            CFARM_CXX: "g++ -flto"
-         - CFARM_HOST: gcc400.fsffrance.org
+         - CFARM_HOST: cfarm400.cfarm.net
            CFARM_PORT: 25465
            CFARM_TRIPLE: loongarch64-linux-gnu
            CFARM_CC: "gcc"
            CFARM_CXX: "g++"
-         - CFARM_HOST: gcc230.fsffrance.org
+         - CFARM_HOST: cfarm230.cfarm.net
            CFARM_PORT: 22
            CFARM_TRIPLE: mips-linux-gnu
            CFARM_CC: "gcc"
            CFARM_CXX: "g++"
-         - CFARM_HOST: gcc102.fsffrance.org
+         - CFARM_HOST: cfarm102.cfarm.net
            CFARM_PORT: 22
            CFARM_TRIPLE: sparc64-linux-gnu
            CFARM_CC: "gcc"
            CFARM_CXX: "g++"
-         - CFARM_HOST: gcc102.fsffrance.org
+         - CFARM_HOST: cfarm102.cfarm.net
            CFARM_PORT: 22
            CFARM_TRIPLE: sparc64-linux-gnu
            CFARM_CC: "gcc -m32"
            CFARM_CXX: "g++ -m32"
-         - CFARM_HOST: gcc91.fsffrance.org
+         - CFARM_HOST: cfarm91.cfarm.net
            CFARM_PORT: 22
            CFARM_TRIPLE: riscv64-linux-gnu
            CFARM_CC: "gcc"
            CFARM_CXX: "g++"
-         - CFARM_HOST: gcc103.fsffrance.org
+         - CFARM_HOST: cfarm103.cfarm.net
            CFARM_PORT: 22
            CFARM_TRIPLE: aarch64-m1-linux-gnu
            CFARM_CC: "gcc"
            CFARM_CXX: "g++"
-         - CFARM_HOST: gcc112.fsffrance.org
+         - CFARM_HOST: cfarm112.cfarm.net
            CFARM_PORT: 22
            CFARM_TRIPLE: powerpc64le-linux-gnu
            CFARM_CC: "gcc"
            CFARM_CXX: "g++"
-         - CFARM_HOST: gcc111.fsffrance.org
+         - CFARM_HOST: cfarm111.cfarm.net
            CFARM_PORT: 22
            CFARM_TRIPLE: powerpc-ibm-aix7.1.5.0
            CFARM_CC: "gcc"
