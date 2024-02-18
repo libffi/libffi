@@ -1,7 +1,7 @@
 Status
 ======
 
-libffi-3.4.5 was released on February 15, 2024.  Check the libffi web
+libffi-3.4.6 was released on February 18, 2024.  Check the libffi web
 page for updates: <URL:http://sourceware.org/libffi/>.
 
 
@@ -200,6 +200,9 @@ History
 =======
 
 See the git log for details at http://github.com/libffi/libffi.
+
+    3.4.6 Feb-18-2024
+        Fix long double regression on mips64 and alpha.
 
     3.4.5 Feb-15-2024
         Add support for wasm32.
