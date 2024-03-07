@@ -68,7 +68,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #define BTI_J hint #36
 /*
  * The ELF Notes section needs to indicate if BTI is supported, as the first ELF loaded that doesn't
- * declare this support disables it for the whole process.
+ * declare this support disables it for memory region containing the loaded library.
  */
 # define GNU_PROPERTY_AARCH64_BTI (1 << 0)         /* Has Branch Target Identification */
 	.text
