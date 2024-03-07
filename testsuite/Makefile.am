@@ -8,7 +8,7 @@ CLEANFILES = *.exe core* *.log *.sum
 
 EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	emscripten/node-tests.sh emscripten/test.html emscripten/test_libffi.py \
-  emscripten/build-tests.sh lib/libffi.exp lib/target-libpath.exp \
+	emscripten/build-tests.sh lib/libffi.exp lib/target-libpath.exp \
 	lib/wrapper.exp libffi.bhaible/Makefile libffi.bhaible/README \
 	libffi.bhaible/alignof.h libffi.bhaible/bhaible.exp libffi.bhaible/test-call.c \
 	libffi.bhaible/test-callback.c libffi.bhaible/testcases.c libffi.call/align_mixed.c \
