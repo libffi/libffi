@@ -68,7 +68,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #define BTI_J hint #36
 /*
  * The ELF Notes section needs to indicate if BTI is supported, as the first ELF loaded that doesn't
- * declare this support disables it for the whole process.
+ * declare this support disables it for memory region containing the loaded library.
  */
 # define GNU_PROPERTY_AARCH64_BTI (1 << 0)         /* Has Branch Target Identification */
 	.text
@@ -527,6 +527,7 @@ L(do_closure):
 #if defined(FFI_EXEC_STATIC_TRAMP)
 	.align 4
 CNAME(ffi_closure_SYSV_V_alt):
+	BTI_C
 	/* See the comments above trampoline_code_table. */
 	ldr	x17, [sp, #8]			/* Load closure in x17 */
 	add	sp, sp, #16			/* Restore the stack */
@@ -541,6 +542,7 @@ CNAME(ffi_closure_SYSV_V_alt):
 
 	.align 4
 CNAME(ffi_closure_SYSV_alt):
+	BTI_C
 	/* See the comments above trampoline_code_table. */
 	ldr	x17, [sp, #8]			/* Load closure in x17 */
 	add	sp, sp, #16			/* Restore the stack */
