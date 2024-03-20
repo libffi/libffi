@@ -333,14 +333,6 @@ MMAP_CLEARS               default: 1 on unix
   True if mmap clears memory so calloc doesn't need to. This is true
   for standard unix mmap using /dev/zero.
 
-USE_BUILTIN_FFS            default: 0 (i.e., not used)
-  Causes malloc to use the builtin ffs() function to compute indices.
-  Some compilers may recognize and intrinsify ffs to be faster than the
-  supplied C version. Also, the case of x86 using gcc is special-cased
-  to an asm instruction, so is already as fast as it can be, and so
-  this setting has no effect. (On most x86s, the asm version is only
-  slightly faster than the C version.)
-
 malloc_getpagesize         default: derive from system includes, or 4096.
   The system page size. To the extent possible, this malloc manages
   memory from the system in page-size units.  This may be (and
@@ -572,9 +564,6 @@ DEFAULT_MMAP_THRESHOLD       default: 256K
 #define DEFAULT_MMAP_THRESHOLD MAX_SIZE_T
 #endif  /* HAVE_MMAP */
 #endif  /* DEFAULT_MMAP_THRESHOLD */
-#ifndef USE_BUILTIN_FFS
-#define USE_BUILTIN_FFS 0
-#endif  /* USE_BUILTIN_FFS */
 #ifndef USE_DEV_RANDOM
 #define USE_DEV_RANDOM 0
 #endif  /* USE_DEV_RANDOM */
@@ -1188,11 +1177,6 @@ int mspace_mallopt(int, int);
 #ifndef LACKS_STRING_H
 #include <string.h>      /* for memset etc */
 #endif  /* LACKS_STRING_H */
-#if USE_BUILTIN_FFS
-#ifndef LACKS_STRINGS_H
-#include <strings.h>     /* for ffs */
-#endif /* LACKS_STRINGS_H */
-#endif /* USE_BUILTIN_FFS */
 #if HAVE_MMAP
 #ifndef LACKS_SYS_MMAN_H
 #include <sys/mman.h>    /* for mmap */
@@ -2301,7 +2285,7 @@ static size_t traverse_and_check(mstate m);
 #define treebin_at(M,i)     (&((M)->treebins[i]))
 
 /* assign tree index for size S to variable I */
-#if defined(__GNUC__) && defined(__i386__)
+#ifdef __GNUC__
 #define compute_tree_index(S, I)\
 {\
   size_t X = S >> TREEBIN_SHIFT;\
@@ -2310,8 +2294,8 @@ static size_t traverse_and_check(mstate m);
   else if (X > 0xFFFF)\
     I = NTREEBINS-1;\
   else {\
-    unsigned int K;\
-    __asm__("bsrl %1,%0\n\t" : "=r" (K) : "rm"  (X));\
+    unsigned int Y = (unsigned int)X;\
+    unsigned int K = (unsigned int) sizeof(Y) * __CHAR_BIT__ - 1 - __builtin_clz(Y);\
     I =  (bindex_t)((K << 1) + ((S >> (K + (TREEBIN_SHIFT-1)) & 1)));\
   }\
 }
@@ -2366,19 +2350,10 @@ static size_t traverse_and_check(mstate m);
 
 /* index corresponding to given bit */
 
-#if defined(__GNUC__) && defined(__i386__)
-#define compute_bit2idx(X, I)\
-{\
-  unsigned int J;\
-  __asm__("bsfl %1,%0\n\t" : "=r" (J) : "rm" (X));\
-  I = (bindex_t)J;\
-}
-
-#else /* GNUC */
-#if  USE_BUILTIN_FFS
+#ifdef __GNUC__
 #define compute_bit2idx(X, I) I = __builtin_ffs(X)-1
 
-#else /* USE_BUILTIN_FFS */
+#else /* GNUC */
 #define compute_bit2idx(X, I)\
 {\
   unsigned int Y = X - 1;\
@@ -2390,7 +2365,6 @@ static size_t traverse_and_check(mstate m);
   N += K = Y >> (1-0) &  1;  Y >>= K;\
   I = (bindex_t)(N + Y);\
 }
-#endif /* USE_BUILTIN_FFS */
 #endif /* GNUC */
 
 /* isolate the least set bit of a bitmap */
