@@ -682,7 +682,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
   else if (flags & AARCH64_RET_NEED_COPY)
     rsize = 16;
 
-  /* Allocate consectutive stack for everything we'll need.
+  /* Allocate consecutive stack for everything we'll need.
      The frame uses 40 bytes for: lr, fp, rvalue, flags, sp */
   context = alloca (sizeof(struct call_context) + stack_bytes + 40 + rsize);
   stack = context + 1;
