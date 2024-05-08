@@ -102,8 +102,6 @@ CNAME(ffi_call_SYSV):
 	 * function it is necessary to point the cfa at the signing register.
 	 */
 	cfi_def_cfa(x1, 0);
-#else
-	cfi_def_cfa(x1, 40);
 #endif
 	stp	x29, x30, [x1]
 	cfi_def_cfa_register(x1)
