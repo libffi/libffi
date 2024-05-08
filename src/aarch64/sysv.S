@@ -96,7 +96,7 @@ CNAME(ffi_call_SYSV):
 	SIGN_LR_WITH_REG(x1)
 
 	/* Use a stack frame allocated by our caller.  */
-#if defined(HAVE_PTRAUTH) && defined(__APPLE__)
+#if defined(HAVE_ARM64E_PTRAUTH) && defined(__APPLE__)
 	/* darwin's libunwind assumes that the cfa is the sp and that's the data
 	 * used to sign the lr.  In order to allow unwinding through this
 	 * function it is necessary to point the cfa at the signing register.

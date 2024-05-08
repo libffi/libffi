@@ -81,7 +81,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 /* Helpers for writing assembly compatible with arm ptr auth */
 #ifdef LIBFFI_ASM
 
-#ifdef HAVE_PTRAUTH
+#ifdef HAVE_ARM64E_PTRAUTH
 #define SIGN_LR pacibsp
 #define SIGN_LR_WITH_REG(x) pacib lr, x
 #define AUTH_LR_AND_RET retab
