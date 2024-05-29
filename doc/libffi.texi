@@ -627,7 +627,7 @@ Here is the corresponding code to describe this struct to
 
       tm_type.size = tm_type.alignment = 0;
       tm_type.type = FFI_TYPE_STRUCT;
-      tm_type.elements = &tm_type_elements;
+      tm_type.elements = tm_type_elements;
 
       for (i = 0; i < 9; i++)
           tm_type_elements[i] = &ffi_type_sint;
