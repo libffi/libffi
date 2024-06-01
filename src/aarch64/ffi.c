@@ -63,7 +63,7 @@ struct call_context
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
 #ifdef __MACH__
-#ifdef HAVE_PTRAUTH
+#ifdef HAVE_ARM64E_PTRAUTH
 #include <ptrauth.h>
 #endif
 #include <mach/vm_param.h>
@@ -877,7 +877,7 @@ ffi_prep_closure_loc (ffi_closure *closure,
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 # ifdef __MACH__
-#  ifdef HAVE_PTRAUTH
+#  ifdef HAVE_ARM64E_PTRAUTH
   codeloc = ptrauth_auth_data(codeloc, ptrauth_key_function_pointer, 0);
 #  endif
   void **config = (void **)((uint8_t *)codeloc - PAGE_MAX_SIZE);

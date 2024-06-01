@@ -189,17 +189,17 @@ AC_CACHE_CHECK([whether compiler supports pointer authentication],
    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
 #ifdef __clang__
 # if __has_feature(ptrauth_calls)
-#  define HAVE_PTRAUTH 1
+#  define HAVE_ARM64E_PTRAUTH 1
 # endif
 #endif
 
-#ifndef HAVE_PTRAUTH
+#ifndef HAVE_ARM64E_PTRAUTH
 # error Pointer authentication not supported
 #endif
 		   ]])],[libffi_cv_as_ptrauth=yes],[libffi_cv_as_ptrauth=no])
 ])
 if test "x$libffi_cv_as_ptrauth" = xyes; then
-    AC_DEFINE(HAVE_PTRAUTH, 1,
+    AC_DEFINE(HAVE_ARM64E_PTRAUTH, 1,
 	      [Define if your compiler supports pointer authentication.])
 fi
 

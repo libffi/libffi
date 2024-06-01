@@ -92,27 +92,27 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 	cfi_startproc
 CNAME(ffi_call_SYSV):
 	BTI_C
-	/* Sign the lr with x1 since that is where it will be stored */
+	PAC_CFI_WINDOW_SAVE
+	/* Sign the lr with x1 since that is the CFA which is the modifer used in auth instructions */
 	SIGN_LR_WITH_REG(x1)
 
-	/* Use a stack frame allocated by our caller.  */
-#if defined(HAVE_PTRAUTH) && defined(__APPLE__)
+#if defined(HAVE_ARM64E_PTRAUTH) && defined(__APPLE__)
 	/* darwin's libunwind assumes that the cfa is the sp and that's the data
 	 * used to sign the lr.  In order to allow unwinding through this
 	 * function it is necessary to point the cfa at the signing register.
 	 */
 	cfi_def_cfa(x1, 0);
-#else
-	cfi_def_cfa(x1, 40);
 #endif
+	/* Use a stack frame allocated by our caller.  */
 	stp	x29, x30, [x1]
+	cfi_def_cfa_register(x1)
+	cfi_rel_offset (x29, 0)
+	cfi_rel_offset (x30, 8)
 	mov	x9, sp
 	str	x9, [x1, #32]
 	mov	x29, x1
-	mov	sp, x0
 	cfi_def_cfa_register(x29)
-	cfi_rel_offset (x29, 0)
-	cfi_rel_offset (x30, 8)
+	mov	sp, x0
 
 	mov	x9, x2			/* save fn */
 	mov	x8, x3			/* install structure return */
@@ -326,6 +326,7 @@ CNAME(ffi_closure_SYSV_V):
 	cfi_startproc
 	BTI_C
 	SIGN_LR
+	PAC_CFI_WINDOW_SAVE
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
 	cfi_rel_offset (x29, 0)
@@ -351,6 +352,7 @@ CNAME(ffi_closure_SYSV_V):
 CNAME(ffi_closure_SYSV):
 	BTI_C
 	SIGN_LR
+	PAC_CFI_WINDOW_SAVE
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
 	cfi_rel_offset (x29, 0)
@@ -648,6 +650,8 @@ CNAME(ffi_go_closure_SYSV_V):
 	cfi_startproc
 CNAME(ffi_go_closure_SYSV):
 	BTI_C
+	SIGN_LR_LINUX_ONLY
+	PAC_CFI_WINDOW_SAVE
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
 	cfi_rel_offset (x29, 0)
