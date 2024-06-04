@@ -88,6 +88,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
   #define AUTH_LR_AND_RET retab
   #define AUTH_LR_WITH_REG(x) autib lr, x
   #define BRANCH_AND_LINK_TO_REG blraaz
+  #define SIGN_LR_LINUX_ONLY
   #define BRANCH_TO_REG braaz
   #define PAC_CFI_WINDOW_SAVE
   /* Linux PAC Support */
@@ -136,6 +137,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
     #define AUTH_LR_AND_RET ret
     #define AUTH_LR_WITH_REG(x)
     #define BRANCH_AND_LINK_TO_REG blr
+    #define SIGN_LR_LINUX_ONLY
     #define BRANCH_TO_REG br
     #define PAC_CFI_WINDOW_SAVE
   #endif /* HAVE_ARM64E_PTRAUTH */
