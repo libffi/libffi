@@ -83,6 +83,23 @@ char *alloca ();
 #include <stdio.h>
 #endif
 
+#ifndef __SANITIZE_ADDRESS__
+# ifdef __clang__
+#  if __has_feature(address_sanitizer)
+#   define FFI_ASAN
+#  endif
+# endif
+#endif
+#ifdef __SANITIZE_ADDRESS__
+#define FFI_ASAN
+#endif
+
+#ifdef FFI_ASAN
+#define FFI_ASAN_NO_SANITIZE __attribute__((no_sanitize_address))
+#else
+#define FFI_ASAN_NO_SANITIZE
+#endif
+
 #ifdef FFI_DEBUG
 NORETURN void ffi_assert(const char *expr, const char *file, int line);
 void ffi_stop_here(void);
