@@ -826,6 +826,13 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 #endif
     }
 
+#ifdef FFI_ASAN
+  /* ffi_call_SYSV will steal the alloca'd `stack` variable here for use
+     _as its own stack_ - so we need to remove the ASAN redzones from it
+     so that the top of the stack remains unpoisoned */
+  ffi_asan_unpoison_alloca_left(context);
+#endif
+
   ffi_call_SYSV (context, frame, fn, rvalue, flags, closure);
 
   if (flags & AARCH64_RET_NEED_COPY)

@@ -403,6 +403,13 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
     }
   FFI_ASSERT (dir > 0 || argp == stack);
 
+#ifdef FFI_ASAN
+  /* ffi_call_i386 will steal the alloca'd `stack` variable here for use
+     _as its own stack_ - so we need to remove the ASAN redzones from it
+     so that the top of the stack remains unpoisoned */
+  ffi_asan_unpoison_alloca_left(stack);
+#endif
+
   ffi_call_i386 (frame, stack);
 }
 #if defined(_MSC_VER)
