@@ -26,6 +26,10 @@
 #include <ffi_common.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
+#ifdef FFI_ASAN
+#include <sanitizer/asan_interface.h>
+#endif
 
 /* General debugging routines */
 
@@ -62,3 +66,22 @@ void ffi_type_test(ffi_type *a, const char *file, int line)
 		file, line);
 
 }
+
+#ifdef FFI_ASAN
+__attribute__((no_sanitize_address))
+void ffi_asan_unpoison_alloca_left(void *alloca_ptr) {
+  size_t shadow_scale, shadow_offset;
+
+  __asan_get_shadow_mapping(&shadow_scale, &shadow_offset);
+  /* Assert that the pointer is aligned to the ASAN shadow stack
+     (i.e. 8-bytes on 64bit) */
+  FFI_ASSERT(((uintptr_t)alloca_ptr) % (1 >> (shadow_scale - 1)) == 0);
+  unsigned char *shadow_stack_ptr = (unsigned char *)((((uintptr_t)alloca_ptr) >> shadow_scale) + shadow_offset);
+  shadow_stack_ptr--;
+
+  while (*shadow_stack_ptr == 0xCA) {
+    *shadow_stack_ptr = 0;
+    shadow_stack_ptr--;
+  }
+}
+#endif

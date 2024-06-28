@@ -88,6 +88,22 @@ NORETURN void ffi_assert(const char *expr, const char *file, int line);
 void ffi_stop_here(void);
 void ffi_type_test(ffi_type *a, const char *file, int line);
 
+#ifndef __SANITIZE_ADDRESS__
+# ifdef __clang__
+#  if __has_feature(address_sanitizer)
+#   define FFI_ASAN
+#  endif
+# endif
+#endif
+#ifdef __SANITIZE_ADDRESS__
+#define FFI_ASAN
+#endif
+
+#ifdef FFI_ASAN
+void ffi_asan_unpoison_alloca_left(void *alloca_ptr);
+#endif
+
+
 #define FFI_ASSERT(x) ((x) ? (void)0 : ffi_assert(#x, __FILE__,__LINE__))
 #define FFI_ASSERT_AT(x, f, l) ((x) ? 0 : ffi_assert(#x, (f), (l)))
 #define FFI_ASSERT_VALID_TYPE(x) ffi_type_test (x, __FILE__, __LINE__)
