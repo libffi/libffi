@@ -128,6 +128,22 @@ libffi-discuss@sourceware.org.
 Installing libffi
 =================
 
+Package Manager Installation
+----------------------------
+
+You can download and install libffi using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
+
+    git clone https://github.com/Microsoft/vcpkg.git
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    ./vcpkg integrate install
+    vcpkg install libffi
+
+The libffi port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+
+Manual Installation
+-------------------
+
 First you must configure the distribution for your particular
 system. Go to the directory you wish to build libffi in and run the
 "configure" program found in the root directory of the libffi source
