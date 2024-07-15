@@ -3388,6 +3388,7 @@ static void add_segment(mstate m, char* tbase, size_t tsize, flag_t mmapped) {
   mchunkptr tnext = chunk_plus_offset(sp, ssize);
   mchunkptr p = tnext;
   int nfences = 0;
+  (void)nfences; // Suppress unused variable warning
 
   /* reset top to new space */
   init_top(m, (mchunkptr)tbase, tsize - TOP_FOOT_SIZE);
