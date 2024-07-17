@@ -192,9 +192,10 @@ static void unmarshal_atom(call_builder *cb, int type, void *data) {
 /* for arguments passed by reference returns the pointer, otherwise the arg is copied (up to MAXCOPYARG bytes) */
 static void *unmarshal(call_builder *cb, ffi_type *type, int var, void *data) {
   size_t realign[2];
-  void *pointer;
 
 #if defined(__ARC64_ARCH64__)
+  void *pointer;
+
   if (type->size > 2 * __SIZEOF_POINTER__) {
         /* pass by reference */
         unmarshal_atom(cb, FFI_TYPE_POINTER, (char*)&pointer);
@@ -348,7 +349,10 @@ ffi_prep_closure_loc (ffi_closure * closure, ffi_cif * cif,
 		      void *user_data, void *codeloc)
 {
   uint32_t *tramp = (uint32_t *) & (closure->tramp[0]);
+
+#if defined(__ARC64_ARCH64__)
   size_t address_ffi_closure = (size_t) ffi_closure_asm;
+#endif
 
   switch (cif->abi)
     {
@@ -367,7 +371,7 @@ ffi_prep_closure_loc (ffi_closure * closure, ffi_cif * cif,
       FFI_ASSERT (tramp == codeloc);
       tramp[0] = CODE_ENDIAN (0x200a1fc0);	/* mov r8, pcl  */
       tramp[1] = CODE_ENDIAN (0x20200f80);	/* j [long imm] */
-      tramp[2] = CODE_ENDIAN (ffi_closure_asm);
+      tramp[2] = CODE_ENDIAN ((uint32_t) ffi_closure_asm);
       break;
 #endif
 
