@@ -651,7 +651,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 		      break;
 		    default:
 		      reg_args->gpr[gprcount] = 0;
-		      memcpy (&reg_args->gpr[gprcount], a, size);
+		      memcpy (&reg_args->gpr[gprcount], a, sizeof(UINT64));
 		    }
 		  gprcount++;
 		  break;
