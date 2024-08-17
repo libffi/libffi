@@ -180,7 +180,7 @@ void ffi_closure_SYSV(unsigned long r3, unsigned long r4, unsigned long r5,
   register int *r13 __asm__ ("r13");
 
   ffi_closure* closure = (ffi_closure*) r13;
-  char *stack_args = sp;
+  char *stack_args = (char*) sp;
 
   /* Lay the register arguments down in a continuous chunk of memory.  */
   unsigned register_args[6] =
