@@ -110,7 +110,7 @@ void* ffi_prep_args(char *stack, extended_cif *ecif)
 
 extern void ffi_call_SYSV(unsigned,
                           extended_cif *,
-                          void *(*)(int *, extended_cif *),
+                          void *(*)(char *, extended_cif *),
                           unsigned *,
                           void (*fn)(void),
                           unsigned);
