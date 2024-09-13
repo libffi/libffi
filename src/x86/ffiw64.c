@@ -30,6 +30,7 @@
 #include <ffi_common.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <tramp.h>
 
 #ifdef X86_WIN64
@@ -133,7 +134,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   for (i = 0; i < nargs; i++)
     {
       ffi_type *at = arg_types[i];
-      int size = at->size;
+      size_t size = at->size;
       if (at->type == FFI_TYPE_STRUCT && size > 8)
         {
           char *argcopy = alloca (size);
