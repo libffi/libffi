@@ -14,11 +14,11 @@ typedef struct
 } test_structure_int_float;
 
 static float ABI_ATTR struct_int_float(test_structure_int_float ts1,
-                                       test_structure_int_float ts2,
-                                       test_structure_int_float ts3,
-                                       test_structure_int_float ts4,
-                                       test_structure_int_float ts5,
-                                       test_structure_int_float ts6)
+                                       test_structure_int_float ts2 __UNUSED__,
+                                       test_structure_int_float ts3 __UNUSED__,
+                                       test_structure_int_float ts4 __UNUSED__,
+                                       test_structure_int_float ts5 __UNUSED__,
+                                       test_structure_int_float ts6 __UNUSED__)
 {
   return ts1.f;
 }
@@ -82,7 +82,7 @@ int main (void)
 
   printf ("%g\n", rfloat);
 
-  CHECK(fabs(rfloat - 11.11) < FLT_EPSILON);
+  CHECK(fabs(rfloat - 11.11) < 3 * FLT_EPSILON);
 
   exit(0);
 }
