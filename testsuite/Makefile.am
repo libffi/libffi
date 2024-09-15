@@ -31,6 +31,7 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.call/struct9.c libffi.call/struct_by_value_2.c libffi.call/struct_by_value_3.c \
 	libffi.call/struct_by_value_3f.c libffi.call/struct_by_value_4.c libffi.call/struct_by_value_4f.c \
 	libffi.call/struct_by_value_big.c libffi.call/struct_by_value_small.c libffi.call/struct_return_2H.c \
+  libffi.call/struct_int_float.c \
 	libffi.call/struct_return_8H.c libffi.call/uninitialized.c libffi.call/va_1.c \
 	libffi.call/va_2.c libffi.call/va_3.c libffi.call/va_struct1.c \
 	libffi.call/va_struct2.c libffi.call/va_struct3.c libffi.call/callback.c \
