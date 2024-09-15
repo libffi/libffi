@@ -54,35 +54,35 @@ int main (void)
   values[4] = &ts_arg[4];
   args[5] = &ts_type;
   values[5] = &ts_arg[5];
-  
+
   /* Initialize the cif */
   CHECK(ffi_prep_cif(&cif, ABI_NUM, 6, &ffi_type_float, args) == FFI_OK);
-  
+
   ts_arg[0].i = 1;
-  ts_arg[0].f = 1.11f;
+  ts_arg[0].f = 11.11f;
   ts_arg[1].i = 2;
-  ts_arg[1].f = 2.22f;
+  ts_arg[1].f = 22.22f;
   ts_arg[2].i = 3;
-  ts_arg[2].f = 3.33f;
+  ts_arg[2].f = 33.33f;
   ts_arg[3].i = 4;
-  ts_arg[3].f = 4.44f;
+  ts_arg[3].f = 44.44f;
   ts_arg[4].i = 5;
-  ts_arg[4].f = 5.55f;
+  ts_arg[4].f = 55.55f;
   ts_arg[5].i = 6;
-  ts_arg[5].f = 6.66f;
-  
+  ts_arg[5].f = 66.66f;
+
   printf ("%g\n", ts_arg[0].f);
   printf ("%g\n", ts_arg[1].f);
   printf ("%g\n", ts_arg[2].f);
   printf ("%g\n", ts_arg[3].f);
   printf ("%g\n", ts_arg[4].f);
   printf ("%g\n", ts_arg[5].f);
-  
+
   ffi_call(&cif, FFI_FN(struct_int_float), &rfloat, values);
 
   printf ("%g\n", rfloat);
-  
-  CHECK(rfloat == 1.11f);
+
+  CHECK(fabs(rfloat - 11.11) < FLT_EPSILON);
 
   exit(0);
 }
