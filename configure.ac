@@ -42,7 +42,7 @@ AC_PROG_EGREP
 LT_INIT
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_CHECK_TOOL(READELF, readelf)
+AC_CHECK_TOOLS([READELF], [readelf greadelf])
 
 # Test for 64-bit build.
 AC_CHECK_SIZEOF([size_t])
@@ -171,7 +171,7 @@ case "$TARGET" in
 	libffi_cv_as_s390_zarch=no
 	echo 'void foo(void) { bar(); bar(); }' > conftest.c
 	if $CC $CFLAGS -S conftest.c > /dev/null 2>&1; then
-	    if grep -q brasl conftest.s; then
+	    if $GREP -q brasl conftest.s; then
 	        libffi_cv_as_s390_zarch=yes
 	    fi
 	fi
@@ -277,7 +277,7 @@ if test "x$GCC" = "xyes"; then
   	libffi_cv_ro_eh_frame=yes
   	echo 'extern void foo (void); void bar (void) { foo (); foo (); }' > conftest.c
   	if $CC $CFLAGS -c -fpic -fexceptions $libffi_cv_no_lto -o conftest.o conftest.c > /dev/null 2>&1; then
-	    if $READELF -WS conftest.o 2>/dev/null | grep -q -n 'eh_frame .* WA'; then
+	    if $READELF -WS conftest.o 2>/dev/null | $GREP -q -n 'eh_frame .* WA'; then
 	        libffi_cv_ro_eh_frame=no
 	    fi
   	fi
