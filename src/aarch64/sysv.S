@@ -89,8 +89,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
    x5 closure
 */
 
-	cfi_startproc
 CNAME(ffi_call_SYSV):
+	cfi_startproc
 	BTI_C
 	PAC_CFI_WINDOW_SAVE
 	/* Sign the lr with x1 since that is the CFA which is the modifer used in auth instructions */
@@ -348,8 +348,8 @@ CNAME(ffi_closure_SYSV_V):
 #endif
 
 	.align	4
-	cfi_startproc
 CNAME(ffi_closure_SYSV):
+	cfi_startproc
 	BTI_C
 	SIGN_LR
 	PAC_CFI_WINDOW_SAVE
@@ -647,8 +647,8 @@ CNAME(ffi_go_closure_SYSV_V):
 #endif
 
 	.align	4
-	cfi_startproc
 CNAME(ffi_go_closure_SYSV):
+	cfi_startproc
 	BTI_C
 	SIGN_LR_LINUX_ONLY
 	PAC_CFI_WINDOW_SAVE
