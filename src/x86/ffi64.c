@@ -557,6 +557,9 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   return FFI_OK;
 }
 
+/* n.b. ffi_call_unix64 will steal the alloca'd `stack` variable here for use
+   _as its own stack_ - so we need to compile this function without ASAN */
+FFI_ASAN_NO_SANITIZE
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	      void **avalue, void *closure)

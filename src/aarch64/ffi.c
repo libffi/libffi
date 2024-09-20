@@ -645,7 +645,10 @@ extern void ffi_call_SYSV (struct call_context *context, void *frame,
 			   void *closure) FFI_HIDDEN;
 
 /* Call a function with the provided arguments and capture the return
-   value.  */
+   value.
+   n.b. ffi_call_SYSV will steal the alloca'd `stack` variable here for use
+   _as its own stack_ - so we need to compile this function without ASAN */
+FFI_ASAN_NO_SANITIZE
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 	      void **avalue, void *closure)
