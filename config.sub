@@ -1864,8 +1864,8 @@ case $kernel-$os-$obj in
 		;;
 	os2-emx-)
 		;;
-	ios*-simulator | tvos*-simulator | watchos*-simulator)
-		;;
+	ios*-simulator* | tvos*-simulator* | watchos*-simulator*)
+		;;	
 	*-eabi*- | *-gnueabi*-)
 		;;
 	none--*)
