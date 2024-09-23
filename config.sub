@@ -1127,7 +1127,7 @@ case $cpu-$vendor in
 	xscale-* | xscalee[bl]-*)
 		cpu=`echo "$cpu" | sed 's/^xscale/arm/'`
 		;;
-	arm64-* | aarch64le-*)
+	arm64-* | arm64_32-* | aarch64le-*)
 		cpu=aarch64
 		;;
 
@@ -1863,6 +1863,8 @@ case $kernel-$os-$obj in
 	nto-qnx*-)
 		;;
 	os2-emx-)
+		;;
+	ios*-simulator | tvos*-simulator | watchos*-simulator)
 		;;
 	*-eabi*- | *-gnueabi*-)
 		;;
