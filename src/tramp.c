@@ -27,7 +27,7 @@
    ----------------------------------------------------------------------- */
 
 #include <fficonfig.h>
-
+#include <stddef.h>
 #ifdef FFI_EXEC_STATIC_TRAMP
 
 /* -------------------------- Headers and Definitions ---------------------*/
