@@ -81,20 +81,64 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 /* Helpers for writing assembly compatible with arm ptr auth */
 #ifdef LIBFFI_ASM
 
-#ifdef HAVE_PTRAUTH
-#define SIGN_LR pacibsp
-#define SIGN_LR_WITH_REG(x) pacib lr, x
-#define AUTH_LR_AND_RET retab
-#define AUTH_LR_WITH_REG(x) autib lr, x
-#define BRANCH_AND_LINK_TO_REG blraaz
-#define BRANCH_TO_REG braaz
-#else
-#define SIGN_LR
-#define SIGN_LR_WITH_REG(x)
-#define AUTH_LR_AND_RET ret
-#define AUTH_LR_WITH_REG(x)
-#define BRANCH_AND_LINK_TO_REG blr
-#define BRANCH_TO_REG br
-#endif
+  #if defined(HAVE_ARM64E_PTRAUTH)
+  /* ARM64E ABI For Darwin */
+  #define SIGN_LR pacibsp
+  #define SIGN_LR_WITH_REG(x) pacib lr, x
+  #define AUTH_LR_AND_RET retab
+  #define AUTH_LR_WITH_REG(x) autib lr, x
+  #define BRANCH_AND_LINK_TO_REG blraaz
+  #define SIGN_LR_LINUX_ONLY
+  #define BRANCH_TO_REG braaz
+  #define PAC_CFI_WINDOW_SAVE
+  /* Linux PAC Support */
+  #elif defined(__ARM_FEATURE_PAC_DEFAULT)
+    #define GNU_PROPERTY_AARCH64_POINTER_AUTH (1 << 1)
+    #define PAC_CFI_WINDOW_SAVE cfi_window_save
+    #define TMP_REG x9
+    #define BRANCH_TO_REG br
+    #define BRANCH_AND_LINK_TO_REG blr
+	#define SIGN_LR_LINUX_ONLY SIGN_LR
+    /* Which key to sign with? */
+    #if (__ARM_FEATURE_PAC_DEFAULT & 1) == 1
+      /* Signed with A-key */
+      #define SIGN_LR            hint #25  /* paciasp */
+      #define AUTH_LR            hint #29  /* autiasp */
+    #else
+      /* Signed with B-key */
+      #define SIGN_LR            hint #27  /* pacibsp */
+      #define AUTH_LR            hint #31  /* autibsp */
+    #endif /* __ARM_FEATURE_PAC_DEFAULT */
+    #define AUTH_LR_WITH_REG(x) _auth_lr_with_reg x
+.macro _auth_lr_with_reg modifier
+    mov TMP_REG, sp
+    mov sp, \modifier
+    AUTH_LR
+    mov sp, TMP_REG
+.endm
+  #define SIGN_LR_WITH_REG(x) _sign_lr_with_reg x
+.macro _sign_lr_with_reg modifier
+    mov TMP_REG, sp
+    mov sp, \modifier
+    SIGN_LR
+    mov sp, TMP_REG
+.endm
+  #define AUTH_LR_AND_RET _auth_lr_and_ret modifier
+.macro _auth_lr_and_ret modifier
+    AUTH_LR
+    ret
+.endm
+  #undef TMP_REG
 
-#endif
+  /* No Pointer Auth */
+  #else
+    #define SIGN_LR
+    #define SIGN_LR_WITH_REG(x)
+    #define AUTH_LR_AND_RET ret
+    #define AUTH_LR_WITH_REG(x)
+    #define BRANCH_AND_LINK_TO_REG blr
+    #define SIGN_LR_LINUX_ONLY
+    #define BRANCH_TO_REG br
+    #define PAC_CFI_WINDOW_SAVE
+  #endif /* HAVE_ARM64E_PTRAUTH */
+#endif /* LIBFFI_ASM */

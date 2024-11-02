@@ -39,14 +39,14 @@
 #define LARG ldl
 #define SARG stl
 #define ADDPTR addl
-#define MOVPTR movl_s
+#define MOVPTR movl
 #else
 #define PTRS 4
 #define FLTS 4
 #define LARG ld
 #define SARG st
 #define ADDPTR add
-#define MOVPTR mov_s
+#define MOVPTR mov
 #endif
 
 #define FRAME_LEN (8 * PTRS + 16)
