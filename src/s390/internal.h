@@ -9,3 +9,14 @@
 #define FFI390_RET_IN_MEM	8
 
 #define FFI390_RET_STRUCT	(FFI390_RET_VOID | FFI390_RET_IN_MEM)
+
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+/*
+ * For the trampoline code table mapping, a mapping size of 4K is chosen.
+ */
+#define FFI390_TRAMP_MAP_SHIFT	12
+#define FFI390_TRAMP_MAP_SIZE	(1 << FFI390_TRAMP_MAP_SHIFT)
+#define FFI390_TRAMP_SIZE	16
+
+#endif

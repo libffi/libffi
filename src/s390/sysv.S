@@ -28,6 +28,7 @@
 #define LIBFFI_ASM
 #include <fficonfig.h>
 #include <ffi.h>
+#include "internal.h"
 
 	.text
 
@@ -318,6 +319,43 @@ ffi_closure_SYSV:
 	br	%r14
 	.cfi_endproc
 	.size	 ffi_closure_SYSV,.-ffi_closure_SYSV
+
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+/*
+ * Below is the definition of the trampoline code table. Each element in
+ * the code table is a trampoline.
+ */
+/*
+ * The trampoline uses the volatile register r0 and r1. As the registers are
+ * marked volatile in the ABI, the original values are not saved.
+ *
+ * The trampoline has two parameters - target code to jump to and data for
+ * the target code. The trampoline extracts the parameters from its parameter
+ * block (see tramp_table_map()). The trampoline saves the data address in r0.
+ * Finally, it jumps to the target code.
+ */
+
+	.align	FFI390_TRAMP_MAP_SIZE
+trampoline_code_table:
+	.rept	FFI390_TRAMP_MAP_SIZE / FFI390_TRAMP_SIZE
+	basr %r1,0              # load next instruction address to r1
+	lmg %r0,%r1,4094(%r1)   # load parameter block
+							# 		r0 -> data
+							# 		r1 -> code
+	br %r1                  # jump to r1/code
+	.balign	8
+	.endr
+
+	.globl trampoline_code_table
+	FFI_HIDDEN(trampoline_code_table)
+#ifdef __ELF__
+	.type	trampoline_code_table, @function
+	.size	trampoline_code_table,.- trampoline_code_table
+#endif
+	.align	FFI390_TRAMP_MAP_SIZE
+#endif /* FFI_EXEC_STATIC_TRAMP */
+
 #endif /* !s390x */
 
 #if defined __ELF__ && defined __linux__
