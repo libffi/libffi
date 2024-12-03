@@ -1,3 +1,9 @@
+> [!IMPORTANT]
+> This repo is a soft fork of `libffi` for packaging with [Crystal releases](https://github.com/crystal-lang/crystal/)
+> for Windows.
+> It's intended to track the latest releases of the upstream repository
+> at https://github.com/libffi/libffi only adding support for CMake.
+
 Status
 ======
 
