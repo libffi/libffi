@@ -1,0 +1,23 @@
+[constants]
+host = '@HOST@'
+ndk_path = '@ANDROID_NDK_ROOT@'
+api_level = '@ANDROID_API_LEVEL@'
+toolchain = ndk_path / 'toolchains/llvm/prebuilt/linux-x86_64'
+bin = toolchain / 'bin'
+
+[host_machine]
+system = 'android'
+cpu_family = '@CPU_FAMILY@'
+cpu = '@CPU@'
+endian = 'little'
+
+[properties]
+sys_root = toolchain / 'sysroot'
+c_ld = 'gold'
+cpp_ld = 'gold'
+
+[binaries]
+c =     bin / host + api_level + '-clang'
+cpp =   bin / host + api_level + '-clang++'
+ar =    bin / 'llvm-ar'
+strip = bin / 'llvm-strip'
