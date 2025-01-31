@@ -80,7 +80,7 @@ int main (void)
   /* { dg-output "1 32765 127 -128: 32765" } */
   printf("res: %d\n", (signed short)res_call);
   /* { dg-output "\nres: 32765" } */
-  CHECK(res_call == 32765);
+  CHECK((signed short)res_call == 32765);
 
   CHECK(ffi_prep_closure_loc(pcl, &cif, test_func_gn, NULL, code)  == FFI_OK);
 
