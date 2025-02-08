@@ -35,7 +35,7 @@ MAKEOVERRIDES=
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libffi.pc
 
-toolexeclib_LTLIBRARIES = libffi.la
+lib_LTLIBRARIES = libffi.la
 noinst_LTLIBRARIES = libffi_convenience.la
 
 libffi_la_SOURCES = src/prep_cif.c src/types.c \
