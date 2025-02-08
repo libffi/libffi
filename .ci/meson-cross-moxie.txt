@@ -1,0 +1,14 @@
+[host_machine]
+system = 'linux'
+cpu_family = 'moxie'
+cpu = 'moxie'
+endian = 'little'
+
+[built-in options]
+c_link_args = '-Tsim.ld'
+cpp_link_args = '-Tsim.ld'
+
+[binaries]
+c = 'moxie-elf-gcc'
+cpp = 'moxie-elf-g++'
+exe_wrapper = 'moxie-elf-run'
