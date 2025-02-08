@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   prep_cif.c - Copyright (c) 2011, 2012, 2021  Anthony Green
+   prep_cif.c - Copyright (c) 2011, 2012, 2021, 2025  Anthony Green
                 Copyright (c) 1996, 1998, 2007  Red Hat, Inc.
                 Copyright (c) 2022 Oracle and/or its affiliates.
 
@@ -158,9 +158,6 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
 #endif
 #ifdef XTENSA
       && (cif->rtype->size > 16)
-#endif
-#ifdef NIOS2
-      && (cif->rtype->size > 8)
 #endif
      )
     bytes = STACK_ARG_SIZE(sizeof(void*));

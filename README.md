@@ -76,7 +76,6 @@ tested:
 | MIPS            | RTEMS            | GCC                     |
 | MIPS64          | Linux            | GCC                     |
 | Moxie           | Bare metal       | GCC                     |
-| Nios II         | Linux            | GCC                     |
 | OpenRISC        | Linux            | GCC                     |
 | PowerPC 32-bit  | AIX              | GCC                     |
 | PowerPC 32-bit  | AIX              | IBM XL C                |
@@ -209,6 +208,7 @@ See the git log for details at http://github.com/libffi/libffi.
         Fix x86-64 calls with 6 GP registers and some SSE registers.
         Miscellaneous fixes for ARC and Darwin ARM64.
         Fix OpenRISC or1k and Solaris 10 builds.
+        Remove nios2 port.
 
     3.4.6 Feb-18-2024
         Fix long double regression on mips64 and alpha.
