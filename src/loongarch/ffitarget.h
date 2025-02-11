@@ -50,20 +50,33 @@ typedef enum ffi_abi
   FFI_LP64S,
   FFI_LP64F,
   FFI_LP64D,
+  FFI_ILP32S,
+  FFI_ILP32F,
+  FFI_ILP32D,
   FFI_LAST_ABI,
 
-#if defined(__loongarch64)
-#if defined(__loongarch_soft_float)
-  FFI_DEFAULT_ABI = FFI_LP64S
-#elif defined(__loongarch_single_float)
-  FFI_DEFAULT_ABI = FFI_LP64F
-#elif defined(__loongarch_double_float)
-  FFI_DEFAULT_ABI = FFI_LP64D
+#if __loongarch_grlen == 64
+  #if defined(__loongarch_soft_float)
+    FFI_DEFAULT_ABI = FFI_LP64S
+  #elif defined(__loongarch_single_float)
+    FFI_DEFAULT_ABI = FFI_LP64F
+  #elif defined(__loongarch_double_float)
+    FFI_DEFAULT_ABI = FFI_LP64D
+  #else
+    #error unsupported LoongArch floating-point ABI
+  #endif
+#elif __loongarch_grlen == 32
+  #if defined(__loongarch_soft_float)
+    FFI_DEFAULT_ABI = FFI_ILP32S
+  #elif defined(__loongarch_single_float)
+    FFI_DEFAULT_ABI = FFI_ILP32F
+  #elif defined(__loongarch_double_float)
+    FFI_DEFAULT_ABI = FFI_ILP32D
+  #else
+    #error unsupported LoongArch floating-point ABI
+  #endif
 #else
-#error unsupported LoongArch floating-point ABI
-#endif
-#else
-#error unsupported LoongArch base architecture
+  #error unsupported LoongArch base architecture
 #endif
 } ffi_abi;
 
