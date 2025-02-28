@@ -32,16 +32,14 @@
 #error "Please do not include ffitarget.h directly into your source.  Use ffi.h instead."
 #endif
 
-#ifdef __linux__
-# include <asm/sgidefs.h>
-#elif defined(__rtems__)
+#ifdef __rtems__
 /*
  * Subprogram calling convention - copied from sgidefs.h
  */
 #define _MIPS_SIM_ABI32		1
 #define _MIPS_SIM_NABI32	2
 #define _MIPS_SIM_ABI64		3
-#elif !defined(__OpenBSD__) && !defined(__FreeBSD__)
+#elif !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__linux__)
 # include <sgidefs.h>
 #endif
 
