@@ -63,7 +63,7 @@ struct call_context
 #if FFI_EXEC_TRAMPOLINE_TABLE
 
 #ifdef __MACH__
-#ifdef HAVE_PTRAUTH
+#ifdef HAVE_ARM64E_PTRAUTH
 #include <ptrauth.h>
 #endif
 #include <mach/vm_param.h>
@@ -645,7 +645,10 @@ extern void ffi_call_SYSV (struct call_context *context, void *frame,
 			   void *closure) FFI_HIDDEN;
 
 /* Call a function with the provided arguments and capture the return
-   value.  */
+   value.
+   n.b. ffi_call_SYSV will steal the alloca'd `stack` variable here for use
+   _as its own stack_ - so we need to compile this function without ASAN */
+FFI_ASAN_NO_SANITIZE
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 	      void **avalue, void *closure)
@@ -682,7 +685,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
   else if (flags & AARCH64_RET_NEED_COPY)
     rsize = 16;
 
-  /* Allocate consectutive stack for everything we'll need.
+  /* Allocate consecutive stack for everything we'll need.
      The frame uses 40 bytes for: lr, fp, rvalue, flags, sp */
   context = alloca (sizeof(struct call_context) + stack_bytes + 40 + rsize);
   stack = context + 1;
@@ -877,7 +880,7 @@ ffi_prep_closure_loc (ffi_closure *closure,
 
 #if FFI_EXEC_TRAMPOLINE_TABLE
 # ifdef __MACH__
-#  ifdef HAVE_PTRAUTH
+#  ifdef HAVE_ARM64E_PTRAUTH
   codeloc = ptrauth_auth_data(codeloc, ptrauth_key_function_pointer, 0);
 #  endif
   void **config = (void **)((uint8_t *)codeloc - PAGE_MAX_SIZE);

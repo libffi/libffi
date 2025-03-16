@@ -7,7 +7,7 @@
 Status
 ======
 
-libffi-3.4.6 was released on February 18, 2024.  Check the libffi web
+libffi-3.4.7 was released on February 8, 2025.  Check the libffi web
 page for updates: <URL:http://sourceware.org/libffi/>.
 
 
@@ -82,7 +82,6 @@ tested:
 | MIPS            | RTEMS            | GCC                     |
 | MIPS64          | Linux            | GCC                     |
 | Moxie           | Bare metal       | GCC                     |
-| Nios II         | Linux            | GCC                     |
 | OpenRISC        | Linux            | GCC                     |
 | PowerPC 32-bit  | AIX              | GCC                     |
 | PowerPC 32-bit  | AIX              | IBM XL C                |
@@ -206,6 +205,16 @@ History
 =======
 
 See the git log for details at http://github.com/libffi/libffi.
+
+    3.4.7 Feb-8-2024
+        Add static trampoline support for Linux on s390x.
+        Fix BTI support for ARM64.
+        Support pointer authentication for ARM64.
+        Fix ASAN compatibility.
+        Fix x86-64 calls with 6 GP registers and some SSE registers.
+        Miscellaneous fixes for ARC and Darwin ARM64.
+        Fix OpenRISC or1k and Solaris 10 builds.
+        Remove nios2 port.
 
     3.4.6 Feb-18-2024
         Fix long double regression on mips64 and alpha.

@@ -68,7 +68,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #define BTI_J hint #36
 /*
  * The ELF Notes section needs to indicate if BTI is supported, as the first ELF loaded that doesn't
- * declare this support disables it for the whole process.
+ * declare this support disables it for memory region containing the loaded library.
  */
 # define GNU_PROPERTY_AARCH64_BTI (1 << 0)         /* Has Branch Target Identification */
 	.text
@@ -89,30 +89,30 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
    x5 closure
 */
 
-	cfi_startproc
 CNAME(ffi_call_SYSV):
+	cfi_startproc
 	BTI_C
-	/* Sign the lr with x1 since that is where it will be stored */
+	PAC_CFI_WINDOW_SAVE
+	/* Sign the lr with x1 since that is the CFA which is the modifer used in auth instructions */
 	SIGN_LR_WITH_REG(x1)
 
-	/* Use a stack frame allocated by our caller.  */
-#if defined(HAVE_PTRAUTH) && defined(__APPLE__)
+#if defined(HAVE_ARM64E_PTRAUTH) && defined(__APPLE__)
 	/* darwin's libunwind assumes that the cfa is the sp and that's the data
 	 * used to sign the lr.  In order to allow unwinding through this
 	 * function it is necessary to point the cfa at the signing register.
 	 */
 	cfi_def_cfa(x1, 0);
-#else
-	cfi_def_cfa(x1, 40);
 #endif
+	/* Use a stack frame allocated by our caller.  */
 	stp	x29, x30, [x1]
+	cfi_def_cfa_register(x1)
+	cfi_rel_offset (x29, 0)
+	cfi_rel_offset (x30, 8)
 	mov	x9, sp
 	str	x9, [x1, #32]
 	mov	x29, x1
-	mov	sp, x0
 	cfi_def_cfa_register(x29)
-	cfi_rel_offset (x29, 0)
-	cfi_rel_offset (x30, 8)
+	mov	sp, x0
 
 	mov	x9, x2			/* save fn */
 	mov	x8, x3			/* install structure return */
@@ -326,6 +326,7 @@ CNAME(ffi_closure_SYSV_V):
 	cfi_startproc
 	BTI_C
 	SIGN_LR
+	PAC_CFI_WINDOW_SAVE
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
 	cfi_rel_offset (x29, 0)
@@ -347,10 +348,11 @@ CNAME(ffi_closure_SYSV_V):
 #endif
 
 	.align	4
-	cfi_startproc
 CNAME(ffi_closure_SYSV):
+	cfi_startproc
 	BTI_C
 	SIGN_LR
+	PAC_CFI_WINDOW_SAVE
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
 	cfi_rel_offset (x29, 0)
@@ -527,6 +529,7 @@ L(do_closure):
 #if defined(FFI_EXEC_STATIC_TRAMP)
 	.align 4
 CNAME(ffi_closure_SYSV_V_alt):
+	BTI_C
 	/* See the comments above trampoline_code_table. */
 	ldr	x17, [sp, #8]			/* Load closure in x17 */
 	add	sp, sp, #16			/* Restore the stack */
@@ -541,6 +544,7 @@ CNAME(ffi_closure_SYSV_V_alt):
 
 	.align 4
 CNAME(ffi_closure_SYSV_alt):
+	BTI_C
 	/* See the comments above trampoline_code_table. */
 	ldr	x17, [sp, #8]			/* Load closure in x17 */
 	add	sp, sp, #16			/* Restore the stack */
@@ -643,9 +647,11 @@ CNAME(ffi_go_closure_SYSV_V):
 #endif
 
 	.align	4
-	cfi_startproc
 CNAME(ffi_go_closure_SYSV):
+	cfi_startproc
 	BTI_C
+	SIGN_LR_LINUX_ONLY
+	PAC_CFI_WINDOW_SAVE
 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
 	cfi_rel_offset (x29, 0)

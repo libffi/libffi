@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-command -v emcc >/dev/null 2>&1 || {
-  echo >&2 "emsdk could not be found.  Aborting."
+
+if ! [ -x "$(command -v emcc)" ]; then
+  echo "Error: emcc could not be found." >&2
   exit 1
-}
+fi
 
 set -e
 
@@ -13,38 +14,20 @@ TARGET=$SOURCE_DIR/target
 mkdir -p "$TARGET"
 
 # Define default arguments
-
-# JS BigInt to Wasm i64 integration, disabled by default
-# This needs to test false if there exists an environment variable called
-# WASM_BIGINT whose contents are empty. Don't use +x.
-if [ -n "${WASM_BIGINT}" ]; then
-  WASM_BIGINT=true
-else
-  WASM_BIGINT=false
-fi
+DEBUG=false
 
 # Parse arguments
 while [ $# -gt 0 ]; do
   case $1 in
-  --wasm-bigint) WASM_BIGINT=true ;;
-  --debug) DEBUG=true ;;
-  *)
-    echo "ERROR: Unknown parameter: $1" >&2
-    exit 1
-    ;;
+    --debug) DEBUG=true ;;
+    *) echo "ERROR: Unknown parameter: $1" >&2; exit 1 ;;
   esac
   shift
 done
 
 # Common compiler flags
 export CFLAGS="-O3 -fPIC"
-if [ "$WASM_BIGINT" = "true" ]; then
-  # We need to detect WASM_BIGINT support at compile time
-  export CFLAGS+=" -DWASM_BIGINT"
-fi
-if [ "$DEBUG" = "true" ]; then
-  export CFLAGS+=" -DDEBUG_F"
-fi
+if [ "$DEBUG" = "true" ]; then export CFLAGS+=" -DDEBUG_F"; fi
 export CXXFLAGS="$CFLAGS"
 
 # Build paths

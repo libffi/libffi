@@ -55,7 +55,7 @@ noinst_HEADERS = src/aarch64/ffitarget.h src/aarch64/internal.h		\
 	src/m32r/ffitarget.h src/m68k/ffitarget.h			\
 	src/m88k/ffitarget.h src/metag/ffitarget.h			\
 	src/microblaze/ffitarget.h src/mips/ffitarget.h			\
-	src/moxie/ffitarget.h src/nios2/ffitarget.h			\
+	src/moxie/ffitarget.h \
 	src/or1k/ffitarget.h src/pa/ffitarget.h				\
 	src/powerpc/ffitarget.h src/powerpc/asm.h			\
 	src/powerpc/ffi_powerpc.h src/riscv/ffitarget.h			\
@@ -80,7 +80,7 @@ EXTRA_libffi_la_SOURCES = src/aarch64/ffi.c src/aarch64/sysv.S		\
 	src/metag/ffi.c src/metag/sysv.S src/microblaze/ffi.c		\
 	src/microblaze/sysv.S src/mips/ffi.c src/mips/o32.S		\
 	src/mips/n32.S src/moxie/ffi.c src/moxie/eabi.S			\
-	src/nios2/ffi.c src/nios2/sysv.S src/or1k/ffi.c			\
+	src/or1k/ffi.c			\
 	src/or1k/sysv.S src/pa/ffi.c src/pa/linux.S src/pa/hpux32.S	\
 	src/pa/hpux64.S src/powerpc/ffi.c src/powerpc/ffi_sysv.c	\
 	src/powerpc/ffi_linux64.c src/powerpc/sysv.S			\

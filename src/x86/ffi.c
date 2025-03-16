@@ -118,7 +118,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       break;
     case FFI_TYPE_STRUCT:
       {
-#ifdef X86_WIN32
+#if defined(X86_WIN32) || defined(X86_DARWIN)
         size_t size = cif->rtype->size;
         if (size == 1)
           flags = X86_RET_STRUCT_1B;
@@ -270,6 +270,9 @@ extern void FFI_DECLARE_FASTCALL ffi_call_i386(struct call_frame *, char *) FFI_
 #if defined(_MSC_VER)
 #pragma runtime_checks("s", off)
 #endif
+/* n.b. ffi_call_unix64 will steal the alloca'd `stack` variable here for use
+   _as its own stack_ - so we need to compile this function without ASAN */
+FFI_ASAN_NO_SANITIZE
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	      void **avalue, void *closure)

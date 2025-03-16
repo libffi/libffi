@@ -185,11 +185,6 @@ case "${host}" in
 	TARGET=MIPS; TARGETDIR=mips
 	;;
 
-  nios2*-linux*)
-	TARGET=NIOS2; TARGETDIR=nios2
-	SOURCES="ffi.c sysv.S"
-	;;
-
   or1k*-*-*)
 	TARGET=OR1K; TARGETDIR=or1k
 	SOURCES="ffi.c sysv.S"

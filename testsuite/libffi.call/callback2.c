@@ -7,9 +7,9 @@
 /* { dg-do run } */
 #include "ffitest.h"
 
-int i=5;
+static int i=5;
 
-void callback(void) { i++; }
+static void callback(void) { i++; }
 
 typedef struct
 {

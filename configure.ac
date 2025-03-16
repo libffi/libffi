@@ -2,7 +2,7 @@ dnl Process this with autoconf to create configure
 
 AC_PREREQ([2.71])
 
-AC_INIT([libffi],[3.4.6],[http://github.com/libffi/libffi/issues])
+AC_INIT([libffi],[3.4.7],[http://github.com/libffi/libffi/issues])
 AC_CONFIG_HEADERS([fficonfig.h])
 
 AC_CANONICAL_TARGET
@@ -42,7 +42,7 @@ AC_PROG_EGREP
 LT_INIT
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_CHECK_TOOL(READELF, readelf)
+AC_CHECK_TOOLS([READELF], [readelf greadelf])
 
 # Test for 64-bit build.
 AC_CHECK_SIZEOF([size_t])
@@ -171,7 +171,7 @@ case "$TARGET" in
 	libffi_cv_as_s390_zarch=no
 	echo 'void foo(void) { bar(); bar(); }' > conftest.c
 	if $CC $CFLAGS -S conftest.c > /dev/null 2>&1; then
-	    if grep -q brasl conftest.s; then
+	    if $GREP -q brasl conftest.s; then
 	        libffi_cv_as_s390_zarch=yes
 	    fi
 	fi
@@ -189,17 +189,17 @@ AC_CACHE_CHECK([whether compiler supports pointer authentication],
    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
 #ifdef __clang__
 # if __has_feature(ptrauth_calls)
-#  define HAVE_PTRAUTH 1
+#  define HAVE_ARM64E_PTRAUTH 1
 # endif
 #endif
 
-#ifndef HAVE_PTRAUTH
+#ifndef HAVE_ARM64E_PTRAUTH
 # error Pointer authentication not supported
 #endif
 		   ]])],[libffi_cv_as_ptrauth=yes],[libffi_cv_as_ptrauth=no])
 ])
 if test "x$libffi_cv_as_ptrauth" = xyes; then
-    AC_DEFINE(HAVE_PTRAUTH, 1,
+    AC_DEFINE(HAVE_ARM64E_PTRAUTH, 1,
 	      [Define if your compiler supports pointer authentication.])
 fi
 
@@ -277,7 +277,7 @@ if test "x$GCC" = "xyes"; then
   	libffi_cv_ro_eh_frame=yes
   	echo 'extern void foo (void); void bar (void) { foo (); foo (); }' > conftest.c
   	if $CC $CFLAGS -c -fpic -fexceptions $libffi_cv_no_lto -o conftest.o conftest.c > /dev/null 2>&1; then
-	    if $READELF -WS conftest.o 2>/dev/null | grep -q -n 'eh_frame .* WA'; then
+	    if $READELF -WS conftest.o 2>/dev/null | $GREP -q -n 'eh_frame .* WA'; then
 	        libffi_cv_ro_eh_frame=no
 	    fi
   	fi
@@ -382,7 +382,7 @@ case "$target" in
                    [Define this if you want statically defined trampolines])
        fi
      ;;
-     *arm*-*-linux-* | aarch64*-*-linux-* | i*86-*-linux-* | x86_64-*-linux-* | loongarch*-*-linux-*)
+     *arm*-*-linux-* | aarch64*-*-linux-* | i*86-*-linux-* | x86_64-*-linux-* | loongarch*-*-linux-* | s390x*-linux-*)
        AC_DEFINE(FFI_EXEC_STATIC_TRAMP, 1,
                  [Define this if you want statically defined trampolines])
      ;;

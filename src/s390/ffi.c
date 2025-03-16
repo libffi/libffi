@@ -32,6 +32,7 @@
 #include <ffi_common.h>
 #include <stdint.h>
 #include "internal.h"
+#include <tramp.h>
 
 /*====================== End of Includes =============================*/
 
@@ -720,16 +721,30 @@ ffi_prep_closure_loc (ffi_closure *closure,
 #endif
     0x07f1			/* br %r1 */
   };
-
+  void (*dest)(void);
   unsigned long *tramp = (unsigned long *)&closure->tramp;
 
   if (cif->abi != FFI_SYSV)
     return FFI_BAD_ABI;
 
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+  if (ffi_tramp_is_present(closure))
+    {
+      /* Initialize the static trampoline's parameters. */
+      dest = ffi_closure_SYSV;
+      ffi_tramp_set_parms (closure->ftramp, dest, closure);
+      goto out;
+    }
+#endif
+
   memcpy (tramp, template, sizeof(template));
   tramp[2] = (unsigned long)codeloc;
   tramp[3] = (unsigned long)&ffi_closure_SYSV;
 
+#if defined(FFI_EXEC_STATIC_TRAMP)
+out:
+#endif
   closure->cif = cif;
   closure->fun = fun;
   closure->user_data = user_data;
@@ -754,3 +769,15 @@ ffi_prep_go_closure (ffi_go_closure *closure, ffi_cif *cif,
 
   return FFI_OK;
 }
+
+#if defined(FFI_EXEC_STATIC_TRAMP)
+void *
+ffi_tramp_arch (size_t *tramp_size, size_t *map_size)
+{
+  extern void *trampoline_code_table;
+
+  *tramp_size = FFI390_TRAMP_SIZE;
+  *map_size = FFI390_TRAMP_MAP_SIZE;
+  return &trampoline_code_table;
+}
+#endif

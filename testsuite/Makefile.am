@@ -8,7 +8,7 @@ CLEANFILES = *.exe core* *.log *.sum
 
 EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	emscripten/node-tests.sh emscripten/test.html emscripten/test_libffi.py \
-  emscripten/build-tests.sh lib/libffi.exp lib/target-libpath.exp \
+	emscripten/build-tests.sh lib/libffi.exp lib/target-libpath.exp \
 	lib/wrapper.exp libffi.bhaible/Makefile libffi.bhaible/README \
 	libffi.bhaible/alignof.h libffi.bhaible/bhaible.exp libffi.bhaible/test-call.c \
 	libffi.bhaible/test-callback.c libffi.bhaible/testcases.c libffi.call/align_mixed.c \
@@ -31,6 +31,7 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.call/struct9.c libffi.call/struct_by_value_2.c libffi.call/struct_by_value_3.c \
 	libffi.call/struct_by_value_3f.c libffi.call/struct_by_value_4.c libffi.call/struct_by_value_4f.c \
 	libffi.call/struct_by_value_big.c libffi.call/struct_by_value_small.c libffi.call/struct_return_2H.c \
+  libffi.call/struct_int_float.c \
 	libffi.call/struct_return_8H.c libffi.call/uninitialized.c libffi.call/va_1.c \
 	libffi.call/va_2.c libffi.call/va_3.c libffi.call/va_struct1.c \
 	libffi.call/va_struct2.c libffi.call/va_struct3.c libffi.call/callback.c \
