@@ -12,7 +12,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-static int fn(unsigned char a, unsigned short b, unsigned int c, unsigned long d)
+static int ABI_ATTR fn(unsigned char a, unsigned short b, unsigned int c, unsigned long d)
 {
 	return (int)(a + b + c + d);
 }
