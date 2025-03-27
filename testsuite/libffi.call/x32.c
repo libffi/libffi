@@ -8,7 +8,7 @@
 
 #include "ffitest.h"
 
-static int fn(int *a)
+static int ABI_ATTR fn(int *a)
 {
 	if (a)
 		return *a;
