@@ -27,6 +27,7 @@
 #define LIBFFI_ASM
 #include <fficonfig.h>
 #include <ffi.h>
+#include "internal.h"
 
 	.file	"linux64_closure.S"
 
@@ -559,7 +560,53 @@ ffi_go_closure_linux64:
 	.size	.ffi_go_closure_linux64,.-.ffi_go_closure_linux64
 #  endif
 # endif
+
+#ifdef FFI_EXEC_STATIC_TRAMP
+	.text
+	.align PPC_TRAMP_MAP_SHIFT
+	FFI_HIDDEN (trampoline_code_table)
+	.globl  trampoline_code_table
+# if _CALL_ELF == 2
+	.type   trampoline_code_table,@function
+trampoline_code_table:
+	.localentry trampoline_code_table,.-trampoline_code_table
+# else
+	.section	".opd","aw"
+	.align  3
+trampoline_code_table:
+	.quad   .L.trampoline_code_table,.TOC.@tocbase,0
+	.type   trampoline_code_table,@function
+	.text
+.L.trampoline_code_table:
+# endif
+	.rept	PPC_TRAMP_MAP_SIZE / PPC_TRAMP_SIZE
+#ifdef __PCREL__
+	pla	%r2,PPC_TRAMP_MAP_SIZE
+	ld	%r11,0(%r2)
+	ld	%r12,8(%r2)
+	mtctr	%r12
+	bctr
+#else
+	mflr	%r0
+	bcl	20,31,$+4
+	mflr	%r11
+	addis	%r11,%r11,PPC_TRAMP_MAP_SIZE@ha
+	mtlr	%r0
+	ld	%r12,(PPC_TRAMP_MAP_SIZE+0)@l(%r11)
+	mtctr	%r12
+	ld	%r11,(PPC_TRAMP_MAP_SIZE-8)@l(%r11)
+	bctr
+	nop
 #endif
+	.endr
+	.align PPC_TRAMP_MAP_SHIFT
+#if _CALL_ELF == 2
+	.size	trampoline_code_table,.-trampoline_code_table
+#else
+	.size	trampoline_code_table,.-.L.trampoline_code_table
+#endif
+#endif /* FFI_EXEC_STATIC_TRAMP */
+#endif /* POWERPC64 */
 
 #if (defined __ELF__ && defined __linux__) || _CALL_ELF == 2
 	.section	.note.GNU-stack,"",@progbits
