@@ -31,6 +31,8 @@
 #include "ffi.h"
 #include "ffi_common.h"
 #include "ffi_powerpc.h"
+#include "internal.h"
+#include <tramp.h>
 
 #if HAVE_LONG_DOUBLE_VARIANT
 /* Adjust ffi_type_longdouble.  */
@@ -173,3 +175,14 @@ ffi_prep_go_closure (ffi_go_closure *closure,
   closure->fun = fun;
   return FFI_OK;
 }
+
+#ifdef FFI_EXEC_STATIC_TRAMP
+void *
+ffi_tramp_arch (size_t *tramp_size, size_t *map_size)
+{
+  extern void *trampoline_code_table;
+  *tramp_size = PPC_TRAMP_SIZE;
+  *map_size = PPC_TRAMP_MAP_SIZE;
+  return &trampoline_code_table;
+}
+#endif
