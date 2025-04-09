@@ -1,7 +1,7 @@
 Status
 ======
 
-libffi-3.4.7 was released on February 8, 2025.  Check the libffi web
+libffi-3.4.8 was released on April 9, 2025.  Check the libffi web
 page for updates: <URL:http://sourceware.org/libffi/>.
 
 
@@ -200,7 +200,15 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
-    3.4.7 Feb-8-2024
+    3.4.8 Apr-9-2025
+        Add static trampoline support for powerpc-linux (32-bit SYSV BE),
+          powerpc64-linux (64-bit ELFv1 BE) and
+          powerpc64le-linux (64-bit ELFv2 LE)
+        Various x86-64 bug fixes (x32 ABI and improper memory access for
+          small argument calls).
+        Fix to enable pointer authentication for aarch64.
+
+    3.4.7 Feb-8-2025
         Add static trampoline support for Linux on s390x.
         Fix BTI support for ARM64.
         Support pointer authentication for ARM64.
