@@ -183,6 +183,12 @@ ffi_tramp_arch (size_t *tramp_size, size_t *map_size)
   extern void *trampoline_code_table;
   *tramp_size = PPC_TRAMP_SIZE;
   *map_size = PPC_TRAMP_MAP_SIZE;
+#ifdef _CALL_AIX
+  /* The caller wants the entry point address of the trampoline code,
+     not the address of the function descriptor.  */
+  return *(void **)trampoline_code_table;
+#else
   return &trampoline_code_table;
+#endif
 }
 #endif
