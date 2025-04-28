@@ -1,3 +1,5 @@
+#include <stdatomic.h>
+
 /*
 Copyright 2023 Doug Lea
 
@@ -2632,7 +2634,7 @@ struct malloc_state {
   mchunkptr  top;
   size_t     trim_check;
   size_t     release_checks;
-  size_t     magic;
+  atomic_size_t     magic;
   mchunkptr  smallbins[(NSMALLBINS+1)*2];
   tbinptr    treebins[NTREEBINS];
   size_t     footprint;
@@ -2670,7 +2672,7 @@ struct malloc_params {
 static struct malloc_params mparams;
 
 /* Ensure mparams initialized */
-#define ensure_initialization() (void)(mparams.magic != 0 || init_mparams())
+#define ensure_initialization() (void)(atomic_load_explicit(&mparams.magic, memory_order_acquire) != 0 || init_mparams())
 
 #if !ONLY_MSPACES
 
@@ -3149,7 +3151,7 @@ static int init_mparams(void) {
 #endif
 
   ACQUIRE_MALLOC_GLOBAL_LOCK();
-  if (mparams.magic == 0) {
+  if (atomic_load_explicit(&mparams.magic, memory_order_acquire) == 0) {
     size_t magic;
     size_t psize;
     size_t gsize;
@@ -3223,7 +3225,7 @@ static int init_mparams(void) {
       magic |= (size_t)8U;    /* ensure nonzero */
       magic &= ~(size_t)7U;   /* improve chances of fault for bad values */
       /* Until memory modes commonly available, use volatile-write */
-      (*(volatile size_t *)(&(mparams.magic))) = magic;
+      atomic_store_explicit(&mparams.magic, magic, memory_order_release);
     }
   }
 
