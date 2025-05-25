@@ -135,7 +135,7 @@ compiler.
 
 If you're building libffi directly from git hosted sources, configure
 won't exist yet; run ./autogen.sh first.  This will require that you
-install autoconf, automake and libtool.
+install autoconf, automake, libtool and texinfo.
 
 You may want to tell configure where to install the libffi library and
 header files. To do that, use the ``--prefix`` configure switch.  Libffi
