@@ -1,0 +1,12 @@
+[host_machine]
+system = 'linux'
+cpu_family = '@CPU_FAMILY@'
+cpu = '@CPU@'
+endian = 'little'
+
+[properties]
+needs_exe_wrapper = false
+
+[binaries]
+c = @CC@
+cpp = @CXX@
