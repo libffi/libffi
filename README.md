@@ -200,6 +200,12 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
+    Next Version TBD
+        Add FFI_VERSION_STRING and FFI_VERSION_NUMBER macros, as well
+          as ffi_get_version() and ffi_get_version_number() functions.
+        Fix closures on powerpc64-linux when statically linking.
+        Mark the PA stack as non-executable.
+
     3.4.8 Apr-9-2025
         Add static trampoline support for powerpc-linux (32-bit SYSV BE),
           powerpc64-linux (64-bit ELFv1 BE) and
