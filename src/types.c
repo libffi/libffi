@@ -31,6 +31,18 @@
 #include <ffi.h>
 #include <ffi_common.h>
 
+/* Return a version string. */
+const char *ffi_get_version (void)
+{
+  return FFI_VERSION_STRING;
+}
+
+/* Return the version as an unsigned long value: (x * 10000 + y * 100 + z) */
+unsigned long ffi_get_version_number (void)
+{
+  return FFI_VERSION_NUMBER;
+}
+
 /* Type definitions */
 
 #define FFI_TYPEDEF(name, type, id, maybe_const)\

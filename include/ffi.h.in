@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------*-C-*-
    libffi @VERSION@
-     - Copyright (c) 2011, 2014, 2019, 2021, 2022, 2024 Anthony Green
+     - Copyright (c) 2011, 2014, 2019, 2021, 2022, 2024, 2025 Anthony Green
      - Copyright (c) 1996-2003, 2007, 2008 Red Hat, Inc.
 
    Permission is hereby granted, free of charge, to any person
@@ -52,6 +52,19 @@ extern "C" {
 /* Specify which architecture libffi is configured for. */
 #ifndef @TARGET@
 #define @TARGET@
+#endif
+
+/* ---- Version API ------------------------------------------------------ */
+
+#define FFI_VERSION_STRING "@FFI_VERSION_STRING@"
+#define FFI_VERSION_NUMBER @FFI_VERSION_NUMBER@
+
+#ifndef LIBFFI_ASM
+/* Return a version string. */
+const char *ffi_get_version (void);
+
+/* Return the version as an unsigned long value: (x * 10000 + y * 100 + z) */
+unsigned long ffi_get_version_number (void);
 #endif
 
 /* ---- System configuration information --------------------------------- */

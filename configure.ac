@@ -1,9 +1,14 @@
 dnl Process this with autoconf to create configure
 
-AC_PREREQ([2.71])
+AC_PREREQ([2.72])
 
-AC_INIT([libffi],[3.4.8],[http://github.com/libffi/libffi/issues])
+AC_INIT([libffi],[3.5.0],[http://github.com/libffi/libffi/issues])
 AC_CONFIG_HEADERS([fficonfig.h])
+
+FFI_VERSION_STRING="3.5.0"
+FFI_VERSION_NUMBER=30500
+AC_SUBST(FFI_VERSION_STRING)
+AC_SUBST(FFI_VERSION_NUMBER)
 
 AC_CANONICAL_TARGET
 target_alias=${target_alias-$host_alias}

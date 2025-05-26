@@ -18,7 +18,7 @@
 This manual is for libffi, a portable foreign function interface
 library.
 
-Copyright @copyright{} 2008--2024 Anthony Green and Red Hat, Inc.
+Copyright @copyright{} 2008--2025 Anthony Green and Red Hat, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -236,6 +236,19 @@ object declared as @code{short}; but if the return type is
 a larger type -- usually @code{ffi_arg}.
 @end defun
 
+@findex ffi_get_version
+@defun {const char *} ffi_get_version (void)
+Returns the library version as a string.  This string is also
+available at build time as the macro @code{FFI_VERSION_STRING}.
+@end defun
+
+@findex ffi_get_version_number
+@defun {unsigned long} ffi_get_version_number (void)
+Returns the library version as an unsigned long value where
+version ``x.y.z'' is represented as the number x*y*z.
+This number is also available at build time as the macro
+@code{FFI_VERSION_NUMBER}.
+@end defun
 
 @node Simple Example
 @section Simple Example
