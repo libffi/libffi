@@ -8,12 +8,13 @@ AC_DEFUN([GCC_AS_CFI_PSEUDO_OP],
   [ AC_LANG_PUSH([C])
     AC_COMPILE_IFELSE(
       [AC_LANG_SOURCE([[
+        #ifdef _MSC_VER
+        Nope.
+        #endif
         int foo (void)
         {
-          __asm__ (
-            ".cfi_sections\n\t"
-            ".cfi_startproc\n\t"
-            ".cfi_endproc");
+          __asm__ (".cfi_remember_state\n\t"
+                   ".cfi_restore_state\n\t");
           return 0;
         }
       ]])],
