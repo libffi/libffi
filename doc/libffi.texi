@@ -245,7 +245,7 @@ available at build time as the macro @code{FFI_VERSION_STRING}.
 @findex ffi_get_version_number
 @defun {unsigned long} ffi_get_version_number (void)
 Returns the library version as an unsigned long value where
-version ``x.y.z'' is represented as the number x*y*z.
+version ``x.y.z'' is represented as the number x*10000+y*100+z.
 This number is also available at build time as the macro
 @code{FFI_VERSION_NUMBER}.
 @end defun
