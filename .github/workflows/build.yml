@@ -13,8 +13,8 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build-sim:
-    name: ${{ matrix.HOST }} ${{ matrix.CONFIGURE_OPTIONS }} \
+  build-linux:
+    name: Linux ${{ matrix.HOST }} ${{ matrix.CONFIGURE_OPTIONS }} \
           ${{ matrix.MEVAL }} ${{ matrix.LIBFFI_TEST_OPTIMIZATION }}
 
     runs-on: ${{ matrix.runner }}
@@ -26,7 +26,7 @@ jobs:
           # ---------- existing x86-64 variants ----------
           - runner: ubuntu-latest
             HOST:  x86_64-pc-linux-gnu
-            MEVAL: 'export CC=clang CXX=clang'
+            MEVAL: 'export CC=clang CXX=clang++'
 
           - runner: ubuntu-latest
             HOST:  i386-pc-linux-gnu
@@ -43,7 +43,7 @@ jobs:
           # ---------- new native arm64 build ----------
           - runner: ubuntu-22.04-arm     # or ubuntu-24.04-arm
             HOST:  aarch64-unknown-linux-gnu
-            MEVAL: 'export CC=clang CXX=clang'
+            MEVAL: 'export CC=clang CXX=clang++'
 
     steps:
       - uses: actions/checkout@v4
@@ -60,6 +60,22 @@ jobs:
           if test x"$MEVAL" != x; then eval ${MEVAL}; fi
           ./.ci/install.sh
           ./.ci/build.sh
+
+  build-macos:
+    name: MacOS ${{ matrix.platform }} ${{ matrix.compilers }}
+    runs-on: ${{ matrix.platform }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-13, macos-14, macos-15]
+        compilers: [CC=gcc CXX=g++, CC=clang CXX=clang++]
+
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v4
+      - run: ./.ci/install.sh
+      - run: ${{ matrix.compilers }} ./.ci/build.sh
 
   build-msvc:
     name: Windows ${{ matrix.width }}-bit Visual C++
@@ -80,7 +96,7 @@ jobs:
 
     steps:
       - run: git config --global core.autocrlf input
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: egor-tensin/setup-cygwin@v4
         with:
           platform: x64
@@ -163,3 +179,38 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: libffi-${{ steps.ver.outputs.version }}-x86-${{ matrix.width }}bit-msvc-binaries.zip
+
+  build-android:
+    name: Android ${{ matrix.host }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [armv7a-linux-androideabi, aarch64-linux-android, i686-linux-android, x86_64-linux-android]
+
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v4
+      - run: ./.ci/install.sh
+      - env:
+          HOST: ${{ matrix.HOST }}
+          ANDROID_API_LEVEL: 23
+          CONFIGURE_OPTIONS: "--disable-shared --disable-multi-os-directory" # fixes warning about unsupported -print-multi-os-directory with clang
+        run: |
+          # Relevant documentation:
+          # https://developer.android.com/ndk/guides/other_build_systems
+          # https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
+          export TOOLCHAIN="${ANDROID_NDK_ROOT}"/toolchains/llvm/prebuilt/linux-x86_64
+          export CC="${TOOLCHAIN}"/bin/${HOST}${ANDROID_API_LEVEL}-clang
+          export CXX="${TOOLCHAIN}"/bin/${HOST}${ANDROID_API_LEVEL}-clang++
+          export CC_FOR_TARGET="${TOOLCHAIN}"/bin/${HOST}${ANDROID_API_LEVEL}-clang
+          export CXX_FOR_TARGET="${TOOLCHAIN}"/bin/${HOST}${ANDROID_API_LEVEL}-clang++
+          export LD="${TOOLCHAIN}"/bin/ld.lld
+          export AR="${TOOLCHAIN}"/bin/llvm-ar
+          export AS="${CC}"
+          export RANLIB="${TOOLCHAIN}"/bin/llvm-ranlib
+          export STRIP="${TOOLCHAIN}"/bin/llvm-strip
+          export NM="${TOOLCHAIN}"/bin/llvm-nm
+          export OBJDUMP="${TOOLCHAIN}"/bin/llvm-objdump
+          ./.ci/build.sh
