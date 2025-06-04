@@ -26,4 +26,10 @@ case "$target_triplet" in {
     { "powerpc-eabisim" } {
         set target_list "powerpc-eabisim"
     }
+    { "aarch*cygwin*" } {
+	set target_list "unix-noexec"
+    }
+    { "arm*cygwin*" } {
+	set target_list "unix-noexec"
+    }
 }
