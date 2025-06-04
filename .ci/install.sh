@@ -37,8 +37,36 @@ else
     sudo apt-get update
     sudo apt install libltdl-dev zip
 
-    set -x
-    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 0 -qO - https://ftpmirror.gnu.org/autoconf/autoconf-2.72.tar.gz | tar -xvzf -
+    shopt -s inherit_errexit   # propagate failure out of subshells (bash >= 4.4)
+
+    URL=https://ftpmirror.gnu.org/autoconf/autoconf-2.72.tar.gz
+    MAX_TRIES=5
+    BACKOFF=2                  # seconds; will double every attempt
+
+    attempt=1
+    while (( attempt <= MAX_TRIES )); do
+        echo "➡️  Attempt ${attempt}/${MAX_TRIES}"
+        if wget --retry-connrefused \
+                --waitretry=1 \
+                --read-timeout=20 \
+                --timeout=15 \
+                -qO-  "$URL" \
+                | tar -xzv; then
+            echo "✅  Success on attempt ${attempt}"
+            break
+        fi
+
+        echo "⚠️  Download or extract failed, retrying in ${BACKOFF}s…"
+        sleep "$BACKOFF"
+        BACKOFF=$(( BACKOFF * 2 ))
+        (( attempt++ ))
+    done
+
+    if (( attempt > MAX_TRIES )); then
+        echo "❌  Exhausted retries ($MAX_TRIES) – aborting." >&2
+        exit 1
+    fi
+
     mkdir -p ~/i
     (cd autoconf-2.72; ./configure --prefix=$HOME/i; make; make install)
 
