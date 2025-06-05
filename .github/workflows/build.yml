@@ -166,12 +166,10 @@ jobs:
             build=0
           fi
 
-          rc /nologo /dFFI_MAJOR=$maj \
-                     /dFFI_MINOR=$min \
-                     /dFFI_MICRO=$pat \
-                     /dFFI_BUILD=$build \
-             -fo version.res version.rc
-          windres -O coff -F pe-${{ matrix.arch == 'x64' && 'x86-64' || 'i386' }} version.rc version.o
+          windres -O coff -F pe-${{ matrix.arch == 'x64' && 'x86-64' || 'i386' }} \
+                  -DFFI_MAJOR=$maj -DFFI_MINOR=$min -DFFI_MICRO=$pat -DFFI_BUILD=$build \
+                  -DFFI_VERSION_STR="\"$ver\"" \
+                  version.rc version.o
           # ----------------------------------------------------------------
           autoreconf -f -v -i
           ./configure \
