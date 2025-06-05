@@ -128,8 +128,8 @@ jobs:
           #include <windows.h>
           #include <winver.h>
           VS_VERSION_INFO VERSIONINFO
-          FILEVERSION     FFI_MAJOR,FFI_MINOR,FFI_MICRO,0
-          PRODUCTVERSION  FFI_MAJOR,FFI_MINOR,FFI_MICRO,0
+          FILEVERSION     FFI_MAJOR,FFI_MINOR,FFI_MICRO,FFI_BUILD
+          PRODUCTVERSION  FFI_MAJOR,FFI_MINOR,FFI_MICRO,FFI_BUILD
           FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
           FILEFLAGS       0
           FILEOS          VOS_NT_WINDOWS32
@@ -148,14 +148,28 @@ jobs:
           END
           EOF
           cat version.rc
-          echo "$ver"
-          echo $(cut -d. -f1 <<<"$ver")
-          echo $(cut -d. -f2 <<<"$ver")
-          echo $(cut -d. -f3 <<<"$ver")
           ver=${{ steps.ver.outputs.version }}
-          rc /nologo /dFFI_MAJOR=$(cut -d. -f1 <<<"$ver") \
-                     /dFFI_MINOR=$(cut -d. -f2 <<<"$ver") \
-                     /dFFI_MICRO=$(cut -d. -f3 <<<"$ver") \
+          echo "$ver"
+
+          base=${ver%%-*}
+          rc=${ver#*-}
+          [[ $rc == "$ver" ]] && rc=""             # no rc?  rc=""
+
+          maj=$(cut -d. -f1 <<<"$base")
+          min=$(cut -d. -f2 <<<"$base")
+          pat=$(cut -d. -f3 <<<"$base")
+
+          # Decide on build number
+          if [[ $rc =~ ^rc([0-9]+)$ ]]; then
+            build=${BASH_REMATCH[1]}               # rc1 → 1
+          else
+            build=0
+          fi
+
+          rc /nologo /dFFI_MAJOR=$maj \
+                     /dFFI_MINOR=$min \
+                     /dFFI_MICRO=$pat \
+                     /dFFI_BUILD=$build \
              -fo version.res version.rc
           # ----------------------------------------------------------------
           autoreconf -f -v -i
