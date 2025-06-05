@@ -171,6 +171,7 @@ jobs:
                      /dFFI_MICRO=$pat \
                      /dFFI_BUILD=$build \
              -fo version.res version.rc
+          windres -O coff -F pe-${{ matrix.arch == 'x64' && 'x86-64' || 'i386' }} version.rc version.o
           # ----------------------------------------------------------------
           autoreconf -f -v -i
           ./configure \
@@ -180,7 +181,7 @@ jobs:
             CC="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
             CXX="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
             LD="link" \
-            LDFLAGS="-no-undefined $(pwd)/version.res" \
+            LDFLAGS="-no-undefined $(pwd)/version.o" \
             CPP="cl -nologo -EP" \
             CXXCPP="cl -nologo -EP" \
             CPPFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
