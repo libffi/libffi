@@ -147,6 +147,10 @@ jobs:
           END
           END
           EOF
+          echo "$ver"
+          echo $(cut -d. -f1 <<<"$ver")
+          echo $(cut -d. -f2 <<<"$ver")
+          echo $(cut -d. -f3 <<<"$ver")
           ver=${{ steps.ver.outputs.version }}
           rc /nologo /dFFI_MAJOR=$(cut -d. -f1 <<<"$ver") \
                      /dFFI_MINOR=$(cut -d. -f2 <<<"$ver") \
