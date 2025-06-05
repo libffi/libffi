@@ -91,6 +91,9 @@ tested:
 | RISC-V 64-bit   | Linux            | GCC                     |
 | S390            | Linux            | GCC                     |
 | S390X           | Linux            | GCC                     |
+| SH3             | Linux            | GCC                     |
+| SH4             | Linux            | GCC                     |
+| SH5/SH64        | Linux            | GCC                     |
 | SPARC           | Linux            | GCC                     |
 | SPARC           | Solaris          | GCC                     |
 | SPARC           | Solaris          | Oracle Solaris Studio C |
