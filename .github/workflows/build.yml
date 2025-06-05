@@ -123,6 +123,35 @@ jobs:
           cd $(cygpath $RUNNER_WORKSPACE)/libffi
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
           unzip rlgl-windows-amd64.zip
+          # ---------- add VERSIONINFO resource --------------------------
+          cat > version.rc <<'EOF'
+          #include <windows.h>
+          #include <winver.h>
+          VS_VERSION_INFO VERSIONINFO
+          FILEVERSION     ${FFI_MAJOR},${FFI_MINOR},${FFI_MICRO},0
+          PRODUCTVERSION  ${FFI_MAJOR},${FFI_MINOR},${FFI_MICRO},0
+          FILEFLAGSMASK   VS_FFI_FILEFLAGMASK
+          FILEFLAGS       0
+          FILEOS          VOS_NT_WINDOWS32
+          FILETYPE        VFT_DLL
+          FILESUBTYPE     0
+          BEGIN BLOCK "StringFileInfo"
+          BEGIN BLOCK "040904B0" // US-English, UTF-16
+          BEGIN
+            VALUE "CompanyName",      "https://github.com/libffi/libffi\0"
+            VALUE "FileDescription",  "Portable Foreign Function Interface library\0"
+            VALUE "ProductName",      "libffi\0"
+            VALUE "FileVersion",      "${{ steps.ver.outputs.version }}\0"
+            VALUE "LegalCopyright",   "Copyright © 1996-2025 Anthony Green and others\0"
+          END
+          END
+          END
+          EOF
+          rc /nologo /DFFI_MAJOR=$(cut -d. -f1 <<<"${{ steps.ver.outputs.version }}") \
+                     /DFFI_MINOR=$(cut -d. -f2 <<<"${{ steps.ver.outputs.version }}") \
+                     /DFFI_MICRO=$(cut -d. -f3 <<<"${{ steps.ver.outputs.version }}") \
+             -fo version.res version.rc
+          # ----------------------------------------------------------------
           autoreconf -f -v -i
           ./configure \
             --enable-shared \
@@ -131,7 +160,7 @@ jobs:
             CC="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
             CXX="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
             LD="link" \
-            LDFLAGS="-no-undefined " \
+            LDFLAGS="-no-undefined version.res" \
             CPP="cl -nologo -EP" \
             CXXCPP="cl -nologo -EP" \
             CPPFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
