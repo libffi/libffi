@@ -147,6 +147,7 @@ jobs:
           END
           END
           EOF
+          cat version.rc
           echo "$ver"
           echo $(cut -d. -f1 <<<"$ver")
           echo $(cut -d. -f2 <<<"$ver")
