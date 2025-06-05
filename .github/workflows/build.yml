@@ -134,8 +134,8 @@ jobs:
             LDFLAGS="-no-undefined " \
             CPP="cl -nologo -EP" \
             CXXCPP="cl -nologo -EP" \
-            CPPFLAGS="-DFFI_BUILDING_DLL" \
-            CFLAGS="-DFFI_BUILDING_DLL" \
+            CPPFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
+            CFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
             AR='$(pwd)/.ci/ar-lib lib' \
             NM='dumpbin -symbols' STRIP=':' \
             $DEBUG_ARG || cat */config.log

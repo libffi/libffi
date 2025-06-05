@@ -54,19 +54,6 @@ extern "C" {
 #define @TARGET@
 #endif
 
-/* ---- Version API ------------------------------------------------------ */
-
-#define FFI_VERSION_STRING "@FFI_VERSION_STRING@"
-#define FFI_VERSION_NUMBER @FFI_VERSION_NUMBER@
-
-#ifndef LIBFFI_ASM
-/* Return a version string. */
-const char *ffi_get_version (void);
-
-/* Return the version as an unsigned long value: (x * 10000 + y * 100 + z) */
-unsigned long ffi_get_version_number (void);
-#endif
-
 /* ---- System configuration information --------------------------------- */
 
 /* If these change, update src/mips/ffitarget.h. */
@@ -326,6 +313,19 @@ FFI_API
 void ffi_java_raw_to_ptrarray (ffi_cif *cif, ffi_java_raw *raw, void **args) __attribute__((deprecated));
 FFI_API
 size_t ffi_java_raw_size (ffi_cif *cif) __attribute__((deprecated));
+
+/* ---- Version API ------------------------------------------------------ */
+
+#define FFI_VERSION_STRING "@FFI_VERSION_STRING@"
+#define FFI_VERSION_NUMBER @FFI_VERSION_NUMBER@
+
+#ifndef LIBFFI_ASM
+/* Return a version string. */
+FFI_API const char *ffi_get_version (void);
+
+/* Return the version as an unsigned long value: (x * 10000 + y * 100 + z) */
+FFI_API unsigned long ffi_get_version_number (void);
+#endif
 
 /* ---- Definitions for closures ----------------------------------------- */
 
