@@ -180,7 +180,7 @@ jobs:
             CC="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
             CXX="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
             LD="link" \
-            LDFLAGS="-no-undefined version.res" \
+            LDFLAGS="-no-undefined $(pwd)/version.res" \
             CPP="cl -nologo -EP" \
             CXXCPP="cl -nologo -EP" \
             CPPFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
