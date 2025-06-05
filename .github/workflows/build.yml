@@ -128,8 +128,8 @@ jobs:
           #include <windows.h>
           #include <winver.h>
           VS_VERSION_INFO VERSIONINFO
-          FILEVERSION     ${FFI_MAJOR},${FFI_MINOR},${FFI_MICRO},0
-          PRODUCTVERSION  ${FFI_MAJOR},${FFI_MINOR},${FFI_MICRO},0
+          FILEVERSION     FFI_MAJOR,FFI_MINOR,FFI_MICRO,0
+          PRODUCTVERSION  FFI_MAJOR,FFI_MINOR,FFI_MICRO,0
           FILEFLAGSMASK   VS_FFI_FILEFLAGMASK
           FILEFLAGS       0
           FILEOS          VOS_NT_WINDOWS32
