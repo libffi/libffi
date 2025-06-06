@@ -156,6 +156,8 @@ jobs:
       - name: Add meta information to DLL
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
         run: |
+          cd $(cygpath $RUNNER_WORKSPACE)/libffi
+
           # Deconstruct the libffi version
           ver=${{ steps.ver.outputs.version }}
           echo "$ver"
