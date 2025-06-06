@@ -176,7 +176,7 @@ jobs:
             --enable-shared \
             --build="${{ matrix.host }}" --host="${{ matrix.host }}" \
             --disable-docs \
-            CC="$(pwd)/msvcc.sh -m${{ matrix.width }} $(pwd)/version.o"\
+            CC="$(pwd)/msvcc.sh -m${{ matrix.width }} $(pwd)/version.o" \
             CXX="$(pwd)/msvcc.sh -m${{ matrix.width }} $(pwd)/version.o" \
             LD="link" \
             LDFLAGS="-no-undefined" \
