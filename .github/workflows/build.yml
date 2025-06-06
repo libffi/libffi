@@ -169,7 +169,7 @@ jobs:
           windres -O coff -F pe-${{ matrix.arch == 'x64' && 'x86-64' || 'i386' }} \
                   -DFFI_MAJOR=$maj -DFFI_MINOR=$min -DFFI_MICRO=$pat -DFFI_BUILD=$build \
                   -DFFI_VERSION_STR="\"$ver\"" \
-                  version.rc version.o
+                  version.rc version.obj
           # ----------------------------------------------------------------
           autoreconf -f -v -i
           ./configure \
@@ -179,7 +179,7 @@ jobs:
             CC="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
             CXX="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
             LD="link" \
-            LDFLAGS="-no-undefined $(pwd)/version.o" \
+            LDFLAGS="-no-undefined $(cygpath -w $(pwd)/version.obj)" \
             CPP="cl -nologo -EP" \
             CXXCPP="cl -nologo -EP" \
             CPPFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
