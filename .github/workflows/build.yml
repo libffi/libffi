@@ -185,7 +185,7 @@ jobs:
             --set-version-string "FileDescription" "Portable foreign function interface library" \
             --set-version-string "ProductName" "libffi" \
             --set-version-string "FileVersion" "${{ steps.ver.outputs.version }}" \
-            --set-version-string "LegalCopyright" "Copyright (c) 1996-2025 Anthony Green and others" \
+            --set-version-string "LegalCopyright" "Copyright (c) 1996-2025 Anthony Green and others"
 
       - name: Create binary distribution
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
