@@ -176,10 +176,10 @@ jobs:
             --enable-shared \
             --build="${{ matrix.host }}" --host="${{ matrix.host }}" \
             --disable-docs \
-            CC="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
-            CXX="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
+            CC="$(pwd)/msvcc.sh -m${{ matrix.width }} $(pwd)/version.o"\
+            CXX="$(pwd)/msvcc.sh -m${{ matrix.width }} $(pwd)/version.o" \
             LD="link" \
-            LDFLAGS="-no-undefined $(pwd)/version.o" \
+            LDFLAGS="-no-undefined" \
             CPP="cl -nologo -EP" \
             CXXCPP="cl -nologo -EP" \
             CPPFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
@@ -187,7 +187,7 @@ jobs:
             AR='$(pwd)/.ci/ar-lib lib' \
             NM='dumpbin -symbols' STRIP=':' \
             $DEBUG_ARG || cat */config.log
-          make
+          make $(pwd)/version.o
           find ./ -type f -name 'libffi*'
           ls -l */.libs
           cp $(find . -name 'libffi-?.dll') ${{ matrix.host }}/testsuite/
