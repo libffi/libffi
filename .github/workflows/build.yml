@@ -177,6 +177,7 @@ jobs:
 
           # Use rcedit to edit the DLLs resources
           wget -O rcedit.exe https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-${{ matrix.arch }}.exe
+          chmod +x ./rcedit.exe
 
           ./rcedit.exe "${{ matrix.host }}"/.libs/libffi-8.dll \
             --set-file-version "$maj.$min.$pat.$build" \
