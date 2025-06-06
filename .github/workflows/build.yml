@@ -123,54 +123,6 @@ jobs:
           cd $(cygpath $RUNNER_WORKSPACE)/libffi
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
           unzip rlgl-windows-amd64.zip
-          # ---------- add VERSIONINFO resource --------------------------
-          cat > version.rc <<'EOF'
-          #include <windows.h>
-          #include <winver.h>
-          VS_VERSION_INFO VERSIONINFO
-          FILEVERSION     FFI_MAJOR,FFI_MINOR,FFI_MICRO,FFI_BUILD
-          PRODUCTVERSION  FFI_MAJOR,FFI_MINOR,FFI_MICRO,FFI_BUILD
-          FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
-          FILEFLAGS       0
-          FILEOS          VOS_NT_WINDOWS32
-          FILETYPE        VFT_DLL
-          FILESUBTYPE     0
-          BEGIN BLOCK "StringFileInfo"
-          BEGIN BLOCK "040904B0" // US-English, UTF-16
-          BEGIN
-            VALUE "CompanyName",      "https://github.com/libffi/libffi\0"
-            VALUE "FileDescription",  "Portable Foreign Function Interface library\0"
-            VALUE "ProductName",      "libffi\0"
-            VALUE "FileVersion",      "${{ steps.ver.outputs.version }}\0"
-            VALUE "LegalCopyright",   "Copyright © 1996-2025 Anthony Green and others\0"
-          END
-          END
-          END
-          EOF
-          cat version.rc
-          ver=${{ steps.ver.outputs.version }}
-          echo "$ver"
-
-          base=${ver%%-*}
-          rc=${ver#*-}
-          [[ $rc == "$ver" ]] && rc=""             # no rc?  rc=""
-
-          maj=$(cut -d. -f1 <<<"$base")
-          min=$(cut -d. -f2 <<<"$base")
-          pat=$(cut -d. -f3 <<<"$base")
-
-          # Decide on build number
-          if [[ $rc =~ ^rc([0-9]+)$ ]]; then
-            build=${BASH_REMATCH[1]}               # rc1 → 1
-          else
-            build=0
-          fi
-
-          windres -O coff -F pe-${{ matrix.arch == 'x64' && 'x86-64' || 'i386' }} \
-                  -DFFI_MAJOR=$maj -DFFI_MINOR=$min -DFFI_MICRO=$pat -DFFI_BUILD=$build \
-                  -DFFI_VERSION_STR="\"$ver\"" \
-                  version.rc version.o
-          # ----------------------------------------------------------------
           autoreconf -f -v -i
           ./configure \
             --enable-shared \
@@ -179,7 +131,7 @@ jobs:
             CC="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
             CXX="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
             LD="link" \
-            LDFLAGS="-no-undefined $(pwd)/version.o" \
+            LDFLAGS="-no-undefined" \
             CPP="cl -nologo -EP" \
             CXXCPP="cl -nologo -EP" \
             CPPFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
@@ -200,6 +152,40 @@ jobs:
                           -l host=${{ matrix.host }} \
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+
+      - name: Add meta information to DLL
+        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+        run: |
+          # Deconstruct the libffi version
+          ver=${{ steps.ver.outputs.version }}
+          echo "$ver"
+
+          base=${ver%%-*}
+          rc=${ver#*-}
+          [[ $rc == "$ver" ]] && rc=""             # no rc?  rc=""
+
+          maj=$(cut -d. -f1 <<<"$base")
+          min=$(cut -d. -f2 <<<"$base")
+          pat=$(cut -d. -f3 <<<"$base")
+
+          # Decide on build number
+          if [[ $rc =~ ^rc([0-9]+)$ ]]; then
+            build=${BASH_REMATCH[1]}               # rc1 → 1
+          else
+            build=0
+          fi
+
+          # Use rcedit to edit the DLLs resources
+          wget -O rcedit.exe https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-${{ matrix.arch }}.exe
+
+          ./rcedit.exe "${{ matrix.host }}"/.libs/libffi-8.dll \
+            --set-file-version "$maj.$min.$pat.$build" \
+            --set-product-version "$maj.$min.$pat.$build" \
+            --set-version-string "CompanyName" "https://github.com/libffi/libffi" \
+            --set-version-string "FileDescription" "Portable foreign function interface library" \
+            --set-version-string "ProductName" "libffi" \
+            --set-version-string "FileVersion" "${{ steps.ver.outputs.version }}" \
+            --set-version-string "LegalCopyright" "Copyright (c) 1996-2025 Anthony Green and others" \
 
       - name: Create binary distribution
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
