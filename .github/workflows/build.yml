@@ -181,14 +181,16 @@ jobs:
           wget -O rcedit.exe https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-${{ matrix.arch }}.exe
           chmod +x ./rcedit.exe
 
-          ./rcedit.exe "${{ matrix.host }}"/.libs/libffi-8.dll \
+          dll_filename=libffi-8.dll
+          ./rcedit.exe "${{ matrix.host }}"/.libs/$dll_filename \
             --set-file-version "$maj.$min.$pat.$build" \
             --set-product-version "$maj.$min.$pat.$build" \
             --set-version-string "CompanyName" "https://github.com/libffi/libffi" \
-            --set-version-string "FileDescription" "Portable foreign function interface library" \
+            --set-version-string "FileDescription" "Portable foreign function interface library (${{ matrix.arch }})" \
             --set-version-string "ProductName" "libffi" \
             --set-version-string "FileVersion" "${{ steps.ver.outputs.version }}" \
-            --set-version-string "LegalCopyright" "Copyright (c) 1996-2025 Anthony Green and others"
+            --set-version-string "LegalCopyright" "Copyright (c) 1996-2025 Anthony Green and others" \
+            --set-version-string "OriginalFilename" "$dll_filename"
 
       - name: Create binary distribution
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
