@@ -1,0 +1,3 @@
+FROM ppc64le/fedora
+
+RUN dnf install -y dejagnu automake autoconf dejagnu texinfo gcc
