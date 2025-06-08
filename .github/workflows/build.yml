@@ -82,7 +82,7 @@ jobs:
       - run: ${{ matrix.compilers }} ./.ci/build.sh
 
   build-non-msvc:
-    name: Windows ${{ matrix.width }}-bit clang
+    name: Windows ${{ matrix.width }}-bit ${{ matrix.compiler }}
     runs-on: windows-latest
 
     strategy:
@@ -93,16 +93,28 @@ jobs:
           - host: i686-pc-cygwin
             width: 32
             arch: x86
-            tools: amd64_x86
             target: i686-pc-cygwin
             gcc_prefix: /usr/i686-pc-cygwin
+            compiler: gcc
+          - host: i686-pc-cygwin
+            width: 32
+            arch: x86
+            target: i686-pc-cygwin
+            gcc_prefix: /usr/i686-pc-cygwin
+            compiler: clang
           # MinGW-w64 64-bit
           - host: x86_64-w64-mingw32
             width: 64
             arch: x64
-            tools: amd64
             target: x86_64-w64-mingw32
             gcc_prefix: /usr/${{ github.workspace }}/mingw64      # unused but keeps the table homogeneous
+            compiler: clang
+          - host: x86_64-w64-mingw32
+            width: 64
+            arch: x64
+            target: x86_64-w64-mingw32
+            gcc_prefix: /usr/${{ github.workspace }}/mingw64      # unused but keeps the table homogeneous
+            compiler: gcc
 
     steps:
       - run: git config --global core.autocrlf input
@@ -111,7 +123,6 @@ jobs:
       # ──────────────────────────────── Cygwin & tool-chains ────────────────────────────────
       - uses: egor-tensin/setup-cygwin@v4
         with:
-          platform: x64
           # gcc / g++ are needed so Clang can reuse their start-files & libraries
           packages: >
             wget make dejagnu automake autoconf libtool texinfo unzip dos2unix
