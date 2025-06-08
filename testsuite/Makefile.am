@@ -85,4 +85,5 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.complex/return_complex2_float.c libffi.complex/return_complex2_longdouble.c libffi.complex/return_complex_double.c \
 	libffi.complex/return_complex_float.c libffi.complex/return_complex_longdouble.c libffi.go/aa-direct.c \
 	libffi.go/closure1.c libffi.go/ffitest.h libffi.go/go.exp \
-	libffi.go/static-chain.h Makefile.am Makefile.in
+	libffi.go/static-chain.h Makefile.am Makefile.in \
+	libffi.threads/ffitest.h libffi.threads/threads.exp libffi.threads/tsan.c
