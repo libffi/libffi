@@ -8,7 +8,9 @@
 
 #define NUM_THREADS 20
 
+#ifdef _POSIX_BARRIERS
 pthread_barrier_t barrier;
+#endif
 
 typedef float (*callback_fn)(float, float);
 
@@ -19,7 +21,9 @@ void callback(ffi_cif *cif __UNUSED__, void *ret, void **args, void *userdata __
 }
 
 void *thread_func(void *arg) {
+#ifdef _POSIX_BARRIERS
     pthread_barrier_wait(&barrier);
+#endif
 
     ffi_cif cif;
     ffi_type *args[2] = { &ffi_type_float, &ffi_type_float };
@@ -46,7 +50,9 @@ void *thread_func(void *arg) {
 int main() {
     pthread_t threads[NUM_THREADS];
 
+#ifdef _POSIX_BARRIERS
     pthread_barrier_init(&barrier, NULL, NUM_THREADS);
+#endif
 
     for (int i = 0; i < NUM_THREADS; ++i) {
         if (pthread_create(&threads[i], NULL, thread_func, NULL) != 0) {
@@ -59,7 +65,9 @@ int main() {
         pthread_join(threads[i], NULL);
     }
 
+#ifdef _POSIX_BARRIERS
     pthread_barrier_destroy(&barrier);
+#endif
 
     printf("Completed\n");
     return 0;
