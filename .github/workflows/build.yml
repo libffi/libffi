@@ -40,6 +40,10 @@ jobs:
             HOST:  x86_64-pc-linux-gnu
             CONFIGURE_OPTIONS: "--enable-shared"
 
+          - runner: ubuntu-latest
+            HOST:  x86_64-pc-linux-gnu
+            CONFIGURE_OPTIONS: "--disable-exec-static-tramp"
+
           # ---------- new native arm64 build ----------
           - runner: ubuntu-22.04-arm     # or ubuntu-24.04-arm
             HOST:  aarch64-unknown-linux-gnu
