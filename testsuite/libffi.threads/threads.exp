@@ -34,8 +34,8 @@ if { [string match $compiler_vendor "microsoft"] } {
 
 set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/*.c]]
 
-# No pthreads for windows
-if { [string match $compiler_vendor "microsoft"] } {
+# No pthreads for windows or wasm
+if { [string match $compiler_vendor "microsoft"] || [istarget "wasm*-*-*"] } {
     foreach test $tlist {
         unsupported "$test"
     }
