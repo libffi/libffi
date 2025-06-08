@@ -40,6 +40,10 @@ jobs:
             HOST:  x86_64-pc-linux-gnu
             CONFIGURE_OPTIONS: "--enable-shared"
 
+          - runner: ubuntu-latest
+            HOST:  x86_64-pc-linux-gnu
+            CONFIGURE_OPTIONS: "--disable-exec-static-tramp"
+
           # ---------- new native arm64 build ----------
           - runner: ubuntu-22.04-arm     # or ubuntu-24.04-arm
             HOST:  aarch64-unknown-linux-gnu
@@ -76,6 +80,96 @@ jobs:
       - uses: actions/checkout@v4
       - run: ./.ci/install.sh
       - run: ${{ matrix.compilers }} ./.ci/build.sh
+
+  build-non-msvc:
+    name: Windows ${{ matrix.width }}-bit ${{ matrix.compiler }}
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Cygwin 32-bit
+          - host: i686-pc-cygwin
+            width: 32
+            arch: x86
+            target: i686-pc-cygwin
+            gcc_prefix: /usr/i686-pc-cygwin
+            compiler: gcc
+          - host: i686-pc-cygwin
+            width: 32
+            arch: x86
+            target: i686-pc-cygwin
+            gcc_prefix: /usr/i686-pc-cygwin
+            compiler: clang
+          # MinGW-w64 64-bit
+          - host: x86_64-w64-mingw32
+            width: 64
+            arch: x64
+            target: x86_64-w64-mingw32
+            gcc_prefix: /usr/${{ github.workspace }}/mingw64      # unused but keeps the table homogeneous
+            compiler: clang
+          - host: x86_64-w64-mingw32
+            width: 64
+            arch: x64
+            target: x86_64-w64-mingw32
+            gcc_prefix: /usr/${{ github.workspace }}/mingw64      # unused but keeps the table homogeneous
+            compiler: gcc
+
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v4
+
+      # ──────────────────────────────── Cygwin & tool-chains ────────────────────────────────
+      - uses: egor-tensin/setup-cygwin@v4
+        with:
+          # gcc / g++ are needed so Clang can reuse their start-files & libraries
+          packages: >
+            wget make dejagnu automake autoconf libtool texinfo unzip dos2unix
+            clang gcc-core gcc-g++
+            cygwin32-gcc-core cygwin32-gcc-g++ cygwin32-runtime cygwin32-libgcc1
+
+      # ──────────────────────────────── Common environment ────────────────────────────────
+      - name: Export build env
+        shell: bash
+        run: |
+          echo "GCC_PREFIX=${{ matrix.gcc_prefix }}"      >> $GITHUB_ENV
+          echo "CC=${{ matrix.compiler }} --target=${{ matrix.target }} -B${{ matrix.gcc_prefix }}/bin \
+                -L${{ matrix.gcc_prefix }}/lib -I${{ matrix.gcc_prefix }}/include"          >> $GITHUB_ENV
+          echo "CXX=${{ matrix.compiler }} --target=${{ matrix.target }} -B${{ matrix.gcc_prefix }}/bin \
+                -L${{ matrix.gcc_prefix }}/lib -I${{ matrix.gcc_prefix }}/include"          >> $GITHUB_ENV
+          # make sure the cross-gcc bin dir is found *before* /usr/bin (64-bit)
+          echo "${{ matrix.gcc_prefix }}/bin" >> $GITHUB_PATH
+
+      # ──────────────────────────────── Pick version from configure.ac ─────────────────────
+      - id: ver
+        name: Read libffi version
+        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+        run: |
+          cd "$(cygpath $RUNNER_WORKSPACE)/libffi"
+          version=$(sed -nE 's/^AC_INIT\(\[libffi\],[[:space:]]*\[([^]]+)\].*/\1/p' configure.ac)
+          [[ $version ]] || { echo "Could not parse version"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # ──────────────────────────────── Build & test ───────────────────────────────────────
+      - name: Build and test
+        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+        run: |
+          set -euo pipefail
+          cd "$(cygpath $RUNNER_WORKSPACE)/libffi"
+
+          autoreconf -fvi
+          ./configure \
+            --enable-shared \
+            --build=${{ matrix.host }} --host=${{ matrix.host }} \
+            CPPFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
+            CFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL"
+
+          make -j$(nproc)
+          file ./.libs/libffi-*.dll   # sanity-check: should say PE32 or PE32+ as expected
+
+          # quick self-tests (dejagnu, etc.)
+          make -k check || true
 
   build-msvc:
     name: Windows ${{ matrix.width }}-bit Visual C++
