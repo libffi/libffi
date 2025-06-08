@@ -117,9 +117,6 @@ jobs:
             wget make dejagnu automake autoconf libtool texinfo unzip dos2unix
             clang gcc-core gcc-g++
             cygwin32-gcc-core cygwin32-gcc-g++ cygwin32-runtime cygwin32-libgcc1
-      # MSVC is only here for other jobs you might add later
-      - uses: ilammy/msvc-dev-cmd@v1.13.0
-        with: { arch: ${{ matrix.tools }} }
 
       # ──────────────────────────────── Common environment ────────────────────────────────
       - name: Export build env
