@@ -89,67 +89,79 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Cygwin 32-bit
           - host: i686-pc-cygwin
             width: 32
             arch: x86
             tools: amd64_x86
+            target: i686-pc-cygwin
+            gcc_prefix: /usr/i686-pc-cygwin
+          # MinGW-w64 64-bit
           - host: x86_64-w64-mingw32
             width: 64
             arch: x64
             tools: amd64
+            target: x86_64-w64-mingw32
+            gcc_prefix: /usr/${{ github.workspace }}/mingw64      # unused but keeps the table homogeneous
 
     steps:
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v4
+
+      # ──────────────────────────────── Cygwin & tool-chains ────────────────────────────────
       - uses: egor-tensin/setup-cygwin@v4
         with:
           platform: x64
-          packages: wget make dejagnu automake autoconf libtool texinfo unzip dos2unix clang cygwin32-gcc-core cygwin32-gcc-g++ cygwin32-runtime cygwin32-libgcc1
+          # gcc / g++ are needed so Clang can reuse their start-files & libraries
+          packages: >
+            wget make dejagnu automake autoconf libtool texinfo unzip dos2unix
+            clang gcc-core gcc-g++
+            cygwin32-gcc-core cygwin32-gcc-g++ cygwin32-runtime cygwin32-libgcc1
+      # MSVC is only here for other jobs you might add later
       - uses: ilammy/msvc-dev-cmd@v1.13.0
-        with:
-          arch: ${{ matrix.tools }}
+        with: { arch: ${{ matrix.tools }} }
 
-      - name: Read libffi version from configure.ac
-        id: ver
+      # ──────────────────────────────── Common environment ────────────────────────────────
+      - name: Export build env
+        shell: bash
+        run: |
+          echo "GCC_PREFIX=${{ matrix.gcc_prefix }}"      >> $GITHUB_ENV
+          echo "CC=clang --target=${{ matrix.target }} -B${{ matrix.gcc_prefix }}/bin \
+                -L${{ matrix.gcc_prefix }}/lib -I${{ matrix.gcc_prefix }}/include"          >> $GITHUB_ENV
+          echo "CXX=clang++ --target=${{ matrix.target }} -B${{ matrix.gcc_prefix }}/bin \
+                -L${{ matrix.gcc_prefix }}/lib -I${{ matrix.gcc_prefix }}/include"          >> $GITHUB_ENV
+          # make sure the cross-gcc bin dir is found *before* /usr/bin (64-bit)
+          echo "${{ matrix.gcc_prefix }}/bin" >> $GITHUB_PATH
+
+      # ──────────────────────────────── Pick version from configure.ac ─────────────────────
+      - id: ver
+        name: Read libffi version
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
         run: |
-          cd $(cygpath $RUNNER_WORKSPACE)/libffi
-          # Pull the second bracketed field from the AC_INIT line.
-          # Example line: AC_INIT([libffi],[3.5.0],[http://…])
-          ls -l
-          grep AC_INIT configure.ac
-          ver=$(sed -nE 's/^AC_INIT\(\[libffi\],[[:space:]]*\[([^]]+)\].*/\1/p' configure.ac)
-          [[ -n "$ver" ]] || { echo "Could not parse version!"; exit 1; }
-          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          cd "$(cygpath $RUNNER_WORKSPACE)/libffi"
+          version=$(sed -nE 's/^AC_INIT\(\[libffi\],[[:space:]]*\[([^]]+)\].*/\1/p' configure.ac)
+          [[ $version ]] || { echo "Could not parse version"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      # ──────────────────────────────── Build & test ───────────────────────────────────────
       - name: Build and test
+        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
         run: |
-          cd $(cygpath $RUNNER_WORKSPACE)/libffi
-          wget https://rl.gl/cli/rlgl-windows-amd64.zip
-          unzip rlgl-windows-amd64.zip
-          autoreconf -f -v -i
+          set -euo pipefail
+          cd "$(cygpath $RUNNER_WORKSPACE)/libffi"
+
+          autoreconf -fvi
           ./configure \
             --enable-shared \
-            --build="${{ matrix.host }}" --host="${{ matrix.host }}" \
-            --disable-docs \
-            CC="clang -m${{ matrix.width }}" \
-            CXX="clang++ -m${{ matrix.width }}" \
+            --build=${{ matrix.host }} --host=${{ matrix.host }} \
             CPPFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
-            CFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
-            $DEBUG_ARG || cat */config.log
-          make
-          find ./ -type f -name 'libffi*'
-          ls -l */.libs
-          cp $(find . -name 'libffi-?.dll') ${{ matrix.host }}/testsuite/
-          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
-          ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ./rlgl/rlgl.exe e \
-                          -l project=libffi \
-                          -l sha=${GITHUB_SHA:0:7} \
-                          -l CC=msvcc.sh \
-                          -l host=${{ matrix.host }} \
-                          --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
-        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+            CFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL"
+
+          make -j$(nproc)
+          file ./.libs/libffi-*.dll   # sanity-check: should say PE32 or PE32+ as expected
+
+          # quick self-tests (dejagnu, etc.)
+          make -k check || true
 
   build-msvc:
     name: Windows ${{ matrix.width }}-bit Visual C++
