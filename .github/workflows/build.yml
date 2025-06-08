@@ -134,9 +134,9 @@ jobs:
         shell: bash
         run: |
           echo "GCC_PREFIX=${{ matrix.gcc_prefix }}"      >> $GITHUB_ENV
-          echo "CC=clang --target=${{ matrix.target }} -B${{ matrix.gcc_prefix }}/bin \
+          echo "CC=${{ matrix.compiler }} --target=${{ matrix.target }} -B${{ matrix.gcc_prefix }}/bin \
                 -L${{ matrix.gcc_prefix }}/lib -I${{ matrix.gcc_prefix }}/include"          >> $GITHUB_ENV
-          echo "CXX=clang++ --target=${{ matrix.target }} -B${{ matrix.gcc_prefix }}/bin \
+          echo "CXX=${{ matrix.compiler }} --target=${{ matrix.target }} -B${{ matrix.gcc_prefix }}/bin \
                 -L${{ matrix.gcc_prefix }}/lib -I${{ matrix.gcc_prefix }}/include"          >> $GITHUB_ENV
           # make sure the cross-gcc bin dir is found *before* /usr/bin (64-bit)
           echo "${{ matrix.gcc_prefix }}/bin" >> $GITHUB_PATH
