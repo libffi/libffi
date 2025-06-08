@@ -27,6 +27,9 @@ LIBFFI_BASE_8.0 {
   ffi_get_version;
   ffi_get_version_number;
 
+  ffi_get_default_abi;
+  ffi_get_closure_size;
+
 	ffi_call;
 	ffi_prep_cif;
 	ffi_prep_cif_var;

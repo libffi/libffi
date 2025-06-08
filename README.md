@@ -206,6 +206,7 @@ See the git log for details at http://github.com/libffi/libffi.
     3.5.0 Jun-8-2025
         Add FFI_VERSION_STRING and FFI_VERSION_NUMBER macros, as well
           as ffi_get_version() and ffi_get_version_number() functions.
+        Add ffi_get_default_abi() and ffi_get_closure_size() functions.
         Fix closures on powerpc64-linux when statically linking.
         Mark the PA stack as non-executable.
 

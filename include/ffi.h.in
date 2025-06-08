@@ -327,6 +327,11 @@ FFI_API const char *ffi_get_version (void);
 FFI_API unsigned long ffi_get_version_number (void);
 #endif
 
+/* ---- Internals API ---------------------------------------------------- */
+
+FFI_API unsigned int ffi_get_default_abi (void);
+FFI_API size_t ffi_get_closure_size (void);
+
 /* ---- Definitions for closures ----------------------------------------- */
 
 #if FFI_CLOSURES

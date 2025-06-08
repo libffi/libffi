@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   types.c - Copyright (c) 1996, 1998, 2024  Red Hat, Inc.
+   types.c - Copyright (c) 1996, 1998, 2024, 2025  Red Hat, Inc.
 
    Predefined ffi_types needed by libffi.
 
@@ -41,6 +41,16 @@ const char *ffi_get_version (void)
 unsigned long ffi_get_version_number (void)
 {
   return FFI_VERSION_NUMBER;
+}
+
+unsigned int ffi_get_default_abi (void)
+{
+  return FFI_DEFAULT_ABI;
+}
+
+size_t ffi_get_closure_size (void)
+{
+  return sizeof(ffi_closure);
 }
 
 /* Type definitions */

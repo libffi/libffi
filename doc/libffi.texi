@@ -250,6 +250,16 @@ This number is also available at build time as the macro
 @code{FFI_VERSION_NUMBER}.
 @end defun
 
+@findex ffi_get_default_abi
+@defun {unsigned int} ffi_get_default_abi (void)
+Return the value of @code{FFI_DEFAULT_ABI}.
+@end defun
+
+@findex ffi_get_closure_size
+@defun {size_t} ffi_get_closure_size (void)
+Return @code{sizeof(ffi_closure)}.
+@end defun
+
 @node Simple Example
 @section Simple Example
 
