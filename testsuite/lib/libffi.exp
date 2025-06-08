@@ -456,8 +456,9 @@ proc libffi_feature_test { test } {
     puts $f "int main() {return 0;}"
     close $f
 
-    set lines [libffi_target_compile $src "" preprocess ""]
+    set lines [libffi_target_compile $src $src.i preprocess ""]
     file delete $src
+    file delete $src.i
 
     return [string match "" $lines]
 }
