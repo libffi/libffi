@@ -104,7 +104,7 @@ jobs:
       - uses: egor-tensin/setup-cygwin@v4
         with:
           platform: x64
-          packages: wget make dejagnu automake autoconf libtool texinfo unzip dos2unix clang
+          packages: wget make dejagnu automake autoconf libtool texinfo unzip dos2unix clang cygwin32-gcc-core cygwin32-gcc-g++ cygwin32-runtime cygwin32-libgcc1
       - uses: ilammy/msvc-dev-cmd@v1.13.0
         with:
           arch: ${{ matrix.tools }}
