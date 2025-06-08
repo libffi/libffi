@@ -81,6 +81,76 @@ jobs:
       - run: ./.ci/install.sh
       - run: ${{ matrix.compilers }} ./.ci/build.sh
 
+  build-non-msvc:
+    name: Windows ${{ matrix.width }}-bit clang
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: i686-pc-cygwin
+            width: 32
+            arch: x86
+            tools: amd64_x86
+          - host: x86_64-w64-mingw32
+            width: 64
+            arch: x64
+            tools: amd64
+
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v4
+      - uses: egor-tensin/setup-cygwin@v4
+        with:
+          platform: x64
+          packages: wget make dejagnu automake autoconf libtool texinfo unzip dos2unix clang
+      - uses: ilammy/msvc-dev-cmd@v1.13.0
+        with:
+          arch: ${{ matrix.tools }}
+
+      - name: Read libffi version from configure.ac
+        id: ver
+        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+        run: |
+          cd $(cygpath $RUNNER_WORKSPACE)/libffi
+          # Pull the second bracketed field from the AC_INIT line.
+          # Example line: AC_INIT([libffi],[3.5.0],[http://…])
+          ls -l
+          grep AC_INIT configure.ac
+          ver=$(sed -nE 's/^AC_INIT\(\[libffi\],[[:space:]]*\[([^]]+)\].*/\1/p' configure.ac)
+          [[ -n "$ver" ]] || { echo "Could not parse version!"; exit 1; }
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+
+      - name: Build and test
+        run: |
+          cd $(cygpath $RUNNER_WORKSPACE)/libffi
+          wget https://rl.gl/cli/rlgl-windows-amd64.zip
+          unzip rlgl-windows-amd64.zip
+          autoreconf -f -v -i
+          ./configure \
+            --enable-shared \
+            --build="${{ matrix.host }}" --host="${{ matrix.host }}" \
+            --disable-docs \
+            CC="clang -m${{ matrix.width }}" \
+            CXX="clang++ -m${{ matrix.width }}" \
+            CPPFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
+            CFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
+            $DEBUG_ARG || cat */config.log
+          make
+          find ./ -type f -name 'libffi*'
+          ls -l */.libs
+          cp $(find . -name 'libffi-?.dll') ${{ matrix.host }}/testsuite/
+          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
+          ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
+          ./rlgl/rlgl.exe e \
+                          -l project=libffi \
+                          -l sha=${GITHUB_SHA:0:7} \
+                          -l CC=msvcc.sh \
+                          -l host=${{ matrix.host }} \
+                          --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
+        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+
   build-msvc:
     name: Windows ${{ matrix.width }}-bit Visual C++
     runs-on: windows-latest
