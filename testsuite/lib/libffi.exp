@@ -435,6 +435,7 @@ proc libffi_target_compile { source dest type options } {
     # which causes it to be seen as unsupported.
     if { [string match "wasm32-*" $target_triplet] } {
         lappend options "additional_flags=-Wno-unused-command-line-argument"
+        lappend options "libs= -lpthread"
     }
 
     verbose "options: $options"
