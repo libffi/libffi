@@ -245,6 +245,7 @@ jobs:
           find ./ -type f -name 'libffi*'
           ls -l */.libs
           cp $(find . -name 'libffi-?.dll') ${{ matrix.host }}/testsuite/
+          find ./ -name ffi.h
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
           ./rlgl/rlgl.exe e \
