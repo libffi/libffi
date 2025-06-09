@@ -13,12 +13,11 @@ jobs:
           fetch-depth: 0        # git describe needs full history
 
       - name: Install autotools
-        run: sudo apt-get update && sudo apt-get -y install autoconf automake libtool texinfo libltdl-dev
+        run: sudo apt-get update && sudo apt-get -y install autoconf automake libtool texinfo libltdl-dev texlive
 
       - name: Stamp snapshot version into configure.ac
         run: |
-          VERSION="$(git describe --match 'v[0-9]*' --long --always |
-                sed -e 's/^v//' -e 's/-/.dev./' -e 's/-/+g/')"
+          VERSION="$(git describe --match 'v[0-9]*' --long --always | sed -e 's/^v//' -e 's/-/.dev./' -e 's/-/+g/')"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
           # 1) AC_INIT second argument
