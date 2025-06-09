@@ -8,16 +8,6 @@ jobs:
   dist:
     runs-on: ubuntu-latest
     steps:
-name: snapshot-dist-tarball
-on:
-  push:
-    branches: [ master ]
-  workflow_dispatch:
-
-jobs:
-  dist:
-    runs-on: ubuntu-latest
-    steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0}
 
