@@ -1,0 +1,43 @@
+name: snapshot-dist-tarball
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  dist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # git describe needs full history
+
+      - name: Install autotools
+        run: sudo apt-get update && sudo apt-get -y install autoconf automake libtool texinfo libltdl-dev texlive
+
+      - name: Stamp snapshot version into configure.ac
+        run: |
+          VERSION="$(git describe --match 'v[0-9]*' --long --always | sed -e 's/^v//' -e 's/-/.dev./' -e 's/-/+g/')"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+          # 1) AC_INIT second argument
+          # AC_INIT([libffi],[<old>],[bug-address])
+          sed -E -i "s/^(AC_INIT\(\[libffi\],\s*\[)[^]]+/\1$VERSION/" configure.ac
+
+          # 2) FFI_VERSION_STRING="..."
+          sed -E -i "s/^(FFI_VERSION_STRING=\")[^\"]+/\1$VERSION/" configure.ac
+
+      - name: autogen
+        run: ./autogen.sh
+
+      - name: Configure
+        run: ./configure
+
+      - name: Build dist tarball
+        run: make dist
+
+      - name: Upload artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "libffi-${{ env.VERSION }}"
+          path: "libffi-${{ env.VERSION }}.tar.*"
