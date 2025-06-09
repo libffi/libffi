@@ -13,7 +13,7 @@ jobs:
           fetch-depth: 0        # git describe needs full history
 
       - name: Install autotools
-        run: sudo apt-get update && sudo apt-get -y install autoconf automake libtool texinfo
+        run: sudo apt-get update && sudo apt-get -y install autoconf automake libtool texinfo libltdl-dev
 
       - name: Stamp snapshot version into configure.ac
         run: |
