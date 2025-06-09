@@ -174,7 +174,7 @@ jobs:
           echo B
           find ./ -type f -name 'libffi*'
           echo BB
-          find ./ -type f -name '*.h
+          find ./ -type f -name '*.h'
           echo C
           ls -l */.libs
           echo D
