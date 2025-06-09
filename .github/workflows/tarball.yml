@@ -43,8 +43,8 @@ jobs:
 
       - name: Create (or update) “snapshots” release
         uses: softprops/action-gh-release@v2
-          with:
-            tag_name: snapshots
-            prerelease: true
-            body: "Nightly snapshot built from ${{ github.sha }}"
-            files: libffi-${{ env.VERSION }}.tar.*
+        with:
+          tag_name: snapshots
+          prerelease: true
+          body: "Nightly snapshot built from ${{ github.sha }}"
+          files: libffi-${{ env.VERSION }}.tar.*
