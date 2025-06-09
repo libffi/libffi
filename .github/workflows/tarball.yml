@@ -8,6 +8,11 @@ jobs:
   dist:
     runs-on: ubuntu-latest
     steps:
+      - name: Install tools
+        run: |
+          sudo apt update
+          sudo apt install texlive makeinfo autoconf automake libtool libltdl-dev
+
       - uses: actions/checkout@v4
         with: {fetch-depth: 0}
 
