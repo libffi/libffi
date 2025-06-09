@@ -17,7 +17,7 @@ jobs:
 
       - name: Stamp snapshot version into configure.ac
         run: |
-          VERSION="$(git describe --match 'v[0-9]*' --long --always | sed -e 's/^v//' -e 's/-/.dev./' -e 's/-/+g/')"
+          VERSION="$(git describe --tags --long --match 'v[0-9]*' | sed -e 's/^v//' -e 's/-/.dev./' -e 's/-/+g/')"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
           # 1) AC_INIT second argument
@@ -36,8 +36,10 @@ jobs:
       - name: Build dist tarball
         run: make dist
 
-      - name: Upload artefact
-        uses: actions/upload-artifact@v4
+      - name: Create (or update) “snapshots” release
+        uses: softprops/action-gh-release@v2
         with:
-          name: "libffi-${{ env.VERSION }}"
-          path: "libffi-${{ env.VERSION }}.tar.*"
+          tag_name: snapshots
+          prerelease: true
+          body: "Snapshot built from ${{ github.sha }}"
+          files: libffi-${{ env.VERSION }}.tar.*
