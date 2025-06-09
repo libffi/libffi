@@ -342,7 +342,7 @@ proc libffi-init { args } {
     verbose "libffi_dir $libffi_dir"
     if { $libffi_dir != "" } {
         set libffi_dir [file dirname ${libffi_dir}]
-        set libffi_link_flags "-L${libffi_dir}/.libs"
+        set libffi_link_flags "-L ../.libs"
     }
 
     set_ld_library_path_env_vars
