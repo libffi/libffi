@@ -36,6 +36,15 @@ jobs:
       - run: ./configure
       - run: make dist     # produces libffi-${VERSION}.tar.gz
 
+      - name: Wipe old snapshot assets
+        uses: mknejp/delete-release-assets@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: snapshots            # ← whatever tag your nightly release uses
+          assets: |
+            libffi-*.tar.*
+            libffi-*.zip
+
       - name: Create (or update) “snapshots” release
         uses: softprops/action-gh-release@v2
         with:
