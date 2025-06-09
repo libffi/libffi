@@ -159,7 +159,6 @@ jobs:
           cd "$(cygpath $RUNNER_WORKSPACE)/libffi"
           wget https://rl.gl/cli/rlgl-windows-amd64.zip
           unzip rlgl-windows-amd64.zip
-
           autoreconf -fvi
           ./configure \
             --enable-shared \
@@ -168,20 +167,8 @@ jobs:
             CFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL"
 
           make
-          # sanity-check: should say PE32 or PE32+ as expected
-          echo A
+          # sanity-check
           file */.libs/*ffi-*.dll
-          echo B
-          find ./ -type f -name 'libffi*'
-          echo BB
-          find ./ -type f -name '*.h'
-          echo C
-          ls -l */.libs
-          echo D
-          ls -l */include
-          echo E
-          find ./ -name ffi.h
-          echo F
 
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
