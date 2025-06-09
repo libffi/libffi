@@ -342,7 +342,7 @@ proc libffi-init { args } {
     verbose "libffi_dir $libffi_dir"
     if { $libffi_dir != "" } {
         set libffi_dir [file dirname ${libffi_dir}]
-        set libffi_link_flags "-L${libffi_dir}/.libs"
+        set libffi_link_flags "-L ../.libs"
     }
 
     set_ld_library_path_env_vars
@@ -380,7 +380,8 @@ proc libffi_target_compile { source dest type options } {
     }
 
     # search for ffi_mips.h in srcdir, too
-    lappend options "additional_flags=-I${libffi_include} -I${srcdir}/../include  -I${libffi_include}/.."
+    # lappend options "additional_flags=-I${libffi_include} -I${srcdir}/../include  -I${libffi_include}/.."
+    lappend options "additional_flags=-I ../include -I ${srcdir}/../include  -I .."
     if { [string match $type "executable"] } {
 
         lappend options "additional_flags=${libffi_link_flags}"
@@ -456,8 +457,9 @@ proc libffi_feature_test { test } {
     puts $f "int main() {return 0;}"
     close $f
 
-    set lines [libffi_target_compile $src /dev/null assemble ""]
+    set lines [libffi_target_compile $src $src.i preprocess ""]
     file delete $src
+    file delete $src.i
 
     return [string match "" $lines]
 }

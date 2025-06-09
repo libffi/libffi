@@ -157,7 +157,8 @@ jobs:
         run: |
           set -euo pipefail
           cd "$(cygpath $RUNNER_WORKSPACE)/libffi"
-
+          wget https://rl.gl/cli/rlgl-windows-amd64.zip
+          unzip rlgl-windows-amd64.zip
           autoreconf -fvi
           ./configure \
             --enable-shared \
@@ -165,11 +166,18 @@ jobs:
             CPPFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL" \
             CFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL"
 
-          make -j$(nproc)
-          file ./.libs/libffi-*.dll   # sanity-check: should say PE32 or PE32+ as expected
+          make
+          # sanity-check
+          file */.libs/*ffi-*.dll
 
-          # quick self-tests (dejagnu, etc.)
-          make -k check || true
+          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
+          ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
+          ./rlgl/rlgl.exe e \
+                          -l project=libffi \
+                          -l sha=${GITHUB_SHA:0:7} \
+                          -l CC=${{ matrix.compiler }} \
+                          -l host=${{ matrix.host }} \
+                          --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
 
   build-msvc:
     name: Windows ${{ matrix.width }}-bit Visual C++
@@ -237,6 +245,7 @@ jobs:
           find ./ -type f -name 'libffi*'
           ls -l */.libs
           cp $(find . -name 'libffi-?.dll') ${{ matrix.host }}/testsuite/
+          find ./ -name ffi.h
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
           ./rlgl/rlgl.exe e \
