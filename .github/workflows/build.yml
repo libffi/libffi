@@ -73,7 +73,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [macos-13, macos-14, macos-15]
-        compilers: [CC=gcc-15 CXX=g++, CC=clang CXX=clang++]
+        compilers: [CC=gcc-15 CXX=g++-15, CC=clang CXX=g++-15]
 
     steps:
       - run: git config --global core.autocrlf input
