@@ -17,11 +17,16 @@ jobs:
 
       - name: Stamp snapshot version into configure.ac
         run: |
-          VERSION="$(git describe --match 'v[0-9]*' --long --always | \
-                    sed -e 's/^v//' -e 's/-/.dev./' -e 's/-/+g/')"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          sed -Ei "s/^(AC_INIT\(\[libffi\],\[[^]]*\])/\1,$VERSION/" configure.ac
-          sed -Ei "s/^(FFI_VERSION_STRING=\").*(\")/\1$VERSION\2/" configure.ac
+          VERSION="$(git describe --match 'v[0-9]*' --long --always |
+                sed -e 's/^v//' -e 's/-/.dev./' -e 's/-/+g/')"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+          # 1) AC_INIT second argument
+          # AC_INIT([libffi],[<old>],[bug-address])
+          sed -E -i "s/^(AC_INIT\(\[libffi\],\s*\[)[^]]+/\1$VERSION/" configure.ac
+
+          # 2) FFI_VERSION_STRING="..."
+          sed -E -i "s/^(FFI_VERSION_STRING=\")[^\"]+/\1$VERSION/" configure.ac
 
       - name: autogen
         run: ./autogen.sh
