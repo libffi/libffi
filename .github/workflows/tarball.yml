@@ -46,5 +46,5 @@ jobs:
         with:
           tag_name: snapshots
           prerelease: true
-          body: "Nightly snapshot built from ${{ github.sha }}"
+          body: "Snapshot built from ${{ github.sha }}"
           files: libffi-${{ env.VERSION }}.tar.*
