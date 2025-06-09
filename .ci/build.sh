@@ -23,9 +23,9 @@ fi
 
 function build_linux()
 {
-    ./autogen.sh
-
     ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS} || cat */config.log
+    ls -l */config.log
+    cat */config.log
     make
     make dist
     DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci runtest --version
