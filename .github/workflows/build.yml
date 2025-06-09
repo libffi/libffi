@@ -168,7 +168,18 @@ jobs:
             CFLAGS="-DFFI_BUILDING_DLL -DUSE_STATIC_RTL"
 
           make -j$(nproc)
-          file ./.libs/libffi-*.dll   # sanity-check: should say PE32 or PE32+ as expected
+          # sanity-check: should say PE32 or PE32+ as expected
+          echo A
+          file */.libs/libffi-*.dll
+          echo B
+          find ./ -type f -name 'libffi*'
+          echo C
+          ls -l */.libs
+          echo D
+          ls -l */include
+          echo E
+          find ./ -name ffi.h
+          echo F
 
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
           ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
