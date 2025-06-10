@@ -1,7 +1,7 @@
 Status
 ======
 
-libffi-3.5.0 was released on June 8, 2025.  Check the libffi web
+libffi-3.5.1 was released on June 10, 2025.  Check the libffi web
 page for updates: <URL:http://sourceware.org/libffi/>.
 
 
@@ -202,6 +202,9 @@ History
 =======
 
 See the git log for details at http://github.com/libffi/libffi.
+
+    3.5.1 Jun-10-2025
+        Fix symbol versioning error.
 
     3.5.0 Jun-8-2025
         Add FFI_VERSION_STRING and FFI_VERSION_NUMBER macros, as well
