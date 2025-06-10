@@ -41,6 +41,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: snapshots            # ← whatever tag your nightly release uses
+          fail-if-no-assets: false
           assets: |
             libffi-*.tar.*
             libffi-*.zip
