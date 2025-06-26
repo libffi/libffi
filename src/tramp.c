@@ -208,7 +208,7 @@ ffi_tramp_get_libffi (void)
   char file[PATH_MAX], line[PATH_MAX+100], perm[10], dev[10];
   unsigned long start, end, offset, inode;
   uintptr_t addr = (uintptr_t) tramp_globals.text;
-  int nfields, found;
+  int nfields, found, flags;
 
   snprintf (file, PATH_MAX, "/proc/%d/maps", getpid());
   fp = fopen (file, "r");
@@ -236,7 +236,13 @@ ffi_tramp_get_libffi (void)
   if (!found)
     return 0;
 
-  tramp_globals.fd = open (file, O_RDONLY);
+#ifdef O_CLOEXEC
+  flags = O_CLOEXEC;
+#else
+  flags = 0;
+#endif
+
+  tramp_globals.fd = open (file, O_RDONLY|flags);
   if (tramp_globals.fd == -1)
     return 0;
 
