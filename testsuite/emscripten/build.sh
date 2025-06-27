@@ -36,11 +36,11 @@ export PKG_CONFIG_PATH="$TARGET/lib/pkgconfig"
 export EM_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
 
 # Specific variables for cross-compilation
-export CHOST="wasm32-unknown-linux" # wasm32-unknown-emscripten
+export CHOST="${TARGET_HOST}-unknown-linux" # wasm32-unknown-emscripten
 
 autoreconf -fiv
 emconfigure ./configure --host=$CHOST --prefix="$TARGET" --enable-static --disable-shared --disable-dependency-tracking \
-  --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs
+  --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs ${EXTRA_CONFIGURE_FLAGS}
 make install
 cp fficonfig.h target/include/
 cp include/ffi_common.h target/include/
