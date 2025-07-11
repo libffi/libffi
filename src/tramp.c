@@ -236,7 +236,7 @@ ffi_tramp_get_libffi (void)
   if (!found)
     return 0;
 
-  tramp_globals.fd = open (file, O_RDONLY);
+  tramp_globals.fd = open (file, O_RDONLY | O_CLOEXEC);
   if (tramp_globals.fd == -1)
     return 0;
 
