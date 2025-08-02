@@ -103,6 +103,7 @@ tested:
 | TILE-Gx/TILEPro | Linux            | GCC                     |
 | VAX             | OpenBSD/vax      | GCC                     |
 | WASM32          | Emscripten       | EMCC                    |
+| WASM64          | Emscripten       | EMCC                    |
 | X86             | FreeBSD          | GCC                     |
 | X86             | GNU HURD         | GCC                     |
 | X86             | Interix          | GCC                     |

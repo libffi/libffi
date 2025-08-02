@@ -123,6 +123,8 @@ AC_C_BIGENDIAN
 
 GCC_AS_CFI_PSEUDO_OP
 
+AC_ARG_VAR([WASM64_MEMORY64], [Used only for the wasm64 target. Set to 1 (default) or 2 for Emscripten's -sMEMORY64 mode])
+
 case "$TARGET" in
   SPARC)
     AC_CACHE_CHECK([assembler and linker support unaligned pc related relocs],
@@ -181,6 +183,12 @@ case "$TARGET" in
 	AC_DEFINE(HAVE_AS_S390_ZARCH, 1,
 		  [Define if the compiler uses zarch features.])
     fi
+    ;;
+  wasm64)
+    if test -z "$WASM64_MEMORY64"; then
+      WASM64_MEMORY64=1
+    fi
+    CFLAGS="$CFLAGS -sMEMORY64=$WASM64_MEMORY64"
     ;;
 esac
 

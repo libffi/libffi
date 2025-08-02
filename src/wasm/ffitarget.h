@@ -42,13 +42,30 @@ typedef void (*ffi_fp)(void);
 
 typedef enum ffi_abi {
   FFI_FIRST_ABI = 0,
+#if __SIZEOF_POINTER__ == 4
   FFI_WASM32, // "raw", no structures, varargs, or closures (not implemented!)
   FFI_WASM32_EMSCRIPTEN, // structures, varargs, and split 64-bit params
+#elif __SIZEOF_POINTER__ == 8
+  FFI_WASM64,
+  FFI_WASM64_EMSCRIPTEN,
+#else
+#error "Unknown pointer size"
+#endif
   FFI_LAST_ABI,
+#if __SIZEOF_POINTER__ == 4
 #ifdef __EMSCRIPTEN__
   FFI_DEFAULT_ABI = FFI_WASM32_EMSCRIPTEN
 #else
   FFI_DEFAULT_ABI = FFI_WASM32
+#endif
+#elif __SIZEOF_POINTER__ == 8
+#ifdef __EMSCRIPTEN__
+  FFI_DEFAULT_ABI = FFI_WASM64_EMSCRIPTEN
+#else
+  FFI_DEFAULT_ABI = FFI_WASM64
+#endif
+#else
+#error "Unknown pointer size"
 #endif
 } ffi_abi;
 

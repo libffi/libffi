@@ -261,7 +261,12 @@ case "${host}" in
 	;;
 
   wasm32-*-*)
-	TARGET=wasm32; TARGETDIR=wasm32
+	TARGET=wasm32; TARGETDIR=wasm
+	SOURCES="ffi.c"
+	;;
+
+  wasm64-*-*)
+	TARGET=wasm64; TARGETDIR=wasm
 	SOURCES="ffi.c"
 	;;
 
