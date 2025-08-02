@@ -2,11 +2,11 @@ dnl Process this with autoconf to create configure
 
 AC_PREREQ([2.68])
 
-AC_INIT([libffi],[3.5.1],[http://github.com/libffi/libffi/issues])
+AC_INIT([libffi],[3.5.2],[http://github.com/libffi/libffi/issues])
 AC_CONFIG_HEADERS([fficonfig.h])
 
-FFI_VERSION_STRING="3.5.1"
-FFI_VERSION_NUMBER=30501
+FFI_VERSION_STRING="3.5.2"
+FFI_VERSION_NUMBER=30502
 AC_SUBST(FFI_VERSION_STRING)
 AC_SUBST(FFI_VERSION_NUMBER)
 

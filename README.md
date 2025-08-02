@@ -1,8 +1,7 @@
 Status
 ======
 
-libffi-3.5.1 was released on June 10, 2025.  Check the libffi web
-page for updates: <URL:http://sourceware.org/libffi/>.
+libffi-3.5.2 was released on August 2, 2025.
 
 
 What is libffi?
@@ -204,6 +203,11 @@ History
 =======
 
 See the git log for details at http://github.com/libffi/libffi.
+
+    3.5.2 Aug-2-2025
+        Add wasm64 support.
+        Add DragonFly BSD support.
+        Ensure trampoline file descriptors are closed on exec.
 
     3.5.1 Jun-10-2025
         Fix symbol versioning error.
