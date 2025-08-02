@@ -114,6 +114,7 @@ tested:
 | X86             | Solaris          | Oracle Solaris Studio C |
 | X86             | Windows/Cygwin   | GCC                     |
 | X86             | Windows/MinGW    | GCC                     |
+| X86-64          | DragonFly BSD    | GCC                     |
 | X86-64          | FreeBSD          | GCC                     |
 | X86-64          | Linux            | GCC                     |
 | X86-64          | Linux/x32        | GCC                     |
