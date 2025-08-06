@@ -29,6 +29,7 @@
 #define LIBFFI_ASM
 #include <fficonfig.h>
 #include <ffi.h>
+#include "internal.h"
 
 /* Define aliases so that we can handle all ABIs uniformly */
 
@@ -291,3 +292,22 @@ ffi_go_closure_asm:
     ret
     .cfi_endproc
     .size ffi_go_closure_asm, .-ffi_go_closure_asm
+
+#ifdef FFI_EXEC_STATIC_TRAMP
+/*
+  trampoline_code_table.
+*/
+    .globl trampoline_code_table
+    .hidden trampoline_code_table
+    .type trampoline_code_table, @function
+    .align RISCV_TRAMP_MAP_SHIFT
+trampoline_code_table:
+    .rept   RISCV_TRAMP_MAP_SIZE / RISCV_TRAMP_SIZE
+    auipc   t2, %hi(RISCV_TRAMP_MAP_SIZE)
+    LARG    t1, 0(t2)
+    LARG    t2, PTRS(t2)
+    jalr    x0,t2,0	# Use the base jalr insn to ensure tramopline alignment
+    .endr
+    .size   trampoline_code_table,.-trampoline_code_table
+    .align RISCV_TRAMP_MAP_SHIFT
+#endif /* FFI_EXEC_STATIC_TRAMP */

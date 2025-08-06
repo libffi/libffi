@@ -29,6 +29,8 @@
 
 #include <ffi.h>
 #include <ffi_common.h>
+#include "internal.h"
+#include <tramp.h>
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -424,33 +426,43 @@ extern void ffi_closure_asm(void) FFI_HIDDEN;
 
 ffi_status ffi_prep_closure_loc(ffi_closure *closure, ffi_cif *cif, void (*fun)(ffi_cif*,void*,void**,void*), void *user_data, void *codeloc)
 {
-    uint32_t *tramp = (uint32_t *) &closure->tramp[0];
-    uint64_t fn = (uint64_t) (uintptr_t) ffi_closure_asm;
-
     if (cif->abi <= FFI_FIRST_ABI || cif->abi >= FFI_LAST_ABI)
         return FFI_BAD_ABI;
 
-    /* we will call ffi_closure_inner with codeloc, not closure, but as long
-       as the memory is readable it should work */
-
-    tramp[0] = 0x00000317; /* auipc t1, 0 (i.e. t0 <- codeloc) */
-#if __SIZEOF_POINTER__ == 8
-    tramp[1] = 0x01033383; /* ld t2, 16(t1) */
-#else
-    tramp[1] = 0x01032383; /* lw t2, 16(t1) */
+#ifdef FFI_EXEC_STATIC_TRAMP
+  if (ffi_tramp_is_present (closure))
+    {
+      /* Initialize the static trampoline's parameters. */
+      void (*dest)(void) = ffi_closure_asm;
+      ffi_tramp_set_parms (closure->ftramp, dest, closure);
+    }
+  else
 #endif
-    tramp[2] = 0x00038067; /* jr t2 */
-    tramp[3] = 0x00000013; /* nop */
-    tramp[4] = fn;
-    tramp[5] = fn >> 32;
+    {
+      uint32_t *tramp = (uint32_t *) &closure->tramp[0];
+      uint64_t fn = (uint64_t) (uintptr_t) ffi_closure_asm;
+
+      /* we will call ffi_closure_inner with codeloc, not closure, but as long
+	 as the memory is readable it should work */
+
+      tramp[0] = 0x00000317; /* auipc t1, 0 (i.e. t0 <- codeloc) */
+#if __SIZEOF_POINTER__ == 8
+      tramp[1] = 0x01033383; /* ld t2, 16(t1) */
+#else
+      tramp[1] = 0x01032383; /* lw t2, 16(t1) */
+#endif
+      tramp[2] = 0x00038067; /* jr t2 */
+      tramp[3] = 0x00000013; /* nop */
+      tramp[4] = fn;
+      tramp[5] = fn >> 32;
+#if !defined(__FreeBSD__)
+    __builtin___clear_cache(codeloc, codeloc + FFI_TRAMPOLINE_SIZE);
+#endif
+    }
 
     closure->cif = cif;
     closure->fun = fun;
     closure->user_data = user_data;
-
-#if !defined(__FreeBSD__)
-    __builtin___clear_cache(codeloc, codeloc + FFI_TRAMPOLINE_SIZE);
-#endif
 
     return FFI_OK;
 }
@@ -512,3 +524,14 @@ ffi_closure_inner (ffi_cif *cif,
         marshal(&cb, cif->rtype, 0, rvalue);
     }
 }
+
+#ifdef FFI_EXEC_STATIC_TRAMP
+void *
+ffi_tramp_arch (size_t *tramp_size, size_t *map_size)
+{
+  extern void *trampoline_code_table;
+  *tramp_size = RISCV_TRAMP_SIZE;
+  *map_size = RISCV_TRAMP_MAP_SIZE;
+  return &trampoline_code_table;
+}
+#endif
