@@ -63,7 +63,7 @@ noinst_HEADERS = src/aarch64/ffitarget.h src/aarch64/internal.h		\
 	src/or1k/ffitarget.h src/pa/ffitarget.h				\
 	src/powerpc/ffitarget.h src/powerpc/asm.h			\
 	src/powerpc/ffi_powerpc.h src/powerpc/internal.h		\
-	src/riscv/ffitarget.h						\
+	src/riscv/ffitarget.h src/riscv/internal.h			\
 	src/s390/ffitarget.h src/s390/internal.h src/sh/ffitarget.h	\
 	src/sh64/ffitarget.h src/sparc/ffitarget.h			\
 	src/sparc/internal.h src/tile/ffitarget.h src/vax/ffitarget.h	\
