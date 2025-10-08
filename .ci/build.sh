@@ -17,17 +17,22 @@ fi
 
 export DOCKER=docker
 
+if ! command -v makeinfo >/dev/null 2>&1; then
+    CONFIGURE_OPTIONS="--disable-docs ${CONFIGURE_OPTIONS}"
+fi
+
 function build_linux()
 {
-    ./autogen.sh
     ./configure ${HOST+--host=$HOST} ${CONFIGURE_OPTIONS} || cat */config.log
+    ls -l */config.log
+    cat */config.log
     make
     make dist
     DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci runtest --version
     DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci make check RUNTESTFLAGS="-a $RUNTESTFLAGS"
 
     ./rlgl l --key=${RLGL_KEY} https://rl.gl
-    ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='$CC' ${HOST+-l host=$HOST} --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
+    ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='${CC}' ${HOST+-l host=$HOST} --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
     exit $?
 }
 
@@ -62,7 +67,7 @@ function build_cross()
 function build_ios()
 {
     which python
-# export PYTHON_BIN=/usr/local/bin/python
+    # export PYTHON_BIN=/usr/local/bin/python
     ./generate-darwin-source-and-headers.py --only-ios
     xcodebuild -showsdks
     xcodebuild -project libffi.xcodeproj -target "libffi-iOS" -configuration Release -sdk iphoneos11.4
@@ -72,7 +77,7 @@ function build_ios()
 function build_macosx()
 {
     which python
-# export PYTHON_BIN=/usr/local/bin/python
+    # export PYTHON_BIN=/usr/local/bin/python
     ./generate-darwin-source-and-headers.py --only-osx
     xcodebuild -showsdks
     xcodebuild -project libffi.xcodeproj -target "libffi-Mac" -configuration Release -sdk macosx10.13
@@ -82,43 +87,43 @@ function build_macosx()
 
 case "$HOST" in
     arm-apple-darwin*)
-	./autogen.sh
-	build_ios
-	;;
+	      ./autogen.sh
+	      build_ios
+	      ;;
     x86_64-apple-darwin*)
-	./autogen.sh
-	build_macosx
-	;;
+	      ./autogen.sh
+	      build_macosx
+	      ;;
     arm32v7-linux-gnu)
-	./autogen.sh
+	      ./autogen.sh
         build_foreign_linux arm quay.io/moxielogic/arm32v7-ci-build-container:latest
-	;;
+	      ;;
     bfin-elf )
-	./autogen.sh
-	GCC_OPTIONS=-msim build_cross
-	;;
+	      ./autogen.sh
+	      GCC_OPTIONS=-msim build_cross
+	      ;;
     m32r-elf )
-	./autogen.sh
-	build_cross
-	;;
+	      ./autogen.sh
+	      build_cross
+	      ;;
     or1k-elf )
-	./autogen.sh
-	build_cross
-	;;
+	      ./autogen.sh
+	      build_cross
+	      ;;
     powerpc-eabisim )
-	./autogen.sh
-	build_cross
-	;;
+	      ./autogen.sh
+	      build_cross
+	      ;;
     m68k-linux-gnu )
-	./autogen.sh
-	GCC_OPTIONS=-mcpu=547x build_cross_linux
-	;;
+	      ./autogen.sh
+	      GCC_OPTIONS=-mcpu=547x build_cross_linux
+	      ;;
     alpha-linux-gnu | sh4-linux-gnu )
-	./autogen.sh
-	build_cross_linux
-	;;
+	      ./autogen.sh
+	      build_cross_linux
+	      ;;
     *)
-	./autogen.sh
-	build_linux
-	;;
+	      ./autogen.sh
+	      build_linux
+	      ;;
 esac

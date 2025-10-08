@@ -18,7 +18,7 @@
 This manual is for libffi, a portable foreign function interface
 library.
 
-Copyright @copyright{} 2008--2024 Anthony Green and Red Hat, Inc.
+Copyright @copyright{} 2008--2025 Anthony Green and Red Hat, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -236,6 +236,29 @@ object declared as @code{short}; but if the return type is
 a larger type -- usually @code{ffi_arg}.
 @end defun
 
+@findex ffi_get_version
+@defun {const char *} ffi_get_version (void)
+Returns the library version as a string.  This string is also
+available at build time as the macro @code{FFI_VERSION_STRING}.
+@end defun
+
+@findex ffi_get_version_number
+@defun {unsigned long} ffi_get_version_number (void)
+Returns the library version as an unsigned long value where
+version ``x.y.z'' is represented as the number x*10000+y*100+z.
+This number is also available at build time as the macro
+@code{FFI_VERSION_NUMBER}.
+@end defun
+
+@findex ffi_get_default_abi
+@defun {unsigned int} ffi_get_default_abi (void)
+Return the value of @code{FFI_DEFAULT_ABI}.
+@end defun
+
+@findex ffi_get_closure_size
+@defun {size_t} ffi_get_closure_size (void)
+Return @code{sizeof(ffi_closure)}.
+@end defun
 
 @node Simple Example
 @section Simple Example
@@ -263,14 +286,14 @@ int main()
 		       &ffi_type_sint, args) == FFI_OK)
     @{
       s = "Hello World!";
-      ffi_call(&cif, puts, &rc, values);
+      ffi_call(&cif, (void(*)())puts, &rc, values);
       /* rc now holds the result of the call to puts */
 
       /* values holds a pointer to the function's arg, so to
          call puts() again all we need to do is change the
          value of s */
       s = "This is cool!";
-      ffi_call(&cif, puts, &rc, values);
+      ffi_call(&cif, (void(*)())puts, &rc, values);
     @}
 
   return 0;

@@ -1,0 +1,44 @@
+# This is a list of labels to be used for automatic tagging
+# of github issues using gail: https://github.com/atgreen/gail
+
+# Main categories
+BUILD-ERROR
+RUNTIME-ERROR
+FEATURE-REQUEST
+QUESTION
+
+# Operating systems
+ANDROID
+IOS
+LINUX
+MACOS
+SOLARIS
+WINDOWS
+
+# Processor families
+AARCH64
+ALPHA
+ARC
+ARM
+AVR32
+BLACKFIN
+CSKY
+HPPA
+IA-64
+KVX
+LOONGARCH64
+M68K
+M88K
+MICROBLAZE
+MIPS
+MOXIE
+OPENRISC
+POWERPC
+RISC-V
+S390
+SPARC
+TILE
+VAX
+WASM
+X86
+XTENSA

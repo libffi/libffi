@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 
-FILE* out;
+FILE* out = NULL;
 
 #define uchar unsigned char
 #define ushort unsigned short

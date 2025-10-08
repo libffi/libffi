@@ -17,8 +17,8 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.call/float1.c libffi.call/float2.c libffi.call/float3.c \
 	libffi.call/float4.c libffi.call/float_va.c libffi.call/many.c \
 	libffi.call/many2.c libffi.call/many_double.c libffi.call/many_mixed.c \
-	libffi.call/negint.c libffi.call/offsets.c libffi.call/pr1172638.c \
-	libffi.call/promotion.c libffi.call/pyobjc_tc.c libffi.call/return_dbl.c \
+	libffi.call/negint.c libffi.call/offsets.c libffi.call/overread.c \
+	libffi.call/pr1172638.c libffi.call/promotion.c libffi.call/pyobjc_tc.c libffi.call/return_dbl.c \
 	libffi.call/return_dbl1.c libffi.call/return_dbl2.c libffi.call/return_fl.c \
 	libffi.call/return_fl1.c libffi.call/return_fl2.c libffi.call/return_fl3.c \
 	libffi.call/return_ldl.c libffi.call/return_ll.c libffi.call/return_ll1.c \
@@ -31,11 +31,11 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.call/struct9.c libffi.call/struct_by_value_2.c libffi.call/struct_by_value_3.c \
 	libffi.call/struct_by_value_3f.c libffi.call/struct_by_value_4.c libffi.call/struct_by_value_4f.c \
 	libffi.call/struct_by_value_big.c libffi.call/struct_by_value_small.c libffi.call/struct_return_2H.c \
-  libffi.call/struct_int_float.c \
+	libffi.call/struct_int_float.c libffi.call/longjmp.c \
 	libffi.call/struct_return_8H.c libffi.call/uninitialized.c libffi.call/va_1.c \
 	libffi.call/va_2.c libffi.call/va_3.c libffi.call/va_struct1.c \
 	libffi.call/va_struct2.c libffi.call/va_struct3.c libffi.call/callback.c \
-	libffi.call/callback2.c libffi.call/callback3.c libffi.call/callback4.c \
+	libffi.call/callback2.c libffi.call/callback3.c libffi.call/callback4.c libffi.call/x32.c \
 	libffi.closures/closure.exp libffi.closures/closure_fn0.c libffi.closures/closure_fn1.c \
 	libffi.closures/closure_fn2.c libffi.closures/closure_fn3.c libffi.closures/closure_fn4.c \
 	libffi.closures/closure_fn5.c libffi.closures/closure_fn6.c libffi.closures/closure_loc_fn0.c \
@@ -85,4 +85,5 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.complex/return_complex2_float.c libffi.complex/return_complex2_longdouble.c libffi.complex/return_complex_double.c \
 	libffi.complex/return_complex_float.c libffi.complex/return_complex_longdouble.c libffi.go/aa-direct.c \
 	libffi.go/closure1.c libffi.go/ffitest.h libffi.go/go.exp \
-	libffi.go/static-chain.h Makefile.am Makefile.in
+	libffi.go/static-chain.h Makefile.am Makefile.in \
+	libffi.threads/ffitest.h libffi.threads/threads.exp libffi.threads/tsan.c

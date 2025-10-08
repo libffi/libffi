@@ -1,4 +1,4 @@
-#   Copyright (C) 2003, 2005, 2008, 2009, 2010, 2011, 2014, 2019, 2022 Free Software Foundation, Inc.
+#   Copyright (C) 2003, 2005, 2008, 2009, 2010, 2011, 2014, 2019, 2022, 2025 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,14 +38,14 @@ proc is-effective-target { arg } {
     global et_index
     set selected 0
     if { ![info exists et_index] } {
-	# Initialize the effective target index that is used in some
-	# check_effective_target_* procs.
-	set et_index 0
+        # Initialize the effective target index that is used in some
+        # check_effective_target_* procs.
+        set et_index 0
     }
     if { [info procs check_effective_target_${arg}] != [list] } {
-	set selected [check_effective_target_${arg}]
+        set selected [check_effective_target_${arg}]
     } else {
-	error "unknown effective target keyword `$arg'"
+        error "unknown effective target keyword `$arg'"
     }
     verbose "is-effective-target: $arg $selected" 2
     return $selected
@@ -53,9 +53,9 @@ proc is-effective-target { arg } {
 
 proc is-effective-target-keyword { arg } {
     if { [info procs check_effective_target_${arg}] != [list] } {
-	return 1
+        return 1
     } else {
-	return 0
+        return 0
     }
 }
 
@@ -87,93 +87,93 @@ if { [info procs saved-dg-process-target] == [list] } {
 
     # Evaluate an operand within a selector expression.
     proc selector_opd { op } {
-	set selector "target"
-	lappend selector $op
-	set answer [ expr { [dg-process-target $selector] == "S" } ]
-	verbose "selector_opd: `$op' $answer" 2
-	return $answer
+        set selector "target"
+        lappend selector $op
+        set answer [ expr { [dg-process-target $selector] == "S" } ]
+        verbose "selector_opd: `$op' $answer" 2
+        return $answer
     }
 
     # Evaluate a target triplet list within a selector expression.
     # Unlike other operands, this needs to be expanded from a list to
     # the same string as "target".
     proc selector_list { op } {
-	set selector "target [join $op]"
-	set answer [ expr { [dg-process-target $selector] == "S" } ]
-	verbose "selector_list: `$op' $answer" 2
-	return $answer
+        set selector "target [join $op]"
+        set answer [ expr { [dg-process-target $selector] == "S" } ]
+        verbose "selector_list: `$op' $answer" 2
+        return $answer
     }
 
     # Evaluate a selector expression.
     proc selector_expression { exp } {
-	if { [llength $exp] == 2 } {
-	    if [string match "!" [lindex $exp 0]] {
-		set op1 [lindex $exp 1]
-		set answer [expr { ! [selector_opd $op1] }]
-	    } else {
-		# Assume it's a list of target triplets.
-		set answer [selector_list $exp]
-	    }
-	} elseif { [llength $exp] == 3 } {
-	    set op1 [lindex $exp 0]
-	    set opr [lindex $exp 1]
-	    set op2 [lindex $exp 2]
-	    if [string match "&&" $opr] {
-		set answer [expr { [selector_opd $op1] && [selector_opd $op2] }]
-	    } elseif [string match "||" $opr] {
-		set answer [expr { [selector_opd $op1] || [selector_opd $op2] }]
-	    } else {
-		# Assume it's a list of target triplets.
-		set answer [selector_list $exp]
-	    }
-	} else {
-	    # Assume it's a list of target triplets.
-	    set answer [selector_list $exp]
-	}
+        if { [llength $exp] == 2 } {
+            if [string match "!" [lindex $exp 0]] {
+                set op1 [lindex $exp 1]
+                set answer [expr { ! [selector_opd $op1] }]
+            } else {
+                # Assume it's a list of target triplets.
+                set answer [selector_list $exp]
+            }
+        } elseif { [llength $exp] == 3 } {
+            set op1 [lindex $exp 0]
+            set opr [lindex $exp 1]
+            set op2 [lindex $exp 2]
+            if [string match "&&" $opr] {
+                set answer [expr { [selector_opd $op1] && [selector_opd $op2] }]
+            } elseif [string match "||" $opr] {
+                set answer [expr { [selector_opd $op1] || [selector_opd $op2] }]
+            } else {
+                # Assume it's a list of target triplets.
+                set answer [selector_list $exp]
+            }
+        } else {
+            # Assume it's a list of target triplets.
+            set answer [selector_list $exp]
+        }
 
-	verbose "selector_expression: `$exp' $answer" 2
-	return $answer
+        verbose "selector_expression: `$exp' $answer" 2
+        return $answer
     }
 
     # Evaluate "target selector" or "xfail selector".
 
     proc dg-process-target-1 { args } {
-	verbose "dg-process-target-1: `$args'" 2
+        verbose "dg-process-target-1: `$args'" 2
 
-	# Extract the 'what' keyword from the argument list.
-	set selector [string trim [lindex $args 0]]
-	if [regexp "^xfail " $selector] {
-	    set what "xfail"
-	} elseif [regexp "^target " $selector] {
-	    set what "target"
-	} else {
-	    error "syntax error in target selector \"$selector\""
-	}
+        # Extract the 'what' keyword from the argument list.
+        set selector [string trim [lindex $args 0]]
+        if [regexp "^xfail " $selector] {
+            set what "xfail"
+        } elseif [regexp "^target " $selector] {
+            set what "target"
+        } else {
+            error "syntax error in target selector \"$selector\""
+        }
 
-	# Extract the rest of the list, which might be a keyword.
-	regsub "^${what}" $selector "" rest
-	set rest [string trim $rest]
+        # Extract the rest of the list, which might be a keyword.
+        regsub "^${what}" $selector "" rest
+        set rest [string trim $rest]
 
-	if [is-effective-target-keyword $rest] {
-	    # The selector is an effective target keyword.
-	    if [is-effective-target $rest] {
-		return [expr { $what == "xfail" ? "F" : "S" }]
-	    } else {
-		return [expr { $what == "xfail" ? "P" : "N" }]
-	    }
-	}
+        if [is-effective-target-keyword $rest] {
+            # The selector is an effective target keyword.
+            if [is-effective-target $rest] {
+                return [expr { $what == "xfail" ? "F" : "S" }]
+            } else {
+                return [expr { $what == "xfail" ? "P" : "N" }]
+            }
+        }
 
-	if [string match "{*}" $rest] {
-	    if [selector_expression [lindex $rest 0]] {
-		return [expr { $what == "xfail" ? "F" : "S" }]
-	    } else {
-		return [expr { $what == "xfail" ? "P" : "N" }]
-	    }
-	}
+        if [string match "{*}" $rest] {
+            if [selector_expression [lindex $rest 0]] {
+                return [expr { $what == "xfail" ? "F" : "S" }]
+            } else {
+                return [expr { $what == "xfail" ? "P" : "N" }]
+            }
+        }
 
-	# The selector is not an effective-target keyword, so process
-	# the list of target triplets.
-	return [saved-dg-process-target $selector]
+        # The selector is not an effective-target keyword, so process
+        # the list of target triplets.
+        return [saved-dg-process-target $selector]
     }
 
     # Intercept calls to the DejaGnu function.  In addition to
@@ -181,24 +181,24 @@ if { [info procs saved-dg-process-target] == [list] } {
     # "target selector1 xfail selector2".
 
     proc dg-process-target { args } {
-	verbose "replacement dg-process-target: `$args'" 2
+        verbose "replacement dg-process-target: `$args'" 2
 
-	set selector [string trim [lindex $args 0]]
+        set selector [string trim [lindex $args 0]]
 
-	# If the argument list contains both 'target' and 'xfail',
-	# process 'target' and, if that succeeds, process 'xfail'.
-	if [regexp "^target .* xfail .*" $selector] {
-	    set xfail_index [string first "xfail" $selector]
-	    set xfail_selector [string range $selector $xfail_index end]
-	    set target_selector [string range $selector 0 [expr $xfail_index-1]]
-	    set target_selector [string trim $target_selector]
-	    if { [dg-process-target-1 $target_selector] == "N" } {
-		return "N"
-	    }
-	    return [dg-process-target-1 $xfail_selector]
+        # If the argument list contains both 'target' and 'xfail',
+        # process 'target' and, if that succeeds, process 'xfail'.
+        if [regexp "^target .* xfail .*" $selector] {
+            set xfail_index [string first "xfail" $selector]
+            set xfail_selector [string range $selector $xfail_index end]
+            set target_selector [string range $selector 0 [expr $xfail_index-1]]
+            set target_selector [string trim $target_selector]
+            if { [dg-process-target-1 $target_selector] == "N" } {
+                return "N"
+            }
+            return [dg-process-target-1 $xfail_selector]
 
-	}
-	return [dg-process-target-1 $selector]
+        }
+        return [dg-process-target-1 $selector]
     }
 }
 
@@ -217,8 +217,8 @@ proc libffi-dg-test-1 { target_compile prog do_what extra_tool_flags } {
     upvar 2 dg-output-text output_match
 
     if { [llength $output_match] > 1 } {
-	regsub -all "\n" [lindex $output_match 1] "\r?\n" x
-	set output_match [lreplace $output_match 1 1 $x]
+        regsub -all "\n" [lindex $output_match 1] "\r?\n" x
+        set output_match [lreplace $output_match 1 1 $x]
     }
 
     if { [ istarget "wasm32-*-*" ] } {
@@ -232,34 +232,34 @@ proc libffi-dg-test-1 { target_compile prog do_what extra_tool_flags } {
 
     set options [list]
     switch $do_what {
-	"compile" {
-	    set compile_type "assembly"
-	    set output_file "[file rootname [file tail $prog]].s"
-	}
-	"link" {
-	    set compile_type "executable"
-	    set output_file "[file rootname [file tail $prog]]$exec_suffix"
-	    # The following line is needed for targets like the i960 where
-	    # the default output file is b.out.  Sigh.
-	}
-	"run" {
-	    set compile_type "executable"
-	    # FIXME: "./" is to cope with "." not being in $PATH.
-	    # Should this be handled elsewhere?
-	    # YES.
-	    set output_file "./[file rootname [file tail $prog]]$exec_suffix"
-	    # This is the only place where we care if an executable was
-	    # created or not.  If it was, dg.exp will try to run it.
-	    remote_file build delete $output_file;
-	}
-	default {
-	    perror "$do_what: not a valid dg-do keyword"
-	    return ""
-	}
+        "compile" {
+            set compile_type "assembly"
+            set output_file "[file rootname [file tail $prog]].s"
+        }
+        "link" {
+            set compile_type "executable"
+            set output_file "[file rootname [file tail $prog]]$exec_suffix"
+            # The following line is needed for targets like the i960 where
+            # the default output file is b.out.  Sigh.
+        }
+        "run" {
+            set compile_type "executable"
+            # FIXME: "./" is to cope with "." not being in $PATH.
+            # Should this be handled elsewhere?
+            # YES.
+            set output_file "./[file rootname [file tail $prog]]$exec_suffix"
+            # This is the only place where we care if an executable was
+            # created or not.  If it was, dg.exp will try to run it.
+            remote_file build delete $output_file;
+        }
+        default {
+            perror "$do_what: not a valid dg-do keyword"
+            return ""
+        }
     }
 
     if { $extra_tool_flags != "" } {
-	lappend options "additional_flags=$extra_tool_flags"
+        lappend options "additional_flags=$extra_tool_flags"
     }
 
     set comp_output [libffi_target_compile "$prog" "$output_file" "$compile_type" $options];
@@ -297,7 +297,7 @@ proc libffi-init { args } {
     global compiler_vendor
 
     if ![info exists blddirffi] {
-	set blddirffi [pwd]/..
+        set blddirffi [pwd]/..
     }
 
     verbose "libffi $blddirffi"
@@ -306,7 +306,7 @@ proc libffi-init { args } {
     if { [string match $compiler_vendor "gnu"] } {
         set gccdir [lookfor_file $tool_root_dir gcc/libgcc.a]
         if {$gccdir != ""} {
-	    set gccdir [file dirname $gccdir]
+            set gccdir [file dirname $gccdir]
         }
         verbose "gccdir $gccdir"
 
@@ -315,17 +315,17 @@ proc libffi-init { args } {
 
         set compiler "${gccdir}/xgcc"
         if { [is_remote host] == 0 && [which $compiler] != 0 } {
-	    foreach i "[exec $compiler --print-multi-lib]" {
-	        set mldir ""
-	        regexp -- "\[a-z0-9=_/\.-\]*;" $i mldir
-	        set mldir [string trimright $mldir "\;@"]
-	        if { "$mldir" == "." } {
-		    continue
-	        }
-	        if { [llength [glob -nocomplain ${gccdir}/${mldir}/libgcc_s*.so.*]] >= 1 } {
-		    append ld_library_path ":${gccdir}/${mldir}"
-	        }
-	    }
+            foreach i "[exec $compiler --print-multi-lib]" {
+                set mldir ""
+                regexp -- "\[a-z0-9=_/\.-\]*;" $i mldir
+                set mldir [string trimright $mldir "\;@"]
+                if { "$mldir" == "." } {
+                    continue
+                }
+                if { [llength [glob -nocomplain ${gccdir}/${mldir}/libgcc_s*.so.*]] >= 1 } {
+                    append ld_library_path ":${gccdir}/${mldir}"
+                }
+            }
         }
     }
 
@@ -341,8 +341,8 @@ proc libffi-init { args } {
     set libffi_dir  "${blddirffi}/.libs"
     verbose "libffi_dir $libffi_dir"
     if { $libffi_dir != "" } {
-	set libffi_dir [file dirname ${libffi_dir}]
-	set libffi_link_flags "-L${libffi_dir}/.libs"
+        set libffi_dir [file dirname ${libffi_dir}]
+        set libffi_link_flags "-L ../.libs"
     }
 
     set_ld_library_path_env_vars
@@ -353,8 +353,8 @@ proc libffi_exit { } {
     global gluefile;
 
     if [info exists gluefile] {
-	file_on_build delete $gluefile;
-	unset gluefile;
+        file_on_build delete $gluefile;
+        unset gluefile;
     }
 }
 
@@ -369,54 +369,60 @@ proc libffi_target_compile { source dest type options } {
     global compiler_vendor
 
     if { [target_info needs_status_wrapper]!="" && [info exists gluefile] } {
-	lappend options "libs=${gluefile}"
-	lappend options "ldflags=$wrap_flags"
+        lappend options "libs=${gluefile}"
+        lappend options "ldflags=$wrap_flags"
     }
 
     # TOOL_OPTIONS must come first, so that it doesn't override testcase
     # specific options.
     if [info exists TOOL_OPTIONS] {
-	lappend  options "additional_flags=$TOOL_OPTIONS"
+        lappend  options "additional_flags=$TOOL_OPTIONS"
     }
 
     # search for ffi_mips.h in srcdir, too
-    lappend options "additional_flags=-I${libffi_include} -I${srcdir}/../include  -I${libffi_include}/.."
-    lappend options "additional_flags=${libffi_link_flags}"
+    # lappend options "additional_flags=-I${libffi_include} -I${srcdir}/../include  -I${libffi_include}/.."
+    lappend options "additional_flags=-I ../include -I ${srcdir}/../include  -I .."
+    if { [string match $type "executable"] } {
 
-    # Darwin needs a stack execution allowed flag.
+        lappend options "additional_flags=${libffi_link_flags}"
 
-    if { [istarget "*-*-darwin9*"] || [istarget "*-*-darwin1*"]
-	 || [istarget "*-*-darwin2*"] } {
-	# lappend options "additional_flags=-Wl,-allow_stack_execute"
-        lappend options "additional_flags=-Wno-unused-command-line-argument"
-        lappend options "additional_flags=-Wl,-search_paths_first"
-    }
+        # Darwin needs a stack execution allowed flag.
+        if { [istarget "*-*-darwin9*"] || [istarget "*-*-darwin1*"]
+             || [istarget "*-*-darwin2*"] } {
+            # lappend options "additional_flags=-Wl,-allow_stack_execute"
+            lappend options "additional_flags=-Wno-unused-command-line-argument"
+            lappend options "additional_flags=-Wl,-search_paths_first"
+        }
 
-    # If you're building the compiler with --prefix set to a place
-    # where it's not yet installed, then the linker won't be able to
-    # find the libgcc used by libffi.dylib.  We could pass the
-    # -dylib_file option, but that's complicated, and it's much easier
-    # to just make the linker find libgcc using -L options.
-    if { [string match "*-*-darwin*" $target_triplet] } {
-	lappend options "libs= -shared-libgcc"
-    }
+        # If you're building the compiler with --prefix set to a place
+        # where it's not yet installed, then the linker won't be able to
+        # find the libgcc used by libffi.dylib.  We could pass the
+        # -dylib_file option, but that's complicated, and it's much easier
+        # to just make the linker find libgcc using -L options.
+        if { [string match "*-*-darwin*" $target_triplet] } {
+            lappend options "libs= -shared-libgcc"
+        }
 
-    if { [string match "*-*-openbsd*" $target_triplet] } {
-	lappend options "libs= -lpthread"
-    }
+        if { [string match "*-*-openbsd*" $target_triplet] } {
+            lappend options "libs= -lpthread"
+        }
 
-    lappend options "libs= -lffi"
-
-    if { ![string match "*android*" $target_triplet] } {
+        lappend options "libs= -lffi"
 
         if { [string match "aarch64*-*-linux*" $target_triplet] } {
-            lappend options "libs= -lpthread"
+            if { ! [string match "*android*" $target_triplet] } {
+                lappend options "libs= -lpthread"
+            }
         }
 
         # this may be required for g++, but just confused clang.
         if { [string match "*.cc" $source] } {
             lappend options "c++"
             if { [string match "*-*-darwin*" $target_triplet] } {
+                if { [string match $compiler_vendor "gnu"] } {
+                    lappend options "libs= -lc++"
+                }
+            } elseif { [string match "*android*" $target_triplet] } {
                 lappend options "libs= -lc++"
             }
         }
@@ -430,6 +436,7 @@ proc libffi_target_compile { source dest type options } {
     # which causes it to be seen as unsupported.
     if { [string match "wasm32-*" $target_triplet] } {
         lappend options "additional_flags=-Wno-unused-command-line-argument"
+        lappend options "libs= -lpthread"
     }
 
     verbose "options: $options"
@@ -447,10 +454,12 @@ proc libffi_feature_test { test } {
     puts $f "#else"
     puts $f "# error Failed $test"
     puts $f "#endif"
+    puts $f "int main() {return 0;}"
     close $f
 
-    set lines [libffi_target_compile $src /dev/null assembly ""]
+    set lines [libffi_target_compile $src $src.i preprocess ""]
     file delete $src
+    file delete $src.i
 
     return [string match "" $lines]
 }
@@ -463,10 +472,10 @@ proc libffi_feature_test { test } {
 proc search_for { file pattern } {
     set fd [open $file r]
     while { [gets $fd cur_line]>=0 } {
-	if [string match "*$pattern*" $cur_line] then {
-	    close $fd
-	    return 1
-	}
+        if [string match "*$pattern*" $cur_line] then {
+            close $fd
+            return 1
+        }
     }
     close $fd
     return 0
@@ -478,27 +487,27 @@ proc libffi-dg-runtest { testcases default-extra-flags } {
     global runtests
 
     foreach test $testcases {
-	# If we're only testing specific files and this isn't one of
-	# them, skip it.
-	if ![runtest_file_p $runtests $test] {
-	    continue
-	}
+        # If we're only testing specific files and this isn't one of
+        # them, skip it.
+        if ![runtest_file_p $runtests $test] {
+            continue
+        }
 
-	# Look for a loop within the source code - if we don't find one,
-	# don't pass -funroll[-all]-loops.
-	global torture_with_loops torture_without_loops
-	if [expr [search_for $test "for*("]+[search_for $test "while*("]] {
-	    set option_list $torture_with_loops
-	} else {
-	    set option_list $torture_without_loops
-	}
+        # Look for a loop within the source code - if we don't find one,
+        # don't pass -funroll[-all]-loops.
+        global torture_with_loops torture_without_loops
+        if [expr [search_for $test "for*("]+[search_for $test "while*("]] {
+            set option_list $torture_with_loops
+        } else {
+            set option_list $torture_without_loops
+        }
 
-	set nshort [file tail [file dirname $test]]/[file tail $test]
+        set nshort [file tail [file dirname $test]]/[file tail $test]
 
-	foreach flags $option_list {
-	    verbose "Testing $nshort, $flags" 1
-	    dg-test $test $flags ${default-extra-flags}
-	}
+        foreach flags $option_list {
+            verbose "Testing $nshort, $flags" 1
+            dg-test $test $flags ${default-extra-flags}
+        }
     }
 }
 
@@ -507,31 +516,31 @@ proc run-many-tests { testcases extra_flags } {
     global has_gccbug
     global env
     switch $compiler_vendor {
-      "clang" {
-        set common "-W -Wall"
-        if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
-	  set optimizations [ list $env(LIBFFI_TEST_OPTIMIZATION) ]
-        } else {
-          set optimizations { "-O0" "-O2" }
+        "clang" {
+            set common "-W -Wall"
+            if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
+                set optimizations [ list $env(LIBFFI_TEST_OPTIMIZATION) ]
+            } else {
+                set optimizations { "-O0" "-O2" }
+            }
         }
-      }
-      "gnu" {
-        set common "-W -Wall -Wno-psabi"
-        if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
-	  set optimizations [ list $env(LIBFFI_TEST_OPTIMIZATION) ]
-        } else {
-          set optimizations { "-O0" "-O2" }
+        "gnu" {
+            set common "-W -Wall -Wno-psabi -fno-diagnostics-color"
+            if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
+                set optimizations [ list $env(LIBFFI_TEST_OPTIMIZATION) ]
+            } else {
+                set optimizations { "-O0" "-O2" }
+            }
         }
-      }
-      default {
-        # Assume we are using the vendor compiler.
-        set common ""
-        if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
-	  set optimizations [ list $env(LIBFFI_TEST_OPTIMIZATION) ]
-        } else {
-          set optimizations { "" }
+        default {
+            # Assume we are using the vendor compiler.
+            set common ""
+            if [info exists env(LIBFFI_TEST_OPTIMIZATION)] {
+                set optimizations [ list $env(LIBFFI_TEST_OPTIMIZATION) ]
+            } else {
+                set optimizations { "" }
+            }
         }
-      }
     }
 
     info exists env(LD_LIBRARY_PATH)
@@ -546,7 +555,7 @@ proc run-many-tests { testcases extra_flags } {
                 "-DABI_NUM=FFI_FASTCALL -DABI_ATTR=__FASTCALL__"
             }
         } elseif { [istarget "x86_64-*-*"] \
-		   && [libffi_feature_test "#if !defined __ILP32__  \
+                       && [libffi_feature_test "#if !defined __ILP32__  \
 						&& !defined __i386__"] } {
             set targetabis {
                 ""
@@ -566,22 +575,22 @@ proc run-many-tests { testcases extra_flags } {
         foreach opt $optimizations {
             foreach abi $abis {
                 set options [concat $common $opt $abi]
-		set has_gccbug false;
-		if { [string match $compiler_vendor "gnu"] \
-			 && [string match "*MSABI*" $abi] \
-			 && ( ( [string match "*DGTEST=57 *" $common] \
-				    && [string match "*call.c*" $testname] ) \
-				  || ( [string match "*DGTEST=54 *" $common] \
-					   && [string match "*callback*" $testname] ) \
-				  || [string match "*DGTEST=55 *" $common] \
-				  || [string match "*DGTEST=56 *" $common] ) } then {
-		    if [libffi_feature_test "#if (__GNUC__ < 9) || ((__GNUC__ == 9) && (__GNUC_MINOR__ < 3))"] {
-			set has_gccbug true;
-		    }
-		}
-		verbose "Testing $testname, $options" 1
-		verbose "has_gccbug = $has_gccbug" 1
-		dg-test $test $options ""
+                set has_gccbug false;
+                if { [string match $compiler_vendor "gnu"] \
+                         && [string match "*MSABI*" $abi] \
+                         && ( ( [string match "*DGTEST=57 *" $common] \
+                                    && [string match "*call.c*" $testname] ) \
+                                  || ( [string match "*DGTEST=54 *" $common] \
+                                           && [string match "*callback*" $testname] ) \
+                                  || [string match "*DGTEST=55 *" $common] \
+                                  || [string match "*DGTEST=56 *" $common] ) } then {
+                    if [libffi_feature_test "#if (__GNUC__ < 9) || ((__GNUC__ == 9) && (__GNUC_MINOR__ < 3))"] {
+                        set has_gccbug true;
+                    }
+                }
+                verbose "Testing $testname, $options" 1
+                verbose "has_gccbug = $has_gccbug" 1
+                dg-test $test $options ""
             }
         }
     }
@@ -593,8 +602,8 @@ proc dg-xfail-if { args } {
     set args [lreplace $args 0 0]
     set selector "target [join [lindex $args 1]]"
     if { [dg-process-target $selector] == "S" } {
-	global compiler_conditional_xfail_data
-	set compiler_conditional_xfail_data $args
+        global compiler_conditional_xfail_data
+        set compiler_conditional_xfail_data $args
     }
 }
 
@@ -606,22 +615,22 @@ proc check-flags { args } {
     # The next two arguments are optional.  If they were not specified,
     # use the defaults.
     if { [llength $args] == 2 } {
-	lappend $args [list "*"]
+        lappend $args [list "*"]
     }
     if { [llength $args] == 3 } {
-	lappend $args [list ""]
+        lappend $args [list ""]
     }
 
     # If the option strings are the defaults, or the same as the
     # defaults, there is no need to call check_conditional_xfail to
     # compare them to the actual options.
     if { [string compare [lindex $args 2] "*"] == 0
-	 && [string compare [lindex $args 3] "" ] == 0 } {
-	set result 1
+         && [string compare [lindex $args 3] "" ] == 0 } {
+        set result 1
     } else {
-	# The target list might be an effective-target keyword, so replace
-	# the original list with "*-*-*", since we already know it matches.
-	set result [check_conditional_xfail [lreplace $args 1 1 "*-*-*"]]
+        # The target list might be an effective-target keyword, so replace
+        # the original list with "*-*-*", since we already know it matches.
+        set result [check_conditional_xfail [lreplace $args 1 1 "*-*-*"]]
     }
 
     return $result
@@ -637,7 +646,7 @@ proc dg-skip-if { args } {
     # Don't bother if we're already skipping the test.
     upvar dg-do-what dg-do-what
     if { [lindex ${dg-do-what} 1] == "N" } {
-      return
+        return
     }
 
     set selector [list target [lindex $args 1]]
@@ -662,18 +671,18 @@ if { [info procs saved-dg-test] == [list] } {
     rename dg-test saved-dg-test
 
     proc dg-test { args } {
-	global additional_files
-	global additional_sources
-	global errorInfo
+        global additional_files
+        global additional_sources
+        global errorInfo
 
-	if { [ catch { eval saved-dg-test $args } errmsg ] } {
-	    set saved_info $errorInfo
-	    set additional_files ""
-	    set additional_sources ""
-	    error $errmsg $saved_info
-	}
-	set additional_files ""
-	set additional_sources ""
+        if { [ catch { eval saved-dg-test $args } errmsg ] } {
+            set saved_info $errorInfo
+            set additional_files ""
+            set additional_sources ""
+            error $errmsg $saved_info
+        }
+        set additional_files ""
+        set additional_sources ""
     }
 }
 

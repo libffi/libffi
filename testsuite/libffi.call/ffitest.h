@@ -1,3 +1,6 @@
+#undef __USE_MINGW_ANSI_STDIO
+#define __USE_MINGW_ANSI_STDIO 1
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

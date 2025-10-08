@@ -48,7 +48,9 @@ typedef int (*closure_test_type1)(float, float, float, float, signed short,
 				  float, float, int, double, int, int, float,
 				  int, int, int, int);
 
+#ifdef __EMSCRIPTEN__
 extern "C"
+#endif
 int main (void)
 {
   ffi_cif cif;

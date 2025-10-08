@@ -23,7 +23,6 @@ LIBFFI_BASE_8.0 {
 	ffi_type_longdouble;
 	ffi_type_pointer;
 
-	/* Exported functions.  */
 	ffi_call;
 	ffi_prep_cif;
 	ffi_prep_cif_var;
@@ -45,6 +44,19 @@ LIBFFI_BASE_8.0 {
   local:
 	*;
 };
+
+/* ----------------------------------------------------------------------
+   Symbols **added in libffi 3.5.0**.
+   Give them a fresh namespace so that package managers notice when
+   code requires a newer libffi than 3.4.x.
+   -------------------------------------------------------------------- */
+LIBFFI_BASE_8.1 {
+  global:
+    ffi_get_version;
+    ffi_get_version_number;
+    ffi_get_default_abi;
+    ffi_get_closure_size;
+} LIBFFI_BASE_8.0;
 
 #ifdef FFI_TARGET_HAS_COMPLEX_TYPE
 LIBFFI_COMPLEX_8.0 {

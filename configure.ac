@@ -1,9 +1,14 @@
 dnl Process this with autoconf to create configure
 
-AC_PREREQ([2.71])
+AC_PREREQ([2.68])
 
-AC_INIT([libffi],[3.4.7],[http://github.com/libffi/libffi/issues])
+AC_INIT([libffi],[3.5.2],[http://github.com/libffi/libffi/issues])
 AC_CONFIG_HEADERS([fficonfig.h])
+
+FFI_VERSION_STRING="3.5.2"
+FFI_VERSION_NUMBER=30502
+AC_SUBST(FFI_VERSION_STRING)
+AC_SUBST(FFI_VERSION_NUMBER)
 
 AC_CANONICAL_TARGET
 target_alias=${target_alias-$host_alias}
@@ -89,10 +94,6 @@ m4_warn([obsolete],
 [The preprocessor macro `STDC_HEADERS' is obsolete.
   Except in unusual embedded environments, you can safely include all
   ISO C90 headers unconditionally.])dnl
-# Autoupdate added the next two lines to ensure that your configure
-# script's behavior did not change.  They are probably safe to remove.
-AC_CHECK_INCLUDES_DEFAULT
-AC_PROG_EGREP
 
 AC_CHECK_FUNCS(memcpy)
 AC_CHECK_HEADERS(alloca.h)
@@ -121,6 +122,8 @@ AC_SUBST(HAVE_LONG_DOUBLE_VARIANT)
 AC_C_BIGENDIAN
 
 GCC_AS_CFI_PSEUDO_OP
+
+AC_ARG_VAR([WASM64_MEMORY64], [Used only for the wasm64 target. Set to 1 (default) or 2 for Emscripten's -sMEMORY64 mode])
 
 case "$TARGET" in
   SPARC)
@@ -181,6 +184,12 @@ case "$TARGET" in
 		  [Define if the compiler uses zarch features.])
     fi
     ;;
+  wasm64)
+    if test -z "$WASM64_MEMORY64"; then
+      WASM64_MEMORY64=1
+    fi
+    CFLAGS="$CFLAGS -sMEMORY64=$WASM64_MEMORY64"
+    ;;
 esac
 
 AC_CACHE_CHECK([whether compiler supports pointer authentication],
@@ -229,7 +238,7 @@ case "$target" in
                  [Cannot use PROT_EXEC on this target, so, we revert to
                    alternative means])
      ;;
-     *-apple-* | *-*-freebsd* | *-*-kfreebsd* | *-*-openbsd* | *-pc-solaris* | *-linux-android*)
+     *-apple-* | *-*-dragonfly* | *-*-freebsd* | *-*-kfreebsd* | *-*-openbsd* | *-pc-solaris* | *-linux-android*)
        AC_DEFINE(FFI_MMAP_EXEC_WRIT, 1,
                  [Cannot use malloc on this target, so, we revert to
                    alternative means])
@@ -382,7 +391,8 @@ case "$target" in
                    [Define this if you want statically defined trampolines])
        fi
      ;;
-     *arm*-*-linux-* | aarch64*-*-linux-* | i*86-*-linux-* | x86_64-*-linux-* | loongarch*-*-linux-* | s390x*-linux-*)
+     *arm*-*-linux-* | aarch64*-*-linux-* | i*86-*-linux-* | x86_64-*-linux-* \
+     | loongarch*-*-linux-* | s390x*-linux-* | powerpc*-linux-*)
        AC_DEFINE(FFI_EXEC_STATIC_TRAMP, 1,
                  [Define this if you want statically defined trampolines])
      ;;

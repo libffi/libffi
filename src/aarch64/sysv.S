@@ -692,7 +692,7 @@ CNAME(ffi_go_closure_SYSV):
 	.asciz "GNU";
 	.long 0xc0000000; /* GNU_PROPERTY_AARCH64_FEATURE_1_AND */
 	.long 4;
-	.long GNU_PROPERTY_AARCH64_BTI;
+	.long GNU_PROPERTY_AARCH64_BTI | GNU_PROPERTY_AARCH64_POINTER_AUTH;
 	.long 0;
 	.popsection;
 #endif

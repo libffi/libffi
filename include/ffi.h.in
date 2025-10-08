@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------*-C-*-
    libffi @VERSION@
-     - Copyright (c) 2011, 2014, 2019, 2021, 2022, 2024 Anthony Green
+     - Copyright (c) 2011, 2014, 2019, 2021, 2022, 2024, 2025 Anthony Green
      - Copyright (c) 1996-2003, 2007, 2008 Red Hat, Inc.
 
    Permission is hereby granted, free of charge, to any person
@@ -313,6 +313,24 @@ FFI_API
 void ffi_java_raw_to_ptrarray (ffi_cif *cif, ffi_java_raw *raw, void **args) __attribute__((deprecated));
 FFI_API
 size_t ffi_java_raw_size (ffi_cif *cif) __attribute__((deprecated));
+
+/* ---- Version API ------------------------------------------------------ */
+
+#define FFI_VERSION_STRING "@FFI_VERSION_STRING@"
+#define FFI_VERSION_NUMBER @FFI_VERSION_NUMBER@
+
+#ifndef LIBFFI_ASM
+/* Return a version string. */
+FFI_API const char *ffi_get_version (void);
+
+/* Return the version as an unsigned long value: (x * 10000 + y * 100 + z) */
+FFI_API unsigned long ffi_get_version_number (void);
+#endif
+
+/* ---- Internals API ---------------------------------------------------- */
+
+FFI_API unsigned int ffi_get_default_abi (void);
+FFI_API size_t ffi_get_closure_size (void);
 
 /* ---- Definitions for closures ----------------------------------------- */
 

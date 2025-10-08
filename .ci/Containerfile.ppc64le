@@ -1,0 +1,12 @@
+FROM ppc64le/fedora
+
+RUN dnf install -y dejagnu automake autoconf dejagnu texinfo gcc libtool diffutils gawk
+
+# -----------------------------------------------------------------------------
+# Give UID 10000 a name so ‘whoami’ works during DejaGNU tests
+# -----------------------------------------------------------------------------
+RUN groupadd  -g 10000 builder \
+ && useradd   -u 10000 -g 10000 -d /home/builder -s /sbin/nologin builder \
+ && mkdir -p /home/builder \
+ && chown 10000:10000 /home/builder
+USER 10000

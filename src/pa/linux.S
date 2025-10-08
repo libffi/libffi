@@ -425,3 +425,7 @@ ffi_closure_pa32:
 
 	.align 4
 .LEFDE2:
+
+#if defined(__ELF__) && defined(__linux__)
+.section .note.GNU-stack,"",%progbits
+#endif

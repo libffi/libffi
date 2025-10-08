@@ -1,0 +1,55 @@
+name: snapshot-dist-tarball
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  dist:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: |
+          sudo apt update
+          sudo apt install texlive texinfo autoconf automake libtool libltdl-dev
+
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+
+      - name: Compute snapshot VERSION
+        id: ver
+        run: |
+          DESC=$(git describe --long --tags --match 'v[0-9]*' 2>/dev/null || echo "")
+          VERSION=$(echo "$DESC" | sed -E 's/^v//; s/-([0-9]+)-g/\.\1+g/')
+          if [[ -z "$VERSION" || "$VERSION" == "$DESC" ]]; then
+            VERSION="3.5.1-dev.0+g$(git rev-parse --short HEAD)"
+          fi
+          echo "VERSION=$VERSION"           >> "$GITHUB_ENV"
+          echo "version=$VERSION"           >> "$GITHUB_OUTPUT"
+
+      - name: Patch configure.ac
+        run: |
+          sed -Ei "s/^(AC_INIT\(\[libffi\],\s*\[)[^]]+/\1${VERSION}/" configure.ac
+          sed -Ei "s/^(FFI_VERSION_STRING=\")[^\"]+/\1${VERSION}/"    configure.ac
+
+      - run: autoreconf -fi
+      - run: ./configure
+      - run: make dist     # produces libffi-${VERSION}.tar.gz
+
+      - name: Wipe old snapshot assets
+        uses: mknejp/delete-release-assets@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: snapshots            # ← whatever tag your nightly release uses
+          fail-if-no-assets: false
+          assets: |
+            libffi-*.tar.*
+            libffi-*.zip
+
+      - name: Create (or update) “snapshots” release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: snapshots
+          prerelease: true
+          body: "Snapshot built from ${{ github.sha }}"
+          files: libffi-${{ env.VERSION }}.tar.*
