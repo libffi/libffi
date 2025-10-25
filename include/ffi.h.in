@@ -90,6 +90,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdint.h>
 #include <limits.h>
 
 /* LONG_LONG_MAX is not always defined (not if STRICT_ANSI, for example).
@@ -207,6 +208,18 @@ typedef struct _ffi_type
  #error "long size not supported"
 #endif
 
+#ifndef SIZE_MAX
+# error "size_t SIZE_MAX not defined"
+#elif SIZE_MAX == 65536UL
+# define ffi_type_sizet        ffi_type_uint16
+#elif SIZE_MAX == 4294967295UL
+# define ffi_type_sizet        ffi_type_uint32
+#elif SIZE_MAX == 18446744073709551615UL
+# define ffi_type_sizet        ffi_type_uint64
+#else
+ #error "size_t size not supported" SIZE_MAX
+#endif
+
 /* These are defined in types.c.  */
 FFI_EXTERN ffi_type ffi_type_void;
 FFI_EXTERN ffi_type ffi_type_uint8;
@@ -250,12 +263,16 @@ typedef struct {
 
 /* ---- Definitions for the raw API -------------------------------------- */
 
-#ifndef FFI_SIZEOF_ARG
-# if LONG_MAX == 2147483647
-#  define FFI_SIZEOF_ARG        4
-# elif LONG_MAX == FFI_64_BIT_MAX
-#  define FFI_SIZEOF_ARG        8
-# endif
+#ifndef SIZE_MAX
+# error "size_t SIZE_MAX not defined"
+#elif SIZE_MAX == 65536UL
+# define FFI_SIZEOF_ARG        2
+#elif SIZE_MAX == 4294967295UL
+# define FFI_SIZEOF_ARG        4
+#elif SIZE_MAX == 18446744073709551615UL
+# define FFI_SIZEOF_ARG        8
+#else
+ #error "size_t size not supported" SIZE_MAX
 #endif
 
 #ifndef FFI_SIZEOF_JAVA_RAW
