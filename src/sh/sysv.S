@@ -51,7 +51,7 @@
 	# sp+4: fn
 
 	# This assumes we are using gas.
-ENTRY(ffi_call_SYSV)
+ENTRY(_ffi_call_SYSV)
 	# Save registers
 .LFB1:
 	mov.l	r8,@-r15
@@ -489,12 +489,12 @@ L_epilogue:
 	 mov.l  @r15+,r8
 #endif
 .LFE1:
-.ffi_call_SYSV_end:
-        .size    CNAME(ffi_call_SYSV),.ffi_call_SYSV_end-CNAME(ffi_call_SYSV)
+._ffi_call_SYSV_end:
+        .size    CNAME(_ffi_call_SYSV),._ffi_call_SYSV_end-CNAME(_ffi_call_SYSV)
 
-.globl	ffi_closure_helper_SYSV
+.globl	_ffi_closure_helper_SYSV
 
-ENTRY(ffi_closure_SYSV)
+ENTRY(_ffi_closure_SYSV)
 .LFB2:
 	mov.l	r7,@-r15
 .LCFI7:
@@ -600,10 +600,10 @@ ENTRY(ffi_closure_SYSV)
 L_got:
 	.long	_GLOBAL_OFFSET_TABLE_
 L_helper:
-	.long	ffi_closure_helper_SYSV@GOTOFF
+	.long	_ffi_closure_helper_SYSV@GOTOFF
 #else
 L_helper:
-	.long	ffi_closure_helper_SYSV
+	.long	_ffi_closure_helper_SYSV
 #endif
 L_table:
 	.short L_case_v - 0b	/* FFI_TYPE_VOID */
@@ -699,8 +699,8 @@ L_case_v:
 	rts
 	 add	#16,r15
 .LFE2:
-.ffi_closure_SYSV_end:
-        .size    CNAME(ffi_closure_SYSV),.ffi_closure_SYSV_end-CNAME(ffi_closure_SYSV)
+._ffi_closure_SYSV_end:
+        .size    CNAME(_ffi_closure_SYSV),._ffi_closure_SYSV_end-CNAME(_ffi_closure_SYSV)
 
 #if defined __ELF__ && defined __linux__
 	.section	.note.GNU-stack,"",@progbits
