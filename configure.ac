@@ -190,6 +190,9 @@ case "$TARGET" in
     fi
     CFLAGS="$CFLAGS -sMEMORY64=$WASM64_MEMORY64"
     ;;
+  LOONGARCH64)
+    CFLAGS="$CFLAGS -mcmodel=medium"
+    ;;
 esac
 
 AC_CACHE_CHECK([whether compiler supports pointer authentication],
