@@ -89,7 +89,7 @@ ffi_call_asm:
 	   we preserve the call_context so that it can be read back in the
 	   caller.  */
 
-	.cfi_def_cfa	5, FRAME_LEN # Interim CFA based on a1.
+	.cfi_def_cfa	5, FRAME_LEN /* Interim CFA based on a1. */
 	SARG	$fp, $a1, FRAME_LEN - 2*PTRS
 	.cfi_offset	22, -2*PTRS
 	SARG	$ra, $a1, FRAME_LEN - 1*PTRS
@@ -97,9 +97,9 @@ ffi_call_asm:
 
 	addi.d	$fp, $a1, FRAME_LEN
 	move	$sp, $a0
-	.cfi_def_cfa	22, 0 # Our frame is fully set up.
+	.cfi_def_cfa	22, 0 /* Our frame is fully set up. */
 
-	# Load arguments.
+	/* Load arguments. */
 	move	$t1, $a2
 	move	$t2, $a3
 
