@@ -30,6 +30,7 @@
 
 #include "ffi.h"
 #include <tramp.h>
+#include <stdlib.h>
 
 #ifdef POWERPC64
 #include "ffi_common.h"
@@ -195,9 +196,6 @@ homogeneous:
       flags |= FLAG_RETURNS_FP;
       break;
 
-    case FFI_TYPE_UINT128:
-      flags |= FLAG_RETURNS_128BITS;
-      /* Fall through.  */
     case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
     case FFI_TYPE_POINTER:
@@ -1142,19 +1140,79 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
   (*fun) (cif, rvalue, avalue, user_data);
 
   /* Tell ffi_closure_LINUX64 how to perform return type promotions.  */
-  if ((cif->flags & FLAG_RETURNS_SMST) != 0)
+  switch (cif->rtype->type)
     {
-      if ((cif->flags & (FLAG_RETURNS_FP | FLAG_RETURNS_VEC)) == 0)
-	return FFI_V2_TYPE_SMALL_STRUCT + cif->rtype->size - 1;
-      else if ((cif->flags & FLAG_RETURNS_VEC) != 0)
-        return FFI_V2_TYPE_VECTOR_HOMOG;
-      else if ((cif->flags & FLAG_RETURNS_64BITS) != 0)
-	return FFI_V2_TYPE_DOUBLE_HOMOG;
-      else
-	return FFI_V2_TYPE_FLOAT_HOMOG;
+    case FFI_TYPE_VOID:
+      return PPC_LD_NONE;
+    case FFI_TYPE_FLOAT:
+      return PPC_LD_F32;
+    case FFI_TYPE_DOUBLE:
+      return PPC_LD_F64;
+#if FFI_TYPE_DOUBLE != FFI_TYPE_LONGDOUBLE
+    case FFI_TYPE_LONGDOUBLE:
+      if ((cif->flags & FLAG_RETURNS_VEC) != 0)
+	return PPC64_LD_VECTOR;
+      return PPC_LD_F128;
+#endif
+    case FFI_TYPE_UINT8:
+      return PPC_LD_U8;
+    case FFI_TYPE_SINT8:
+      return PPC_LD_S8;
+    case FFI_TYPE_UINT16:
+      return PPC_LD_U16;
+    case FFI_TYPE_SINT16:
+      return PPC_LD_S16;
+    case FFI_TYPE_UINT32:
+      return PPC_LD_U32;
+    case FFI_TYPE_INT:
+    case FFI_TYPE_SINT32:
+      return PPC_LD_S32;
+    case FFI_TYPE_POINTER:
+      return PPC_LD_PTR;
+    case FFI_TYPE_UINT64:
+    case FFI_TYPE_SINT64:
+      return PPC_LD_I64;
+    case FFI_TYPE_STRUCT:
+      if ((cif->flags & FLAG_RETURNS_SMST) != 0)
+	{
+	  if ((cif->flags & (FLAG_RETURNS_FP | FLAG_RETURNS_VEC)) == 0)
+	    {
+	      /* A struct smaller than a dword is returned in the low bits
+		 of r3 right justified.  Larger structs are passed left
+		 justified in r3 and r4.  The return value area on the
+		 stack will have the structs as they are usually stored
+		 in memory. */
+	      switch (cif->rtype->size)
+		{
+		case 0:
+		  return PPC_LD_NONE;
+		case 1:
+		  return PPC_LD_U8;
+		case 2:
+		  return PPC_LD_U16;
+		case 3:
+		  return PPC64_LD_STRUCT_3;
+		case 4:
+		  return PPC_LD_U32;
+		case 5:
+		  return PPC64_LD_STRUCT_5;
+		case 6:
+		  return PPC64_LD_STRUCT_6;
+		case 7:
+		  return PPC64_LD_STRUCT_7;
+		case 8 ... 16:
+		  return PPC_LD_R3R4;
+		}
+	      break;
+	    }
+	  if ((cif->flags & FLAG_RETURNS_VEC) != 0)
+	    return PPC64_LD_VECTOR_HOMOG;
+	  if ((cif->flags & FLAG_RETURNS_64BITS) != 0)
+	    return PPC64_LD_DOUBLE_HOMOG;
+	  return PPC64_LD_FLOAT_HOMOG;
+        }
+      return PPC_LD_NONE;
     }
-  if ((cif->flags & FLAG_RETURNS_VEC) != 0)
-    return FFI_V2_TYPE_VECTOR;
-  return cif->rtype->type;
+  abort();
 }
 #endif

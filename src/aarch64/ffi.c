@@ -537,6 +537,32 @@ allocate_int_to_reg_or_stack (struct call_context *context,
   return allocate_to_stack (state, stack, size, size);
 }
 
+static void *
+allocate_int128_to_reg_or_stack (struct call_context *context,
+			         struct arg_state *state, void *stack)
+{
+  unsigned ngrn = state->ngrn;
+  void *ret;
+
+  /* The normal AArch64 ABI requires even Xreg; Darwin does not. */
+#ifndef __APPLE__
+  ngrn += ngrn & 1;
+#endif
+
+  if (ngrn < N_X_ARG_REG)
+    {
+      ret = &context->x[ngrn];
+      ngrn += 2;
+    }
+  else
+    {
+      ret = allocate_to_stack (state, stack, 16, 16);
+      ngrn = N_X_ARG_REG;
+    }
+  state->ngrn = ngrn;
+  return ret;
+}
+
 ffi_status FFI_HIDDEN
 ffi_prep_cif_machdep (ffi_cif *cif)
 {
@@ -574,6 +600,11 @@ ffi_prep_cif_machdep (ffi_cif *cif)
       break;
     case FFI_TYPE_POINTER:
       flags = (sizeof(void *) == 4 ? AARCH64_RET_UINT32 : AARCH64_RET_INT64);
+      break;
+
+    case FFI_TYPE_UINT128:
+    case FFI_TYPE_SINT128:
+      flags = AARCH64_RET_INT128;
       break;
 
     case FFI_TYPE_FLOAT:
@@ -739,6 +770,12 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 #endif
 	      }
 	  }
+	  break;
+
+	case FFI_TYPE_UINT128:
+	case FFI_TYPE_SINT128:
+	  dest = allocate_int128_to_reg_or_stack (context, &state, stack);
+	  memcpy (dest, a, 16);
 	  break;
 
 	case FFI_TYPE_FLOAT:
@@ -1021,6 +1058,11 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
 	case FFI_TYPE_SINT64:
 	case FFI_TYPE_POINTER:
 	  avalue[i] = allocate_int_to_reg_or_stack (context, &state, stack, s);
+	  break;
+
+	case FFI_TYPE_UINT128:
+	case FFI_TYPE_SINT128:
+	  avalue[i] = allocate_int128_to_reg_or_stack (context, &state, stack);
 	  break;
 
 	case FFI_TYPE_FLOAT:

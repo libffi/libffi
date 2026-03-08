@@ -54,6 +54,10 @@
 #define FFI_TARGET_HAS_COMPLEX_TYPE
 #endif
 
+#ifdef X86_64
+#define FFI_TARGET_HAS_INT128
+#endif
+
 /* ---- Generic type definitions ----------------------------------------- */
 
 #ifndef LIBFFI_ASM

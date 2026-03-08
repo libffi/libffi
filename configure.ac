@@ -119,6 +119,10 @@ fi
 AC_SUBST(HAVE_LONG_DOUBLE)
 AC_SUBST(HAVE_LONG_DOUBLE_VARIANT)
 
+AC_CHECK_TYPE(__int128_t,
+	      AC_DEFINE(HAVE_INT128, 1,
+			[Define if __int128_t and __uint128_t are supported.]))
+
 AC_C_BIGENDIAN
 
 GCC_AS_CFI_PSEUDO_OP

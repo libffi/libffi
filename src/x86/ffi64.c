@@ -171,6 +171,8 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
     case FFI_TYPE_SINT32:
     case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
+    case FFI_TYPE_UINT128:
+    case FFI_TYPE_SINT128:
     case FFI_TYPE_POINTER:
     do_integer:
       {
@@ -322,6 +324,10 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 	  case FFI_TYPE_SINT64:
 	    goto do_integer;
 
+	  case FFI_TYPE_SINT128:
+	  case FFI_TYPE_UINT128:
+	    return 0;
+
 	  case FFI_TYPE_FLOAT:
 	    classes[0] = X86_64_SSE_CLASS;
 	    if (byte_offset % 8)
@@ -445,6 +451,10 @@ ffi_prep_cif_machdep (ffi_cif *cif)
     case FFI_TYPE_SINT64:
       flags = UNIX64_RET_INT64;
       break;
+    case FFI_TYPE_UINT128:
+    case FFI_TYPE_SINT128:
+      flags = UNIX64_RET_ST_RAX_RDX | (16 << UNIX64_SIZE_SHIFT);
+      break;
     case FFI_TYPE_POINTER:
       flags = (sizeof(void *) == 4 ? UNIX64_RET_UINT32 : UNIX64_RET_INT64);
       break;
@@ -517,6 +527,11 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	  flags = UNIX64_RET_X87_2;
 	  break;
 #endif
+	case FFI_TYPE_SINT128:
+	case FFI_TYPE_UINT128:
+	  gprcount++;
+	  flags = UNIX64_RET_VOID | UNIX64_FLAG_RET_IN_MEM;
+	  break;
 	default:
 	  return FFI_BAD_TYPEDEF;
 	}

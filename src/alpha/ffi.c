@@ -95,6 +95,8 @@ ffi_prep_cif_machdep(ffi_cif *cif)
 	  bytes += 8;
 	  break;
 
+	case FFI_TYPE_SINT128:
+	case FFI_TYPE_UINT128:
 	case FFI_TYPE_VOID:
 	case FFI_TYPE_STRUCT:
 	  /* Passed by value in N slots.  */
@@ -149,6 +151,8 @@ ffi_prep_cif_machdep(ffi_cif *cif)
     case FFI_TYPE_POINTER:
       flags = ALPHA_FLAGS(ALPHA_ST_INT, ALPHA_LD_INT64);
       break;
+    case FFI_TYPE_SINT128:
+    case FFI_TYPE_UINT128:
     case FFI_TYPE_LONGDOUBLE:
     case FFI_TYPE_STRUCT:
       /* Passed in memory, with a hidden pointer.  */
@@ -281,6 +285,8 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	  argp[argn++] = (unsigned long)valp;
 	  break;
 
+	case FFI_TYPE_SINT128:
+	case FFI_TYPE_UINT128:
 	case FFI_TYPE_VOID:
 	case FFI_TYPE_STRUCT:
 	  size = ty->size;
@@ -418,6 +424,8 @@ ffi_closure_osf_inner (ffi_cif *cif,
 	  argn += 1;
 	  break;
 
+	case FFI_TYPE_SINT128:
+	case FFI_TYPE_UINT128:
 	case FFI_TYPE_VOID:
 	case FFI_TYPE_STRUCT:
 	  size = ty->size;
