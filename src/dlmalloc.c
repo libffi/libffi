@@ -1431,7 +1431,7 @@ static int win32munmap(void* ptr, size_t size) {
 #if USE_LOCKS
 
 /*
-  When locks are defined, there are up to two global locks:
+  When locks are defined, there are up to three global locks:
 
   * If HAVE_MORECORE, morecore_mutex protects sequences of calls to
     MORECORE.  In many cases sys_alloc requires two calls, that should
@@ -1442,6 +1442,9 @@ static int win32munmap(void* ptr, size_t size) {
 
   * magic_init_mutex ensures that mparams.magic and other
     unique mparams values are initialized only once.
+
+  * page_size_init_mutex ensures that mparams.page_size can be referenced
+    before and after initialization without a data race.
 */
 
 #if !defined(WIN32) && !defined(__OS2__)
@@ -1457,6 +1460,7 @@ static MLOCK_T morecore_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* HAVE_MORECORE */
 
 static MLOCK_T magic_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+static MLOCK_T page_size_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #elif defined(__OS2__)
 #define MLOCK_T HMTX
@@ -1467,6 +1471,7 @@ static MLOCK_T magic_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 static MLOCK_T morecore_mutex;
 #endif /* HAVE_MORECORE */
 static MLOCK_T magic_init_mutex;
+static MLOCK_T page_size_init_mutex;
 
 #else /* WIN32 */
 /*
@@ -1499,6 +1504,7 @@ static void win32_release_lock (MLOCK_T *sl) {
 static MLOCK_T morecore_mutex;
 #endif /* HAVE_MORECORE */
 static MLOCK_T magic_init_mutex;
+static MLOCK_T page_size_init_mutex;
 #endif /* WIN32 */
 
 #define USE_LOCK_BIT               (2U)
@@ -1518,9 +1524,13 @@ static MLOCK_T magic_init_mutex;
 #if USE_LOCKS
 #define ACQUIRE_MAGIC_INIT_LOCK()  ACQUIRE_LOCK(&magic_init_mutex);
 #define RELEASE_MAGIC_INIT_LOCK()  RELEASE_LOCK(&magic_init_mutex);
+#define ACQUIRE_PAGE_SIZE_INIT_LOCK() ACQUIRE_LOCK(&page_size_init_mutex);
+#define RELEASE_PAGE_SIZE_INIT_LOCK() RELEASE_LOCK(&page_size_init_mutex);
 #else  /* USE_LOCKS */
 #define ACQUIRE_MAGIC_INIT_LOCK()
 #define RELEASE_MAGIC_INIT_LOCK()
+#define ACQUIRE_PAGE_SIZE_INIT_LOCK()
+#define RELEASE_PAGE_SIZE_INIT_LOCK()
 #endif /* USE_LOCKS */
 
 
@@ -2118,6 +2128,13 @@ struct malloc_params {
 
 static struct malloc_params mparams;
 
+size_t mparamsPageSize()
+  ACQUIRE_PAGE_SIZE_INIT_LOCK();
+  size_t size = mparams.page_size;
+  RELEASE_PAGE_SIZE_INIT_LOCK();
+  return size
+}
+
 /* The global malloc_state used for all non-"mspace" calls */
 static struct malloc_state _gm_;
 #define gm                 (&_gm_)
@@ -2146,14 +2163,14 @@ static struct malloc_state _gm_;
 
 /* page-align a size */
 #define page_align(S)\
- (((S) + (mparams.page_size)) & ~(mparams.page_size - SIZE_T_ONE))
+ (((S) + (mparamsPageSize())) & ~(mparamsPageSize() - SIZE_T_ONE))
 
 /* granularity-align a size */
 #define granularity_align(S)\
   (((S) + (mparams.granularity)) & ~(mparams.granularity - SIZE_T_ONE))
 
 #define is_page_aligned(S)\
-   (((size_t)(S) & (mparams.page_size - SIZE_T_ONE)) == 0)
+   (((size_t)(S) & (mparamsPageSize() - SIZE_T_ONE)) == 0)
 #define is_granularity_aligned(S)\
    (((size_t)(S) & (mparams.granularity - SIZE_T_ONE)) == 0)
 
@@ -2209,7 +2226,7 @@ static int has_segment_link(mstate m, msegmentptr ss) {
 #if USE_LOCKS
 
 /* Ensure locks are initialized */
-#define GLOBALLY_INITIALIZE() (mparams.page_size == 0 && init_mparams())
+#define GLOBALLY_INITIALIZE() (mparamsPageSize() == 0 && init_mparams())
 
 #define PREACTION(M)  ((GLOBALLY_INITIALIZE() || use_lock(M))? ACQUIRE_LOCK(&(M)->mutex) : 0)
 #define POSTACTION(M) { if (use_lock(M)) RELEASE_LOCK(&(M)->mutex); }
@@ -2517,7 +2534,7 @@ static size_t traverse_and_check(mstate m);
 
 /* Initialize mparams */
 static int init_mparams(void) {
-  if (mparams.page_size == 0) {
+  if (mparamsPageSize() == 0) {
     size_t s;
 
     mparams.mmap_threshold = DEFAULT_MMAP_THRESHOLD;
@@ -2559,6 +2576,7 @@ static int init_mparams(void) {
     }
     RELEASE_MAGIC_INIT_LOCK();
 
+    ACQUIRE_PAGE_SIZE_INIT_LOCK();
 #if !defined(WIN32) && !defined(__OS2__)
     mparams.page_size = malloc_getpagesize;
     mparams.granularity = ((DEFAULT_GRANULARITY != 0)?
@@ -2576,6 +2594,8 @@ static int init_mparams(void) {
       mparams.granularity = system_info.dwAllocationGranularity;
     }
 #endif /* WIN32 */
+    size_t pagesz = mparams.page_size;
+    RELEASE_PAGE_SIZE_INIT_LOCK();
 
     /* Sanity-check configuration:
        size_t must be unsigned and as wide as pointer type.
@@ -2590,7 +2610,7 @@ static int init_mparams(void) {
         ((MALLOC_ALIGNMENT    & (MALLOC_ALIGNMENT-SIZE_T_ONE))    != 0) ||
         ((MCHUNK_SIZE         & (MCHUNK_SIZE-SIZE_T_ONE))         != 0) ||
         ((mparams.granularity & (mparams.granularity-SIZE_T_ONE)) != 0) ||
-        ((mparams.page_size   & (mparams.page_size-SIZE_T_ONE))   != 0))
+        ((pagesz              & (pagesz-SIZE_T_ONE))   != 0))
       ABORT;
   }
   return 0;
@@ -2605,7 +2625,7 @@ static int change_mparam(int param_number, int value) {
     mparams.trim_threshold = val;
     return 1;
   case M_GRANULARITY:
-    if (val >= mparams.page_size && ((val & (val-1)) == 0)) {
+    if (val >= mparamsPageSize() && ((val & (val-1)) == 0)) {
       mparams.granularity = val;
       return 1;
     }
@@ -2651,7 +2671,7 @@ static void do_check_mmapped_chunk(mstate m, mchunkptr p) {
   assert((is_aligned(chunk2mem(p))) || (p->head == FENCEPOST_HEAD));
   assert(ok_address(m, p));
   assert(!is_small(sz));
-  assert((len & (mparams.page_size-SIZE_T_ONE)) == 0);
+  assert((len & (mparamsPageSize()-SIZE_T_ONE)) == 0);
   assert(chunk_plus_offset(p, sz)->head == FENCEPOST_HEAD);
   assert(chunk_plus_offset(p, sz+SIZE_T_SIZE)->head == 0);
 }
@@ -4419,14 +4439,18 @@ void** dlindependent_comalloc(size_t n_elements, size_t sizes[],
 void* dlvalloc(size_t bytes) {
   size_t pagesz;
   init_mparams();
+  ACQUIRE_PAGE_SIZE_INIT_LOCK();
   pagesz = mparams.page_size;
+  RELEASE_PAGE_SIZE_INIT_LOCK();
   return dlmemalign(pagesz, bytes);
 }
 
 void* dlpvalloc(size_t bytes) {
   size_t pagesz;
   init_mparams();
+  ACQUIRE_PAGE_SIZE_INIT_LOCK();
   pagesz = mparams.page_size;
+  RELEASE_PAGE_SIZE_INIT_LOCK();
   return dlmemalign(pagesz, (bytes + pagesz - SIZE_T_ONE) & ~(pagesz - SIZE_T_ONE));
 }
 
@@ -4501,7 +4525,7 @@ mspace create_mspace(size_t capacity, int locked) {
   size_t msize = pad_request(sizeof(struct malloc_state));
   init_mparams(); /* Ensure pagesize etc initialized */
 
-  if (capacity < (size_t) -(msize + TOP_FOOT_SIZE + mparams.page_size)) {
+  if (capacity < (size_t) -(msize + TOP_FOOT_SIZE + mparamsPageSize())) {
     size_t rs = ((capacity == 0)? mparams.granularity :
                  (capacity + TOP_FOOT_SIZE + msize));
     size_t tsize = granularity_align(rs);
@@ -4521,7 +4545,7 @@ mspace create_mspace_with_base(void* base, size_t capacity, int locked) {
   init_mparams(); /* Ensure pagesize etc initialized */
 
   if (capacity > msize + TOP_FOOT_SIZE &&
-      capacity < (size_t) -(msize + TOP_FOOT_SIZE + mparams.page_size)) {
+      capacity < (size_t) -(msize + TOP_FOOT_SIZE + mparamsPageSize())) {
     m = init_user_mstate((char*)base, capacity);
     set_segment_flags(&m->seg, EXTERN_BIT);
     set_lock(m, locked);
