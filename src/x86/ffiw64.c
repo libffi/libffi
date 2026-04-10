@@ -116,6 +116,7 @@ EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
 #if defined(_MSC_VER)
 #pragma runtime_checks("s", off)
 #endif
+FFI_ASAN_NO_SANITIZE
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	      void **avalue, void *closure)
