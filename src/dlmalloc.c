@@ -2128,7 +2128,7 @@ struct malloc_params {
 
 static struct malloc_params mparams;
 
-size_t mparamsPageSize()
+static size_t mparamsPageSize(void ) {
   ACQUIRE_PAGE_SIZE_INIT_LOCK();
   size_t size = mparams.page_size;
   RELEASE_PAGE_SIZE_INIT_LOCK();
