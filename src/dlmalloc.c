@@ -2534,7 +2534,10 @@ static size_t traverse_and_check(mstate m);
 
 /* Initialize mparams */
 static int init_mparams(void) {
-  if (mparamsPageSize() == 0) {
+  ACQUIRE_PAGE_SIZE_INIT_LOCK();
+  if (mparams.page_size == 0) {
+    mparams.page_size = 1;
+    RELEASE_PAGE_SIZE_INIT_LOCK();
     size_t s;
 
     mparams.mmap_threshold = DEFAULT_MMAP_THRESHOLD;
@@ -2612,7 +2615,10 @@ static int init_mparams(void) {
         ((mparams.granularity & (mparams.granularity-SIZE_T_ONE)) != 0) ||
         ((pagesz              & (pagesz-SIZE_T_ONE))   != 0))
       ABORT;
+
+    ACQUIRE_PAGE_SIZE_INIT_LOCK();
   }
+  RELEASE_PAGE_SIZE_INIT_LOCK();
   return 0;
 }
 
