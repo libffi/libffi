@@ -2536,9 +2536,27 @@ static size_t traverse_and_check(mstate m);
 static int init_mparams(void) {
   ACQUIRE_PAGE_SIZE_INIT_LOCK();
   if (mparams.page_size == 0) {
-    mparams.page_size = 1;
-    RELEASE_PAGE_SIZE_INIT_LOCK();
     size_t s;
+
+#if !defined(WIN32) && !defined(__OS2__)
+    mparams.page_size = malloc_getpagesize;
+    mparams.granularity = ((DEFAULT_GRANULARITY != 0)?
+                           DEFAULT_GRANULARITY : mparams.page_size);
+#elif defined (__OS2__)
+ /* if low-memory is used, os2munmap() would break
+    if it were anything other than 64k */
+    mparams.page_size = 4096u;
+    mparams.granularity = 65536u;
+#else /* WIN32 */
+    {
+      SYSTEM_INFO system_info;
+      GetSystemInfo(&system_info);
+      mparams.page_size = system_info.dwPageSize;
+      mparams.granularity = system_info.dwAllocationGranularity;
+    }
+#endif /* WIN32 */
+    size_t pagesz = mparams.page_size;
+    RELEASE_PAGE_SIZE_INIT_LOCK();
 
     mparams.mmap_threshold = DEFAULT_MMAP_THRESHOLD;
     mparams.trim_threshold = DEFAULT_TRIM_THRESHOLD;
@@ -2578,27 +2596,6 @@ static int init_mparams(void) {
       gm->mflags = mparams.default_mflags;
     }
     RELEASE_MAGIC_INIT_LOCK();
-
-    ACQUIRE_PAGE_SIZE_INIT_LOCK();
-#if !defined(WIN32) && !defined(__OS2__)
-    mparams.page_size = malloc_getpagesize;
-    mparams.granularity = ((DEFAULT_GRANULARITY != 0)?
-                           DEFAULT_GRANULARITY : mparams.page_size);
-#elif defined (__OS2__)
- /* if low-memory is used, os2munmap() would break
-    if it were anything other than 64k */
-    mparams.page_size = 4096u;
-    mparams.granularity = 65536u;
-#else /* WIN32 */
-    {
-      SYSTEM_INFO system_info;
-      GetSystemInfo(&system_info);
-      mparams.page_size = system_info.dwPageSize;
-      mparams.granularity = system_info.dwAllocationGranularity;
-    }
-#endif /* WIN32 */
-    size_t pagesz = mparams.page_size;
-    RELEASE_PAGE_SIZE_INIT_LOCK();
 
     /* Sanity-check configuration:
        size_t must be unsigned and as wide as pointer type.
