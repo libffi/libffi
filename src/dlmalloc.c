@@ -2132,7 +2132,7 @@ static size_t mparamsPageSize(void ) {
   ACQUIRE_PAGE_SIZE_INIT_LOCK();
   size_t size = mparams.page_size;
   RELEASE_PAGE_SIZE_INIT_LOCK();
-  return size
+  return size;
 }
 
 /* The global malloc_state used for all non-"mspace" calls */
