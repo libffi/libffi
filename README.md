@@ -525,8 +525,9 @@ developers:
     frv                 Anthony Green
     ia64                Hans Boehm
     kvx                 Yann Sionneau
-    loongarch64         Cheng Lulu, Xi Ruoyao, Xu Hao,
-                        Zhang Wenlong, Pan Xuefeng
+    loongarch           Cheng Lulu, Xi Ruoyao, Xu Hao,
+                        Zhang Wenlong, Pan Xuefeng,
+                        Meng Qinggang
     m32r                Kazuhiro Inaoka
     m68k                Andreas Schwab
     m88k                Miod Vallat
