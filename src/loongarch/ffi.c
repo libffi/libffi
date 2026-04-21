@@ -70,9 +70,9 @@ typedef struct call_builder
   call_context *aregs;
   int used_integer;
   int used_float;
-  size_t *used_stack;
-  size_t *stack;
-  size_t next_struct_area;
+  size_t *used_stack;	    /* Stack pointer.  */
+  size_t *stack;	    /* Place for arguments pass by reference.  */
+  size_t next_struct_area;  /* Offset for arguments pass by reference.  */
 } call_builder;
 
 /* Integer (not pointer) less than ABI GRLEN.  */
@@ -450,13 +450,17 @@ static void
 ffi_call_int (ffi_cif *cif, void (*fn) (void), void *rvalue, void **avalue,
 	      void *closure)
 {
+  size_t arg_bytes = FFI_ALIGN (cif->bytes, STKALIGN);
+
   /* This is a conservative estimate, assuming a complex return value and
      that all remaining arguments are long long / __int128 */
-  size_t arg_bytes = cif->bytes;
+  size_t extra_bytes = cif->nargs <= 3 ? 0 :
+      FFI_ALIGN(2 * sizeof(size_t) * (cif->nargs - 3), STKALIGN);
+
   size_t rval_bytes = 0;
   if (rvalue == NULL && cif->rtype->size > 2 * __SIZEOF_POINTER__)
     rval_bytes = FFI_ALIGN (cif->rtype->size, STKALIGN);
-  size_t alloc_size = arg_bytes + rval_bytes + sizeof (call_context);
+  size_t alloc_size = arg_bytes + extra_bytes + rval_bytes + sizeof (call_context);
 
   /* The assembly code will deallocate all stack data at lower addresses
      than the argument region, so we need to allocate the frame and the
@@ -475,9 +479,9 @@ ffi_call_int (ffi_cif *cif, void (*fn) (void), void *rvalue, void **avalue,
 
   call_builder cb;
   cb.used_float = cb.used_integer = 0;
-  cb.aregs = (call_context *) (alloc_base + arg_bytes + rval_bytes);
-  cb.used_stack = (void *) alloc_base;
-  cb.stack = (void *) alloc_base;
+  cb.aregs = (call_context *) (alloc_base + arg_bytes + extra_bytes + rval_bytes);
+  cb.used_stack = (size_t *)((char *) alloc_base);
+  cb.stack = (size_t *)((char *) alloc_base + extra_bytes + rval_bytes);
   cb.next_struct_area = arg_bytes;
 
   int return_by_ref = passed_by_ref (&cb, cif->rtype, 0);

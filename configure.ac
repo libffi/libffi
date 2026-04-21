@@ -197,6 +197,10 @@ case "$TARGET" in
   LOONGARCH64)
     CFLAGS="$CFLAGS -mcmodel=medium"
     ;;
+  LOONGARCH32)
+    # No special for LoongArch32 now.
+    ;;
+
 esac
 
 AC_CACHE_CHECK([whether compiler supports pointer authentication],
