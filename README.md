@@ -536,7 +536,6 @@ developers:
     mips                Anthony Green, Casey Marshall
     mips64              David Daney
     moxie               Anthony Green
-    nios ii             Sandra Loosemore
     openrisc            Sebastian Macke
     pa                  Randolph Chung, Dave Anglin, Andreas Tobler
     pa64                Dave Anglin
