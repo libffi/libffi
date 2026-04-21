@@ -1,7 +1,7 @@
 Status
 ======
 
-libffi-3.5.2 was released on August 2, 2025.
+This is WIP repo for what will eventually become libffi-3.6.0.
 
 
 What is libffi?
@@ -63,6 +63,7 @@ tested:
 | HPPA64          | HPUX             | GCC                     |
 | KVX             | Linux            | GCC                     |
 | IA-64           | Linux            | GCC                     |
+| LoongArch32     | Linux            | GCC                     |
 | LoongArch64     | Linux            | GCC                     |
 | M68K            | FreeMiNT         | GCC                     |
 | M68K            | Linux            | GCC                     |
@@ -201,6 +202,20 @@ History
 =======
 
 See the git log for details at http://github.com/libffi/libffi.
+
+    3.6.0 ???
+        Add LoongArch32 support.
+        Add RISC-V static trampoline support.
+        Add aarch64 GCS (Guarded Control Stack) support.
+        Add conditional target support for __int128.
+        Fix closures using FFI_REGISTER ABI.
+        Fix SH linker errors with __USER_LABEL_PREFIX__.
+        Fix compilation for ARM Windows targets.
+        Fix compilation for Cortex-A53.
+        Fix test compilation for some Android platforms.
+        Fix x86 ASAN compatibility for win64.
+        Define WIN32_LEAN_AND_MEAN before including windows.h.
+        Fix comments that trip up some toolchains.
 
     3.5.2 Aug-2-2025
         Add wasm64 support.
