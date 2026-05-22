@@ -96,6 +96,26 @@ discover_homogeneous_aggregate (ffi_abi abi,
       *elnum = 1;
       return (int) t->type;
 
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+    case FFI_TYPE_COMPLEX:
+      /* Count complex of an FP base as two elements of that base, so a
+	 struct containing complex members is recognised as an HFA.  This
+	 only affects FFI_TYPE_COMPLEX *inside* structs; the top-level
+	 complex arg path has its own case in the cif/args/closure loops
+	 and never reaches the FFI_TYPE_STRUCT branches.  */
+      {
+	unsigned int inner_elnum = 0;
+	unsigned int inner
+	  = discover_homogeneous_aggregate (abi, t->elements[0], &inner_elnum);
+	if (inner == FFI_TYPE_FLOAT || inner == FFI_TYPE_DOUBLE)
+	  {
+	    *elnum = 2 * inner_elnum;
+	    return inner;
+	  }
+	return 0;
+      }
+#endif
+
     case FFI_TYPE_STRUCT:;
       {
 	unsigned int base_elt = 0, total_elnum = 0;
@@ -224,6 +244,46 @@ homogeneous:
       flags |= FLAG_RETURNS_NOTHING;
       break;
 
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+    case FFI_TYPE_COMPLEX:
+      rtype = cif->rtype->elements[0]->type;
+      switch (rtype)
+        {
+        case FFI_TYPE_FLOAT:
+        case FFI_TYPE_DOUBLE:
+          /* float/double _Complex are returned in (f1, f2), matching
+             the assembly path for a 2-element FP HFA.  */
+          flags |= FLAG_RETURNS_SMST;
+          goto homogeneous;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+        case FFI_TYPE_LONGDOUBLE:
+          /* Only the 64-bit long double case is wired up; IBM-128 and
+             IEEE-binary128 _Complex are left as a follow-up.  */
+          if ((cif->abi & (FFI_LINUX_LONG_DOUBLE_128
+                           | FFI_LINUX_LONG_DOUBLE_IEEE128)) != 0)
+            return FFI_BAD_TYPEDEF;
+          flags |= FLAG_RETURNS_SMST;
+          rtype = FFI_TYPE_DOUBLE;
+          goto homogeneous;
+#endif
+        case FFI_TYPE_INT:
+        case FFI_TYPE_SINT8:  case FFI_TYPE_UINT8:
+        case FFI_TYPE_SINT16: case FFI_TYPE_UINT16:
+        case FFI_TYPE_SINT32: case FFI_TYPE_UINT32:
+        case FFI_TYPE_SINT64: case FFI_TYPE_UINT64:
+        case FFI_TYPE_POINTER:
+          /* Integer-typed _Complex: real returned in r3, imag in r4.
+             Take the .Lsmall_struct return path (FLAG_RETURNS_SMST
+             without FP/VEC) and let the bounce-buffer logic in
+             ffi_call_int repack the two halves.  */
+          flags |= FLAG_RETURNS_SMST;
+          break;
+        default:
+          return FFI_BAD_TYPEDEF;
+        }
+      break;
+#endif
+
     default:
       /* Returns 32-bit integer, or similar.  Nothing to do here.  */
       break;
@@ -313,6 +373,51 @@ homogeneous:
 	  if (intarg_count > NUM_GPR_ARG_REGISTERS64)
 	    flags |= FLAG_ARG_NEEDS_PSAVE;
 	  break;
+
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+	case FFI_TYPE_COMPLEX:
+	  /* Each half of a _Complex argument is passed independently: an FP
+	     half in its own FPR (and its own GPR shadow slot); an integer
+	     half in its own GPR slot.  This matches GCC's split_complex_arg
+	     under ELFv2, and is what differentiates _Complex from a
+	     same-sized struct{T;T;} which uses fewer GPR shadow slots.  */
+	  elt = (*ptr)->elements[0]->type;
+	  switch (elt)
+	    {
+	    case FFI_TYPE_FLOAT:
+	    case FFI_TYPE_DOUBLE:
+	      fparg_count += 2;
+	      intarg_count += 2;
+	      if (fparg_count > NUM_FPR_ARG_REGISTERS64)
+		flags |= FLAG_ARG_NEEDS_PSAVE;
+	      break;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+	    case FFI_TYPE_LONGDOUBLE:
+	      if ((cif->abi & (FFI_LINUX_LONG_DOUBLE_128
+			       | FFI_LINUX_LONG_DOUBLE_IEEE128)) != 0)
+		return FFI_BAD_TYPEDEF;
+	      fparg_count += 2;
+	      intarg_count += 2;
+	      if (fparg_count > NUM_FPR_ARG_REGISTERS64)
+		flags |= FLAG_ARG_NEEDS_PSAVE;
+	      break;
+#endif
+	    case FFI_TYPE_INT:
+	    case FFI_TYPE_SINT8:  case FFI_TYPE_UINT8:
+	    case FFI_TYPE_SINT16: case FFI_TYPE_UINT16:
+	    case FFI_TYPE_SINT32: case FFI_TYPE_UINT32:
+	    case FFI_TYPE_SINT64: case FFI_TYPE_UINT64:
+	    case FFI_TYPE_POINTER:
+	      intarg_count += 2;
+	      break;
+	    default:
+	      return FFI_BAD_TYPEDEF;
+	    }
+	  if (intarg_count > NUM_GPR_ARG_REGISTERS64)
+	    flags |= FLAG_ARG_NEEDS_PSAVE;
+	  break;
+#endif
+
 	default:
 	  FFI_ASSERT (0);
 	}
@@ -645,6 +750,98 @@ ffi_prep_args64 (extended_cif *ecif, unsigned long *const stack)
 	  fparg_count++;
 	  FFI_ASSERT (flags & FLAG_FP_ARGUMENTS);
 	  break;
+
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+	case FFI_TYPE_COMPLEX:
+	  elt = (*ptr)->elements[0]->type;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+	  /* 64-bit long double is equivalent to double; the IBM-128 and
+	     IEEE-binary128 variants were rejected in prep_cif.  */
+	  if (elt == FFI_TYPE_LONGDOUBLE)
+	    elt = FFI_TYPE_DOUBLE;
+#endif
+	  if (elt == FFI_TYPE_FLOAT)
+	    {
+	      float *cval = (float *) *p_argv.v;
+	      unsigned int j;
+	      for (j = 0; j < 2; j++)
+		{
+		  double_tmp = cval[j];
+		  if (fparg_count < NUM_FPR_ARG_REGISTERS64 && i < nfixedargs)
+		    *fpr_base.d++ = double_tmp;
+		  else
+		    {
+# ifndef __LITTLE_ENDIAN__
+		      next_arg.f[1] = (float) double_tmp;
+# else
+		      next_arg.f[0] = (float) double_tmp;
+# endif
+		    }
+		  if (++next_arg.ul == gpr_end.ul)
+		    next_arg.ul = rest.ul;
+		  fparg_count++;
+		}
+	      FFI_ASSERT (flags & FLAG_FP_ARGUMENTS);
+	    }
+	  else if (elt == FFI_TYPE_DOUBLE)
+	    {
+	      double *cval = (double *) *p_argv.v;
+	      unsigned int j;
+	      for (j = 0; j < 2; j++)
+		{
+		  double_tmp = cval[j];
+		  if (fparg_count < NUM_FPR_ARG_REGISTERS64 && i < nfixedargs)
+		    *fpr_base.d++ = double_tmp;
+		  else
+		    *next_arg.d = double_tmp;
+		  if (++next_arg.ul == gpr_end.ul)
+		    next_arg.ul = rest.ul;
+		  fparg_count++;
+		}
+	      FFI_ASSERT (flags & FLAG_FP_ARGUMENTS);
+	    }
+	  else
+	    {
+	      /* Integer-typed _Complex: each half consumes one GPR slot,
+		 sign-/zero-extended to a doubleword.  */
+	      char *cval = (char *) *p_argv.v;
+	      size_t hsize = (*ptr)->elements[0]->size;
+	      unsigned int j;
+	      for (j = 0; j < 2; j++)
+		{
+		  char *half = cval + j * hsize;
+		  unsigned long gprvalue;
+		  switch (elt)
+		    {
+		    case FFI_TYPE_UINT8:
+		      gprvalue = *(unsigned char *) half; break;
+		    case FFI_TYPE_SINT8:
+		      gprvalue = (unsigned long) (long) *(signed char *) half;
+		      break;
+		    case FFI_TYPE_UINT16:
+		      gprvalue = *(unsigned short *) half; break;
+		    case FFI_TYPE_SINT16:
+		      gprvalue = (unsigned long) (long) *(signed short *) half;
+		      break;
+		    case FFI_TYPE_UINT32:
+		      gprvalue = *(unsigned int *) half; break;
+		    case FFI_TYPE_INT:
+		    case FFI_TYPE_SINT32:
+		      gprvalue = (unsigned long) (long) *(signed int *) half;
+		      break;
+		    case FFI_TYPE_SINT64:
+		    case FFI_TYPE_UINT64:
+		    case FFI_TYPE_POINTER:
+		    default:
+		      gprvalue = *(unsigned long *) half; break;
+		    }
+		  *next_arg.ul++ = gprvalue;
+		  if (next_arg.ul == gpr_end.ul)
+		    next_arg.ul = rest.ul;
+		}
+	    }
+	  break;
+#endif
 
 	case FFI_TYPE_STRUCT:
 	  if ((ecif->cif->abi & FFI_LINUX_STRUCT_ALIGN) != 0)
@@ -1130,6 +1327,79 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
 	  pst++;
 	  break;
 
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+	case FFI_TYPE_COMPLEX:
+	  /* Reassemble each _Complex argument from successive registers (or
+	     parameter-save slots when registers are exhausted) into a
+	     contiguous in-memory value for the closure.  */
+	  {
+	    unsigned int j;
+	    elt = arg_types[i]->elements[0]->type;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+	    if (elt == FFI_TYPE_LONGDOUBLE)
+	      elt = FFI_TYPE_DOUBLE;
+#endif
+	    if (elt == FFI_TYPE_FLOAT)
+	      {
+		float *cval = alloca (2 * sizeof (float));
+		for (j = 0; j < 2; j++)
+		  {
+		    if (pfr < end_pfr && i < nfixedargs)
+		      {
+			cval[j] = (float) pfr->d;
+			pfr++;
+		      }
+		    else
+		      {
+#ifndef __LITTLE_ENDIAN__
+			cval[j] = ((float *) pst)[1];
+#else
+			cval[j] = ((float *) pst)[0];
+#endif
+		      }
+		    pst++;
+		  }
+		avalue[i] = cval;
+	      }
+	    else if (elt == FFI_TYPE_DOUBLE)
+	      {
+		double *cval = alloca (2 * sizeof (double));
+		for (j = 0; j < 2; j++)
+		  {
+		    if (pfr < end_pfr && i < nfixedargs)
+		      {
+			cval[j] = pfr->d;
+			pfr++;
+		      }
+		    else
+		      cval[j] = *(double *) pst;
+		    pst++;
+		  }
+		avalue[i] = cval;
+	      }
+	    else
+	      {
+		/* Integer-typed _Complex: each half lives in its own GPR
+		   slot, right-justified on BE, low-address on LE.  */
+		size_t hsize = arg_types[i]->elements[0]->size;
+		char *cval = alloca (2 * hsize);
+		for (j = 0; j < 2; j++)
+		  {
+		    char *src;
+#ifndef __LITTLE_ENDIAN__
+		    src = (char *) pst + (8 - hsize);
+#else
+		    src = (char *) pst;
+#endif
+		    memcpy (cval + j * hsize, src, hsize);
+		    pst++;
+		  }
+		avalue[i] = cval;
+	      }
+	  }
+	  break;
+#endif
+
 	default:
 	  FFI_ASSERT (0);
 	}
@@ -1172,6 +1442,68 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
     case FFI_TYPE_UINT64:
     case FFI_TYPE_SINT64:
       return PPC_LD_I64;
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+    case FFI_TYPE_COMPLEX:
+      {
+	int inner = cif->rtype->elements[0]->type;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+	if (inner == FFI_TYPE_LONGDOUBLE)
+	  inner = FFI_TYPE_DOUBLE;
+#endif
+	if (inner == FFI_TYPE_FLOAT)
+	  return PPC64_LD_FLOAT_HOMOG;
+	if (inner == FFI_TYPE_DOUBLE)
+	  return PPC64_LD_DOUBLE_HOMOG;
+	/* Integer-typed _Complex: the user wrote the natural packed
+	   complex layout into rvalue (real@0, imag@hsize).  Repack into
+	   two sign-/zero-extended doublewords so the closure assembly
+	   can do `ld r3, 0(rvalue); ld r4, 8(rvalue)` and the GCC caller
+	   recovers real in r3 and imag in r4.  The RETVAL stack area is
+	   large enough (64 or 128 bytes) to hold the 16-byte repack.  */
+	{
+	  char *rv = rvalue;
+	  unsigned long re, im;
+	  switch (inner)
+	    {
+	    case FFI_TYPE_UINT8:
+	      re = ((unsigned char *) rv)[0];
+	      im = ((unsigned char *) rv)[1];
+	      break;
+	    case FFI_TYPE_SINT8:
+	      re = (unsigned long) (long) ((signed char *) rv)[0];
+	      im = (unsigned long) (long) ((signed char *) rv)[1];
+	      break;
+	    case FFI_TYPE_UINT16:
+	      re = ((unsigned short *) rv)[0];
+	      im = ((unsigned short *) rv)[1];
+	      break;
+	    case FFI_TYPE_SINT16:
+	      re = (unsigned long) (long) ((signed short *) rv)[0];
+	      im = (unsigned long) (long) ((signed short *) rv)[1];
+	      break;
+	    case FFI_TYPE_UINT32:
+	      re = ((unsigned int *) rv)[0];
+	      im = ((unsigned int *) rv)[1];
+	      break;
+	    case FFI_TYPE_INT:
+	    case FFI_TYPE_SINT32:
+	      re = (unsigned long) (long) ((signed int *) rv)[0];
+	      im = (unsigned long) (long) ((signed int *) rv)[1];
+	      break;
+	    case FFI_TYPE_SINT64:
+	    case FFI_TYPE_UINT64:
+	    case FFI_TYPE_POINTER:
+	    default:
+	      re = ((unsigned long *) rv)[0];
+	      im = ((unsigned long *) rv)[1];
+	      break;
+	    }
+	  ((unsigned long *) rv)[0] = re;
+	  ((unsigned long *) rv)[1] = im;
+	  return PPC_LD_R3R4;
+	}
+      }
+#endif
     case FFI_TYPE_STRUCT:
       if ((cif->flags & FLAG_RETURNS_SMST) != 0)
 	{
