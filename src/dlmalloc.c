@@ -3675,7 +3675,7 @@ static int sys_trim(mstate m, size_t pad) {
                       SIZE_T_ONE) * unit;
       msegmentptr sp = segment_holding(m, (char*)m->top);
 
-      if (!is_extern_segment(sp)) {
+      if (sp !=NULL && !is_extern_segment(sp)) {
         if (is_mmapped_segment(sp)) {
           if (HAVE_MMAP &&
               sp->size >= extra &&
