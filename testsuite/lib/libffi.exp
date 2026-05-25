@@ -379,9 +379,9 @@ proc libffi_target_compile { source dest type options } {
         lappend  options "additional_flags=$TOOL_OPTIONS"
     }
 
-    # search for ffi_mips.h in srcdir, too
-    # lappend options "additional_flags=-I${libffi_include} -I${srcdir}/../include  -I${libffi_include}/.."
-    lappend options "additional_flags=-I ../include -I ${srcdir}/../include  -I .."
+    # Search for include files in build_dir/include, build_dir and source_dir/include.
+    # The .. in the last path is necessary because srcdir points to libffi source/testsuite.
+    lappend options "additional_flags=-I${libffi_include} -I${blddirffi} -I${srcdir}/../include"
     if { [string match $type "executable"] } {
 
         lappend options "additional_flags=${libffi_link_flags}"
