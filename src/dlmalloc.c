@@ -3676,7 +3676,7 @@ static int sys_trim(mstate m, size_t pad) {
       msegmentptr sp = segment_holding(m, (char*)m->top);
 
       if (sp == 0)
-	CORRUPTION_ERROR_ACTION(m);
+        CORRUPTION_ERROR_ACTION(m);
       if (!is_extern_segment(sp)) {
         if (is_mmapped_segment(sp)) {
           if (HAVE_MMAP &&
