@@ -59,6 +59,15 @@
 #define STACK_ALIGN(bytes) FFI_ALIGN (bytes, 16)
 #endif
 
+static int
+is_type_passed_by_pointer (int cabi, ffi_type *ty)
+{
+  /* PASCAL and REGISTER pass these by-value records through a pointer. */
+  return ((cabi == FFI_PASCAL || cabi == FFI_REGISTER)
+	  && ty->type == FFI_TYPE_STRUCT
+	  && ty->size > FFI_SIZEOF_ARG);
+}
+
 /* Perform machine dependent cif processing.  */
 ffi_status FFI_HIDDEN
 ffi_prep_cif_machdep(ffi_cif *cif)
@@ -138,6 +147,8 @@ ffi_prep_cif_machdep(ffi_cif *cif)
               case FFI_FASTCALL:
               case FFI_STDCALL:
               case FFI_MS_CDECL:
+              case FFI_PASCAL:
+              case FFI_REGISTER:
                 flags = X86_RET_STRUCTARG;
                 break;
               default:
@@ -183,14 +194,22 @@ ffi_prep_cif_machdep(ffi_cif *cif)
   for (i = 0, n = cif->nargs; i < n; i++)
     {
       ffi_type *t = cif->arg_types[i];
+      size_t align = t->alignment;
+      size_t size = t->size;
+
+      if (is_type_passed_by_pointer (cabi, t))
+        {
+          align = FFI_SIZEOF_ARG;
+          size = sizeof(void *);
+        }
 
 #if defined(X86_WIN32)
       if (cabi == FFI_STDCALL)
         bytes = FFI_ALIGN (bytes, FFI_SIZEOF_ARG);
       else
 #endif
-        bytes = FFI_ALIGN (bytes, t->alignment);
-      bytes += FFI_ALIGN (t->size, FFI_SIZEOF_ARG);
+        bytes = FFI_ALIGN (bytes, align);
+      bytes += FFI_ALIGN (size, FFI_SIZEOF_ARG);
     }
   cif->bytes = bytes;
 
@@ -251,6 +270,57 @@ static const struct abi_params abi_params[FFI_LAST_ABI] = {
   [FFI_MS_CDECL] = { 1, R_ECX, 0 }
 };
 
+/* Count actual bytes used on stack for FFI_REGISTER call. This is needed to
+   ensure that arguments end up at the right position on the stack for calls
+   and to clean up after closures. */
+static size_t
+register_stack_bytes (ffi_cif *cif)
+{
+  size_t bytes = 0;
+  int i, n, narg_reg = 0;
+  const struct abi_params *pabi = &abi_params[FFI_REGISTER];
+
+  for (i = 0, n = cif->nargs; i < n; i++)
+    {
+      ffi_type *ty = cif->arg_types[i];
+      size_t z = ty->size;
+      int t = ty->type;
+
+      if ((z <= FFI_SIZEOF_ARG
+	   && t != FFI_TYPE_STRUCT
+	   && t != FFI_TYPE_FLOAT)
+	  || is_type_passed_by_pointer (FFI_REGISTER, ty))
+        {
+	  if (narg_reg < pabi->nregs)
+	    {
+	      narg_reg++;
+	    }
+	  else
+	    {
+	      bytes += FFI_ALIGN (sizeof(void *), FFI_SIZEOF_ARG);
+	    }
+	}
+      else
+	{
+	  bytes += FFI_ALIGN (z, FFI_SIZEOF_ARG);
+	}
+    }
+
+  if (cif->flags == X86_RET_STRUCTARG)
+    {
+      if (narg_reg < pabi->nregs)
+	{
+	  narg_reg++;
+	}
+      else
+	{
+	  bytes += FFI_ALIGN (sizeof(void *), FFI_SIZEOF_ARG);
+	}
+    }
+
+  return bytes;
+}
+
 #ifdef HAVE_FASTCALL
   #ifdef _MSC_VER
     #define FFI_DECLARE_FASTCALL __fastcall
@@ -277,9 +347,9 @@ static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	      void **avalue, void *closure)
 {
-  size_t rsize, bytes;
+  size_t rsize, rsizea, bytes, struct_copies_size;
   struct call_frame *frame;
-  char *stack, *argp;
+  char *stack, *argp, *copy_argp;
   ffi_type **arg_types;
   int flags, cabi, i, n, dir, narg_reg;
   const struct abi_params *pabi;
@@ -310,12 +380,37 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	}
     }
 
-  bytes = STACK_ALIGN (cif->bytes);
-  stack = alloca(bytes + sizeof(*frame) + rsize);
+  bytes = (cif->abi == FFI_REGISTER
+	   ? register_stack_bytes (cif) : cif->bytes);
+
+  if (dir > 0)
+    {
+      bytes = STACK_ALIGN (bytes);
+    }
+
+  rsizea = FFI_ALIGN (rsize, FFI_SIZEOF_ARG);
+
+  struct_copies_size = 0;
+  if (cif->abi == FFI_PASCAL || cif->abi == FFI_REGISTER)
+    {
+      /* Calculate how much space must be used to copy structs that are
+	 passed by pointer on FFI_PASCAL and FFI_REGISTER ABIs. */
+      for (i = 0, n = cif->nargs; i < n; i++)
+        {
+	  if (is_type_passed_by_pointer (cabi, cif->arg_types[i]))
+	    {
+	      struct_copies_size += FFI_ALIGN (cif->arg_types[i]->size,
+					       FFI_SIZEOF_ARG);
+	    }
+	}
+    }
+
+  stack = alloca(bytes + sizeof(*frame) + rsizea + struct_copies_size);
   argp = (dir < 0 ? stack + bytes : stack);
   frame = (struct call_frame *)(stack + bytes);
   if (rsize)
     rvalue = frame + 1;
+  copy_argp = (char *)(frame + 1) + rsizea;
 
   frame->fn = fn;
   frame->flags = flags;
@@ -323,21 +418,26 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   frame->regs[pabi->static_chain] = (unsigned)closure;
 
   narg_reg = 0;
-  switch (flags)
+  /* For RTL ABIs, handle struct returns before arguments. */
+  if (dir > 0)
     {
-    case X86_RET_STRUCTARG:
-      /* The pointer is passed as the first argument.  */
-      if (pabi->nregs > 0)
+      switch (flags)
 	{
-	  frame->regs[pabi->regs[0]] = (unsigned)rvalue;
-	  narg_reg = 1;
+	case X86_RET_STRUCTARG:
+	  /* The pointer is passed as the first argument.  */
+	  if (pabi->nregs > 0)
+	    {
+	      frame->regs[pabi->regs[0]] = (unsigned)rvalue;
+	      narg_reg = 1;
+	      break;
+	    }
+
+	  /* fallthru */
+	case X86_RET_STRUCTPOP:
+	  *(void **)argp = rvalue;
+	  argp += sizeof(void *);
 	  break;
 	}
-      /* fallthru */
-    case X86_RET_STRUCTPOP:
-      *(void **)argp = rvalue;
-      argp += sizeof(void *);
-      break;
     }
 
   arg_types = cif->arg_types;
@@ -348,7 +448,28 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
       size_t z = ty->size;
       int t = ty->type;
 
-      if (z <= FFI_SIZEOF_ARG && t != FFI_TYPE_STRUCT)
+      if (is_type_passed_by_pointer (cabi, ty))
+        {
+	  memcpy (copy_argp, valp, z);
+	  valp = copy_argp;
+	  copy_argp += FFI_ALIGN (z, FFI_SIZEOF_ARG);
+
+	  if (narg_reg < pabi->nregs)
+	    {
+	      frame->regs[pabi->regs[narg_reg++]] = (unsigned)valp;
+	    }
+	  else if (dir < 0)
+	    {
+	      argp -= sizeof(void *);
+	      *(void **)argp = valp;
+	    }
+	  else
+	    {
+	      *(void **)argp = valp;
+	      argp += sizeof(void *);
+	    }
+	}
+      else if (z <= FFI_SIZEOF_ARG && t != FFI_TYPE_STRUCT)
         {
 	  ffi_arg val = extend_basic_type (valp, t);
 
@@ -404,6 +525,25 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	    }
 	}
     }
+
+  /* For LTR ABIs, handle struct returns after arguments. */
+  if (dir < 0)
+    switch (flags)
+      {
+      case X86_RET_STRUCTARG:
+	if (narg_reg < pabi->nregs)
+	  {
+	    frame->regs[pabi->regs[narg_reg++]] = (unsigned)rvalue;
+	    break;
+	  }
+
+	/* fallthru */
+      case X86_RET_STRUCTPOP:
+	argp -= sizeof(void *);
+	*(void **)argp = rvalue;
+	break;
+      }
+
   FFI_ASSERT (dir > 0 || argp == stack);
 
   ffi_call_i386 (frame, stack);
