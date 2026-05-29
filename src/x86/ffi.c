@@ -597,6 +597,7 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
   char *argp;
   void *rvalue;
   void **avalue;
+  size_t bytes;
 
   cabi = cif->abi;
   flags = cif->flags;
@@ -604,24 +605,39 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
   rvalue = frame->rettemp;
   pabi = &abi_params[cabi];
   dir = pabi->dir;
-  argp = (dir < 0 ? stack + STACK_ALIGN (cif->bytes) : stack);
 
-  switch (flags)
+  if (dir > 0)
     {
-    case X86_RET_STRUCTARG:
-      if (pabi->nregs > 0)
+      argp = stack;
+    }
+  else
+    {
+      bytes = (cif->abi == FFI_REGISTER
+	       ? register_stack_bytes (cif) : cif->bytes);
+      argp = stack + bytes;
+    }
+
+  /* For RTL ABIs, handle struct returns before arguments. */
+  if (dir > 0)
+    {
+      switch (flags)
 	{
-	  rvalue = (void *)frame->regs[pabi->regs[0]];
-	  narg_reg = 1;
+	case X86_RET_STRUCTARG:
+	  if (pabi->nregs > 0)
+	    {
+	      rvalue = (void *)frame->regs[pabi->regs[0]];
+	      narg_reg = 1;
+	      frame->rettemp[0] = (unsigned)rvalue;
+	      break;
+	    }
+
+	  /* fallthru */
+	case X86_RET_STRUCTPOP:
+	  rvalue = *(void **)argp;
+	  argp += sizeof(void *);
 	  frame->rettemp[0] = (unsigned)rvalue;
 	  break;
 	}
-      /* fallthru */
-    case X86_RET_STRUCTPOP:
-      rvalue = *(void **)argp;
-      argp += sizeof(void *);
-      frame->rettemp[0] = (unsigned)rvalue;
-      break;
     }
 
   n = cif->nargs;
@@ -635,7 +651,24 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
       int t = ty->type;
       void *valp;
 
-      if (z <= FFI_SIZEOF_ARG && t != FFI_TYPE_STRUCT)
+      if (is_type_passed_by_pointer (cabi, ty))
+	{
+	  if (narg_reg < pabi->nregs)
+      {
+        valp = (void *)frame->regs[pabi->regs[narg_reg++]];
+      }
+	  else if (dir < 0)
+	    {
+	      argp -= sizeof(void *);
+	      valp = *(void **)argp;
+	    }
+	  else
+	    {
+	      valp = *(void **)argp;
+	      argp += sizeof(void *);
+	    }
+	}
+      else if (z <= FFI_SIZEOF_ARG && t != FFI_TYPE_STRUCT)
 	{
 	  if (t != FFI_TYPE_FLOAT && narg_reg < pabi->nregs)
 	    valp = &frame->regs[pabi->regs[narg_reg++]];
@@ -686,16 +719,40 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
       avalue[i] = valp;
     }
 
+  /* For LTR ABIs, handle struct returns before arguments. */
+  if (dir < 0)
+    {
+      switch (flags)
+	{
+	case X86_RET_STRUCTARG:
+	  if (narg_reg < pabi->nregs)
+	    {
+	      rvalue = (void *)frame->regs[pabi->regs[narg_reg++]];
+	      frame->rettemp[0] = (unsigned)rvalue;
+	      break;
+	    }
+	  /* fallthru */
+	case X86_RET_STRUCTPOP:
+	  argp -= sizeof(void *);
+	  rvalue = *(void **)argp;
+	  frame->rettemp[0] = (unsigned)rvalue;
+	  break;
+	}
+    }
+
   frame->fun (cif, rvalue, avalue, frame->user_data);
 
   switch (cabi)
     {
     case FFI_STDCALL:
+    case FFI_PASCAL:
       return flags | (cif->bytes << X86_RET_POP_SHIFT);
     case FFI_THISCALL:
     case FFI_FASTCALL:
       return flags | ((cif->bytes - (narg_reg * FFI_SIZEOF_ARG))
           << X86_RET_POP_SHIFT);
+    case FFI_REGISTER:
+      return flags | (register_stack_bytes (cif) << X86_RET_POP_SHIFT);
     default:
       return flags;
     }
