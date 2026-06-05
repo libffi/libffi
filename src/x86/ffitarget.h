@@ -46,7 +46,6 @@
 
 #ifdef X86_WIN64
 #define FFI_SIZEOF_ARG 8
-#define USE_BUILTIN_FFS 0 /* not yet implemented in mingw-64 */
 #endif
 
 #define FFI_TARGET_SPECIFIC_STACK_SPACE_ALLOCATION
