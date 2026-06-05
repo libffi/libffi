@@ -207,6 +207,8 @@ See the git log for details at http://github.com/libffi/libffi.
         Add LoongArch32 support.
         Add RISC-V static trampoline support.
         Add aarch64 GCS (Guarded Control Stack) support.
+        Add aarch64 feature build attribute support.
+        Add ppc64le ELFv2 complex type support.
         Add conditional target support for __int128.
         Fix closures using FFI_REGISTER ABI.
         Fix SH linker errors with __USER_LABEL_PREFIX__.
@@ -214,6 +216,8 @@ See the git log for details at http://github.com/libffi/libffi.
         Fix compilation for Cortex-A53.
         Fix test compilation for some Android platforms.
         Fix x86 ASAN compatibility for win64.
+        Fix clang -Werror-semi builds on riscv, or1k, loongarch.
+        Fix NULL deref in dlmalloc sys_trim on heap corruption.
         Define WIN32_LEAN_AND_MEAN before including windows.h.
         Fix comments that trip up some toolchains.
 
