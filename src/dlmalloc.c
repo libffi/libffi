@@ -1167,6 +1167,12 @@ int mspace_mallopt(int, int);
 
 #include <stdio.h>       /* for printing in malloc_stats */
 
+#if USE_LOCKS && defined(HAVE_STDATOMIC_H)
+#include <stdatomic.h>
+#elif USE_LOCKS && defined(_MSC_VER) && !defined(__clang__)
+#include <intrin.h>
+#endif /* USE_LOCKS */
+
 #ifndef LACKS_ERRNO_H
 #include <errno.h>       /* for MALLOC_FAILURE_ACTION */
 #endif /* LACKS_ERRNO_H */
@@ -1440,8 +1446,8 @@ static int win32munmap(void* ptr, size_t size) {
     using this lock, so there is still code to cope the best we can on
     interference.
 
-  * magic_init_mutex ensures that mparams.magic and other
-    unique mparams values are initialized only once.
+  * init_mparam_mutex ensures that mparams and the main malloc
+    area lock are initialized only once.
 */
 
 #if !defined(WIN32) && !defined(__OS2__)
@@ -1456,7 +1462,7 @@ static int win32munmap(void* ptr, size_t size) {
 static MLOCK_T morecore_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* HAVE_MORECORE */
 
-static MLOCK_T magic_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+static MLOCK_T init_mparam_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #elif defined(__OS2__)
 #define MLOCK_T HMTX
@@ -1466,7 +1472,7 @@ static MLOCK_T magic_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 #if HAVE_MORECORE
 static MLOCK_T morecore_mutex;
 #endif /* HAVE_MORECORE */
-static MLOCK_T magic_init_mutex;
+static MLOCK_T init_mparam_mutex;
 
 #else /* WIN32 */
 /*
@@ -1498,7 +1504,7 @@ static void win32_release_lock (MLOCK_T *sl) {
 #if HAVE_MORECORE
 static MLOCK_T morecore_mutex;
 #endif /* HAVE_MORECORE */
-static MLOCK_T magic_init_mutex;
+static MLOCK_T init_mparam_mutex;
 #endif /* WIN32 */
 
 #define USE_LOCK_BIT               (2U)
@@ -1516,11 +1522,11 @@ static MLOCK_T magic_init_mutex;
 #endif /* USE_LOCKS && HAVE_MORECORE */
 
 #if USE_LOCKS
-#define ACQUIRE_MAGIC_INIT_LOCK()  ACQUIRE_LOCK(&magic_init_mutex);
-#define RELEASE_MAGIC_INIT_LOCK()  RELEASE_LOCK(&magic_init_mutex);
+#define ACQUIRE_MPARAM_INIT_LOCK()  ACQUIRE_LOCK(&init_mparam_mutex);
+#define RELEASE_MPARAM_INIT_LOCK()  RELEASE_LOCK(&init_mparam_mutex);
 #else  /* USE_LOCKS */
-#define ACQUIRE_MAGIC_INIT_LOCK()
-#define RELEASE_MAGIC_INIT_LOCK()
+#define ACQUIRE_MPARAM_INIT_LOCK()
+#define RELEASE_MPARAM_INIT_LOCK()
 #endif /* USE_LOCKS */
 
 
@@ -2109,7 +2115,21 @@ typedef struct malloc_state*    mstate;
 
 struct malloc_params {
   size_t magic;
+#if USE_LOCKS
+# if defined(HAVE_STDATOMIC_H)
+#  define MPARAMS_PAGE_SIZE_T atomic_size_t
+# elif (defined(__GNUC__) || defined(__clang__)) && \
+       defined(__ATOMIC_ACQUIRE) && defined(__ATOMIC_RELEASE)
+#  define MPARAMS_PAGE_SIZE_T size_t
+# elif defined(_MSC_VER)
+#  define MPARAMS_PAGE_SIZE_T volatile size_t
+# else
+#  error "USE_LOCKS requires stdatomic.h, GCC/Clang __atomic builtins, or MSVC _Interlocked intrinsics"
+# endif
+  MPARAMS_PAGE_SIZE_T page_size;
+#else
   size_t page_size;
+#endif /* USE_LOCKS */
   size_t granularity;
   size_t mmap_threshold;
   size_t trim_threshold;
@@ -2117,6 +2137,43 @@ struct malloc_params {
 };
 
 static struct malloc_params mparams;
+
+#if USE_LOCKS
+#if defined(HAVE_STDATOMIC_H)
+#define mparams_page_size()                                            \
+  (atomic_load_explicit(&mparams.page_size, memory_order_acquire))
+#define set_mparams_page_size(S)                                       \
+  (atomic_store_explicit(&mparams.page_size, (S), memory_order_release))
+#elif (defined(__GNUC__) || defined(__clang__)) &&                     \
+      defined(__ATOMIC_ACQUIRE) && defined(__ATOMIC_RELEASE)
+#define mparams_page_size()                                            \
+  (__atomic_load_n(&mparams.page_size, __ATOMIC_ACQUIRE))
+#define set_mparams_page_size(S)                                       \
+  (__atomic_store_n(&mparams.page_size, (size_t)(S), __ATOMIC_RELEASE))
+#elif defined(_MSC_VER) && !defined(__clang__)
+static size_t mparams_page_size(void) {
+# ifdef _WIN64
+  return (size_t)_InterlockedCompareExchange64(
+    (volatile __int64*)&mparams.page_size, 0, 0);
+# else
+  return (size_t)_InterlockedCompareExchange(
+    (volatile long*)&mparams.page_size, 0, 0);
+# endif
+}
+
+static void set_mparams_page_size(size_t s) {
+# ifdef _WIN64
+  _InterlockedExchange64(
+    (volatile __int64*)&mparams.page_size, (__int64)s);
+# else
+  _InterlockedExchange((volatile long*)&mparams.page_size, (long)s);
+# endif
+}
+#endif
+#else
+#define mparams_page_size() (mparams.page_size)
+#define set_mparams_page_size(S) (mparams.page_size = (S))
+#endif /* USE_LOCKS */
 
 /* The global malloc_state used for all non-"mspace" calls */
 static struct malloc_state _gm_;
@@ -2146,14 +2203,14 @@ static struct malloc_state _gm_;
 
 /* page-align a size */
 #define page_align(S)\
- (((S) + (mparams.page_size)) & ~(mparams.page_size - SIZE_T_ONE))
+ (((S) + (mparams_page_size())) & ~(mparams_page_size() - SIZE_T_ONE))
 
 /* granularity-align a size */
 #define granularity_align(S)\
   (((S) + (mparams.granularity)) & ~(mparams.granularity - SIZE_T_ONE))
 
 #define is_page_aligned(S)\
-   (((size_t)(S) & (mparams.page_size - SIZE_T_ONE)) == 0)
+   (((size_t)(S) & (mparams_page_size() - SIZE_T_ONE)) == 0)
 #define is_granularity_aligned(S)\
    (((size_t)(S) & (mparams.granularity - SIZE_T_ONE)) == 0)
 
@@ -2209,7 +2266,7 @@ static int has_segment_link(mstate m, msegmentptr ss) {
 #if USE_LOCKS
 
 /* Ensure locks are initialized */
-#define GLOBALLY_INITIALIZE() (mparams.page_size == 0 && init_mparams())
+#define GLOBALLY_INITIALIZE() (mparams_page_size() == 0 && init_mparams())
 
 #define PREACTION(M)  ((GLOBALLY_INITIALIZE() || use_lock(M))? ACQUIRE_LOCK(&(M)->mutex) : 0)
 #define POSTACTION(M) { if (use_lock(M)) RELEASE_LOCK(&(M)->mutex); }
@@ -2517,81 +2574,88 @@ static size_t traverse_and_check(mstate m);
 
 /* Initialize mparams */
 static int init_mparams(void) {
-  if (mparams.page_size == 0) {
+  if (mparams_page_size() == 0) {
     size_t s;
+    size_t page_size;
+    size_t granularity;
 
-    mparams.mmap_threshold = DEFAULT_MMAP_THRESHOLD;
-    mparams.trim_threshold = DEFAULT_TRIM_THRESHOLD;
+    ACQUIRE_MPARAM_INIT_LOCK();
+    if (mparams_page_size() == 0) {
+
+      mparams.mmap_threshold = DEFAULT_MMAP_THRESHOLD;
+      mparams.trim_threshold = DEFAULT_TRIM_THRESHOLD;
 #if MORECORE_CONTIGUOUS
-    mparams.default_mflags = USE_LOCK_BIT|USE_MMAP_BIT;
+      mparams.default_mflags = USE_LOCK_BIT|USE_MMAP_BIT;
 #else  /* MORECORE_CONTIGUOUS */
-    mparams.default_mflags = USE_LOCK_BIT|USE_MMAP_BIT|USE_NONCONTIGUOUS_BIT;
+      mparams.default_mflags = USE_LOCK_BIT|USE_MMAP_BIT|USE_NONCONTIGUOUS_BIT;
 #endif /* MORECORE_CONTIGUOUS */
 
 #if (FOOTERS && !INSECURE)
-    {
+      {
 #if USE_DEV_RANDOM
-      int fd;
-      unsigned char buf[sizeof(size_t)];
-      /* Try to use /dev/urandom, else fall back on using time */
-      if ((fd = open("/dev/urandom", O_RDONLY)) >= 0 &&
-          read(fd, buf, sizeof(buf)) == sizeof(buf)) {
-        s = *((size_t *) buf);
-        close(fd);
-      }
-      else
+        int fd;
+        unsigned char buf[sizeof(size_t)];
+        /* Try to use /dev/urandom, else fall back on using time */
+        if ((fd = open("/dev/urandom", O_RDONLY)) >= 0 &&
+            read(fd, buf, sizeof(buf)) == sizeof(buf)) {
+          s = *((size_t *) buf);
+          close(fd);
+        }
+        else
 #endif /* USE_DEV_RANDOM */
-        s = (size_t)(time(0) ^ (size_t)0x55555555U);
+          s = (size_t)(time(0) ^ (size_t)0x55555555U);
 
-      s |= (size_t)8U;    /* ensure nonzero */
-      s &= ~(size_t)7U;   /* improve chances of fault for bad values */
+        s |= (size_t)8U;    /* ensure nonzero */
+        s &= ~(size_t)7U;   /* improve chances of fault for bad values */
 
-    }
+      }
 #else /* (FOOTERS && !INSECURE) */
-    s = (size_t)0x58585858U;
+      s = (size_t)0x58585858U;
 #endif /* (FOOTERS && !INSECURE) */
-    ACQUIRE_MAGIC_INIT_LOCK();
-    if (mparams.magic == 0) {
+
       mparams.magic = s;
       /* Set up lock for main malloc area */
       INITIAL_LOCK(&gm->mutex);
       gm->mflags = mparams.default_mflags;
-    }
-    RELEASE_MAGIC_INIT_LOCK();
 
 #if !defined(WIN32) && !defined(__OS2__)
-    mparams.page_size = malloc_getpagesize;
-    mparams.granularity = ((DEFAULT_GRANULARITY != 0)?
-                           DEFAULT_GRANULARITY : mparams.page_size);
+      page_size = malloc_getpagesize;
+      granularity = ((DEFAULT_GRANULARITY != 0)?
+                     DEFAULT_GRANULARITY : page_size);
 #elif defined (__OS2__)
  /* if low-memory is used, os2munmap() would break
     if it were anything other than 64k */
-    mparams.page_size = 4096u;
-    mparams.granularity = 65536u;
+      page_size = 4096u;
+      granularity = 65536u;
 #else /* WIN32 */
-    {
-      SYSTEM_INFO system_info;
-      GetSystemInfo(&system_info);
-      mparams.page_size = system_info.dwPageSize;
-      mparams.granularity = system_info.dwAllocationGranularity;
-    }
+      {
+        SYSTEM_INFO system_info;
+        GetSystemInfo(&system_info);
+        page_size = system_info.dwPageSize;
+        granularity = system_info.dwAllocationGranularity;
+      }
 #endif /* WIN32 */
 
-    /* Sanity-check configuration:
-       size_t must be unsigned and as wide as pointer type.
-       ints must be at least 4 bytes.
-       alignment must be at least 8.
-       Alignment, min chunk size, and page size must all be powers of 2.
-    */
-    if ((sizeof(size_t) != sizeof(char*)) ||
-        (MAX_SIZE_T < MIN_CHUNK_SIZE)  ||
-        (sizeof(int) < 4)  ||
-        (MALLOC_ALIGNMENT < (size_t)8U) ||
-        ((MALLOC_ALIGNMENT    & (MALLOC_ALIGNMENT-SIZE_T_ONE))    != 0) ||
-        ((MCHUNK_SIZE         & (MCHUNK_SIZE-SIZE_T_ONE))         != 0) ||
-        ((mparams.granularity & (mparams.granularity-SIZE_T_ONE)) != 0) ||
-        ((mparams.page_size   & (mparams.page_size-SIZE_T_ONE))   != 0))
-      ABORT;
+      /* Sanity-check configuration:
+         size_t must be unsigned and as wide as pointer type.
+         ints must be at least 4 bytes.
+         alignment must be at least 8.
+         Alignment, min chunk size, and page size must all be powers of 2.
+      */
+      if ((sizeof(size_t) != sizeof(char*)) ||
+          (MAX_SIZE_T < MIN_CHUNK_SIZE)  ||
+          (sizeof(int) < 4)  ||
+          (MALLOC_ALIGNMENT < (size_t)8U) ||
+          ((MALLOC_ALIGNMENT & (MALLOC_ALIGNMENT-SIZE_T_ONE)) != 0) ||
+          ((MCHUNK_SIZE      & (MCHUNK_SIZE-SIZE_T_ONE))      != 0) ||
+          ((granularity      & (granularity-SIZE_T_ONE))      != 0) ||
+          ((page_size        & (page_size-SIZE_T_ONE))        != 0))
+        ABORT;
+
+      mparams.granularity = granularity;
+      set_mparams_page_size(page_size);
+    }
+    RELEASE_MPARAM_INIT_LOCK();
   }
   return 0;
 }
@@ -2605,7 +2669,7 @@ static int change_mparam(int param_number, int value) {
     mparams.trim_threshold = val;
     return 1;
   case M_GRANULARITY:
-    if (val >= mparams.page_size && ((val & (val-1)) == 0)) {
+    if (val >= mparams_page_size() && ((val & (val-1)) == 0)) {
       mparams.granularity = val;
       return 1;
     }
@@ -2651,7 +2715,7 @@ static void do_check_mmapped_chunk(mstate m, mchunkptr p) {
   assert((is_aligned(chunk2mem(p))) || (p->head == FENCEPOST_HEAD));
   assert(ok_address(m, p));
   assert(!is_small(sz));
-  assert((len & (mparams.page_size-SIZE_T_ONE)) == 0);
+  assert((len & (mparams_page_size() - SIZE_T_ONE)) == 0);
   assert(chunk_plus_offset(p, sz)->head == FENCEPOST_HEAD);
   assert(chunk_plus_offset(p, sz+SIZE_T_SIZE)->head == 0);
 }
@@ -4421,14 +4485,14 @@ void** dlindependent_comalloc(size_t n_elements, size_t sizes[],
 void* dlvalloc(size_t bytes) {
   size_t pagesz;
   init_mparams();
-  pagesz = mparams.page_size;
+  pagesz = mparams_page_size();
   return dlmemalign(pagesz, bytes);
 }
 
 void* dlpvalloc(size_t bytes) {
   size_t pagesz;
   init_mparams();
-  pagesz = mparams.page_size;
+  pagesz = mparams_page_size();
   return dlmemalign(pagesz, (bytes + pagesz - SIZE_T_ONE) & ~(pagesz - SIZE_T_ONE));
 }
 
@@ -4503,7 +4567,7 @@ mspace create_mspace(size_t capacity, int locked) {
   size_t msize = pad_request(sizeof(struct malloc_state));
   init_mparams(); /* Ensure pagesize etc initialized */
 
-  if (capacity < (size_t) -(msize + TOP_FOOT_SIZE + mparams.page_size)) {
+  if (capacity < (size_t) -(msize + TOP_FOOT_SIZE + mparams_page_size())) {
     size_t rs = ((capacity == 0)? mparams.granularity :
                  (capacity + TOP_FOOT_SIZE + msize));
     size_t tsize = granularity_align(rs);
@@ -4523,7 +4587,7 @@ mspace create_mspace_with_base(void* base, size_t capacity, int locked) {
   init_mparams(); /* Ensure pagesize etc initialized */
 
   if (capacity > msize + TOP_FOOT_SIZE &&
-      capacity < (size_t) -(msize + TOP_FOOT_SIZE + mparams.page_size)) {
+      capacity < (size_t) -(msize + TOP_FOOT_SIZE + mparams_page_size())) {
     m = init_user_mstate((char*)base, capacity);
     set_segment_flags(&m->seg, EXTERN_BIT);
     set_lock(m, locked);
