@@ -98,6 +98,25 @@ m4_warn([obsolete],
 AC_CHECK_FUNCS(memcpy)
 AC_CHECK_HEADERS(alloca.h)
 
+AC_CACHE_CHECK([for working stdatomic.h],
+  [libffi_cv_have_stdatomic_h],
+  [AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stddef.h>
+#include <stdatomic.h>
+]], [[
+  atomic_size_t value;
+  size_t loaded;
+  atomic_store_explicit(&value, (size_t) 1, memory_order_release);
+  loaded = atomic_load_explicit(&value, memory_order_acquire);
+  return loaded == 1 ? 0 : 1;
+]])],
+    [libffi_cv_have_stdatomic_h=yes],
+    [libffi_cv_have_stdatomic_h=no])])
+if test "x$libffi_cv_have_stdatomic_h" = xyes; then
+  AC_DEFINE([HAVE_STDATOMIC_H], [1],
+    [Define to 1 if <stdatomic.h> provides atomic_size_t and explicit load/store.])
+fi
+
 AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(long double)
 

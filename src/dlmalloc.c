@@ -1166,8 +1166,11 @@ int mspace_mallopt(int, int);
 #endif /* _MSC_VER */
 
 #include <stdio.h>       /* for printing in malloc_stats */
-#if USE_LOCKS
+
+#if USE_LOCKS && defined(HAVE_STDATOMIC_H)
 #include <stdatomic.h>
+#elif USE_LOCKS && defined(_MSC_VER) && !defined(__clang__)
+#include <intrin.h>
 #endif /* USE_LOCKS */
 
 #ifndef LACKS_ERRNO_H
@@ -2113,7 +2116,17 @@ typedef struct malloc_state*    mstate;
 struct malloc_params {
   size_t magic;
 #if USE_LOCKS
-  atomic_size_t page_size;
+# if defined(HAVE_STDATOMIC_H)
+#  define MPARAMS_PAGE_SIZE_T atomic_size_t
+# elif (defined(__GNUC__) || defined(__clang__)) && \
+       defined(__ATOMIC_ACQUIRE) && defined(__ATOMIC_RELEASE)
+#  define MPARAMS_PAGE_SIZE_T size_t
+# elif defined(_MSC_VER)
+#  define MPARAMS_PAGE_SIZE_T volatile size_t
+# else
+#  error "USE_LOCKS requires stdatomic.h, GCC/Clang __atomic builtins, or MSVC _Interlocked intrinsics"
+# endif
+  MPARAMS_PAGE_SIZE_T page_size;
 #else
   size_t page_size;
 #endif /* USE_LOCKS */
@@ -2126,10 +2139,37 @@ struct malloc_params {
 static struct malloc_params mparams;
 
 #if USE_LOCKS
-#define mparams_page_size() \
+#if defined(HAVE_STDATOMIC_H)
+#define mparams_page_size()                                            \
   (atomic_load_explicit(&mparams.page_size, memory_order_acquire))
-#define set_mparams_page_size(S) \
+#define set_mparams_page_size(S)                                       \
   (atomic_store_explicit(&mparams.page_size, (S), memory_order_release))
+#elif (defined(__GNUC__) || defined(__clang__)) &&                     \
+      defined(__ATOMIC_ACQUIRE) && defined(__ATOMIC_RELEASE)
+#define mparams_page_size()                                            \
+  (__atomic_load_n(&mparams.page_size, __ATOMIC_ACQUIRE))
+#define set_mparams_page_size(S)                                       \
+  (__atomic_store_n(&mparams.page_size, (size_t)(S), __ATOMIC_RELEASE))
+#elif defined(_MSC_VER) && !defined(__clang__)
+static size_t mparams_page_size(void) {
+# ifdef _WIN64
+  return (size_t)_InterlockedCompareExchange64(
+    (volatile __int64*)&mparams.page_size, 0, 0);
+# else
+  return (size_t)_InterlockedCompareExchange(
+    (volatile long*)&mparams.page_size, 0, 0);
+# endif
+}
+
+static void set_mparams_page_size(size_t s) {
+# ifdef _WIN64
+  _InterlockedExchange64(
+    (volatile __int64*)&mparams.page_size, (__int64)s);
+# else
+  _InterlockedExchange((volatile long*)&mparams.page_size, (long)s);
+# endif
+}
+#endif
 #else
 #define mparams_page_size() (mparams.page_size)
 #define set_mparams_page_size(S) (mparams.page_size = (S))
