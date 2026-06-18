@@ -171,6 +171,7 @@ jobs:
           cd "$(cygpath $RUNNER_WORKSPACE)/libffi"
           curl -fsSL "$(curl -fsSL https://api.github.com/repos/atgreen/red-light-green-light/releases/latest | grep -oE 'https://[^" ]*rlgl-[^" ]*windows-amd64.zip' | head -n1)" -o rlgl.zip
           unzip -o rlgl.zip
+          chmod +x rlgl.exe
           autoreconf -fvi
           ./configure \
             --enable-shared \
@@ -248,6 +249,7 @@ jobs:
           cd $(cygpath $RUNNER_WORKSPACE)/libffi
           curl -fsSL "$(curl -fsSL https://api.github.com/repos/atgreen/red-light-green-light/releases/latest | grep -oE 'https://[^" ]*rlgl-[^" ]*windows-amd64.zip' | head -n1)" -o rlgl.zip
           unzip -o rlgl.zip
+          chmod +x rlgl.exe
           autoreconf -f -v -i
           ./configure \
             --enable-shared \
