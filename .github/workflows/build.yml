@@ -65,6 +65,18 @@ jobs:
           ./.ci/install.sh
           ./.ci/build.sh
 
+      - name: Upload rlgl report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rlgl-report-${{ github.job }}-${{ strategy.job-index }}
+          path: rlgl-report.html
+          if-no-files-found: ignore
+
+      - name: rlgl report link
+        if: always()
+        run: echo "::notice title=rlgl report::https://libffi.github.io/libffi/reports/${{ github.run_id }}/${{ github.job }}-${{ strategy.job-index }}/"
+
   build-macos:
     name: MacOS ${{ matrix.platform }} ${{ matrix.compilers }}
     runs-on: ${{ matrix.platform }}
@@ -178,6 +190,18 @@ jobs:
                           -l host=${{ matrix.host }} \
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
 
+      - name: Upload rlgl report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rlgl-report-${{ github.job }}-${{ strategy.job-index }}
+          path: rlgl-report.html
+          if-no-files-found: ignore
+
+      - name: rlgl report link
+        if: always()
+        run: echo "::notice title=rlgl report::https://libffi.github.io/libffi/reports/${{ github.run_id }}/${{ github.job }}-${{ strategy.job-index }}/"
+
   build-msvc:
     name: Windows ${{ matrix.width }}-bit Visual C++
     runs-on: windows-latest
@@ -253,6 +277,18 @@ jobs:
                           -l host=${{ matrix.host }} \
                           --policy=https://github.com/libffi/rlgl-policy.git $(find . -name libffi.log)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+
+      - name: Upload rlgl report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rlgl-report-${{ github.job }}-${{ strategy.job-index }}
+          path: rlgl-report.html
+          if-no-files-found: ignore
+
+      - name: rlgl report link
+        if: always()
+        run: echo "::notice title=rlgl report::https://libffi.github.io/libffi/reports/${{ github.run_id }}/${{ github.job }}-${{ strategy.job-index }}/"
 
       - name: Add meta information to DLL
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
@@ -354,3 +390,111 @@ jobs:
           export NM="${TOOLCHAIN}"/bin/llvm-nm
           export OBJDUMP="${TOOLCHAIN}"/bin/llvm-objdump
           ./.ci/build.sh
+
+      - name: Upload rlgl report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rlgl-report-${{ github.job }}-${{ strategy.job-index }}
+          path: rlgl-report.html
+          if-no-files-found: ignore
+
+      - name: rlgl report link
+        if: always()
+        run: echo "::notice title=rlgl report::https://libffi.github.io/libffi/reports/${{ github.run_id }}/${{ github.job }}-${{ strategy.job-index }}/"
+
+  # ----------------------------------------------------------------------------
+  # Collect the rlgl HTML reports from every job above and publish them to the
+  # gh-pages branch under reports/<run-id>/<job>/, regenerating an index that
+  # lists all runs.  Serialized across workflows via the gh-pages-publish
+  # concurrency group.  Only runs for pushes to the canonical repo.
+  publish-reports:
+    name: Publish rlgl reports
+    needs: [build-linux, build-non-msvc, build-msvc, build-android]
+    if: ${{ always() && github.event_name != 'pull_request' && github.repository == 'libffi/libffi' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: gh-pages-publish
+      cancel-in-progress: false
+    steps:
+      - name: Download report artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: rlgl-report-*
+          path: incoming
+
+      - name: Publish reports to gh-pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ ! -d incoming ] || [ -z "$(ls -A incoming 2>/dev/null)" ]; then
+            echo "No rlgl reports to publish."; exit 0
+          fi
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" pages
+          cd pages
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          run_dir="reports/${{ github.run_id }}"
+          mkdir -p "$run_dir"
+          echo "${{ github.sha }}"      > "$run_dir/.sha"
+          echo "${{ github.workflow }}" > "$run_dir/.workflow"
+          for d in ../incoming/*/; do
+            [ -d "$d" ] || continue
+            key="$(basename "$d")"; key="${key#rlgl-report-}"
+            if [ -f "${d}rlgl-report.html" ]; then
+              mkdir -p "$run_dir/$key"
+              cp "${d}rlgl-report.html" "$run_dir/$key/index.html"
+            fi
+          done
+          {
+            echo '<!doctype html><html><head><meta charset="utf-8"><title>libffi rlgl reports</title>'
+            echo '<style>body{font-family:sans-serif;max-width:60em;margin:2em auto;padding:0 1em}h2{margin-top:1.5em}code{background:#f0f0f0;padding:.1em .3em}</style></head><body>'
+            echo '<h1>libffi rlgl evaluation reports</h1>'
+            for run in $(ls -1 reports 2>/dev/null | sort -rn); do
+              [ -d "reports/$run" ] || continue
+              sha="$(cut -c1-12 "reports/$run/.sha" 2>/dev/null || true)"
+              wf="$(cat "reports/$run/.workflow" 2>/dev/null || true)"
+              printf '<h2>Run <a href="https://github.com/%s/actions/runs/%s">%s</a>' "${{ github.repository }}" "$run" "$run"
+              [ -n "$wf" ]  && printf ' &middot; %s' "$wf"
+              [ -n "$sha" ] && printf ' &middot; <code>%s</code>' "$sha"
+              echo '</h2><ul>'
+              for cfg in "reports/$run"/*/; do
+                [ -d "$cfg" ] || continue
+                name="$(basename "$cfg")"
+                printf '<li><a href="%s">%s</a></li>\n' "$cfg" "$name"
+              done
+              echo '</ul>'
+            done
+            echo '</body></html>'
+          } > index.html
+          git add -A
+          if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
+          git commit -m "reports: ${{ github.workflow }} run ${{ github.run_id }}"
+          for i in 1 2 3 4 5; do
+            if git push origin gh-pages; then exit 0; fi
+            echo "push rejected, rebasing (attempt $i)"; git pull --rebase origin gh-pages || true; sleep 3
+          done
+          echo "::error::failed to push reports to gh-pages"; exit 1
+
+      - name: Summarize report links
+        if: always()
+        run: |
+          base="https://libffi.github.io/libffi/reports/${{ github.run_id }}"
+          {
+            echo "## rlgl reports"
+            echo ""
+            if [ -d incoming ]; then
+              for d in incoming/*/; do
+                [ -d "$d" ] || continue
+                key="$(basename "$d")"; key="${key#rlgl-report-}"
+                echo "- [$key]($base/$key/)"
+              done
+            fi
+            echo ""
+            echo "All runs: https://libffi.github.io/libffi/"
+          } >> "$GITHUB_STEP_SUMMARY"
