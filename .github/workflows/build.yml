@@ -157,8 +157,8 @@ jobs:
         run: |
           set -euo pipefail
           cd "$(cygpath $RUNNER_WORKSPACE)/libffi"
-          wget https://rl.gl/cli/rlgl-windows-amd64.zip
-          unzip rlgl-windows-amd64.zip
+          curl -fsSL "$(curl -fsSL https://api.github.com/repos/atgreen/red-light-green-light/releases/latest | grep -oE 'https://[^" ]*rlgl-[^" ]*windows-amd64.zip' | head -n1)" -o rlgl.zip
+          unzip -o rlgl.zip
           autoreconf -fvi
           ./configure \
             --enable-shared \
@@ -171,8 +171,7 @@ jobs:
           file */.libs/*ffi-*.dll
 
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
-          ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ./rlgl/rlgl.exe e \
+          ./rlgl.exe e \
                           -l project=libffi \
                           -l sha=${GITHUB_SHA:0:7} \
                           -l CC=${{ matrix.compiler }} \
@@ -223,8 +222,8 @@ jobs:
       - name: Build and test
         run: |
           cd $(cygpath $RUNNER_WORKSPACE)/libffi
-          wget https://rl.gl/cli/rlgl-windows-amd64.zip
-          unzip rlgl-windows-amd64.zip
+          curl -fsSL "$(curl -fsSL https://api.github.com/repos/atgreen/red-light-green-light/releases/latest | grep -oE 'https://[^" ]*rlgl-[^" ]*windows-amd64.zip' | head -n1)" -o rlgl.zip
+          unzip -o rlgl.zip
           autoreconf -f -v -i
           ./configure \
             --enable-shared \
@@ -247,8 +246,7 @@ jobs:
           cp $(find . -name 'libffi-?.dll') ${{ matrix.host }}/testsuite/
           find ./ -name ffi.h
           TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
-          ./rlgl/rlgl.exe l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
-          ./rlgl/rlgl.exe e \
+          ./rlgl.exe e \
                           -l project=libffi \
                           -l sha=${GITHUB_SHA:0:7} \
                           -l CC=msvcc.sh \

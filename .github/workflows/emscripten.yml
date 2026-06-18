@@ -100,9 +100,8 @@ jobs:
 
       - name: Install rlgl and run
         run: |
-          wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
-               tar --strip-components=2 -xvzf - ./rlgl/rlgl;
-          ./rlgl l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
+          curl -fsSL "$(curl -fsSL https://api.github.com/repos/atgreen/red-light-green-light/releases/latest | grep -oE 'https://[^" ]*rlgl-[^" ]*linux-amd64.tar.gz' | head -n1)" | tar -xzf - rlgl
+          chmod +x rlgl
           ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='emcc' -l host=wasm32-unknown-linux --policy=https://github.com/libffi/rlgl-policy.git testsuite/libffi.log
           exit $?
 
@@ -208,8 +207,7 @@ jobs:
       - name: Install rlgl and run
         if: success() || failure()
         run: |
-          wget -qO - https://rl.gl/cli/rlgl-linux-amd64.tgz | \
-               tar --strip-components=2 -xvzf - ./rlgl/rlgl;
-          ./rlgl l --key=0LIBFFI-0LIBFFI-0LIBFFI-0LIBFFI https://rl.gl
+          curl -fsSL "$(curl -fsSL https://api.github.com/repos/atgreen/red-light-green-light/releases/latest | grep -oE 'https://[^" ]*rlgl-[^" ]*linux-amd64.tar.gz' | head -n1)" | tar -xzf - rlgl
+          chmod +x rlgl
           ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC='emcc' -l host=${{ matrix.browser }} --policy=https://github.com/libffi/rlgl-policy.git testsuite/emscripten/test-results/junit.xml
           exit $?
