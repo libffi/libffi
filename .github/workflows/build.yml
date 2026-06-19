@@ -166,11 +166,18 @@ jobs:
       # ──────────────────────────────── Cygwin & tool-chains ────────────────────────────────
       - uses: egor-tensin/setup-cygwin@v4
         with:
-          # gcc / g++ are needed so Clang can reuse their start-files & libraries
+          # gcc / g++ are needed so Clang can reuse their start-files & libraries.
+          # mingw64-x86_64-* gives us a *Cygwin-hosted* x86_64-w64-mingw32 cross
+          # toolchain: its driver translates Cygwin POSIX paths (/cygdrive/...),
+          # so the DejaGnu test compiles find the generated ffi.h.  Without it the
+          # 64-bit job picked up a native mingw gcc that can't read those paths,
+          # and every testsuite compile failed with "ffi.h: No such file".
           packages: >
             wget make dejagnu automake autoconf libtool texinfo unzip dos2unix
             clang gcc-core gcc-g++
             cygwin32-gcc-core cygwin32-gcc-g++ cygwin32-runtime cygwin32-libgcc1
+            mingw64-x86_64-gcc-core mingw64-x86_64-gcc-g++
+            mingw64-x86_64-runtime mingw64-x86_64-winpthreads
 
       # ──────────────────────────────── Common environment ────────────────────────────────
       - name: Export build env
