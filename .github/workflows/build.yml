@@ -419,6 +419,7 @@ jobs:
       matrix:
         include:
           - HOST: powerpc64le-unknown-linux-gnu
+            docker_arch: ppc64le
             image: libffi-ci-ppc64le
             containerfile: .ci/Containerfile.ppc64le
     steps:
@@ -428,7 +429,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: Build foreign-arch container image
-        run: docker build -f ${{ matrix.containerfile }} -t ${{ matrix.image }} .ci
+        run: docker build --platform linux/${{ matrix.docker_arch }} -f ${{ matrix.containerfile }} -t ${{ matrix.image }} .ci
 
       - name: Build and test under emulation
         env:

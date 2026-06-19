@@ -1,4 +1,6 @@
-FROM ppc64le/fedora
+# Built for ppc64le via `docker build --platform linux/ppc64le` (QEMU binfmt).
+# The official multi-arch fedora image has a ppc64le variant.
+FROM fedora
 
 RUN dnf install -y dejagnu automake autoconf dejagnu texinfo gcc libtool diffutils gawk
 
