@@ -426,6 +426,14 @@ jobs:
             docker_arch: s390x
             image: libffi-ci-s390x
             containerfile: .ci/Containerfile.s390x
+          - HOST: riscv64-unknown-linux-gnu
+            docker_arch: riscv64
+            image: libffi-ci-riscv64
+            containerfile: .ci/Containerfile.debian
+          - HOST: arm-unknown-linux-gnueabihf
+            docker_arch: arm/v7
+            image: libffi-ci-armv7
+            containerfile: .ci/Containerfile.debian
     steps:
       - uses: actions/checkout@v4
 
@@ -472,12 +480,15 @@ jobs:
         include:
           - HOST: powerpc64-linux-gnu
           - HOST: powerpc-linux-gnu
+          - HOST: sparc64-linux-gnu
+          - HOST: mips64el-linux-gnu
     steps:
       - uses: actions/checkout@v4
 
       - name: Build and test under qemu-user
         env:
           HOST: ${{ matrix.HOST }}
+          CROSS_QEMU: "1"
         run: |
           ./.ci/install.sh
           ./.ci/build.sh

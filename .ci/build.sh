@@ -65,9 +65,13 @@ function build_cross()
 # qemu-user-static to be installed, plus the target sysroot at /usr/${HOST}.
 function build_cross_qemu()
 {
+    # Export the sysroot so qemu-user (invoked via binfmt when the test
+    # binaries run) finds the target dynamic loader; otherwise every execution
+    # test fails with "Could not open '/lib/ld.so.1'".
+    export QEMU_LD_PREFIX=/usr/${HOST}
     ./configure --host=$HOST CC="${HOST}-gcc ${GCC_OPTIONS}" CXX="${HOST}-g++ ${GCC_OPTIONS}" --disable-shared || cat */config.log
     make
-    QEMU_LD_PREFIX=/usr/${HOST} DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci \
+    DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci \
         make check RUNTESTFLAGS="-a $RUNTESTFLAGS" || true
 
     ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC="${HOST}-gcc" -l host=$HOST --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
@@ -94,6 +98,19 @@ function build_macosx()
     echo "Finished build"
     exit $?
 }
+
+# QEMU jobs select their build method by env var (set in the workflow), which
+# avoids fragile HOST-triple glob matching:
+#   FOREIGN_IMAGE -> native build+test inside a QEMU-run foreign-arch container
+#   CROSS_QEMU    -> cross-compile + run tests under qemu-user (binfmt)
+if [ -n "${FOREIGN_IMAGE:-}" ]; then
+    ./autogen.sh
+    build_foreign_linux "$HOST" "$FOREIGN_IMAGE"
+fi
+if [ -n "${CROSS_QEMU:-}" ]; then
+    ./autogen.sh
+    build_cross_qemu
+fi
 
 case "$HOST" in
     arm-apple-darwin*)
@@ -127,16 +144,6 @@ case "$HOST" in
     m68k-linux-gnu )
 	      ./autogen.sh
 	      GCC_OPTIONS=-mcpu=547x build_cross_linux
-	      ;;
-    powerpc64le-*-linux-gnu | ppc64le-*-linux-gnu | s390x-*-linux-gnu )
-	      # Native build+test inside a QEMU-run foreign-arch container image.
-	      ./autogen.sh
-	      build_foreign_linux "$HOST" "${FOREIGN_IMAGE:?set FOREIGN_IMAGE to the foreign-arch container image}"
-	      ;;
-    powerpc64-*-linux-gnu | powerpc-*-linux-gnu )
-	      # Big-endian PowerPC: cross-compile + run tests under qemu-user.
-	      ./autogen.sh
-	      build_cross_qemu
 	      ;;
     alpha-linux-gnu | sh4-linux-gnu )
 	      ./autogen.sh

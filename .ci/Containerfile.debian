@@ -1,0 +1,17 @@
+# Foreign-arch build image for QEMU testing, built per-arch via
+# `docker build --platform linux/<arch>` (e.g. linux/riscv64, linux/arm/v7).
+# The official multi-arch debian image covers arm/v7, riscv64, etc. that the
+# fedora image does not.
+FROM debian:trixie
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      dejagnu automake autoconf texinfo gcc g++ libtool make ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# Give UID 10000 a name so 'whoami' works during DejaGNU tests.
+RUN groupadd -g 10000 builder \
+ && useradd  -u 10000 -g 10000 -d /home/builder -s /usr/sbin/nologin builder \
+ && mkdir -p /home/builder \
+ && chown 10000:10000 /home/builder
+USER 10000
