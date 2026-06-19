@@ -401,10 +401,16 @@ jobs:
     steps:
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v4
-      # Register qemu-user binfmt so the cross-built aarch64/armv7 test binaries
-      # run under emulation (x86_64/i686 Android binaries run on the host).
+      # Register qemu-user binfmt for the cross-built aarch64/armv7 test
+      # binaries only. We deliberately do NOT register x86_64/i686 handlers:
+      # the x86 Android binaries are native and must run directly on the host.
+      # Otherwise tonistiigi/binfmt's default "--install all" routes them
+      # through qemu-x86_64, whose x87 80-bit long double emulation is
+      # inaccurate and fails all the long double tests.
       - name: Set up QEMU (binfmt)
         uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64,arm
       - run: ./.ci/install.sh
       - env:
           HOST: ${{ matrix.HOST }}
