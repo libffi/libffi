@@ -10,26 +10,12 @@ lappend boards_dir $::env(BOARDSDIR)
 verbose "Global Config File: target_triplet is $target_triplet" 2
 global target_list
 
-case "$target_triplet" in {
-    { "bfin-elf" } {
-	set target_list "bfin-sim"
-    }
-    { "m32r-elf" } {
-	set target_list "m32r-sim"
-    }
-    { "moxie-elf" } {
-	set target_list "moxie-sim"
-    }
-    { "or1k-elf" } {
-	set target_list "or1k-sim"
-    }
-    { "powerpc-eabisim" } {
-        set target_list "powerpc-eabisim"
-    }
-    { "aarch*cygwin*" } {
-	set target_list "unix-noexec"
-    }
-    { "arm*cygwin*" } {
-	set target_list "unix-noexec"
-    }
+switch -glob -- "$target_triplet" {
+    "bfin-elf"        { set target_list "bfin-sim" }
+    "m32r-elf"        { set target_list "m32r-sim" }
+    "moxie-elf"       { set target_list "moxie-sim" }
+    "or1k-elf"        { set target_list "or1k-sim" }
+    "powerpc-eabisim" { set target_list "powerpc-eabisim" }
+    "aarch*cygwin*"   { set target_list "unix-noexec" }
+    "arm*cygwin*"     { set target_list "unix-noexec" }
 }
