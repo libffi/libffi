@@ -49,6 +49,10 @@ else
 	      alpha-linux-gnu | arm32v7-linux-gnu | m68k-linux-gnu | sh4-linux-gnu)
 	          sudo apt-get install qemu-user-static
 	          ;;
+	      powerpc64-linux-gnu | powerpc-linux-gnu)
+	          # Big-endian PowerPC: Debian cross toolchain + qemu-user (binfmt).
+	          sudo apt-get install -y gcc-${HOST} g++-${HOST} qemu-user-static
+	          ;;
 	      hppa-linux-gnu )
 	          sudo apt-get install -y qemu-user-static g++-5-hppa-linux-gnu
 	          ;;

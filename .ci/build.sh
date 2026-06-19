@@ -59,6 +59,21 @@ function build_cross()
     exit $?
 }
 
+# Cross-compile on the host with a Debian cross toolchain and run the tests
+# under qemu-user (binfmt).  Used for big-endian PowerPC variants, which have
+# no ready foreign-arch container image.  Expects ${HOST}-gcc / ${HOST}-g++ and
+# qemu-user-static to be installed, plus the target sysroot at /usr/${HOST}.
+function build_cross_qemu()
+{
+    ./configure --host=$HOST CC="${HOST}-gcc ${GCC_OPTIONS}" CXX="${HOST}-g++ ${GCC_OPTIONS}" --disable-shared || cat */config.log
+    make
+    QEMU_LD_PREFIX=/usr/${HOST} DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci \
+        make check RUNTESTFLAGS="-a $RUNTESTFLAGS" || true
+
+    ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC="${HOST}-gcc" -l host=$HOST --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
+    exit $?
+}
+
 function build_ios()
 {
     which python
@@ -113,10 +128,15 @@ case "$HOST" in
 	      ./autogen.sh
 	      GCC_OPTIONS=-mcpu=547x build_cross_linux
 	      ;;
-    powerpc64le-*-linux-gnu | ppc64le-*-linux-gnu )
-	      # Emulated big/foreign-arch native build inside a QEMU-run container.
+    powerpc64le-*-linux-gnu | ppc64le-*-linux-gnu | s390x-*-linux-gnu )
+	      # Native build+test inside a QEMU-run foreign-arch container image.
 	      ./autogen.sh
-	      build_foreign_linux ppc64le "${FOREIGN_IMAGE:?set FOREIGN_IMAGE to the foreign-arch container image}"
+	      build_foreign_linux "$HOST" "${FOREIGN_IMAGE:?set FOREIGN_IMAGE to the foreign-arch container image}"
+	      ;;
+    powerpc64-*-linux-gnu | powerpc-*-linux-gnu )
+	      # Big-endian PowerPC: cross-compile + run tests under qemu-user.
+	      ./autogen.sh
+	      build_cross_qemu
 	      ;;
     alpha-linux-gnu | sh4-linux-gnu )
 	      ./autogen.sh

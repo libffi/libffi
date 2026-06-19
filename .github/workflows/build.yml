@@ -422,6 +422,10 @@ jobs:
             docker_arch: ppc64le
             image: libffi-ci-ppc64le
             containerfile: .ci/Containerfile.ppc64le
+          - HOST: s390x-unknown-linux-gnu
+            docker_arch: s390x
+            image: libffi-ci-s390x
+            containerfile: .ci/Containerfile.s390x
     steps:
       - uses: actions/checkout@v4
 
@@ -455,13 +459,49 @@ jobs:
         run: echo "::notice title=rlgl report::https://libffi.github.io/libffi/reports/${{ github.run_id }}/${{ github.job }}-${{ strategy.job-index }}/"
 
   # ----------------------------------------------------------------------------
+  # Big-endian PowerPC variants have no ready foreign-arch container image, so
+  # cross-compile with a Debian cross toolchain and run the testsuite under
+  # qemu-user (binfmt).  rlgl evaluates on the host.  Add a matrix entry (HOST +
+  # the gcc-<HOST> package, installed by install.sh) to cover more such targets.
+  build-cross-qemu:
+    name: QEMU-cross ${{ matrix.HOST }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - HOST: powerpc64-linux-gnu
+          - HOST: powerpc-linux-gnu
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and test under qemu-user
+        env:
+          HOST: ${{ matrix.HOST }}
+        run: |
+          ./.ci/install.sh
+          ./.ci/build.sh
+
+      - name: Upload rlgl report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rlgl-report-${{ github.job }}-${{ strategy.job-index }}
+          path: rlgl-report.html
+          if-no-files-found: ignore
+
+      - name: rlgl report link
+        if: always()
+        run: echo "::notice title=rlgl report::https://libffi.github.io/libffi/reports/${{ github.run_id }}/${{ github.job }}-${{ strategy.job-index }}/"
+
+  # ----------------------------------------------------------------------------
   # Collect the rlgl HTML reports from every job above and publish them to the
   # gh-pages branch under reports/<run-id>/<job>/, regenerating an index that
   # lists all runs.  Serialized across workflows via the gh-pages-publish
   # concurrency group.  Only runs for pushes to the canonical repo.
   publish-reports:
     name: Publish rlgl reports
-    needs: [build-linux, build-non-msvc, build-msvc, build-android, build-qemu]
+    needs: [build-linux, build-non-msvc, build-msvc, build-android, build-qemu, build-cross-qemu]
     if: ${{ always() && github.event_name != 'pull_request' && github.repository == 'libffi/libffi' }}
     runs-on: ubuntu-latest
     permissions:
