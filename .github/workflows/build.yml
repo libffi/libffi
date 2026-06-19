@@ -221,7 +221,14 @@ jobs:
           # sanity-check
           file */.libs/*ffi-*.dll
 
-          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
+          # mingw-w64 gcc/clang default to the MS C runtime printf, where the
+          # %L length modifier means double, not long double -- so every long
+          # double test trips -Wformat and dejagnu fails it as "excess errors".
+          # __USE_MINGW_ANSI_STDIO selects mingw's ISO-C99 printf, where %Lf/%Lg
+          # handle long double correctly (fixing both the warning and runtime
+          # output). It's a no-op on the Cygwin targets.
+          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= \
+            make check RUNTESTFLAGS="TOOL_OPTIONS=-D__USE_MINGW_ANSI_STDIO=1" || true
           ./rlgl.exe e \
                           -l project=libffi \
                           -l sha=${GITHUB_SHA:0:7} \
