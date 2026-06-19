@@ -3,13 +3,11 @@
 # Cave's workflow format (parsed by cave's src/workflow.lisp): each job runs in
 # a single podman container with the repo checked out at /workspace (the
 # working directory).  Steps run sequentially via `bash -c`; a step fails the
-# job if its last command exits non-zero.  Job containers run privileged, so
-# steps may launch nested containers and register QEMU binfmt for foreign-arch
-# testing (foreign-arch jobs can be added the same way the GitHub build-qemu
-# jobs work, using podman instead of docker).
-#
-# This baseline does a clean native x86_64 build + dejagnu test, gated by rlgl
-# against the shared policy.
+# job if its last command exits non-zero.  Job containers are unprivileged by
+# default; a job opts into nested containers (podman/docker-in-podman) and QEMU
+# binfmt for foreign-arch testing by setting `privileged: true`.  This baseline
+# is a clean native x86_64 build + dejagnu test gated by rlgl against the
+# shared policy, so it needs no nesting and stays unprivileged.
 name: CI
 on: [push]
 
