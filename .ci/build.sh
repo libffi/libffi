@@ -111,6 +111,14 @@ if [ -n "${CROSS_QEMU:-}" ]; then
     ./autogen.sh
     build_cross_qemu
 fi
+# MACOS_X86 -> build x86_64 (CC="clang -arch x86_64", HOST=x86_64-apple-darwin)
+# on an Apple-Silicon runner and run the tests under Rosetta.  Uses build_linux
+# (dejagnu + rlgl), bypassing the legacy xcodebuild build_macosx path that the
+# x86_64-apple-darwin* case below would otherwise select.
+if [ -n "${MACOS_X86:-}" ]; then
+    ./autogen.sh
+    build_linux
+fi
 
 case "$HOST" in
     arm-apple-darwin*)

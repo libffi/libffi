@@ -93,6 +93,37 @@ jobs:
       - run: ./.ci/install.sh
       - run: ${{ matrix.compilers }} ./.ci/build.sh
 
+  # ----------------------------------------------------------------------------
+  # x86_64 macOS coverage without an Intel runner: build x86_64 on an
+  # Apple-Silicon runner (clang -arch x86_64) and run the testsuite under
+  # Rosetta 2.  Exercises libffi's x86_64 calling-convention paths.
+  build-macos-x86:
+    name: MacOS x86_64 (Rosetta)
+    runs-on: macos-14
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v4
+      - name: Install Rosetta 2
+        run: softwareupdate --install-rosetta --agree-to-license || true
+      - run: ./.ci/install.sh
+      - name: Build x86_64 and test under Rosetta
+        env:
+          MACOS_X86: "1"
+          HOST: x86_64-apple-darwin
+          CC: clang -arch x86_64
+          CXX: clang++ -arch x86_64
+        run: ./.ci/build.sh
+      - name: Upload rlgl report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rlgl-report-${{ github.job }}
+          path: rlgl-report.html
+          if-no-files-found: ignore
+      - name: rlgl report link
+        if: always()
+        run: echo "::notice title=rlgl report::https://libffi.github.io/libffi/reports/${{ github.run_id }}/${{ github.job }}/"
+
   build-non-msvc:
     name: Windows ${{ matrix.width }}-bit ${{ matrix.compiler }}
     runs-on: windows-latest
@@ -512,7 +543,7 @@ jobs:
   # concurrency group.  Only runs for pushes to the canonical repo.
   publish-reports:
     name: Publish rlgl reports
-    needs: [build-linux, build-non-msvc, build-msvc, build-android, build-qemu, build-cross-qemu]
+    needs: [build-linux, build-non-msvc, build-msvc, build-android, build-qemu, build-cross-qemu, build-macos-x86]
     if: ${{ always() && github.event_name != 'pull_request' && github.repository == 'libffi/libffi' }}
     runs-on: ubuntu-latest
     permissions:
