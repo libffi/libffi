@@ -84,7 +84,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-13, macos-14, macos-15]
+        platform: [macos-14, macos-15]
         compilers: [CC=gcc-15 CXX=g++-15, CC=clang CXX=g++-15]
 
     steps:
