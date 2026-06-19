@@ -1610,6 +1610,14 @@ unsigned char _BitScanReverse(unsigned long *index, unsigned long mask);
 #endif
 #endif
 
+/* libffi: the upstream malloc_getpagesize definition above is gated on
+   !WIN32 (WIN32 builds use GetSystemInfo in init_mparams instead).  Guarantee
+   the symbol is always defined so the !WIN32 init_mparams branch still compiles
+   on toolchains where it is not preprocessed out as expected (e.g. MSVC).  */
+#ifndef malloc_getpagesize
+#define malloc_getpagesize ((size_t)4096U)
+#endif
+
 /* ------------------- size_t and alignment properties -------------------- */
 
 /* The byte and bit size of a size_t */
