@@ -406,13 +406,61 @@ jobs:
         run: echo "::notice title=rlgl report::https://libffi.github.io/libffi/reports/${{ github.run_id }}/${{ github.job }}-${{ strategy.job-index }}/"
 
   # ----------------------------------------------------------------------------
+  # Non-native architectures tested under QEMU emulation: build + run the
+  # libffi testsuite natively inside a foreign-arch container (run via QEMU
+  # binfmt), then evaluate the results with rlgl on the host.  GitHub offers no
+  # ppc64le/s390x/etc. runners, so emulation is the only option.  Add a matrix
+  # entry (HOST + a .ci/Containerfile.<arch>) to cover more architectures.
+  build-qemu:
+    name: QEMU ${{ matrix.HOST }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - HOST: powerpc64le-unknown-linux-gnu
+            image: libffi-ci-ppc64le
+            containerfile: .ci/Containerfile.ppc64le
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU (binfmt)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build foreign-arch container image
+        run: docker build -f ${{ matrix.containerfile }} -t ${{ matrix.image }} .ci
+
+      - name: Build and test under emulation
+        env:
+          HOST: ${{ matrix.HOST }}
+          FOREIGN_IMAGE: ${{ matrix.image }}
+        run: |
+          # The emulated container runs as a non-root UID and writes build
+          # artifacts into the mounted workspace, so make it writable.
+          chmod -R a+rwX "$GITHUB_WORKSPACE" || true
+          ./.ci/install.sh
+          ./.ci/build.sh
+
+      - name: Upload rlgl report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rlgl-report-${{ github.job }}-${{ strategy.job-index }}
+          path: rlgl-report.html
+          if-no-files-found: ignore
+
+      - name: rlgl report link
+        if: always()
+        run: echo "::notice title=rlgl report::https://libffi.github.io/libffi/reports/${{ github.run_id }}/${{ github.job }}-${{ strategy.job-index }}/"
+
+  # ----------------------------------------------------------------------------
   # Collect the rlgl HTML reports from every job above and publish them to the
   # gh-pages branch under reports/<run-id>/<job>/, regenerating an index that
   # lists all runs.  Serialized across workflows via the gh-pages-publish
   # concurrency group.  Only runs for pushes to the canonical repo.
   publish-reports:
     name: Publish rlgl reports
-    needs: [build-linux, build-non-msvc, build-msvc, build-android]
+    needs: [build-linux, build-non-msvc, build-msvc, build-android, build-qemu]
     if: ${{ always() && github.event_name != 'pull_request' && github.repository == 'libffi/libffi' }}
     runs-on: ubuntu-latest
     permissions:

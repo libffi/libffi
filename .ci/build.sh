@@ -113,6 +113,11 @@ case "$HOST" in
 	      ./autogen.sh
 	      GCC_OPTIONS=-mcpu=547x build_cross_linux
 	      ;;
+    powerpc64le-*-linux-gnu | ppc64le-*-linux-gnu )
+	      # Emulated big/foreign-arch native build inside a QEMU-run container.
+	      ./autogen.sh
+	      build_foreign_linux ppc64le "${FOREIGN_IMAGE:?set FOREIGN_IMAGE to the foreign-arch container image}"
+	      ;;
     alpha-linux-gnu | sh4-linux-gnu )
 	      ./autogen.sh
 	      build_cross_linux
