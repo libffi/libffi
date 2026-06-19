@@ -6,9 +6,12 @@
 /* { dg-do run } */
 #include "ffitest.h"
 
+/* clang defines __SIZEOF_INT128__ but does not support _Complex __int128,
+   so exclude it here and fall through to the trivial main() below. */
 #if defined(FFI_TARGET_HAS_INT128) && \
     defined(FFI_TARGET_HAS_COMPLEX_TYPE) && \
-    defined(__SIZEOF_INT128__)
+    defined(__SIZEOF_INT128__) && \
+    !defined(__clang__)
 
 typedef __int128_t i128;
 typedef _Complex __int128 ci128;
