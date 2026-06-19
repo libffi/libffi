@@ -401,11 +401,18 @@ jobs:
     steps:
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v4
+      # Register qemu-user binfmt so the cross-built aarch64/armv7 test binaries
+      # run under emulation (x86_64/i686 Android binaries run on the host).
+      - name: Set up QEMU (binfmt)
+        uses: docker/setup-qemu-action@v3
       - run: ./.ci/install.sh
       - env:
           HOST: ${{ matrix.HOST }}
           ANDROID_API_LEVEL: 23
           CONFIGURE_OPTIONS: "--disable-shared --disable-multi-os-directory" # fixes warning about unsupported -print-multi-os-directory with clang
+          # Link tests statically so they need no bionic loader/sysroot at run
+          # time, then they execute directly (x86) or under qemu-user (arm).
+          RUNTESTFLAGS: "--target_board=unix/-static"
         run: |
           # Relevant documentation:
           # https://developer.android.com/ndk/guides/other_build_systems
