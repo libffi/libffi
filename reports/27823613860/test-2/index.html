@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+     <head>
+       <meta charset="utf-8" />
+       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+       <meta name="theme-color" content="#ffffff" />
+       <title>Red Light Green Light</title>
+       <style>@import url("https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css");
+
+* {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    box-sizing: border-box;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    padding-top: 65px;
+    margin-bottom: 60px;
+}
+
+.rlgl-svg {
+    float: left;
+    width: 100%;
+    background-image: url("data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%20standalone%3D%22no%22%3F%3E%0A%3C%21--%20Generator%3A%20Adobe%20Illustrator%2019.0.0%2C%20SVG%20Export%20Plug-In%20.%20SVG%20Version%3A%206.00%20Build%200%29%20%20--%3E%0A%0A%3Csvg%0A%20%20%20xmlns%3Adc%3D%22http%3A%2F%2Fpurl.org%2Fdc%2Felements%2F1.1%2F%22%0A%20%20%20xmlns%3Acc%3D%22http%3A%2F%2Fcreativecommons.org%2Fns%23%22%0A%20%20%20xmlns%3Ardf%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2F02%2F22-rdf-syntax-ns%23%22%0A%20%20%20xmlns%3Asvg%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%0A%20%20%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%0A%20%20%20xmlns%3Asodipodi%3D%22http%3A%2F%2Fsodipodi.sourceforge.net%2FDTD%2Fsodipodi-0.dtd%22%0A%20%20%20xmlns%3Ainkscape%3D%22http%3A%2F%2Fwww.inkscape.org%2Fnamespaces%2Finkscape%22%0A%20%20%20version%3D%221.1%22%0A%20%20%20id%3D%22Layer_1%22%0A%20%20%20x%3D%220px%22%0A%20%20%20y%3D%220px%22%0A%20%20%20viewBox%3D%220%200%20496.162%20496.162%22%0A%20%20%20style%3D%22enable-background%3Anew%200%200%20496.162%20496.162%3B%22%0A%20%20%20xml%3Aspace%3D%22preserve%22%0A%20%20%20sodipodi%3Adocname%3D%22rlgl.svg%22%0A%20%20%20inkscape%3Aversion%3D%220.92.3%20%282405546%2C%202018-03-11%29%22%3E%3Cmetadata%0A%20%20%20id%3D%22metadata59%22%3E%3Crdf%3ARDF%3E%3Ccc%3AWork%0A%20%20%20%20%20%20%20rdf%3Aabout%3D%22%22%3E%3Cdc%3Aformat%3Eimage%2Fsvg%2Bxml%3C%2Fdc%3Aformat%3E%3Cdc%3Atype%0A%20%20%20%20%20%20%20%20%20rdf%3Aresource%3D%22http%3A%2F%2Fpurl.org%2Fdc%2Fdcmitype%2FStillImage%22%20%2F%3E%3C%2Fcc%3AWork%3E%3C%2Frdf%3ARDF%3E%3C%2Fmetadata%3E%3Cdefs%0A%20%20%20id%3D%22defs57%22%20%2F%3E%3Csodipodi%3Anamedview%0A%20%20%20pagecolor%3D%22%23ffffff%22%0A%20%20%20bordercolor%3D%22%23666666%22%0A%20%20%20borderopacity%3D%221%22%0A%20%20%20objecttolerance%3D%2210%22%0A%20%20%20gridtolerance%3D%2210%22%0A%20%20%20guidetolerance%3D%2210%22%0A%20%20%20inkscape%3Apageopacity%3D%220%22%0A%20%20%20inkscape%3Apageshadow%3D%222%22%0A%20%20%20inkscape%3Awindow-width%3D%22838%22%0A%20%20%20inkscape%3Awindow-height%3D%22480%22%0A%20%20%20id%3D%22namedview55%22%0A%20%20%20showgrid%3D%22false%22%0A%20%20%20inkscape%3Azoom%3D%220.47565111%22%0A%20%20%20inkscape%3Acx%3D%22248.08099%22%0A%20%20%20inkscape%3Acy%3D%22248.08099%22%0A%20%20%20inkscape%3Awindow-x%3D%222881%22%0A%20%20%20inkscape%3Awindow-y%3D%22257%22%0A%20%20%20inkscape%3Awindow-maximized%3D%220%22%0A%20%20%20inkscape%3Acurrent-layer%3D%22Layer_1%22%20%2F%3E%0A%3Cpath%0A%20%20%20style%3D%22fill%3A%23337180%3Bstroke-width%3A0.88559228%22%0A%20%20%20d%3D%22m%20247.02627%2C14.717127%20c%20-121.33058%2C0%20-219.693313%2C98.355643%20-219.693313%2C219.700393%200%2C121.33057%2098.362733%2C219.69685%20219.693313%2C219.69685%20121.33766%2C0%20219.70039%2C-98.36628%20219.70039%2C-219.69685%200%2C-121.34475%20-98.36273%2C-219.700393%20-219.70039%2C-219.700393%20z%22%0A%20%20%20id%3D%22path2%22%0A%20%20%20inkscape%3Aconnector-curvature%3D%220%22%20%2F%3E%0A%3Cpath%0A%20%20%20style%3D%22fill%3A%23d3d3d3%3Bstroke-width%3A0.90713316%22%0A%20%20%20d%3D%22m%20229.787%2C246.881%20v%20204.57719%20c%206.041%2C0.36207%2012.139%2C0.5538%2018.29%2C0.5538%205.371%2C0%2010.696%2C-0.15635%2015.983%2C-0.43366%20V%20246.881%20Z%22%0A%20%20%20id%3D%22path4%22%0A%20%20%20inkscape%3Aconnector-curvature%3D%220%22%20%2F%3E%0A%3Cpath%0A%20%20%20style%3D%22fill%3A%23eaeaea%3Bstroke-width%3A0.90713316%22%0A%20%20%20d%3D%22m%20229.787%2C246.881%20v%20204.57719%20c%206.041%2C0.36207%2012.139%2C0.5538%2018.29%2C0.5538%20V%20246.881%20Z%22%0A%20%20%20id%3D%22path6%22%0A%20%20%20inkscape%3Aconnector-curvature%3D%220%22%20%2F%3E%0A%3Cpath%0A%20%20%20style%3D%22fill%3A%23e5e5e5%3Bstroke-width%3A0.97107792%22%0A%20%20%20d%3D%22m%20248.081%2C42.593907%20c%20-53.4177%2C0%20-96.72809%2C22.939871%20-96.72809%2C51.237772%20V%20326.9198%20c%200%2C28.2979%2043.31039%2C51.23777%2096.72809%2C51.23777%2053.4177%2C0%2096.72809%2C-22.93987%2096.72809%2C-51.23777%20V%2093.831679%20c%200%2C-28.297901%20-43.31039%2C-51.237772%20-96.72809%2C-51.237772%20z%22%0A%20%20%20id%3D%22path8%22%0A%20%20%20inkscape%3Aconnector-curvature%3D%220%22%20%2F%3E%0A%3Cpath%0A%20%20%20style%3D%22fill%3A%233b3b3b%3Bstroke-width%3A0.96465236%22%0A%20%20%20d%3D%22m%20248.081%2C65.208194%20c%20-48.07352%2C0%20-87.04988%2C20.566786%20-87.04988%2C45.937566%20v%20208.97285%20c%200%2C25.3708%2038.97636%2C45.93758%2087.04988%2C45.93758%2048.07352%2C0%2087.04988%2C-20.56678%2087.04988%2C-45.93758%20V%20111.14576%20c%200%2C-25.37078%20-38.97636%2C-45.937566%20-87.04988%2C-45.937566%20z%22%0A%20%20%20id%3D%22path10%22%0A%20%20%20inkscape%3Aconnector-curvature%3D%220%22%20%2F%3E%0A%3Ccircle%0A%20%20%20style%3D%22fill%3A%23ea4949%3Bstroke-width%3A1.34224808%22%0A%20%20%20cx%3D%22250.18338%22%0A%20%20%20cy%3D%22143.91194%22%0A%20%20%20id%3D%22circle12%22%0A%20%20%20r%3D%2257.716671%22%0A%20%20%20inkscape%3Atransform-center-x%3D%2210.511907%22%0A%20%20%20inkscape%3Atransform-center-y%3D%222.1023814%22%20%2F%3E%0A%3Cpath%0A%20%20%20style%3D%22fill%3A%23f25f5f%3Bstroke-width%3A1.34224808%22%0A%20%20%20d%3D%22m%20285.62544%2C108.46856%20c%20-19.57401%2C-19.574007%20-51.31146%2C-19.574007%20-70.88547%2C0%20-19.57534%2C19.574%20-19.57534%2C51.31145%200%2C70.88681%2019.57535%2C19.574%2090.46082%2C-51.31147%2070.88547%2C-70.88681%20z%22%0A%20%20%20id%3D%22path14%22%0A%20%20%20inkscape%3Aconnector-curvature%3D%220%22%0A%20%20%20inkscape%3Atransform-center-x%3D%2216.161193%22%0A%20%20%20inkscape%3Atransform-center-y%3D%22-3.5459238%22%20%2F%3E%0A%3Ccircle%0A%20%20%20style%3D%22fill%3A%232bbf60%3Bstroke-width%3A1.36669445%22%0A%20%20%20cx%3D%22249.21809%22%0A%20%20%20cy%3D%22275.94055%22%0A%20%20%20r%3D%2258.76786%22%0A%20%20%20id%3D%22circle16%22%20%2F%3E%0A%0A%0A%3Cpath%0A%20%20%20style%3D%22fill%3A%233cce6c%3Bstroke-width%3A1.36669445%22%0A%20%20%20d%3D%22m%20285.30567%2C240.53499%20c%20-19.93051%2C-19.93051%20-52.246%2C-19.93051%20-72.1765%2C0%20-19.93187%2C19.9305%20-19.93187%2C52.24599%200%2C72.17786%2019.93187%2C19.93051%2092.10837%2C-52.24599%2072.1765%2C-72.17786%20z%22%0A%20%20%20id%3D%22path22%22%0A%20%20%20inkscape%3Aconnector-curvature%3D%220%22%20%2F%3E%0A%3Cg%0A%20%20%20id%3D%22g24%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g26%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g28%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g30%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g32%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g34%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g36%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g38%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g40%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g42%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g44%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g46%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g48%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g50%22%3E%0A%3C%2Fg%3E%0A%3Cg%0A%20%20%20id%3D%22g52%22%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+    background-size: cover;
+    height: 0;
+    padding: 0; /* reset */
+    padding-bottom: 92%;
+}
+
+h1 {
+  position: relative;
+  bottom: 18px;
+  left: 10px;
+}
+
+pre {
+    display: block;
+    padding: 9.5px;
+    margin: 0 0 10px;
+    font-size: 13px;
+    line-height: 1.42857143;
+    color: #333;
+    word-break: break-all;
+    word-wrap: break-word;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 2px 2px 3px 0px black;
+}
+
+table {
+    border-collapse: collapse;
+    border: 1px solid #ddd;
+    width: 75%;
+}
+
+table th {
+    text-align: left;
+    border-bottom: 1px solid #ccc;
+}
+
+table th, table td {
+    padding: .4em;
+}
+
+table.fold-table > tbody > tr.view td,
+table.fold-table > tbody > tr.view th {
+    cursor: pointer;
+}
+
+table.fold-table > tbody > tr.view td:first-child,
+table.fold-table > tbody > tr.view th:first-child {
+    position: relative;
+    padding-left: 20px;
+}
+
+table.fold-table > tbody > tr.view td:first-child:before,
+table.fold-table > tbody > tr.view th:first-child:before {
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    width: 9px;
+    height: 16px;
+    margin-top: -8px;
+    font: 16px fontawesome;
+    color: #999;
+    content: "\f0d7";
+    transition: all .3s ease;
+}
+
+table.fold-table > tbody > tr.view:nth-child(4n-1) {
+    background: #eee;
+}
+
+table.fold-table > tbody > tr.view:hover {
+    background: #aaa;
+}
+
+table.fold-table > tbody > tr.fail {
+    background: #ffb3b3
+}
+
+table.fold-table > tbody > tr.xfail {
+    background: #e6f6e6
+}
+
+table.fold-table > tbody > tr.pass {
+    background: #80ff80
+}
+
+/*
+table.fold-table > tbody > tr.view.open {
+    background: tomato;
+    color: white;
+}
+*/
+
+table.fold-table > tbody > tr.view.open td:first-child:before, table.fold-table > tbody > tr.view.open th:first-child:before {
+    transform: rotate(-180deg);
+    color: #333;
+}
+
+table.fold-table > tbody > tr.fold {
+    display: none;
+}
+
+table.fold-table > tbody > tr.fold.open {
+    display: table-row;
+}
+
+.fold-content {
+    padding: .5em;
+}
+
+.fold-content h3 {
+    margin-top: 0;
+}
+
+.fold-content > table {
+    border: 12px solid #ccc;
+}
+
+tr:nth-child(4n-2) {
+    background: #eee;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  /* Set the fixed height of the footer here */
+  height: 120px;
+  line-height: 60px; /* Vertically center the text there */
+  background-color: #f5f5f5;
+}
+
+.footer > .container {
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+code {
+  font-size: 80%;
+}
+</style>
+       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min.js"></script>
+     </head>
+     <header>
+       <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+         <div class="container-fluid" style="margin-left: 1rem; margin-right: 1rem;">
+           <a class="navbar-brand" href="https://github.com/atgreen/red-light-green-light">Red Light Green Light</a>
+         </div>
+       </nav>
+     </header>
+     <body>
+       <main class="container" role="main">
+         <div class="row">
+           <div class="col">
+             
+            <div class="row">
+              <div class="col">
+                <div style="width:100px">
+                  <div class="rlgl-svg"></div>
+                </div>
+                <h1 class="mt-5"> JUnit Test Report </h1>
+            <a href="rlgl-report-original.xml" target="_blank">
+              Original Report (sha3-256: 39503557fd06378e80688b2bbcbe2e05c62c52c2328b295c83a5831946bada23)
+            </a>
+            <table>
+                 
+                 <tr><td> project </td><td> libffi </td></tr><tr><td> sha </td><td> 5b1c6fa </td></tr><tr><td> cc </td><td> emcc </td></tr><tr><td> host </td><td> chrome </td></tr>
+                 
+               </table>
+            <table class="fold-table" id="results">
+              <tr> <th> RESULT </th><th> ID </th>
+              </tr>
+              
+            </table>
+          </div>
+        </div>
+      
+             <hr />
+             Red Light Green Light was written by Anthony Green <a href="mailto:green@moxielogic.com">&lt;green@moxielogic.com&gt</a>
+             and is available in source form under the terms of the AGPLv3 license from
+             <a href="https://github.com/atgreen/red-light-green-light"> https://github.com/atgreen/red-light-green-light </a>.
+           </div>
+         </div>
+       </main>
+     </body>
+     <footer class="page-footer font-small
+                    special-color-dark pt-4">
+       <div class="footer-copyright
+                   text-center py-3">Version 2.0.4 // (C) 2018-2025<a href="https://linkedin.com/in/green"> Anthony Green</a></div>
+     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+             <script>$(function(){
+  $(".fold-table tr.view").on("click", function(){
+    $(this).toggleClass("open").next(".fold").toggleClass("open");
+  });
+});
+</script>
+      </footer>
+   </html>
