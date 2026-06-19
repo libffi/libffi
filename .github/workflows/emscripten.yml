@@ -110,7 +110,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rlgl-report-${{ github.job }}-${{ strategy.job-index }}
-          path: rlgl-report.html
+          path: rlgl-report*
           if-no-files-found: ignore
 
       - name: rlgl report link
@@ -229,7 +229,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rlgl-report-${{ github.job }}-${{ strategy.job-index }}
-          path: rlgl-report.html
+          path: rlgl-report*
           if-no-files-found: ignore
 
       - name: rlgl report link
@@ -286,6 +286,8 @@ jobs:
             if [ -f "${d}rlgl-report.html" ]; then
               mkdir -p "$run_dir/$key"
               cp "${d}rlgl-report.html" "$run_dir/$key/index.html"
+              # Publish the original report so its "Original Report" link resolves.
+              cp "${d}"rlgl-report-original.* "$run_dir/$key/" 2>/dev/null || true
             fi
           done
           {
