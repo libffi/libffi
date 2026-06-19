@@ -481,7 +481,7 @@ jobs:
           - HOST: powerpc64-linux-gnu
           - HOST: powerpc-linux-gnu
           - HOST: sparc64-linux-gnu
-          - HOST: mips64el-linux-gnu
+          - HOST: mips64el-linux-gnuabi64
     steps:
       - uses: actions/checkout@v4
 
