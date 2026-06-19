@@ -3,9 +3,12 @@ set -x
 
 # Download the self-contained rlgl client from its GitHub releases into ./rlgl.
 # rlgl runs on *this* runner (not the build target), so select the binary by
-# the runner's own OS/arch.
+# the runner's own OS/arch.  Use a direct, version-pinned asset URL rather than
+# the GitHub API: the unauthenticated api.github.com is rate-limited (60/hr/IP)
+# and 403s under the CI matrix load, whereas release-asset downloads are not.
+RLGL_VERSION="${RLGL_VERSION:-2.0.4}"
 download_rlgl() {
-    local uname_s uname_m os arch pat url
+    local uname_s uname_m os arch url
     uname_s=$(uname -s); uname_m=$(uname -m)
     case "$uname_s" in
         Darwin) os=darwin ;;
@@ -16,11 +19,9 @@ download_rlgl() {
         aarch64|arm64) arch=arm64 ;;
         *) echo "No rlgl binary available for $uname_s/$uname_m"; return 1 ;;
     esac
-    pat="${os}-${arch}.tar.gz"
-    url=$(curl -fsSL https://api.github.com/repos/atgreen/red-light-green-light/releases/latest \
-          | grep -oE "https://[^\" ]*rlgl-[^\" ]*${pat}" | head -n1)
+    url="https://github.com/atgreen/red-light-green-light/releases/download/v${RLGL_VERSION}/rlgl-${RLGL_VERSION}-${os}-${arch}.tar.gz"
     echo "Downloading rlgl: $url"
-    curl -fsSL "$url" | tar -xzf - rlgl
+    curl -fsSL --retry 3 "$url" | tar -xzf - rlgl
     chmod +x rlgl
 }
 
@@ -31,8 +32,8 @@ if [[ $RUNNER_OS != 'Linux' ]]; then
     brew uninstall libtool;
     brew install automake libtool dejagnu gcc@15;
 
-    # Download the rlgl client (used by build_macosx if/when it gates results)
-    download_rlgl || true
+    # Download the rlgl client (macOS build path evaluates results with it)
+    download_rlgl
 
 else
     # Download the rlgl client for the runner's architecture
