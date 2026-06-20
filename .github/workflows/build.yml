@@ -166,11 +166,18 @@ jobs:
       # ──────────────────────────────── Cygwin & tool-chains ────────────────────────────────
       - uses: egor-tensin/setup-cygwin@v4
         with:
-          # gcc / g++ are needed so Clang can reuse their start-files & libraries
+          # gcc / g++ are needed so Clang can reuse their start-files & libraries.
+          # mingw64-x86_64-* gives us a *Cygwin-hosted* x86_64-w64-mingw32 cross
+          # toolchain: its driver translates Cygwin POSIX paths (/cygdrive/...),
+          # so the DejaGnu test compiles find the generated ffi.h.  Without it the
+          # 64-bit job picked up a native mingw gcc that can't read those paths,
+          # and every testsuite compile failed with "ffi.h: No such file".
           packages: >
             wget make dejagnu automake autoconf libtool texinfo unzip dos2unix
             clang gcc-core gcc-g++
             cygwin32-gcc-core cygwin32-gcc-g++ cygwin32-runtime cygwin32-libgcc1
+            mingw64-x86_64-gcc-core mingw64-x86_64-gcc-g++
+            mingw64-x86_64-runtime mingw64-x86_64-winpthreads
 
       # ──────────────────────────────── Common environment ────────────────────────────────
       - name: Export build env
@@ -214,7 +221,14 @@ jobs:
           # sanity-check
           file */.libs/*ffi-*.dll
 
-          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= make check || true
+          # mingw-w64 gcc/clang default to the MS C runtime printf, where the
+          # %L length modifier means double, not long double -- so every long
+          # double test trips -Wformat and dejagnu fails it as "excess errors".
+          # __USE_MINGW_ANSI_STDIO selects mingw's ISO-C99 printf, where %Lf/%Lg
+          # handle long double correctly (fixing both the warning and runtime
+          # output). It's a no-op on the Cygwin targets.
+          TERM=none DEJAGNU=$(pwd)/.ci/site.exp BOARDSDIR=$(pwd)/.ci GCC_COLORS= \
+            make check RUNTESTFLAGS="TOOL_OPTIONS=-D__USE_MINGW_ANSI_STDIO=1" || true
           ./rlgl.exe e \
                           -l project=libffi \
                           -l sha=${GITHUB_SHA:0:7} \
