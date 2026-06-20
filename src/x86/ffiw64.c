@@ -51,6 +51,126 @@ struct win64_call_frame
 extern void ffi_call_win64 (void *stack, struct win64_call_frame *,
 			    void *closure) FFI_HIDDEN;
 
+/* ===== Mechanism A: plan fast path (Win64 / EFI64 / GNUW64) =====
+   Reuses the arena/slab storage and probe from ffi64.c.  The Win64 ABI is
+   simple: every arg occupies one 8-byte slot (positional), copied by width or
+   passed by reference; the i-th slot goes to RCX/RDX/R8/R9 (and XMM0-3) or the
+   stack.  So the plan precomputes, per arg, a copy width (forward) and a source
+   (demarshal), letting us skip the per-call type scan in ffi_call_int and the
+   per-call classification in ffi_closure_win64_inner. */
+
+#include "plan-cache.h"		/* ffi_plan_get (inline) */
+
+#define W64_DK_ARGS  0			/* avalue[i] = &frame->args[slot]   */
+#define W64_DK_FARGS 1			/* avalue[i] = &frame->fargs[slot]  */
+#define W64_DK_BYREF 2			/* avalue[i] = (void *)args[slot]   */
+
+typedef struct
+{
+  unsigned char width;			/* marshal: 8/4/2/1 (0 = by-ref)    */
+  unsigned char dkind;			/* demarshal source                 */
+} w64_aent;
+
+typedef struct
+{
+  int usable;				/* forward plan usable (no by-ref)  */
+  int dem_ok;				/* demarshal usable                 */
+  unsigned flags;			/* cif->flags                       */
+  unsigned nargs;
+  unsigned struct_ret;			/* sret pointer occupies slot 0     */
+  w64_aent e[];
+} w64_plan;
+
+void * FFI_HIDDEN
+ffi_w64_build_plan (ffi_cif *cif)
+{
+  unsigned i, n = cif->nargs;
+  w64_plan *p;
+  int nreg, usable = 1;
+
+  if (cif->abi != FFI_WIN64 && cif->abi != FFI_GNUW64)
+    return NULL;
+
+  p = malloc (sizeof (w64_plan) + n * sizeof (w64_aent));
+  if (p == NULL)
+    return NULL;
+
+  p->flags = cif->flags;
+  p->nargs = n;
+  p->struct_ret = (cif->flags == FFI_TYPE_STRUCT);
+  nreg = p->struct_ret;
+
+  for (i = 0; i < n; i++, nreg++)
+    {
+      ffi_type *at = cif->arg_types[i];
+      size_t size = at->size, type = at->type;
+
+      if (type == FFI_TYPE_UINT128 || type == FFI_TYPE_SINT128
+	  || (type == FFI_TYPE_STRUCT
+	      && size != 1 && size != 2 && size != 4 && size != 8))
+	{
+	  /* Passed by reference; forward needs a by-value copy -> bail there,
+	     but the demarshal can still point straight at the pointer slot. */
+	  usable = 0;
+	  p->e[i].width = 0;
+	  p->e[i].dkind = W64_DK_BYREF;
+	}
+      else
+	{
+	  p->e[i].width = (unsigned char) size;		/* 1/2/4/8 */
+	  p->e[i].dkind = ((type == FFI_TYPE_DOUBLE || type == FFI_TYPE_FLOAT)
+			   && nreg < 4) ? W64_DK_FARGS : W64_DK_ARGS;
+	}
+    }
+  p->usable = usable;
+  p->dem_ok = 1;
+  return p;
+}
+
+/* Forward executor: fill the slot array from the plan, then ffi_call_win64. */
+FFI_ASAN_NO_SANITIZE
+static void
+w64_plan_exec (ffi_cif *cif, w64_plan *p, void (*fn)(void),
+	       void *rvalue, void **avalue)
+{
+  int i, j, n, flags = (int) p->flags;
+  UINT64 *stack;
+  size_t rsize = 0;
+  struct win64_call_frame *frame;
+
+  if (rvalue == NULL)
+    {
+      if (flags == FFI_TYPE_STRUCT)
+	rsize = cif->rtype->size;
+      else
+	flags = FFI_TYPE_VOID;
+    }
+
+  stack = alloca (cif->bytes + sizeof (struct win64_call_frame) + rsize);
+  frame = (struct win64_call_frame *) ((char *) stack + cif->bytes);
+  if (rsize)
+    rvalue = frame + 1;
+
+  frame->fn = (uintptr_t) fn;
+  frame->flags = flags;
+  frame->rvalue = (uintptr_t) rvalue;
+
+  j = 0;
+  if (flags == FFI_TYPE_STRUCT)
+    { stack[0] = (uintptr_t) rvalue; j = 1; }
+
+  for (i = 0, n = (int) p->nargs; i < n; i++, j++)
+    switch (p->e[i].width)
+      {
+      case 8: stack[j] = *(UINT64 *) avalue[i]; break;
+      case 4: stack[j] = *(UINT32 *) avalue[i]; break;
+      case 2: stack[j] = *(UINT16 *) avalue[i]; break;
+      case 1: stack[j] = *(UINT8 *)  avalue[i]; break;
+      }
+
+  ffi_call_win64 (stack, frame, NULL);
+}
+
 ffi_status FFI_HIDDEN
 EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
 {
@@ -224,6 +344,12 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 void
 EFI64(ffi_call)(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 {
+  w64_plan *p = ffi_plan_get (cif);
+  if (p != NULL && p->usable)
+    {
+      w64_plan_exec (cif, p, fn, rvalue, avalue);
+      return;
+    }
   ffi_call_int (cif, fn, rvalue, avalue, NULL);
 }
 
@@ -339,6 +465,36 @@ ffi_closure_win64_inner(ffi_cif *cif,
   void *rvalue;
   int i, n, nreg, flags;
 
+  flags = cif->flags;
+
+  /* Mechanism A (upcall): arena cif with a precomputed demarshal layout ->
+     point avalue straight at the saved register/stack slots. */
+  {
+    w64_plan *p = ffi_plan_get (cif);
+    if (p != NULL && p->dem_ok)
+      {
+	avalue = alloca (cif->nargs * sizeof (void *));
+	rvalue = frame->rvalue;
+	if (flags == FFI_TYPE_STRUCT)
+	  {
+	    rvalue = (void *) (uintptr_t) frame->args[0];
+	    frame->rvalue[0] = frame->args[0];
+	  }
+	for (i = 0, n = cif->nargs; i < n; i++)
+	  {
+	    unsigned nr = p->struct_ret + (unsigned) i;
+	    switch (p->e[i].dkind)
+	      {
+	      case W64_DK_FARGS: avalue[i] = &frame->fargs[nr]; break;
+	      case W64_DK_BYREF: avalue[i] = (void *) (uintptr_t) frame->args[nr]; break;
+	      default:           avalue[i] = &frame->args[nr]; break;
+	      }
+	  }
+	fun (cif, rvalue, avalue, user_data);
+	return flags;
+      }
+  }
+
   avalue = alloca(cif->nargs * sizeof(void *));
   rvalue = frame->rvalue;
   nreg = 0;
@@ -346,7 +502,6 @@ ffi_closure_win64_inner(ffi_cif *cif,
   /* When returning a structure, the address is in the first argument.
      We must also be prepared to return the same address in eax, so
      install that address in the frame and pretend we return a pointer.  */
-  flags = cif->flags;
   if (flags == FFI_TYPE_STRUCT)
     {
       rvalue = (void *)(uintptr_t)frame->args[0];

@@ -33,10 +33,16 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <string.h>
 #include <tramp.h>
 #include "internal64.h"
 
 #ifdef __x86_64__
+
+/* Mechanism A plan cache: this is the one x86-64 TU that defines it. */
+#include "plan-cache.h"
+#include "plan-cache-impl.h"
 
 #define MAX_GPR_REGS 6
 #define MAX_SSE_REGS 8
@@ -693,6 +699,379 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 }
 
 #ifndef __ILP32__
+/* =====================================================================
+   Mechanism A: precompiled placement plan + opt-in arena cif allocation.
+
+   ffi_prep_cif_machdep classifies once; ffi_call_int re-derives the same
+   placement on every call (~650 instructions for a 3-arg call).  A "plan"
+   captures that placement as a flat move-list, built once, so ffi_call can
+   rebuild the register_args+stack buffer with no classification and hand off
+   to the unchanged ffi_call_unix64.
+
+   Transparent, no API: ffi_call looks the plan up in a per-thread content-
+   addressed cache keyed on (abi, nargs, rtype, arg_types) -- see plan-cache.h.
+   First use of a signature builds the plan; later calls hit the cache.  Every
+   caller benefits on a relink, with no opt-in.
+
+   Scalar/pointer/int128/float/double args only.  Any struct, complex, or x87
+   long double arg -> no plan (cached as FFI_PLAN_NONE) -> fall back to
+   ffi_call_int. */
+
+enum ffi_move_op
+{
+  FFI_MOVE_SE8, FFI_MOVE_SE16, FFI_MOVE_SE32,  /* sign-extend N bytes -> gpr   */
+  FFI_MOVE_GP64,                               /* copy a full 8-byte word -> gpr */
+  FFI_MOVE_GP,                                 /* zero gpr, copy len(<8) bytes  */
+  FFI_MOVE_SSE64, FFI_MOVE_SSE32,              /* copy 8/4 bytes -> sse slot    */
+  FFI_MOVE_STACK                               /* copy len bytes -> stack       */
+};
+
+typedef struct
+{
+  unsigned src_idx;     /* avalue[] index                                  */
+  unsigned src_off;     /* byte offset within avalue[src_idx] (chunk * 8)  */
+  unsigned dst_off;     /* byte offset within the register_args+stack buf  */
+  unsigned len;         /* bytes for FFI_MOVE_GP / FFI_MOVE_STACK          */
+  unsigned char op;
+} ffi_move;
+
+/* Closure demarshal: where avalue[i] points (reg image, or incoming stack). */
+typedef struct { unsigned off; unsigned char on_stack; } ffi_dent;
+
+typedef struct
+{
+  unsigned nmoves;
+  unsigned ssecount;    /* -> reg_args->rax                                */
+  unsigned bytes;       /* stack-arg area size (== cif->bytes)             */
+  unsigned flags;       /* == cif->flags                                   */
+  unsigned ret_in_mem;  /* nonzero -> reg_args->gpr[0] = rvalue            */
+  unsigned fast;        /* nonzero -> lean trampoline eligible             */
+  unsigned retcode;     /* UNIX64_RET_* (low byte of flags) for the store  */
+  int      thunk_n;     /* >=0 -> ffi_gp_thunks[thunk_n], else -1          */
+  ffi_dent *dem;        /* closure demarshal layout (or NULL)              */
+  int      dem_ok;      /* nonzero -> dem usable for the closure fast path */
+  ffi_move moves[];
+} ffi_plan;
+
+/* Return of the lean trampoline / direct thunks: callee's rax in .i, xmm0 in .d. */
+struct ffi_ret2 { UINT64 i; double d; };
+extern struct ffi_ret2 ffi_plan_fast_call (struct register_args *img,
+					   void (*fn) (void)) FFI_HIDDEN;
+
+/* Count-based direct thunks: load avalue[0..N-1] into arg registers, call. */
+extern struct ffi_ret2 ffi_plan_gp0 (void **, void (*)(void)) FFI_HIDDEN;
+extern struct ffi_ret2 ffi_plan_gp1 (void **, void (*)(void)) FFI_HIDDEN;
+extern struct ffi_ret2 ffi_plan_gp2 (void **, void (*)(void)) FFI_HIDDEN;
+extern struct ffi_ret2 ffi_plan_gp3 (void **, void (*)(void)) FFI_HIDDEN;
+extern struct ffi_ret2 ffi_plan_gp4 (void **, void (*)(void)) FFI_HIDDEN;
+extern struct ffi_ret2 ffi_plan_gp5 (void **, void (*)(void)) FFI_HIDDEN;
+extern struct ffi_ret2 ffi_plan_gp6 (void **, void (*)(void)) FFI_HIDDEN;
+static struct ffi_ret2 (*const ffi_gp_thunks[7]) (void **, void (*)(void)) =
+  { ffi_plan_gp0, ffi_plan_gp1, ffi_plan_gp2, ffi_plan_gp3,
+    ffi_plan_gp4, ffi_plan_gp5, ffi_plan_gp6 };
+
+/* Store the callee return value, replicating the unix64.S store_table widths. */
+static inline void
+store_ret (void *rvalue, unsigned retcode, struct ffi_ret2 r)
+{
+  switch (retcode)
+    {
+    case UNIX64_RET_VOID:   break;
+    case UNIX64_RET_UINT8:  *(UINT64 *) rvalue = (UINT8)  r.i; break;
+    case UNIX64_RET_UINT16: *(UINT64 *) rvalue = (UINT16) r.i; break;
+    case UNIX64_RET_UINT32: *(UINT64 *) rvalue = (UINT32) r.i; break;
+    case UNIX64_RET_SINT8:  *(UINT64 *) rvalue = (UINT64)(SINT64)(SINT8)  r.i; break;
+    case UNIX64_RET_SINT16: *(UINT64 *) rvalue = (UINT64)(SINT64)(SINT16) r.i; break;
+    case UNIX64_RET_SINT32: *(UINT64 *) rvalue = (UINT64)(SINT64)(SINT32) r.i; break;
+    case UNIX64_RET_INT64:  *(UINT64 *) rvalue = r.i; break;
+    case UNIX64_RET_XMM32:  memcpy (rvalue, &r.d, 4); break;
+    case UNIX64_RET_XMM64:  memcpy (rvalue, &r.d, 8); break;
+    }
+}
+
+/* Precompute the closure demarshal layout: for each arg, where avalue[i] must
+   point (an offset into the saved register image, or into the incoming stack).
+   Mirrors ffi_closure_unix64_inner's classification, done once.  Sets
+   plan->dem_ok=0 if any arg needs gathering or an over-aligned stack slot. */
+static void
+build_demarshal (ffi_cif *cif, ffi_plan *plan)
+{
+  unsigned i, avn = cif->nargs;
+  int gprcount, ssecount, ngpr, nsse, ok = 1;
+  size_t argp_off = 0;
+  enum x86_64_reg_class classes[MAX_CLASSES];
+  ffi_dent *dem = plan->dem;	/* points inside the plan's own allocation */
+
+  plan->dem_ok = 0;
+  gprcount = ssecount = 0;
+  if (plan->ret_in_mem)
+    gprcount++;				/* sret pointer occupies gpr[0] */
+
+  for (i = 0; i < avn; i++)
+    {
+      ffi_type *at = cif->arg_types[i];
+      size_t n = examine_argument (at, classes, 0, &ngpr, &nsse);
+      if (n == 0
+	  || gprcount + ngpr > MAX_GPR_REGS
+	  || ssecount + nsse > MAX_SSE_REGS)
+	{
+	  long align = at->alignment;
+	  if (align > 8)			/* over-aligned incoming stack slot */
+	    { ok = 0; break; }
+	  if (align < 8)
+	    align = 8;
+	  argp_off = FFI_ALIGN (argp_off, align);
+	  dem[i].on_stack = 1;
+	  dem[i].off = (unsigned) argp_off;
+	  argp_off += at->size;
+	}
+      else if (n == 1
+	       || (n == 2 && !(SSE_CLASS_P (classes[0])
+			       || SSE_CLASS_P (classes[1]))))
+	{
+	  dem[i].on_stack = 0;
+	  if (SSE_CLASS_P (classes[0]))
+	    {
+	      dem[i].off = (unsigned) (offsetof (struct register_args, sse)
+				       + ssecount * sizeof (union big_int_union));
+	      ssecount += n;
+	    }
+	  else
+	    {
+	      dem[i].off = (unsigned) (gprcount * 8);
+	      gprcount += n;
+	    }
+	}
+      else
+	{ ok = 0; break; }			/* split (gather) arg */
+    }
+  plan->dem_ok = ok;
+}
+
+/* Build the move-list for CIF, or NULL if not plan-able (caller falls back). */
+static ffi_plan *
+build_plan (ffi_cif *cif)
+{
+  unsigned i, avn = cif->nargs;
+  enum x86_64_reg_class classes[MAX_CLASSES];
+  unsigned nm, gprcount, ssecount;
+  size_t argp_off;
+  ffi_plan *plan;
+  int all_gp64 = 1;	/* every arg is exactly one 64-bit GP move? */
+
+  if (cif->abi != FFI_UNIX64)
+    return NULL;
+
+  /* Reject arg types this cut doesn't encode; returns are handled by flags. */
+  for (i = 0; i < avn; i++)
+    {
+      int t = cif->arg_types[i]->type;
+      if (t == FFI_TYPE_STRUCT || t == FFI_TYPE_COMPLEX)
+	return NULL;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+      if (t == FFI_TYPE_LONGDOUBLE)
+	return NULL;
+#endif
+    }
+
+  /* One self-contained allocation: header + moves + inline demarshal array,
+     so the plan cache can release an evicted plan with a plain free(). */
+  plan = malloc (sizeof (ffi_plan) + sizeof (ffi_move) * (2 * avn + 1)
+		 + sizeof (ffi_dent) * avn);
+  if (plan == NULL)
+    return NULL;
+  plan->dem = (ffi_dent *) &plan->moves[2 * avn + 1];
+
+  nm = gprcount = ssecount = 0;
+  argp_off = 0;
+  plan->ret_in_mem = (cif->flags & UNIX64_FLAG_RET_IN_MEM) ? 1 : 0;
+  if (plan->ret_in_mem)
+    gprcount++;				/* sret pointer occupies gpr[0] */
+
+  for (i = 0; i < avn; i++)
+    {
+      ffi_type *at = cif->arg_types[i];
+      size_t size = at->size, n, rem;
+      int ngpr, nsse;
+      unsigned j;
+
+      n = examine_argument (at, classes, 0, &ngpr, &nsse);
+      if (n == 0
+	  || gprcount + ngpr > MAX_GPR_REGS
+	  || ssecount + nsse > MAX_SSE_REGS)
+	{
+	  long align = at->alignment;
+	  ffi_move *m = &plan->moves[nm++];
+	  all_gp64 = 0;
+	  if (align < 8)
+	    align = 8;
+	  argp_off = FFI_ALIGN (argp_off, align);
+	  m->op = FFI_MOVE_STACK;
+	  m->src_idx = i;
+	  m->src_off = 0;
+	  m->dst_off = (unsigned) (sizeof (struct register_args) + argp_off);
+	  m->len = (unsigned) size;
+	  argp_off += size;
+	  continue;
+	}
+
+      for (j = 0, rem = size; j < n; j++, rem -= 8)
+	{
+	  ffi_move m;
+	  m.src_idx = i;
+	  m.src_off = j * 8;
+	  switch (classes[j])
+	    {
+	    case X86_64_NO_CLASS:
+	    case X86_64_SSEUP_CLASS:
+	      continue;			/* nothing placed for this 8-byte */
+	    case X86_64_INTEGER_CLASS:
+	    case X86_64_INTEGERSI_CLASS:
+	      m.dst_off = gprcount * 8;	/* offsetof(register_args,gpr) == 0 */
+	      switch (at->type)
+		{
+		case FFI_TYPE_SINT8:  m.op = FFI_MOVE_SE8;  all_gp64 = 0; break;
+		case FFI_TYPE_SINT16: m.op = FFI_MOVE_SE16; all_gp64 = 0; break;
+		case FFI_TYPE_SINT32: m.op = FFI_MOVE_SE32; all_gp64 = 0; break;
+		default:
+		  if (rem >= 8)
+		    m.op = FFI_MOVE_GP64;
+		  else
+		    { m.op = FFI_MOVE_GP; m.len = (unsigned) rem; all_gp64 = 0; }
+		  break;
+		}
+	      gprcount++;
+	      break;
+	    case X86_64_SSE_CLASS:
+	    case X86_64_SSEDF_CLASS:
+	      m.dst_off = (unsigned) (offsetof (struct register_args, sse)
+				      + ssecount * sizeof (union big_int_union));
+	      m.op = FFI_MOVE_SSE64;
+	      ssecount++;
+	      all_gp64 = 0;
+	      break;
+	    case X86_64_SSESF_CLASS:
+	      m.dst_off = (unsigned) (offsetof (struct register_args, sse)
+				      + ssecount * sizeof (union big_int_union));
+	      m.op = FFI_MOVE_SSE32;
+	      ssecount++;
+	      all_gp64 = 0;
+	      break;
+	    default:
+	      free (plan);		/* X87 etc. in registers: bail */
+	      return NULL;
+	    }
+	  plan->moves[nm++] = m;
+	}
+    }
+
+  plan->nmoves = nm;
+  plan->ssecount = ssecount;
+  plan->bytes = cif->bytes;
+  plan->flags = cif->flags;
+  plan->retcode = cif->flags & 0xff;	/* UNIX64_RET_* */
+  /* Lean-trampoline eligible: no spilled stack args and a simple return
+     (VOID..XMM64, codes 0..9; RET_IN_MEM has low byte VOID).  Struct-in-regs
+     (>=12) and x87 (10,11) returns stay on ffi_call_unix64. */
+  plan->fast = (cif->bytes == 0 && plan->retcode <= UNIX64_RET_XMM64) ? 1 : 0;
+  /* Pure-GP64 direct thunk: every arg is one 64-bit GP value (so a plain load
+     per arg is exact), <=6 of them, no sret, simple return -> load avalue
+     straight into the arg registers, no register image. */
+  plan->thunk_n =
+    (all_gp64 && !plan->ret_in_mem && nm == avn && avn <= MAX_GPR_REGS
+     && plan->fast)
+    ? (int) avn : -1;
+  build_demarshal (cif, plan);		/* closure (upcall) fast path */
+  return plan;
+}
+
+/* Execute PLAN: rebuild register_args + stack buffer, then ffi_call_unix64. */
+FFI_ASAN_NO_SANITIZE
+static inline __attribute__ ((always_inline)) void
+plan_exec (ffi_cif *cif, ffi_plan *plan, void (*fn) (void),
+	   void *rvalue, void **avalue)
+{
+  unsigned flags = plan->flags;
+  struct register_args local __attribute__ ((aligned (16)));
+  char *stack = NULL;
+  struct register_args *reg_args;
+  unsigned k;
+
+  if (rvalue == NULL)
+    {
+      if (flags & UNIX64_FLAG_RET_IN_MEM)
+	rvalue = alloca (cif->rtype->size);
+      else
+	flags = UNIX64_RET_VOID;
+    }
+
+  if (plan->thunk_n >= 0)
+    {
+      /* Pure-GP64: load avalue straight into arg regs, no image at all. */
+      struct ffi_ret2 r = ffi_gp_thunks[plan->thunk_n] (avalue, fn);
+      if (rvalue != NULL)
+	store_ret (rvalue, plan->retcode, r);
+      return;
+    }
+
+  if (plan->fast)
+    reg_args = &local;			/* no stack args: fixed local image */
+  else
+    {
+      stack = alloca (sizeof (struct register_args) + plan->bytes + 4 * 8);
+      reg_args = (struct register_args *) stack;
+    }
+  reg_args->r10 = 0;			/* closure (none for ffi_call) */
+  if (plan->ret_in_mem)
+    reg_args->gpr[0] = (UINT64) (uintptr_t) rvalue;
+
+  for (k = 0; k < plan->nmoves; k++)
+    {
+      ffi_move *m = &plan->moves[k];
+      char *src = (char *) avalue[m->src_idx] + m->src_off;
+      char *dst = (char *) reg_args + m->dst_off;
+      switch (m->op)
+	{
+	/* x86-64: unaligned scalar loads from avalue[] are fine. */
+	case FFI_MOVE_SE8:   *(UINT64 *) dst = (UINT64) (SINT64) *(SINT8 *)  src; break;
+	case FFI_MOVE_SE16:  *(UINT64 *) dst = (UINT64) (SINT64) *(SINT16 *) src; break;
+	case FFI_MOVE_SE32:  *(UINT64 *) dst = (UINT64) (SINT64) *(SINT32 *) src; break;
+	case FFI_MOVE_GP64:  *(UINT64 *) dst = *(UINT64 *) src;                   break;
+	case FFI_MOVE_GP:    *(UINT64 *) dst = 0; memcpy (dst, src, m->len);     break;
+	case FFI_MOVE_SSE64: *(UINT64 *) dst = *(UINT64 *) src;                   break;
+	case FFI_MOVE_SSE32: *(UINT32 *) dst = *(UINT32 *) src;                   break;
+	case FFI_MOVE_STACK: memcpy (dst, src, m->len);                          break;
+	}
+    }
+  reg_args->rax = plan->ssecount;
+
+  if (plan->fast)
+    {
+      /* No stack args; lean trampoline + return store replicating the
+	 unix64.S store_table widths.  ret_in_mem already wrote gpr[0]. */
+      struct ffi_ret2 r = ffi_plan_fast_call (reg_args, fn);
+      if (rvalue != NULL)
+	store_ret (rvalue, plan->retcode, r);
+      return;
+    }
+
+  ffi_call_unix64 (stack, plan->bytes + sizeof (struct register_args),
+		   flags, rvalue, fn);
+}
+
+/* Win64/EFI64/GNUW64 plan builder (ffiw64.c). */
+extern void *ffi_w64_build_plan (ffi_cif *cif);
+
+/* x86-64 plan builder for the cache: dispatch by ABI to SysV or Win64.
+   Both return self-contained allocations (the cache frees with plain free). */
+void *
+ffi_build_plan_arch (ffi_cif *cif)
+{
+  return (cif->abi == FFI_UNIX64)
+    ? (void *) build_plan (cif)
+    : ffi_w64_build_plan (cif);
+}
+
 extern void
 ffi_call_efi64(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue);
 #endif
@@ -703,6 +1082,20 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
   ffi_type **arg_types = cif->arg_types;
   int i, nargs = cif->nargs;
   const int max_reg_struct_size = cif->abi == FFI_GNUW64 ? 8 : 16;
+
+#ifndef __ILP32__
+  /* Mechanism A: arena cif (UNIX64) with a precompiled plan -> fast path.
+     Win64/EFI64/GNUW64 cifs have their own plan path in ffiw64.c. */
+  if (cif->abi == FFI_UNIX64)
+    {
+      ffi_plan *plan = (ffi_plan *) ffi_plan_get (cif);
+      if (plan != NULL)
+	{
+	  plan_exec (cif, plan, fn, rvalue, avalue);
+	  return;
+	}
+    }
+#endif
 
   /* If we have any large structure arguments, make a copy so we are passing
      by value.  */
@@ -843,6 +1236,31 @@ ffi_closure_unix64_inner(ffi_cif *cif,
 
   avn = cif->nargs;
   flags = cif->flags;
+
+#ifndef __ILP32__
+  /* Mechanism A (upcall): arena cif with a precomputed demarshal layout ->
+     point avalue straight at the saved registers/stack, no classification. */
+  {
+    ffi_plan *plan = (ffi_plan *) ffi_plan_get (cif);
+    if (plan != NULL && plan->dem_ok)
+      {
+	ffi_dent *dem = plan->dem;
+	avalue = alloca (avn * sizeof (void *));
+	if (flags & UNIX64_FLAG_RET_IN_MEM)
+	  {
+	    void *r = (void *) (uintptr_t) reg_args->gpr[0];
+	    *(void **) rvalue = r;
+	    rvalue = r;
+	    flags = (sizeof (void *) == 4 ? UNIX64_RET_UINT32 : UNIX64_RET_INT64);
+	  }
+	for (i = 0; i < avn; i++)
+	  avalue[i] = (dem[i].on_stack ? argp : (char *) reg_args) + dem[i].off;
+	fun (cif, rvalue, avalue, user_data);
+	return flags;
+      }
+  }
+#endif
+
   avalue = alloca(avn * sizeof(void *));
   gprcount = ssecount = 0;
 
