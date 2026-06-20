@@ -40,7 +40,7 @@
 
 #ifdef __x86_64__
 
-/* Mechanism A plan cache: this is the one x86-64 TU that defines it. */
+/* Plan cache storage: this is the one x86-64 TU that instantiates it. */
 #include "plan-cache.h"
 #include "plan-cache-impl.h"
 
@@ -700,22 +700,24 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 
 #ifndef __ILP32__
 /* =====================================================================
-   Mechanism A: precompiled placement plan + opt-in arena cif allocation.
+   Precompiled argument-placement plan for ffi_call and closures.
 
-   ffi_prep_cif_machdep classifies once; ffi_call_int re-derives the same
-   placement on every call (~650 instructions for a 3-arg call).  A "plan"
-   captures that placement as a flat move-list, built once, so ffi_call can
-   rebuild the register_args+stack buffer with no classification and hand off
-   to the unchanged ffi_call_unix64.
+   ffi_prep_cif_machdep classifies the signature once, but ffi_call_int then
+   re-derives the same per-argument placement on every call (~650 instructions
+   for a 3-argument call).  A "plan" captures that placement as a flat move
+   list, built once, so the register_args + stack buffer can be filled with no
+   re-classification before handing off to the unchanged ffi_call_unix64.  For
+   the common case (only 64-bit GP arguments) a direct thunk loads the values
+   straight into the argument registers, skipping the buffer entirely.
 
-   Transparent, no API: ffi_call looks the plan up in a per-thread content-
-   addressed cache keyed on (abi, nargs, rtype, arg_types) -- see plan-cache.h.
-   First use of a signature builds the plan; later calls hit the cache.  Every
-   caller benefits on a relink, with no opt-in.
+   Plans are looked up in a per-thread content-addressed cache keyed on
+   (abi, nargs, rtype, arg_types); see plan-cache.h.  The first call with a
+   given signature builds the plan, later calls reuse it, and this is fully
+   transparent to callers.
 
-   Scalar/pointer/int128/float/double args only.  Any struct, complex, or x87
-   long double arg -> no plan (cached as FFI_PLAN_NONE) -> fall back to
-   ffi_call_int. */
+   Scalar, pointer, int128, float and double arguments are handled; any struct,
+   complex, or x87 long double argument has no plan (cached as FFI_PLAN_NONE)
+   and falls back to ffi_call_int. */
 
 enum ffi_move_op
 {
@@ -1084,8 +1086,8 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
   const int max_reg_struct_size = cif->abi == FFI_GNUW64 ? 8 : 16;
 
 #ifndef __ILP32__
-  /* Mechanism A: arena cif (UNIX64) with a precompiled plan -> fast path.
-     Win64/EFI64/GNUW64 cifs have their own plan path in ffiw64.c. */
+  /* Cached plan for this UNIX64 signature -> fast path.  Win64/EFI64/GNUW64
+     cifs are handled by their own ffi_call in ffiw64.c. */
   if (cif->abi == FFI_UNIX64)
     {
       ffi_plan *plan = (ffi_plan *) ffi_plan_get (cif);
@@ -1238,8 +1240,8 @@ ffi_closure_unix64_inner(ffi_cif *cif,
   flags = cif->flags;
 
 #ifndef __ILP32__
-  /* Mechanism A (upcall): arena cif with a precomputed demarshal layout ->
-     point avalue straight at the saved registers/stack, no classification. */
+  /* Cached plan with a precomputed demarshal layout -> point avalue straight
+     at the saved registers/stack, with no per-call classification. */
   {
     ffi_plan *plan = (ffi_plan *) ffi_plan_get (cif);
     if (plan != NULL && plan->dem_ok)

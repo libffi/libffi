@@ -51,13 +51,13 @@ struct win64_call_frame
 extern void ffi_call_win64 (void *stack, struct win64_call_frame *,
 			    void *closure) FFI_HIDDEN;
 
-/* ===== Mechanism A: plan fast path (Win64 / EFI64 / GNUW64) =====
-   Reuses the arena/slab storage and probe from ffi64.c.  The Win64 ABI is
-   simple: every arg occupies one 8-byte slot (positional), copied by width or
-   passed by reference; the i-th slot goes to RCX/RDX/R8/R9 (and XMM0-3) or the
-   stack.  So the plan precomputes, per arg, a copy width (forward) and a source
-   (demarshal), letting us skip the per-call type scan in ffi_call_int and the
-   per-call classification in ffi_closure_win64_inner. */
+/* Precompiled argument-placement plan for the Win64 / EFI64 / GNUW64 ABI,
+   looked up in the shared per-thread plan cache (see plan-cache.h).  The Win64
+   ABI is simple: every argument occupies one 8-byte slot (positional), copied
+   by width or passed by reference, with the i-th slot going to RCX/RDX/R8/R9
+   (and XMM0-3) or the stack.  The plan records, per argument, a copy width (for
+   the call) and a source (for closures), so ffi_call_int's per-call type scan
+   and ffi_closure_win64_inner's per-call classification can be skipped. */
 
 #include "plan-cache.h"		/* ffi_plan_get (inline) */
 
@@ -467,8 +467,8 @@ ffi_closure_win64_inner(ffi_cif *cif,
 
   flags = cif->flags;
 
-  /* Mechanism A (upcall): arena cif with a precomputed demarshal layout ->
-     point avalue straight at the saved register/stack slots. */
+  /* Cached plan with a precomputed demarshal layout -> point avalue straight
+     at the saved register/stack slots, with no per-call classification. */
   {
     w64_plan *p = ffi_plan_get (cif);
     if (p != NULL && p->dem_ok)

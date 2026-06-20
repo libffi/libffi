@@ -1,6 +1,6 @@
-/* Mechanism A: plan-cache storage.  #include in EXACTLY ONE translation unit
-   per architecture (the one that also defines ffi_build_plan_arch).  See
-   plan-cache.h. */
+/* Storage for the plan cache (see plan-cache.h).  #include this in EXACTLY ONE
+   translation unit per architecture -- the one that also defines the backend's
+   ffi_build_plan_arch. */
 
 #ifndef FFI_PLAN_CACHE_IMPL_H
 #define FFI_PLAN_CACHE_IMPL_H
