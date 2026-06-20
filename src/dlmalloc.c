@@ -2957,8 +2957,11 @@ static size_t traverse_and_check(mstate m);
 #define smallbin_at(M, i)   ((sbinptr)((char*)&((M)->smallbins[(i)<<1])))
 #define treebin_at(M,i)     (&((M)->treebins[i]))
 
-/* assign tree index for size S to variable I. Use x86 asm if possible  */
-#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+/* assign tree index for size S to variable I.
+   libffi: enable the __builtin_clz path on any GNU-compatible compiler, not
+   only x86, so the log2 is an intrinsic rather than the generic C idiom that
+   the compiler can't always recognize (libffi #754).  */
+#if defined(__GNUC__)
 #define compute_tree_index(S, I)\
 {\
   unsigned int X = S >> TREEBIN_SHIFT;\
@@ -3059,9 +3062,11 @@ static size_t traverse_and_check(mstate m);
 /* mask with all bits to left of or equal to least bit of x on */
 #define same_or_left_bits(x) ((x) | -(x))
 
-/* index corresponding to given bit. Use x86 asm if possible */
+/* index corresponding to given bit.
+   libffi: use __builtin_ctz on any GNU-compatible compiler, not only x86
+   (libffi #754).  */
 
-#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+#if defined(__GNUC__)
 #define compute_bit2idx(X, I)\
 {\
   unsigned int J;\
