@@ -1942,6 +1942,9 @@ static FORCEINLINE void x86_clear_lock(int* sl) {
    atomic builtins are unavailable.  */
 #if defined(__ATOMIC_RELAXED)
 # define ffi_spin_peek(sl) __atomic_load_n((sl), __ATOMIC_RELAXED)
+#elif defined(_MSC_VER)
+# define ffi_spin_peek(sl) \
+  ((int)_InterlockedCompareExchange((LONG volatile *)(sl), (LONG)0, (LONG)0))
 #else
 # define ffi_spin_peek(sl) (*(volatile int *)(sl))
 #endif
@@ -2741,10 +2744,25 @@ static struct malloc_params mparams;
    instead: a thread that observes magic != 0 via the acquire load is then
    guaranteed to see all the other initialization writes (page_size, mflags,
    ...) performed before the release store.  Fall back to the original volatile
-   access when atomic builtins are unavailable (e.g. MSVC).  */
+   access when no supported compiler atomic operations are available.  */
 #if USE_LOCKS && defined(__ATOMIC_ACQUIRE)
 # define ffi_mparams_magic_load()   __atomic_load_n(&mparams.magic, __ATOMIC_ACQUIRE)
 # define ffi_mparams_magic_store(v) __atomic_store_n(&mparams.magic, (size_t)(v), __ATOMIC_RELEASE)
+#elif USE_LOCKS && defined(_MSC_VER)
+# if defined(_WIN64)
+#  define ffi_mparams_magic_load() \
+  ((size_t)_InterlockedCompareExchange64((__int64 volatile *)&mparams.magic, \
+                                         (__int64)0, (__int64)0))
+#  define ffi_mparams_magic_store(v) \
+  ((void)_InterlockedExchange64((__int64 volatile *)&mparams.magic, \
+                                (__int64)(v)))
+# else
+#  define ffi_mparams_magic_load() \
+  ((size_t)_InterlockedCompareExchange((LONG volatile *)&mparams.magic, \
+                                       (LONG)0, (LONG)0))
+#  define ffi_mparams_magic_store(v) \
+  ((void)_InterlockedExchange((LONG volatile *)&mparams.magic, (LONG)(v)))
+# endif
 #else
 # define ffi_mparams_magic_load()   (mparams.magic)
 # define ffi_mparams_magic_store(v) (*(volatile size_t *)(&(mparams.magic)) = (size_t)(v))
