@@ -375,7 +375,7 @@ ffi_status ffi_closure_inner_pa64(ffi_closure *closure, UINT64 *stack)
   char *tmp;
   int i, avn;
   unsigned int slot = FIRST_ARG_SLOT;
-  register UINT64 r28 asm("r28");
+  register UINT64 r28 __asm__("r28");
 
   cif = closure->cif;
 

@@ -52,14 +52,14 @@ extern void ffi_go_closure_osf(void) FFI_HIDDEN;
 static inline UINT64 lds(void *ptr)
 {
   UINT64 ret;
-  asm("lds %0,%1" : "=f"(ret) : "m"(*(UINT32 *)ptr));
+  __asm__("lds %0,%1" : "=f"(ret) : "m"(*(UINT32 *)ptr));
   return ret;
 }
 
 /* And the reverse.  */
 static inline void sts(void *ptr, UINT64 val)
 {
-  asm("sts %1,%0" : "=m"(*(UINT32 *)ptr) : "f"(val));
+  __asm__("sts %1,%0" : "=m"(*(UINT32 *)ptr) : "f"(val));
 }
 
 ffi_status FFI_HIDDEN
@@ -357,7 +357,7 @@ ffi_prep_closure_loc (ffi_closure* closure,
      instead, since both Compaq as and gas can handle it.
 
      0x86 is PAL_imb in Tru64 UNIX <alpha/pal.h>.  */
-  asm volatile ("call_pal 0x86" : : : "memory");
+  __asm__ volatile ("call_pal 0x86" : : : "memory");
 
   return FFI_OK;
 }

@@ -388,7 +388,7 @@ extend_hfa_type (void *dest, void *src, int h)
   void *x0;
 
 #define BTI_J "hint #36"
-  asm volatile (
+  __asm__ volatile (
 	"adr	%0, 0f\n"
 "	add	%0, %0, %1\n"
 "	br	%0\n"
@@ -468,18 +468,18 @@ compress_hfa_type (void *dest, void *reg, int h)
 	*(float *)dest = *(float *)reg;
       break;
     case AARCH64_RET_S2:
-      asm ("ldp q16, q17, [%1]\n\t"
+      __asm__ ("ldp q16, q17, [%1]\n\t"
 	   "st2 { v16.s, v17.s }[0], [%0]"
 	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17");
       break;
     case AARCH64_RET_S3:
-      asm ("ldp q16, q17, [%1]\n\t"
+      __asm__ ("ldp q16, q17, [%1]\n\t"
 	   "ldr q18, [%1, #32]\n\t"
 	   "st3 { v16.s, v17.s, v18.s }[0], [%0]"
 	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18");
       break;
     case AARCH64_RET_S4:
-      asm ("ldp q16, q17, [%1]\n\t"
+      __asm__ ("ldp q16, q17, [%1]\n\t"
 	   "ldp q18, q19, [%1, #32]\n\t"
 	   "st4 { v16.s, v17.s, v18.s, v19.s }[0], [%0]"
 	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18", "v19");
@@ -496,18 +496,18 @@ compress_hfa_type (void *dest, void *reg, int h)
 	*(double *)dest = *(double *)reg;
       break;
     case AARCH64_RET_D2:
-      asm ("ldp q16, q17, [%1]\n\t"
+      __asm__ ("ldp q16, q17, [%1]\n\t"
 	   "st2 { v16.d, v17.d }[0], [%0]"
 	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17");
       break;
     case AARCH64_RET_D3:
-      asm ("ldp q16, q17, [%1]\n\t"
+      __asm__ ("ldp q16, q17, [%1]\n\t"
 	   "ldr q18, [%1, #32]\n\t"
 	   "st3 { v16.d, v17.d, v18.d }[0], [%0]"
 	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18");
       break;
     case AARCH64_RET_D4:
-      asm ("ldp q16, q17, [%1]\n\t"
+      __asm__ ("ldp q16, q17, [%1]\n\t"
 	   "ldp q18, q19, [%1, #32]\n\t"
 	   "st4 { v16.d, v17.d, v18.d, v19.d }[0], [%0]"
 	   : : "r"(dest), "r"(reg) : "memory", "v16", "v17", "v18", "v19");
