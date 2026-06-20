@@ -5,6 +5,9 @@ on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
+    # Run on release tags too, so the MSVC job's "Upload to GitHub Release"
+    # step (gated on github.ref_type == 'tag') publishes the Windows binaries.
+    tags: [ 'v[0-9]*' ]
   pull_request:
     branches: [ master ]
 

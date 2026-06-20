@@ -1,0 +1,67 @@
+name: release
+
+# Cut a GitHub release when a version tag (e.g. v3.6.0) is pushed.  Builds the
+# source distribution tarball via `make dist` and publishes it with release
+# notes extracted from the matching section of README.md.  The Windows MSVC
+# binaries are attached separately by the build.yml "Upload to GitHub Release"
+# step, which also runs on the tag.
+on:
+  push:
+    tags: [ 'v[0-9]*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: |
+          sudo apt update
+          sudo apt install -y texlive texinfo autoconf automake libtool libltdl-dev
+
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }   # full history so dist-hook's ChangeLog is complete
+
+      - name: Determine version and verify it matches configure.ac
+        id: ver
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          AC_VER=$(sed -nE 's/^AC_INIT\(\[libffi\],[[:space:]]*\[([^]]+)\].*/\1/p' configure.ac)
+          if [ "$VERSION" != "$AC_VER" ]; then
+            echo "::error::tag $TAG (version $VERSION) does not match configure.ac version ($AC_VER)"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build source tarball
+        run: |
+          autoreconf -fi
+          ./configure
+          make dist     # produces libffi-${{ steps.ver.outputs.version }}.tar.gz
+
+      - name: Extract release notes from README
+        run: |
+          VER="${{ steps.ver.outputs.version }}"
+          awk -v ver="$VER" '
+            $0 ~ "^    " ver "([ \t]|$)" { found=1; next }
+            found && /^    [0-9]+\.[0-9]+/ { exit }
+            found { sub(/^        /, ""); print }
+          ' README.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "::error::no release notes found for $VER in README.md"
+            exit 1
+          fi
+          echo "---- release notes ----"; cat RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: libffi ${{ steps.ver.outputs.version }}
+          body_path: RELEASE_NOTES.md
+          prerelease: false
+          files: libffi-${{ steps.ver.outputs.version }}.tar.gz
