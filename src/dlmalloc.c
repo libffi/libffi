@@ -1934,11 +1934,23 @@ static FORCEINLINE void x86_clear_lock(int* sl) {
 #define SPIN_LOCK_YIELD
 #endif /* ... yield ... */
 
+/* libffi: read the spin-lock word with a relaxed atomic load for the lock-free
+   "is it held?" peek, so ThreadSanitizer does not flag it as racing with the
+   atomic CLEAR_LOCK release on unlock.  Relaxed ordering is sufficient: the
+   peek is only a hint to avoid a costly CAS, and CAS_LOCK still provides the
+   acquire ordering on success.  Falls back to the original volatile read when
+   atomic builtins are unavailable.  */
+#if defined(__ATOMIC_RELAXED)
+# define ffi_spin_peek(sl) __atomic_load_n((sl), __ATOMIC_RELAXED)
+#else
+# define ffi_spin_peek(sl) (*(volatile int *)(sl))
+#endif
+
 #if !defined(USE_RECURSIVE_LOCKS) || USE_RECURSIVE_LOCKS == 0
 /* Plain spin locks use single word (embedded in malloc_states) */
 static int spin_acquire_lock(int *sl) {
   int spins = 0;
-  while (*(volatile int *)sl != 0 || CAS_LOCK(sl)) {
+  while (ffi_spin_peek(sl) != 0 || CAS_LOCK(sl)) {
     if ((++spins & SPINS_PER_YIELD) == 0) {
       SPIN_LOCK_YIELD;
     }
@@ -1991,7 +2003,7 @@ static FORCEINLINE int recursive_acquire_lock(MLOCK_T *lk) {
   THREAD_ID_T mythreadid = CURRENT_THREAD;
   int spins = 0;
   for (;;) {
-    if (*((volatile int *)(&lk->sl)) == 0) {
+    if (ffi_spin_peek(&lk->sl) == 0) {
       if (!CAS_LOCK(&lk->sl)) {
         lk->threadid = mythreadid;
         lk->c = 1;
@@ -2010,7 +2022,7 @@ static FORCEINLINE int recursive_acquire_lock(MLOCK_T *lk) {
 
 static FORCEINLINE int recursive_try_lock(MLOCK_T *lk) {
   THREAD_ID_T mythreadid = CURRENT_THREAD;
-  if (*((volatile int *)(&lk->sl)) == 0) {
+  if (ffi_spin_peek(&lk->sl) == 0) {
     if (!CAS_LOCK(&lk->sl)) {
       lk->threadid = mythreadid;
       lk->c = 1;
@@ -2720,8 +2732,26 @@ struct malloc_params {
 
 static struct malloc_params mparams;
 
+/* libffi: mparams is initialized exactly once (under the malloc global lock),
+   but mparams.magic is read on every allocation's fast path WITHOUT a lock to
+   decide whether initialization already happened.  Upstream writes magic
+   through a `volatile` cast, which is not a synchronizing operation, so
+   ThreadSanitizer reports a data race (libffi issue #873) between that one-time
+   write and the lock-free readers.  Access magic with acquire/release ordering
+   instead: a thread that observes magic != 0 via the acquire load is then
+   guaranteed to see all the other initialization writes (page_size, mflags,
+   ...) performed before the release store.  Fall back to the original volatile
+   access when atomic builtins are unavailable (e.g. MSVC).  */
+#if USE_LOCKS && defined(__ATOMIC_ACQUIRE)
+# define ffi_mparams_magic_load()   __atomic_load_n(&mparams.magic, __ATOMIC_ACQUIRE)
+# define ffi_mparams_magic_store(v) __atomic_store_n(&mparams.magic, (size_t)(v), __ATOMIC_RELEASE)
+#else
+# define ffi_mparams_magic_load()   (mparams.magic)
+# define ffi_mparams_magic_store(v) (*(volatile size_t *)(&(mparams.magic)) = (size_t)(v))
+#endif
+
 /* Ensure mparams initialized */
-#define ensure_initialization() (void)(mparams.magic != 0 || init_mparams())
+#define ensure_initialization() (void)(ffi_mparams_magic_load() != 0 || init_mparams())
 
 #if !ONLY_MSPACES
 
@@ -3278,8 +3308,9 @@ static int init_mparams(void) {
 #endif
       magic |= (size_t)8U;    /* ensure nonzero */
       magic &= ~(size_t)7U;   /* improve chances of fault for bad values */
-      /* Until memory modes commonly available, use volatile-write */
-      (*(volatile size_t *)(&(mparams.magic))) = magic;
+      /* libffi: release-store so any thread that observes magic via the
+         acquire load in ensure_initialization() sees the writes above (#873).  */
+      ffi_mparams_magic_store(magic);
     }
   }
 
