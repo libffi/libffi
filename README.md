@@ -210,6 +210,7 @@ See the git log for details at http://github.com/libffi/libffi.
         Add aarch64 feature build attribute support.
         Add ppc64le ELFv2 complex type support.
         Add conditional target support for __int128.
+        Add x86_64 IEEE binary128 long double support (e.g. x86_64 Android).
         Fix closures using FFI_REGISTER ABI.
         Fix SH linker errors with __USER_LABEL_PREFIX__.
         Fix compilation for ARM Windows targets.
