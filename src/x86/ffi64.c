@@ -1061,17 +1061,13 @@ plan_exec (ffi_cif *cif, ffi_plan *plan, void (*fn) (void),
 		   flags, rvalue, fn);
 }
 
-/* Win64/EFI64/GNUW64 plan builder (ffiw64.c). */
-extern void *ffi_w64_build_plan (ffi_cif *cif);
-
-/* x86-64 plan builder for the cache: dispatch by ABI to SysV or Win64.
-   Both return self-contained allocations (the cache frees with plain free). */
+/* Plan builder for the cache.  Only the SysV (FFI_UNIX64) ABI has a plan; the
+   Win64/EFI64/GNUW64 ABIs use the existing path in ffiw64.c.  The returned plan
+   is a self-contained allocation that the cache releases with plain free(). */
 void *
 ffi_build_plan_arch (ffi_cif *cif)
 {
-  return (cif->abi == FFI_UNIX64)
-    ? (void *) build_plan (cif)
-    : ffi_w64_build_plan (cif);
+  return (cif->abi == FFI_UNIX64) ? (void *) build_plan (cif) : NULL;
 }
 
 extern void
