@@ -393,10 +393,21 @@ jobs:
           path: libffi-${{ steps.ver.outputs.version }}-x86-${{ matrix.width }}bit-msvc-binaries
           if-no-files-found: error
 
+      # The binary distribution above is a directory; zip it so the release
+      # upload has an actual .zip file to attach (its contents at top level,
+      # matching the upload-artifact layout).
+      - name: Package binary distribution as zip
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        run: |
+          $d = "libffi-${{ steps.ver.outputs.version }}-x86-${{ matrix.width }}bit-msvc-binaries"
+          Compress-Archive -Path "$d/*" -DestinationPath "$d.zip" -Force
+
       - name: Upload to GitHub Release
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
+          fail_on_unmatched_files: true
           files: libffi-${{ steps.ver.outputs.version }}-x86-${{ matrix.width }}bit-msvc-binaries.zip
 
   build-android:
