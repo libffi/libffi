@@ -19,6 +19,12 @@
 #include <ffi.h>
 #include <stdint.h>
 
+#if defined(_MSC_VER)
+# define FFI_TLS __declspec(thread)
+#else
+# define FFI_TLS __thread
+#endif
+
 #define FFI_PLAN_CACHE_BITS 10			/* 1024 slots / thread */
 #define FFI_PLAN_CACHE_SIZE (1u << FFI_PLAN_CACHE_BITS)
 #define FFI_PLAN_NONE ((void *) 1)		/* sentinel: not plan-able */
@@ -32,7 +38,7 @@ struct ffi_plan_slot
   void      *plan;	/* NULL=empty, FFI_PLAN_NONE=no fast path, else plan */
 };
 
-extern __thread struct ffi_plan_slot ffi_plan_cache[FFI_PLAN_CACHE_SIZE];
+extern FFI_TLS struct ffi_plan_slot ffi_plan_cache[FFI_PLAN_CACHE_SIZE];
 
 /* Cold miss handler + per-arch builder, defined in the impl/arch TUs. */
 void *ffi_plan_miss (ffi_cif *cif, struct ffi_plan_slot *s);

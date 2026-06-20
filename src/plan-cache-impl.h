@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "plan-cache.h"
 
-__thread struct ffi_plan_slot ffi_plan_cache[FFI_PLAN_CACHE_SIZE];
+FFI_TLS struct ffi_plan_slot ffi_plan_cache[FFI_PLAN_CACHE_SIZE];
 
 /* Direct-mapped miss: free the evicted plan, build this signature's plan once,
    record the key.  A non-plan-able signature caches FFI_PLAN_NONE so it isn't

@@ -61,6 +61,20 @@ extern void ffi_call_win64 (void *stack, struct win64_call_frame *,
 
 #include "plan-cache.h"		/* ffi_plan_get (inline) */
 
+#ifdef X86_WIN64
+/* On native Windows the SysV backend (ffi64.c) -- which instantiates the plan
+   cache storage and provides ffi_build_plan_arch -- is not part of the build,
+   so this translation unit takes that role.  On Unix x86-64 ffi64.c does it
+   and X86_WIN64 is undefined here, avoiding duplicate definitions. */
+#include "plan-cache-impl.h"
+extern void *ffi_w64_build_plan (ffi_cif *cif);
+void *
+ffi_build_plan_arch (ffi_cif *cif)
+{
+  return ffi_w64_build_plan (cif);
+}
+#endif
+
 #define W64_DK_ARGS  0			/* avalue[i] = &frame->args[slot]   */
 #define W64_DK_FARGS 1			/* avalue[i] = &frame->fargs[slot]  */
 #define W64_DK_BYREF 2			/* avalue[i] = (void *)args[slot]   */
