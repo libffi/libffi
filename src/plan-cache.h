@@ -46,17 +46,17 @@ extern FFI_TLS struct ffi_plan_slot ffi_plan_cache[FFI_PLAN_CACHE_SIZE];
 void *ffi_plan_miss (ffi_cif *cif, struct ffi_plan_slot *s, uint64_t fp);
 void *ffi_build_plan_arch (ffi_cif *cif);
 
-/* 64-bit FNV-1a-style fingerprint over the signature, including the element
-   type pointers -- so two signatures that differ only in argument types (even
-   if they happen to reuse the same arg_types array address) get distinct keys. */
+/* 64-bit FNV-1a-style fingerprint over the element type pointers -- so two
+   signatures that differ only in argument types (even if they happen to reuse
+   the same arg_types array address) get distinct keys.  abi, nargs and rtype
+   are stored in the slot and compared exactly on every hit, so folding them in
+   here would be redundant work on the hot path; the fingerprint only needs to
+   cover the arg_types contents. */
 static inline uint64_t
 ffi_plan_fp (ffi_cif *cif)
 {
   uint64_t h = 0xCBF29CE484222325ULL;
   unsigned i, n = cif->nargs;
-  h = (h ^ (uint64_t) (uintptr_t) cif->rtype) * 0x100000001B3ULL;
-  h = (h ^ cif->abi)                          * 0x100000001B3ULL;
-  h = (h ^ n)                                 * 0x100000001B3ULL;
   for (i = 0; i < n; i++)
     h = (h ^ (uint64_t) (uintptr_t) cif->arg_types[i]) * 0x100000001B3ULL;
   return h | 1;				/* never 0 (0 marks an empty slot) */
