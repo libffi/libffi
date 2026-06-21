@@ -280,9 +280,24 @@ static void ffi_size_stack_pa32(ffi_cif *cif)
 
 #ifdef PA_HPUX
 	case FFI_TYPE_LONGDOUBLE:
+	  z += 1; /* passed by pointer, like a large struct */
+	  break;
 #endif
+
 	case FFI_TYPE_STRUCT:
-	  z += 1; /* pass by ptr, callee will copy */
+	  /* This must mirror the slot accounting in ffi_prep_args_pa32:
+	     structs of 1-4 bytes occupy one slot, structs of 5-8 bytes are
+	     passed inline in two even-aligned slots (exactly like a 64-bit
+	     value), and larger structs are passed by pointer in one slot.
+	     z stays offset from the marshaller's slot by FIRST_ARG_SLOT (odd),
+	     so (z & 1) tracks the same alignment the marshaller applies.  */
+	  {
+	    size_t len = (*ptr)->size;
+	    if (len <= 4 || len > 8)
+	      z += 1;
+	    else
+	      z += 2 + (z & 1);
+	  }
 	  break;
 
 	default: /* <= 32-bit values */
