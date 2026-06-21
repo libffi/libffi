@@ -278,3 +278,39 @@ ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type, size_t *offsets)
 
   return initialize_aggregate(struct_type, offsets);
 }
+
+/* Generic ffi_call_plan: a portable fallback compiled on every target that does
+   not provide its own accelerated implementation.  The x86-64 backend defines
+   these (with a fast path) under __x86_64__ && !__ILP32__; everywhere else this
+   plan just records the cif and invoke calls ffi_call, so the API is always
+   present and links on all targets.  The cif must outlive the plan. */
+#if !(defined(__x86_64__) && !defined(__ILP32__))
+
+struct ffi_call_plan
+{
+  ffi_cif *cif;
+};
+
+ffi_call_plan *
+ffi_call_plan_alloc (ffi_cif *cif)
+{
+  ffi_call_plan *plan = malloc (sizeof (struct ffi_call_plan));
+  if (plan != NULL)
+    plan->cif = cif;
+  return plan;
+}
+
+void
+ffi_call_plan_invoke (ffi_call_plan *plan, void (*fn) (void),
+		      void *rvalue, void **avalue)
+{
+  ffi_call (plan->cif, fn, rvalue, avalue);
+}
+
+void
+ffi_call_plan_free (ffi_call_plan *plan)
+{
+  free (plan);
+}
+
+#endif /* generic ffi_call_plan fallback */

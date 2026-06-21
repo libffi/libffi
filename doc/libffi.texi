@@ -118,6 +118,7 @@ values passed between the two languages.
 * Simple Example::              A simple example.
 * Types::                       libffi type descriptions.
 * Multiple ABIs::               Different passing styles on one platform.
+* Reusable Call Plans::         Building a call plan once and reusing it.
 * The Closure API::             Writing a generic function.
 * Closure Example::             A closure example.
 * Thread Safety::               Thread safety.
@@ -805,6 +806,45 @@ functions.
 necessarily platform-specific.
 
 @c FIXME: document the platforms
+
+@node Reusable Call Plans
+@section Reusable Call Plans
+
+When the same signature is called many times -- as language bindings
+typically do -- you can build a @dfn{call plan} once and reuse it, so
+that each call avoids the work @code{ffi_call} would otherwise repeat
+on every invocation.  A plan is an opaque, caller-owned object built
+from a prepared @code{ffi_cif}.
+
+@findex ffi_call_plan_alloc
+@defun {ffi_call_plan *} ffi_call_plan_alloc (ffi_cif *@var{cif})
+Builds and returns a reusable plan for the signature described by
+@var{cif}, which must already have been prepared with
+@code{ffi_prep_cif}.  The plan does not copy @var{cif}; @var{cif} must
+remain valid for as long as the plan is used.
+
+Returns @code{NULL} only when memory cannot be allocated.  A signature
+for which no accelerated path exists is still valid: the returned plan
+simply falls back to @code{ffi_call} when it is invoked.
+@end defun
+
+@findex ffi_call_plan_invoke
+@defun void ffi_call_plan_invoke (ffi_call_plan *@var{plan}, void *@var{fn}, void *@var{rvalue}, void **@var{avalues})
+Calls @var{fn} using @var{plan}.  The @var{fn}, @var{rvalue}, and
+@var{avalues} arguments have exactly the same meaning as for
+@code{ffi_call} (@pxref{The Basics}), including the rule that integral
+return values narrower than a register are widened to @code{ffi_arg}.
+
+A plan is immutable once built, so a single plan may be invoked
+concurrently from multiple threads without additional locking.
+@end defun
+
+@findex ffi_call_plan_free
+@defun void ffi_call_plan_free (ffi_call_plan *@var{plan})
+Releases a plan returned by @code{ffi_call_plan_alloc}.  Passing
+@code{NULL} is harmless.  The @code{ffi_cif} the plan was built from is
+not affected.
+@end defun
 
 @node The Closure API
 @section The Closure API
