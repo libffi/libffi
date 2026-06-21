@@ -56,7 +56,8 @@ else
 	          sudo apt-get install qemu-user-static
 	          ;;
 	      hppa-linux-gnu )
-	          sudo apt-get install -y qemu-user-static g++-5-hppa-linux-gnu
+	          # The gcc/g++-hppa-linux-gnu cross toolchain and qemu-user-static
+	          # are installed by the CROSS_QEMU block above; nothing extra here.
 	          ;;
 	      i386-pc-linux-gnu)
 	          sudo apt-get install gcc-multilib g++-multilib;
