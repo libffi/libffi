@@ -547,6 +547,9 @@ jobs:
           - HOST: powerpc-linux-gnu
           - HOST: sparc64-linux-gnu
           - HOST: mips64el-linux-gnuabi64
+          # PA-RISC 32-bit (FFI_PA32): exercises the struct-by-value
+          # marshalling regression in testsuite/libffi.call/many_small_structs.c.
+          - HOST: hppa-linux-gnu
     steps:
       - uses: actions/checkout@v4
 
