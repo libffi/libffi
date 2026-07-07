@@ -264,6 +264,10 @@ ffi_call_js, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
   var rtype_unboxed = unbox_small_structs(CIF__RTYPE(cif));
   var rtype_ptr = rtype_unboxed[0];
   var rtype_id = rtype_unboxed[1];
+  // A small struct return is unboxed to a scalar type id above, but it is
+  // still a struct to the caller: its buffer is exactly the struct's size,
+  // so it must not get the integral widening to ffi_arg.
+  var rtype_widen = FFI_TYPE__TYPEID(DEC_PTR(CIF__RTYPE(cif))) !== FFI_TYPE_STRUCT;
   var orig_stack_ptr = stackSave();
   var cur_stack_ptr = orig_stack_ptr;
 
@@ -464,16 +468,23 @@ ffi_call_js, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
   // Otherwise the result was automatically converted from C into Javascript and
   // we need to manually convert it back to C.
   // Integral returns narrower than a register are widened to ffi_arg, as
-  // documented and as every native port does.
+  // documented and as every native port does -- but only genuine scalar
+  // returns: an unboxed small-struct return keeps its natural width.
   switch (rtype_id) {
   case FFI_TYPE_VOID:
     break;
   case FFI_TYPE_INT:
   case FFI_TYPE_SINT32:
-    STORE_ARG_WIDENED_SIGNED(rvalue, result | 0);
+    if (rtype_widen)
+      STORE_ARG_WIDENED_SIGNED(rvalue, result | 0);
+    else
+      DEREF_U32(rvalue, 0) = result;
     break;
   case FFI_TYPE_UINT32:
-    STORE_ARG_WIDENED_UNSIGNED(rvalue, result | 0);
+    if (rtype_widen)
+      STORE_ARG_WIDENED_UNSIGNED(rvalue, result | 0);
+    else
+      DEREF_U32(rvalue, 0) = result;
     break;
   case FFI_TYPE_FLOAT:
     DEREF_F32(rvalue, 0) = result;
@@ -482,16 +493,28 @@ ffi_call_js, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
     DEREF_F64(rvalue, 0) = result;
     break;
   case FFI_TYPE_UINT8:
-    STORE_ARG_WIDENED_UNSIGNED(rvalue, result & 0xff);
+    if (rtype_widen)
+      STORE_ARG_WIDENED_UNSIGNED(rvalue, result & 0xff);
+    else
+      DEREF_U8(rvalue, 0) = result;
     break;
   case FFI_TYPE_SINT8:
-    STORE_ARG_WIDENED_SIGNED(rvalue, (result << 24) >> 24);
+    if (rtype_widen)
+      STORE_ARG_WIDENED_SIGNED(rvalue, (result << 24) >> 24);
+    else
+      DEREF_U8(rvalue, 0) = result;
     break;
   case FFI_TYPE_UINT16:
-    STORE_ARG_WIDENED_UNSIGNED(rvalue, result & 0xffff);
+    if (rtype_widen)
+      STORE_ARG_WIDENED_UNSIGNED(rvalue, result & 0xffff);
+    else
+      DEREF_U16(rvalue, 0) = result;
     break;
   case FFI_TYPE_SINT16:
-    STORE_ARG_WIDENED_SIGNED(rvalue, (result << 16) >> 16);
+    if (rtype_widen)
+      STORE_ARG_WIDENED_SIGNED(rvalue, (result << 16) >> 16);
+    else
+      DEREF_U16(rvalue, 0) = result;
     break;
   case FFI_TYPE_UINT64:
   case FFI_TYPE_SINT64:
