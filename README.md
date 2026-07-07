@@ -211,6 +211,10 @@ See the git log for details at http://github.com/libffi/libffi.
         Include .note.GNU-stack on FreeBSD/x86 (#991).
         Fix MSVC Win32 spin-lock atomics in bundled dlmalloc (#989).
         Harden static trampoline and x86_64 closure internals.
+        Fix ffi_call clobbering the caller's argument pointer array
+        when passing large structs by value.
+        Allow a NULL rvalue in ffi_call to discard the return value.
+        Fix wasm widening of integral returns narrower than ffi_arg.
 
     3.6.0 Jun-20-2026
         Add LoongArch32 support.
