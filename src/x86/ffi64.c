@@ -1277,7 +1277,7 @@ ffi_closure_unix64_inner(ffi_cif *cif,
       /* Otherwise, allocate space to make them consecutive.  */
       else
 	{
-	  char *a = alloca (16);
+	  char *a = alloca (n * 8);
 	  unsigned int j;
 
 	  avalue[i] = a;
