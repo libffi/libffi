@@ -267,6 +267,15 @@ ffi_call_js, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
   // just use this. We also mark a flag that we don't need to convert the return
   // value of the dynamic call back to C.
   if (rtype_id === FFI_TYPE_LONGDOUBLE || rtype_id === FFI_TYPE_STRUCT) {
+    if (rvalue === 0) {
+      // NULL rvalue: the caller discards the result, but the callee still
+      // needs somewhere to write it. Allocate scratch space on the stack;
+      // it is released by the stackRestore after the call.
+      var rsize = DEC_PTR(FFI_TYPE__SIZE(rtype_ptr));
+      var ralign = FFI_TYPE__ALIGN(rtype_ptr);
+      STACK_ALLOC(cur_stack_ptr, rsize, ralign);
+      rvalue = cur_stack_ptr;
+    }
     args.push(ENC_PTR(rvalue));
     ret_by_arg = true;
   }
@@ -427,6 +436,11 @@ ffi_call_js, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
   // We need to return by argument. If return value was a nontrivial struct or
   // long double, the onwards call already put the return value in rvalue
   if (ret_by_arg) {
+    return;
+  }
+
+  // A NULL rvalue means the caller discards the return value.
+  if (rvalue === 0) {
     return;
   }
 
