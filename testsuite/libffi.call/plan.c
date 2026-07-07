@@ -94,7 +94,7 @@ int main (void)
     ffi_type *selements[3];
     void *svalues[1];
     struct small_pair s;
-    long rc, rp;
+    ffi_arg rc, rp;
     ffi_call_plan *plans;
 
     selements[0] = &ffi_type_slong;
@@ -116,7 +116,7 @@ int main (void)
     ffi_call(&cifs, FFI_FN(ssum), &rc, svalues);
     ffi_call_plan_invoke(plans, FFI_FN(ssum), &rp, svalues);
     CHECK(rc == rp);
-    CHECK(rp == ssum(s));
+    CHECK((long) rp == ssum(s));
     ffi_call_plan_free(plans);
   }
 
