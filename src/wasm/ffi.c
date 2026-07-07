@@ -70,6 +70,13 @@ EM_JS_DEPS(libffi, "$getWasmTableEntry,$setWasmTableEntry,$getEmptyTableSlot,$co
 #define DEREF_PTR(addr, offset) DEREF_U32(addr, offset)
 #define DEREF_PTR_NUMBER(addr, offset) DEREF_PTR(addr, offset)
 
+// Store an integral return value widened to ffi_arg (32 bits on wasm32), as
+// the libffi API promises for integral returns narrower than a register.
+// The typed-array store wraps modulo 2^32, so a sign-extended negative
+// Number is stored correctly by both variants.
+#define STORE_ARG_WIDENED_UNSIGNED(rvalue, x) (DEREF_U32(rvalue, 0) = (x))
+#define STORE_ARG_WIDENED_SIGNED(rvalue, x) (DEREF_U32(rvalue, 0) = (x))
+
 CHECK_FIELD_OFFSET(ffi_cif, abi, 4*0);
 CHECK_FIELD_OFFSET(ffi_cif, nargs, 4*1);
 CHECK_FIELD_OFFSET(ffi_cif, arg_types, 4*2);
@@ -108,6 +115,16 @@ CHECK_FIELD_OFFSET(ffi_type, elements, 8);
 
 #define DEREF_PTR(addr, offset) DEREF_U64(addr, offset)
 #define DEREF_PTR_NUMBER(addr, offset) DEC_PTR(DEREF_PTR(addr, offset))
+
+// Store an integral return value widened to ffi_arg (64 bits on wasm64), as
+// the libffi API promises for integral returns narrower than a register.
+// BigInt masking treats the value as infinite-precision two's complement, so
+// the unsigned variant zero-extends a possibly-negative i32 Number, while
+// the BigUint64Array store wraps the signed variant modulo 2^64, which is
+// sign extension.
+#define STORE_ARG_WIDENED_UNSIGNED(rvalue, x) \
+  (DEREF_U64(rvalue, 0) = BigInt(x) & BigInt(4294967295))
+#define STORE_ARG_WIDENED_SIGNED(rvalue, x) (DEREF_U64(rvalue, 0) = BigInt(x))
 
 CHECK_FIELD_OFFSET(ffi_cif, abi, 0);
 CHECK_FIELD_OFFSET(ffi_cif, nargs, 4);
@@ -446,13 +463,17 @@ ffi_call_js, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
 
   // Otherwise the result was automatically converted from C into Javascript and
   // we need to manually convert it back to C.
+  // Integral returns narrower than a register are widened to ffi_arg, as
+  // documented and as every native port does.
   switch (rtype_id) {
   case FFI_TYPE_VOID:
     break;
   case FFI_TYPE_INT:
-  case FFI_TYPE_UINT32:
   case FFI_TYPE_SINT32:
-    DEREF_U32(rvalue, 0) = result;
+    STORE_ARG_WIDENED_SIGNED(rvalue, result | 0);
+    break;
+  case FFI_TYPE_UINT32:
+    STORE_ARG_WIDENED_UNSIGNED(rvalue, result | 0);
     break;
   case FFI_TYPE_FLOAT:
     DEREF_F32(rvalue, 0) = result;
@@ -461,12 +482,16 @@ ffi_call_js, (ffi_cif *cif, ffi_fp fn, void *rvalue, void **avalue),
     DEREF_F64(rvalue, 0) = result;
     break;
   case FFI_TYPE_UINT8:
+    STORE_ARG_WIDENED_UNSIGNED(rvalue, result & 0xff);
+    break;
   case FFI_TYPE_SINT8:
-    DEREF_U8(rvalue, 0) = result;
+    STORE_ARG_WIDENED_SIGNED(rvalue, (result << 24) >> 24);
     break;
   case FFI_TYPE_UINT16:
+    STORE_ARG_WIDENED_UNSIGNED(rvalue, result & 0xffff);
+    break;
   case FFI_TYPE_SINT16:
-    DEREF_U16(rvalue, 0) = result;
+    STORE_ARG_WIDENED_SIGNED(rvalue, (result << 16) >> 16);
     break;
   case FFI_TYPE_UINT64:
   case FFI_TYPE_SINT64:
