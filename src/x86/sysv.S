@@ -1269,6 +1269,6 @@ L(EFDE9):
 
 #endif /* ifdef __i386__ */
 
-#if defined __ELF__ && defined __linux__
+#if defined __ELF__ && (defined __linux__ || defined __FreeBSD__)
 	.section	.note.GNU-stack,"",@progbits
 #endif
