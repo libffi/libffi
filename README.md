@@ -203,7 +203,7 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
-    3.7.0 TBD
+    3.7.0 July-7-2026
         Add reusable call plans (ffi_call_plan_alloc/ffi_call_plan_invoke/ffi_call_plan_free).
         Fix PA-RISC build broken by the conditional __int128 support added in 3.6.0.
         Fix PA-RISC stack overflow passing many small structs by value.
@@ -212,7 +212,7 @@ See the git log for details at http://github.com/libffi/libffi.
         Fix MSVC Win32 spin-lock atomics in bundled dlmalloc (#989).
         Harden static trampoline and x86_64 closure internals.
         Fix ffi_call clobbering the caller's argument pointer array
-        when passing large structs by value.
+          when passing large structs by value.
         Allow a NULL rvalue in ffi_call to discard the return value.
         Fix wasm widening of integral returns narrower than ffi_arg.
 
