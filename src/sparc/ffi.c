@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   ffi.c - Copyright (c) 2011, 2013 Anthony Green
+   ffi.c - Copyright (c) 2011, 2013, 2026 Anthony Green
            Copyright (c) 1996, 2003-2004, 2007-2008 Red Hat, Inc.
    
    SPARC Foreign Function Interface 

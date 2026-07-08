@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   ffiw64.c - Copyright (c) 2018 Anthony Green
+   ffiw64.c - Copyright (c) 2018, 2026 Anthony Green
               Copyright (c) 2014 Red Hat, Inc.
 
    x86 win64 Foreign Function Interface

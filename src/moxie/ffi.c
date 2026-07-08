@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   ffi.c - Copyright (C) 2012, 2013, 2018, 2021, 2022  Anthony Green
+   ffi.c - Copyright (C) 2012, 2013, 2018, 2021, 2022, 2026  Anthony Green
 
    Moxie Foreign Function Interface
 

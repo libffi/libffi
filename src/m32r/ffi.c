@@ -1,7 +1,7 @@
 /* -----------------------------------------------------------------------
    ffi.c - Copyright (c) 2004  Renesas Technology
            Copyright (c) 2008  Red Hat, Inc.
-           Copyright (c) 2022  Anthony Green
+           Copyright (c) 2022, 2026  Anthony Green
 
    M32R Foreign Function Interface
 

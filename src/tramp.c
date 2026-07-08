@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------------
    tramp.c - Copyright (c) 2020 Madhavan T. Venkataraman
-             Copyright (c) 2022 Anthony Green
+             Copyright (c) 2022, 2026 Anthony Green
 
    API and support functions for managing statically defined closure
    trampolines.

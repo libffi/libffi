@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   prep_cif.c - Copyright (c) 2011, 2012, 2021, 2025  Anthony Green
+   prep_cif.c - Copyright (c) 2011, 2012, 2021, 2025, 2026  Anthony Green
                 Copyright (c) 1996, 1998, 2007  Red Hat, Inc.
                 Copyright (c) 2022 Oracle and/or its affiliates.
 
