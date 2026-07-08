@@ -1,5 +1,6 @@
 /* -----------------------------------------------------------------------
    ffi.c - Copyright (c) 2018-2023  Hood Chatham, Brion Vibber, Kleis Auke Wolthuizen, and others.
+           Copyright (c) 2026  Anthony Green
 
    wasm32/emscripten Foreign Function Interface
 

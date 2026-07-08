@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------
-   ffi.c - (c) 2011 Anthony Green
+   ffi.c - (c) 2011, 2026 Anthony Green
            (c) 2008 Red Hat, Inc.
 	   (c) 2006 Free Software Foundation, Inc.
            (c) 2003-2004 Randolph Chung <tausq@debian.org>
