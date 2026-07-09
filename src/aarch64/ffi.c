@@ -550,7 +550,9 @@ allocate_int128_to_reg_or_stack (struct call_context *context,
   ngrn += ngrn & 1;
 #endif
 
-  if (ngrn < N_X_ARG_REG)
+  /* The value must fit entirely in registers, i.e. the low half may
+     not be allocated to x7 with the high half spilled to the stack.  */
+  if (ngrn + 2 <= N_X_ARG_REG)
     {
       ret = &context->x[ngrn];
       ngrn += 2;
