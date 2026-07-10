@@ -600,7 +600,11 @@ jobs:
   publish-reports:
     name: Publish rlgl reports
     needs: [build-linux, build-non-msvc, build-msvc, build-android, build-qemu, build-cross-qemu, build-macos-x86]
-    if: ${{ always() && github.event_name != 'pull_request' && github.repository == 'libffi/libffi' }}
+    # Skip on tag pushes: a tag and its commit fire two runs at the same SHA,
+    # and both deploying the fixed-name github-pages artifact collide (one
+    # fails with BlobNotFound).  The same-SHA branch push already publishes
+    # the reports, so the tag run's attempt is redundant.
+    if: ${{ always() && github.event_name != 'pull_request' && github.repository == 'libffi/libffi' && github.ref_type != 'tag' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
