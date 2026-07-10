@@ -245,21 +245,40 @@ jobs:
         run: echo "::notice title=rlgl report::https://libffi.github.io/libffi/reports/${{ github.run_id }}/${{ github.job }}-${{ strategy.job-index }}/"
 
   build-msvc:
-    name: Windows ${{ matrix.width }}-bit Visual C++
-    runs-on: windows-latest
+    name: Windows ${{ matrix.display }} Visual C++
+    runs-on: ${{ matrix.runner }}
 
     strategy:
       fail-fast: false
       matrix:
         include:
           - host: i686-pc-cygwin
-            width: 32
+            display: 32-bit
+            runner: windows-latest
+            mflag: -m32
             arch: x86
+            rcedit_arch: x86
+            pkg: x86-32bit
             tools: amd64_x86
           - host: x86_64-w64-mingw32
-            width: 64
+            display: 64-bit
+            runner: windows-latest
+            mflag: -m64
             arch: x64
+            rcedit_arch: x64
+            pkg: x86-64bit
             tools: amd64
+          # ARM64: Cygwin and the amd64_arm64 cross tools are x64-hosted
+          # and run under the runner's x64 emulation; the ARM64 binaries
+          # they produce (and the testsuite) execute natively.
+          - host: aarch64-w64-mingw32
+            display: ARM64
+            runner: windows-11-arm
+            mflag: -marm64
+            arch: arm64
+            rcedit_arch: x64
+            pkg: arm64
+            tools: amd64_arm64
 
     steps:
       - run: git config --global core.autocrlf input
@@ -296,8 +315,8 @@ jobs:
             --enable-shared \
             --build="${{ matrix.host }}" --host="${{ matrix.host }}" \
             --disable-docs \
-            CC="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
-            CXX="$(pwd)/msvcc.sh -m${{ matrix.width }}" \
+            CC="$(pwd)/msvcc.sh ${{ matrix.mflag }}" \
+            CXX="$(pwd)/msvcc.sh ${{ matrix.mflag }}" \
             LD="link" \
             LDFLAGS="-no-undefined" \
             CPP="cl -nologo -EP" \
@@ -358,7 +377,7 @@ jobs:
           fi
 
           # Use rcedit to edit the DLLs resources
-          wget -O rcedit.exe https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-${{ matrix.arch }}.exe
+          wget -O rcedit.exe https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-${{ matrix.rcedit_arch }}.exe
           chmod +x ./rcedit.exe
 
           dll_filename=libffi-8.dll
@@ -378,7 +397,7 @@ jobs:
           cd $(cygpath $RUNNER_WORKSPACE)/libffi
           set -euxo pipefail
 
-          pkgdir="libffi-${{ steps.ver.outputs.version }}-x86-${{ matrix.width }}bit-msvc-binaries"
+          pkgdir="libffi-${{ steps.ver.outputs.version }}-${{ matrix.pkg }}-msvc-binaries"
           mkdir -p "$pkgdir"
 
           # Copy libraries, headers, and licence into the *same* directory
@@ -389,8 +408,8 @@ jobs:
       - name: Upload artefact
         uses: actions/upload-artifact@v4
         with:
-          name: libffi-${{ steps.ver.outputs.version }}-x86-${{ matrix.width }}bit-msvc-binaries
-          path: libffi-${{ steps.ver.outputs.version }}-x86-${{ matrix.width }}bit-msvc-binaries
+          name: libffi-${{ steps.ver.outputs.version }}-${{ matrix.pkg }}-msvc-binaries
+          path: libffi-${{ steps.ver.outputs.version }}-${{ matrix.pkg }}-msvc-binaries
           if-no-files-found: error
 
       # The binary distribution above is a directory; zip it so the release
@@ -400,7 +419,7 @@ jobs:
         if: github.ref_type == 'tag'
         shell: pwsh
         run: |
-          $d = "libffi-${{ steps.ver.outputs.version }}-x86-${{ matrix.width }}bit-msvc-binaries"
+          $d = "libffi-${{ steps.ver.outputs.version }}-${{ matrix.pkg }}-msvc-binaries"
           Compress-Archive -Path "$d/*" -DestinationPath "$d.zip" -Force
 
       - name: Upload to GitHub Release
@@ -408,7 +427,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           fail_on_unmatched_files: true
-          files: libffi-${{ steps.ver.outputs.version }}-x86-${{ matrix.width }}bit-msvc-binaries.zip
+          files: libffi-${{ steps.ver.outputs.version }}-${{ matrix.pkg }}-msvc-binaries.zip
 
   build-android:
     name: Android ${{ matrix.host }}
