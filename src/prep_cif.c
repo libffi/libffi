@@ -280,11 +280,14 @@ ffi_get_struct_offsets (ffi_abi abi, ffi_type *struct_type, size_t *offsets)
 }
 
 /* Generic ffi_call_plan: a portable fallback compiled on every target that does
-   not provide its own accelerated implementation.  The x86-64 backend defines
-   these (with a fast path) under __x86_64__ && !__ILP32__; everywhere else this
-   plan just records the cif and invoke calls ffi_call, so the API is always
-   present and links on all targets.  The cif must outlive the plan. */
-#if !(defined(__x86_64__) && !defined(__ILP32__))
+   not provide its own accelerated implementation.  The x86-64 SysV backend
+   (ffi64.c) defines these with a fast path under __x86_64__ && !__ILP32__, but
+   that file is not built for Windows x86-64 (X86_WIN64), which uses ffiw64.c
+   instead -- and clang-cl and MSYS/mingw both define __x86_64__ there.  So
+   exclude the fallback only when ffi64.c actually provides it; everywhere else
+   this plan just records the cif and invoke calls ffi_call, so the API is
+   always present and links on all targets.  The cif must outlive the plan. */
+#if !(defined(__x86_64__) && !defined(__ILP32__) && !defined(X86_WIN64))
 
 struct ffi_call_plan
 {
