@@ -644,6 +644,23 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	break;
       }
 
+  /* Composites larger than 16 bytes (that are not HFAs) are passed by
+     invisible reference: ffi_call copies the payload into the argument
+     slab (next_struct_area, growing down) and, once the X registers are
+     exhausted, also spills the by-ref pointer into the same slab (the
+     NSAA, growing up).  The generic prep_cif accounting in cif->bytes
+     only charges the payload copy, not that 8-byte pointer slot, so the
+     two regions can collide and a later struct copy can overwrite an
+     already-spilled pointer with the copied payload bytes.  Reserve an
+     extra 8 bytes per such argument so the slab is always large enough
+     for both.  */
+  for (i = 0, n = cif->nargs; i < n; i++)
+    {
+      ffi_type *ty = cif->arg_types[i];
+      if (ty->size > 16 && !is_vfp_type (ty))
+	bytes += 8;
+    }
+
   /* Round the stack up to a multiple of the stack alignment requirement. */
   cif->bytes = (unsigned) FFI_ALIGN(bytes, 16);
   cif->flags = flags;
