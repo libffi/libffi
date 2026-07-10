@@ -554,8 +554,14 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
       return flags | (cif->bytes << X86_RET_POP_SHIFT);
     case FFI_THISCALL:
     case FFI_FASTCALL:
-      return flags | ((cif->bytes - (narg_reg * FFI_SIZEOF_ARG))
-          << X86_RET_POP_SHIFT);
+      /* The callee must pop exactly the bytes that were passed on the
+	 stack.  Deriving that from cif->bytes minus narg_reg * 4 is wrong
+	 once narg_reg has been force-bumped to 2 (above) for a 64-bit or
+	 struct argument that is itself placed on the stack: the subtraction
+	 then discounts register slots that were never used, under-popping
+	 the stack.  argp has advanced past exactly the stack-resident
+	 arguments (dir == 1 for these ABIs), so use that directly.  */
+      return flags | (((unsigned) (argp - stack)) << X86_RET_POP_SHIFT);
     default:
       return flags;
     }
