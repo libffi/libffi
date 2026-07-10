@@ -94,6 +94,13 @@ do
       cl="clang-cl"
       shift 1
     ;;
+    -E)
+      # DejaGnu-style preprocessing (-E -o <file>): handled specially
+      # below, since cl writes preprocessed output to stdout and prints
+      # the source file name to stderr.
+      preprocess="true"
+      shift 1
+    ;;
     -O0)
       args="$args -Od"
       shift 1
@@ -242,6 +249,7 @@ do
     -o)
       outdir="$(dirname $2)"
       base="$(basename $2|sed 's/\.[^.]*//g')"
+      ppout="$2"
       if [ -n "$single" ]; then 
         output="-Fo$2"
       else
@@ -294,7 +302,19 @@ if [ -n "$debug_crt" ]; then
     md="${md}d"
 fi
 
-if [ -n "$assembly" ]; then
+if [ -n "$preprocess" ]; then
+    # Write the preprocessed output to the -o target (or stdout), and
+    # swallow stderr: cl prints the source file name there, which the
+    # testsuite's feature probes would mistake for a diagnostic.
+    args="$(echo $args | sed 's%[-/]F[edpoa][^ ]*%%g')"
+
+    if test -n "$verbose"; then
+      echo "$cl -EP $args > ${ppout:-/dev/stdout}"
+    fi
+
+    eval "\"$cl\" -EP $args" > "${ppout:-/dev/stdout}" 2>/dev/null
+    result=$?
+elif [ -n "$assembly" ]; then
     if [ -z "$outdir" ]; then
       outdir="."
     fi
