@@ -6,6 +6,7 @@
    PR:		none.
    Originator:	<andreast@gcc.gnu.org> 20030828	 */
 
+/* { dg-do run } */
 
 #include "ffitest.h"
 

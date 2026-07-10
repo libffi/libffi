@@ -243,20 +243,25 @@ do
       shift 1
     ;;
     -S)
-      args="$args -FAs"
+      # Compile to assembly without linking, like gcc -S: emit the
+      # listing and stop after the compile step.
+      args="$args -c -FAs"
+      compile_to_asm="true"
       shift 1
     ;;
     -o)
       outdir="$(dirname $2)"
       base="$(basename $2|sed 's/\.[^.]*//g')"
       ppout="$2"
-      if [ -n "$single" ]; then 
+      if [ -n "$compile_to_asm" ]; then
+        output="-Fo$outdir/$base.obj -Fa$2"
+      elif [ -n "$single" ]; then
         output="-Fo$2"
       else
         output="-Fe$2"
       fi
       armasm_output="-o $2"
-      if [ -n "$assembly" ]; then
+      if [ -n "$assembly" ] || [ -n "$compile_to_asm" ]; then
         args="$args $output"
       else
         args="$args $output -Fd$outdir/$base -Fp$outdir/$base -Fa$outdir/$base"
