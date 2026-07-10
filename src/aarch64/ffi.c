@@ -378,13 +378,13 @@ extend_integer_type (void *source, int type)
     }
 }
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 void extend_hfa_type (void *dest, void *src, int h);
 #else
 static void
 extend_hfa_type (void *dest, void *src, int h)
 {
-  ssize_t f = h - AARCH64_RET_S4;
+  ptrdiff_t f = h - AARCH64_RET_S4;
   void *x0;
 
 #define BTI_J "hint #36"
@@ -449,7 +449,7 @@ extend_hfa_type (void *dest, void *src, int h)
 }
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 void* compress_hfa_type (void *dest, void *src, int h);
 #else
 static void *
