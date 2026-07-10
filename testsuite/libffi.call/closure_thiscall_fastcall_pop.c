@@ -34,36 +34,45 @@ cb (ffi_cif *cif, void *resp, void **args, void *userdata)
 
 /* Push an 8-byte stack argument, load ECX (the thiscall "this" register,
    ignored by the fastcall callee), call the closure, and return how many
-   bytes ESP moved by (0 == the callee popped exactly what was pushed).
-   ESP is forced back to its saved value before returning so a wrong pop
-   cannot corrupt our frame.
+   bytes the callee under-popped (0 == it popped exactly what was pushed).
 
-   Compiled at -O0 so all operands are frame-pointer relative and stay
-   valid across the manual pushes; marking eax/ecx/edx clobbered forces
-   'before'/'after' into callee-saved registers that survive the call.  */
-#if defined(__clang__)
-__attribute__((optnone))
-#else
-__attribute__((optimize("O0")))
-#endif
+   Every operand is read into a register up front, while ESP is still at
+   its incoming value, so nothing is referenced through an ESP-relative
+   memory operand after we start moving ESP (which would otherwise read a
+   stale slot, on clang at -O2 in particular).  The stack is then 16-byte
+   aligned at the call as the i386 psABI requires, so the -O2-built closure
+   body may use aligned SSE without faulting; the alignment cancels out of
+   the delta.  ESP is restored to its exact incoming value before the delta
+   is stored, so a wrong pop cannot corrupt our frame.  Not using EBX keeps
+   this compatible with -fPIC; the delta is returned via memory so no free
+   register is needed for it.  */
 static int
 esp_delta (void *code, uint64_t stackarg, unsigned ecxv)
 {
-  unsigned before, after;
+  unsigned delta;
   unsigned lo = (unsigned) stackarg;
   unsigned hi = (unsigned) (stackarg >> 32);
   __asm__ volatile (
-      "movl %[ecxv], %%ecx\n\t"
-      "movl %%esp, %[before]\n\t"
-      "pushl %[hi]\n\t"
-      "pushl %[lo]\n\t"
-      "calll *%[code]\n\t"
-      "movl %%esp, %[after]\n\t"
-      "movl %[before], %%esp\n\t"
-      : [before] "=&r" (before), [after] "=&r" (after)
+      "movl %[lo], %%eax\n\t"       /* stash all operands in registers   */
+      "movl %[hi], %%edx\n\t"       /* before ESP moves                  */
+      "movl %[code], %%edi\n\t"
+      "movl %[ecxv], %%ecx\n\t"     /* thiscall 'this'                   */
+      "movl %%esp, %%esi\n\t"       /* remember the real esp             */
+      "andl $-16, %%esp\n\t"        /* 16-byte align, then bias by the   */
+      "subl $8, %%esp\n\t"          /* 8 arg bytes so 'call' is 0 mod 16 */
+      "pushl %%edx\n\t"             /* high dword                        */
+      "pushl %%eax\n\t"             /* low dword                         */
+      "calll *%%edi\n\t"
+      "movl %%esi, %%eax\n\t"       /* recompute esp just before the     */
+      "andl $-16, %%eax\n\t"        /* pushes...                         */
+      "subl $8, %%eax\n\t"
+      "subl %%esp, %%eax\n\t"       /* eax = under-popped byte count     */
+      "movl %%esi, %%esp\n\t"       /* restore before touching memory    */
+      "movl %%eax, %[delta]\n\t"
+      : [delta] "=m" (delta)
       : [lo] "m" (lo), [hi] "m" (hi), [code] "m" (code), [ecxv] "m" (ecxv)
-      : "memory", "cc", "eax", "ecx", "edx");
-  return (int) (before - after);
+      : "memory", "cc", "eax", "ecx", "edx", "esi", "edi");
+  return (int) delta;
 }
 
 static int
