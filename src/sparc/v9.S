@@ -41,6 +41,20 @@
 #endif
 #define L(Y)	C1(.L, Y)
 
+#ifndef __GNUC__
+        .align 8
+	.globl	C(ffi_flush_icache)
+	.type	C(ffi_flush_icache),#function
+	FFI_HIDDEN(C(ffi_flush_icache))
+
+C(ffi_flush_icache):
+1:	flush %o0
+	flush %o0+8
+	retl
+	 nop
+	.size	C(ffi_flush_icache), . - C(ffi_flush_icache)
+#endif
+
 #if defined(__sun__) && defined(__svr4__)
 # define E(INDEX)	.align 16
 #else
