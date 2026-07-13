@@ -465,6 +465,10 @@ proc libffi_feature_test { test } {
     puts $f "int main() {return 0;}"
     close $f
 
+    # On z/OS, files written by Tcl are untagged (EBCDIC); tag as ASCII
+    # so the C compiler reads them correctly.
+    catch {exec chtag -tc ISO8859-1 $src}
+
     set lines [libffi_target_compile $src $src.i preprocess ""]
     file delete $src
     file delete $src.i

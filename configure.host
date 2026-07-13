@@ -80,6 +80,11 @@ case "${host}" in
 	SOURCES="ffi.c hpux32.S"
 	;;
 
+  i370-*)
+	TARGET=ZOS; TARGETDIR=z
+	SOURCES="ffi.c xplink.S closure_xplink.S"
+	;;
+
   i?86-*-freebsd* | i?86-*-openbsd*)
 	TARGET=X86_FREEBSD; TARGETDIR=x86
 	;;
