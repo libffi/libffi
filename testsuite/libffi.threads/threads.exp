@@ -40,6 +40,10 @@ if { [string match $compiler_vendor "microsoft"] || [istarget "wasm*-*-*"] } {
         unsupported "$test"
     }
 } else {
+    # z/OS requires _OPEN_THREADS to expose pthread declarations
+    if { [istarget "*-*-openedition*"] || [istarget "i370-ibm-openedition"] } {
+        append additional_options " -D_OPEN_THREADS"
+    }
     run-many-tests $tlist $additional_options
 }
 
