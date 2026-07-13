@@ -19,6 +19,11 @@ FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
 
          LG 14,0(,2)           ecif->cif
          LG 14,8(,14)          cif->arg_types
+         STMG 0,15,SAVREGS     save live GPRs across helper calls
+         STD 0,SAVFPRS
+         STD 2,SAVFPRS+8
+         STD 4,SAVFPRS+16
+         STD 6,SAVFPRS+24
 *What: Storing arguments in this routine's
 *      local storage for future use
 *Name:    ffi_prep_args_call
@@ -63,7 +68,7 @@ FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
 
 GETNARGS DS 0H
 *Get the cif->nargs from caller's stack
-         L   9,(2176+(((DSASZ+31)/32)*32)+44)(,4) 
+         LGF 9,(2176+(((DSASZ+31)/32)*32)+44)(,4)
 *         CGIJE 9,0,CALL
          CFI 9,0
          BE CALL
@@ -72,8 +77,8 @@ GETNARGS DS 0H
 ARGLOOP  LG  11,0(10,5)       Get pointer to current ffi_type
          LLGC 11,11(11)       ffi_type->type
          SLL 11,2             Find offset in branch tabel
-         LA  15,ATABLE        
-         L   15,0(11,15)      
+         LA  15,ATABLE
+         L   15,0(11,15)
          AFI 7,7
          N 7,=X'FFFFFFF8'
          BR  15
@@ -926,7 +931,7 @@ CALL     DS 0H
 *         SR 11,11
          LA 11,0
          LG 6,(2176+(((DSASZ+31)/32)*32))(,4)
-         L 11,(2176+(((DSASZ+31)/32)*32)+20)(,4)
+         LGF 11,(2176+(((DSASZ+31)/32)*32)+20)(,4)
 
          LG 12,(2176+(((DSASZ+31)/32)*32)+8)(,4) ecif
          LG 12,0(,12) ecif->cif
@@ -1237,5 +1242,7 @@ TEST DS XL8
 * TODO check long doubles, might be 8*8
 SSTOR DS  XL32
 SSIZE DS  XL8
+SAVREGS DS XL128
+SAVFPRS DS XL32
 DSASZ    EQU (*-CEEDSAHP_FIXED)
  END FFISYS
