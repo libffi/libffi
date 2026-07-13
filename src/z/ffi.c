@@ -75,6 +75,8 @@ void ffi_prep_args (unsigned char *, extended_cif *);
 void ffi_closure_helper_SYSV (ffi_closure *, void *, struct ffi_reg_data *);
 #pragma map(ffi_determine_return_type, "DETRET")
 int ffi_determine_return_type(ffi_closure *);
+#pragma map(ffi_xplink_type_code, "TYPCLASS")
+unsigned short ffi_xplink_type_code (ffi_type *);
 
 // void ffi_closure_helper_SYSV (ffi_closure *, unsigned long *, 
 //                          unsigned long long *, unsigned long *);
@@ -350,7 +352,23 @@ ffi_check_struct_for_complex(ffi_type *arg_type)
       }
     }
   }
+  else if ((FFI_TYPE_COMPLEX == arg_type->type) && (NULL != arg_type->elements[0]))
+  {
+    unsigned short elementType = get_ffi_element_type_in_struct(arg_type->elements[0]);
+    if (FFI_TYPE_FLOAT == elementType)
+      return FFI_TYPE_STRUCT_FF;
+    else if (FFI_TYPE_DOUBLE == elementType)
+      return FFI_TYPE_STRUCT_DD;
+    else if (FFI_TYPE_LONGDOUBLE == elementType)
+      return FFI_TYPE_STRUCT_LDLD;
+  }
   return arg_type->type;
+}
+
+unsigned short
+ffi_xplink_type_code (ffi_type *arg_type)
+{
+  return ffi_check_struct_for_complex (arg_type);
 }
 
 /*====================================================================*/
@@ -456,19 +474,16 @@ ffi_prep_cif_machdep(ffi_cif *cif)
        i > 0;
        i--, ptr++)
     {
-      int type = (*ptr)->type;
+      int type = ffi_xplink_type_code (*ptr);
 
       /* Check how a structure type is passed.  */
-      if (type == FFI_TYPE_STRUCT) 
+      if (type == FFI_TYPE_STRUCT)
         {
-          
           type = ffi_check_struct_type (*ptr);
-		      //(*ptr)->type = ffi_check_struct_for_complex(*ptr);
           /* If we pass the struct via pointer, we must reserve space
              to copy its data for proper call-by-value semantics.  */
           if (type == FFI_TYPE_POINTER)
             struct_size += ROUND_SIZE ((*ptr)->size);
-        
         }
 
       /* Now handle all primitive int/float data types.  */
@@ -575,42 +590,7 @@ ffi_call(ffi_cif *cif,
   switch (cif->abi)
     {
       case FFI_XPLINK:
-
-        // do this in call, doing it outside the call contaminates the 
-        // cif which is a huge pain for parts of ctypes relying on "standard"
-        // type information, we can do it here self contained, then undo it.
-        if (cif->rtype->type == FFI_TYPE_STRUCT) {
-          cif->rtype->type = ffi_check_struct_for_complex(cif->rtype);
-        }
-	if (cif->rtype->type == FFI_TYPE_STRUCT_LDLD) {
-		cif->flags = FFI390_RET_STRUCT;
-	}
-
-        for (int i = 0; i < cif->nargs; i++) {
-          if (cif->arg_types[i]->type == FFI_TYPE_STRUCT) {
-            cif->arg_types[i]->type = ffi_check_struct_for_complex(cif->arg_types[i]);
-          }
-        }
-
         ffi_call_SYSV(fn, &ecif, cif->flags, ecif.rvalue, cif->bytes, cif->nargs);
-
-        // undo the aforementioned type sourcery.
-        if ((cif->rtype->type == FFI_TYPE_STRUCT_DD) || (cif->rtype->type == FFI_TYPE_STRUCT_FF) || (cif->rtype->type == FFI_TYPE_STRUCT_LDLD)) {
-          cif->rtype->type = FFI_TYPE_STRUCT;
-        }
-
-        for (int i = 0; i < cif->nargs; i++) {
-          if (cif->arg_types[i]->type == FFI_TYPE_STRUCT_DD) {
-            cif->arg_types[i]->type = FFI_TYPE_STRUCT;
-          }
-          else if (cif->arg_types[i]->type == FFI_TYPE_STRUCT_FF) {
-            cif->arg_types[i]->type = FFI_TYPE_STRUCT;
-          }
-          else if (cif->arg_types[i]->type == FFI_TYPE_STRUCT_LDLD) {
-            cif->arg_types[i]->type = FFI_TYPE_STRUCT;
-          }
-        }
-
 
 #ifdef FFI_DEBUG
         printf("called_ffi_call_sysv nargs=%d\n",cif->nargs);
@@ -650,11 +630,14 @@ int ffi_determine_return_type(ffi_closure *closure) {
 
 
   ffi_type *type = closure->cif->rtype;
+  unsigned short type_code;
   if (type == NULL) {
     return 1; // do nothing
   }
 
-  switch(type->type) {
+  type_code = ffi_xplink_type_code (type);
+
+  switch(type_code) {
     
     case FFI_TYPE_UINT8:
     case FFI_TYPE_SINT8:
@@ -690,18 +673,17 @@ int ffi_determine_return_type(ffi_closure *closure) {
       }
       break;
 
+    case FFI_TYPE_STRUCT_DD:
+      return 6; // fpr0+2
+
+    case FFI_TYPE_STRUCT_FF:
+      return 7; // fpr0+2+4 (floats)
+
+    case FFI_TYPE_STRUCT_LDLD:
+      return 8; // fpr0+2+4+6
+
     case FFI_TYPE_STRUCT:
-      unsigned short struct_subtype = ffi_check_struct_for_complex(type);
-      if (struct_subtype == FFI_TYPE_STRUCT_DD) {
-        return 6; // fpr0+2
-      }
-      else if (struct_subtype == FFI_TYPE_STRUCT_FF) {
-        return 7; // fpr0+2 (floats)
-      }
-      else if (struct_subtype == FFI_TYPE_STRUCT_LDLD) {
-        return 8; // fpr0+2+4+6
-      }
-      else if (type->size <= 8) {
+      if (type->size <= 8) {
         return 2; // grp1
       }
       else if (type->size <= 16) {
@@ -739,9 +721,9 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
   int ret_size;
   ffi_cif *cif = closure->cif;
 
-  unsigned short struct_subtype;
+  unsigned short struct_subtype = FFI_TYPE_VOID;
   if(cif->rtype) {
-    struct_subtype = ffi_check_struct_for_complex(cif->rtype);
+    struct_subtype = ffi_xplink_type_code(cif->rtype);
   }
 
   int num_args = cif->nargs;
@@ -787,7 +769,7 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
   }
 
   for (int i = 0; i < cif->nargs; i++) {
-    switch (atype[i]->type) {
+    switch (ffi_xplink_type_code (atype[i])) {
       case FFI_TYPE_UINT8:
       case FFI_TYPE_SINT8:
         if (n_gprs == 3) {
