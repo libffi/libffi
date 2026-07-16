@@ -8,7 +8,7 @@ FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
 *@2124(,4) <- ecif->rvalue (+24)?
 *@2128(,4) <- cif->bytes (+36)?
 *@2132(,4) <- cif->nargs (+44)?
-*@2136(,4) <- cif->arg_types->size (+52)?
+*@2136(,4) <- cif->nfixedargs (+52)?
 
          USING  CEEDSAHP,4
 
@@ -69,6 +69,10 @@ FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
 GETNARGS DS 0H
 *Get the cif->nargs from caller's stack
          LGF 9,(2176+(((DSASZ+31)/32)*32)+44)(,4)
+*Get the cif->nfixedargs countdown into r12
+*r12 counts down from nfixedargs to 0; when it hits 0 we
+*force r14=4 (FPR counter exhausted) so FLT/D go via GPR path
+         LGF 12,(2176+(((DSASZ+31)/32)*32)+52)(,4)
 *         CGIJE 9,0,CALL
          CFI 9,0
          BE CALL
@@ -428,11 +432,16 @@ U64ARGA  DS 0H                u_INT64 in arg area
          B CONT               Next parameter
    
 FLT      DS 0H                ffi_type_float
+* for variadics 12 is number of fixed args left
+* if it's zero we just use GPRs/memory no FPRs
+* branch to the unsigned int32 label for that 
+         CFI  12,0
+         BE   UI32
          LA 15,FLTS
          LR 11,14
          SLL 11,2             Pass in fpr or arg area
          L 15,0(11,15)
-         CFI 14,4             FPRs left to pass parms in?            
+         CFI 14,4             FPRs left to pass parms in?
          BL INC7L
          LA 14,4              Reached max fprs
          B JL7
@@ -473,6 +482,12 @@ FLTSTR   DS 0H
          B CONT               Next parameter
 
 D        DS 0H                ffi_type_double
+* for variadics 12 is number of fixed args left
+* if it's zero we just use GPRs/memory no FPRs
+* branch to the unsigned int64 label for that 
+         CFI  12,0
+         BE   UI64
+DBLNVP   DS   0H
          LA 15,FLD
          LR 11,14
          SLL 11,2             Pass in fpr or arg area
@@ -518,6 +533,14 @@ DBLSTR   DS 0H
          B CONT               Next parameter
 
 LD       DS 0H                ffi_type_long_double
+* for variadics 12 is number of fixed args left
+* if it's zero we just use GPRs/memory no FPRs
+* branch to the 16 byte struct label for that 
+         CFI  12,0
+         BNE  LDNVP
+         LA   15,16           "struct" size 16
+         B    BYTE16
+LDNVP    DS   0H
          LA 15,LDD
          LR 11,14
          SLL 11,2             Pass in fpr or arg area
@@ -562,6 +585,20 @@ LDBLSTR  DS 0H
          AHI 6,16             Bump stack twice, cuz ldouble is 16byte
          B CONT               Next parameter
 
+
+* CPXANY: called for FFI_TYPE_COMPLEX (type code 15).
+* Reads elements[0]->type to dispatch to CPXF/CPXD/CPXLD.
+* Register state on entry is the same as for CPXF/CPXD/CPXLD.
+CPXANY   DS 0H
+         LG  11,0(10,5)            pointer to current ffi_type
+         LG  11,16(,11)            ffi_type->elements (pointer to array)
+         LG  11,0(,11)             elements[0] pointer
+         LLGC 11,11(,11)           elements[0]->type (low byte)
+         CFI  11,2                 FFI_TYPE_FLOAT?
+         BE  CPXF
+         CFI  11,3                 FFI_TYPE_DOUBLE?
+         BE  CPXD
+         B   CPXLD                 assume FFI_TYPE_LONGDOUBLE
 
 CPXF     DS 0H
          CFI 14,4               no FPRs are available
@@ -738,6 +775,38 @@ STFPCHKLD1 DS 0H
 
          B CPXMRG
 
+*STRCTDISP: entry for FFI_TYPE_STRUCT (type 13) from ATABLE.
+*Check whether this struct is a homogeneous float aggregate (HFA):
+*  exactly two elements, both the same float/double/longdouble type.
+*If so, dispatch to CPXF/CPXD/CPXLD (FPR-pair passing).
+*Otherwise fall through to STRCT (GPR/memory passing).
+STRCTDISP DS 0H
+         LG  11,0(10,5)         pointer to ffi_type
+         LG  12,16(,11)         ffi_type->elements pointer
+         LTGR 12,12             elements == NULL?
+         BZ  STRCT
+         LG  15,0(,12)          elements[0]
+         LTGR 15,15             elements[0] == NULL?
+         BZ  STRCT
+         LG  11,8(,12)          elements[1]
+         LTGR 11,11             elements[1] == NULL? (single-element struct)
+         BZ  STRCT
+         LG  12,16(,12)         elements[2]
+         LTGR 12,12             elements[2] non-NULL? (>2 elements)
+         BNZ STRCT
+* exactly two elements; check that both have the same float type
+         LLGC 12,11(,15)        elements[0]->type low byte
+         LLGC 11,11(,11)        elements[1]->type low byte
+         CR   12,11             both same type?
+         BNE  STRCT
+         CFI  12,2              FFI_TYPE_FLOAT?
+         BE   CPXF
+         CFI  12,3              FFI_TYPE_DOUBLE?
+         BE   CPXD
+         CFI  12,4              FFI_TYPE_LONGDOUBLE?
+         BE   CPXLD
+* not a homogeneous float struct - fall through to STRCT
+
 *determine how to pass the struct based on size
 *at this point we've weeded out all the float/double
 *pair structs that get passed purely in FPRs
@@ -904,8 +973,8 @@ STRCTLP  DS 0H               Rest of struct goes in Memory
          CFI 15,0            Size remaining > 0?
          BNH CONT
 
-         LB 12,0(6,13)        Load the byte of the struct
-         STC 12,2176(7,4)     Store in next byte in arg area
+         LB 11,0(6,13)        Load the byte of the struct
+         STC 11,2176(7,4)     Store in next byte in arg area
 
          AFI  6,1            Move to next byte in struct
          AFI  7,1            Move to next byte in arg area
@@ -915,13 +984,23 @@ STRCTLP  DS 0H               Rest of struct goes in Memory
 
 CONT     DS 0H                End of processing curr_param
          AHI 10,8             Next parameter type
+*Variadic fence: count down r12 (nfixedargs remaining)
+*If r12 is already 0 (non-variadic or fence already fired), skip
+*When r12 decrements to 0, force r14=4 so FLT/D use GPR path
+         CFI  12,0
+         BNH  VARFNC
+         AHI  12,-1
+         CFI  12,0
+         BNE  VARFNC
+         LA   14,4
+VARFNC   DS   0H
 *         CFI 0,3
 *         BNE CONT2
 *         AFI 7,7
-*         N 7,=X'FFFFFFF8' 
+*         N 7,=X'FFFFFFF8'
 
-CONT2    DS 0H
-         BCT 9,ARGLOOP        
+CONT2    DS   0H
+         BCT 9,ARGLOOP
 
   
 *Get function address, first argument passed,
@@ -1156,9 +1235,11 @@ ATABLE DC A(VOID)
  DC A(SI32)
  DC A(UI64)
  DC A(SI64)
- DC A(STRCT)
- DC A(PTR) 
- DC A(I)
+* FFI_TYPE_STRUCT (13): check for HFA, else plain struct
+ DC A(STRCTDISP)
+ DC A(PTR)
+* FFI_TYPE_COMPLEX (15): classify by elements[0]->type
+ DC A(CPXANY)
  DC A(CPXF)
  DC A(CPXD)
  DC A(CPXLD)
@@ -1220,7 +1301,10 @@ RTABLE DC A(RV)
  DC A(RD)
  DC A(RLD)
  DC A(RI)
- DC A(RLL) 
+ DC A(RLL)
+ DC A(STOREF1)
+ DC A(STORED1)
+ DC A(STORELD1)
 RETVOID  EQU  X'0'
 RETSTRT  EQU  X'1'
 RETFLOT  EQU  X'2'
@@ -1244,5 +1328,7 @@ SSTOR DS  XL32
 SSIZE DS  XL8
 SAVREGS DS XL128
 SAVFPRS DS XL32
+* storage space for scratch registers
+SCRREGS DS XL128
 DSASZ    EQU (*-CEEDSAHP_FIXED)
  END FFISYS

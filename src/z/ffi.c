@@ -52,14 +52,20 @@
 /* Round to multiple of 16.  */
 #define ROUND_SIZE(size) (((size) + 15) & ~15)
 
-/* If these values change, xplink.s must be adapted!  */
-#define FFI390_RET_VOID		0
-#define FFI390_RET_STRUCT	1
-#define FFI390_RET_FLOAT	2
-#define FFI390_RET_DOUBLE	3
-#define FFI390_RET_LDBLE  4
-#define FFI390_RET_INT32	5
-#define FFI390_RET_INT64  6
+/* If these values change, xplink.S RTABLE must be updated to match!  */
+#define FFI390_RET_VOID		    0
+#define FFI390_RET_STRUCT	    1
+#define FFI390_RET_FLOAT	    2
+#define FFI390_RET_DOUBLE	    3
+#define FFI390_RET_LDBLE        4
+#define FFI390_RET_INT32	    5
+#define FFI390_RET_INT64        6
+/* struct containing two floats or complexf returned in FPR0 + FPR2 (float halves) */
+#define FFI390_RET_STRUCT_FF    7
+/* struct containing two doubles or complexd returned in FPR0 + FPR2 */
+#define FFI390_RET_STRUCT_DD    8
+/* struct containing two long doubles or complexld returned in FPR0/2 + FPR4/6 */
+#define FFI390_RET_STRUCT_LDLD  9
 
 /*===================== End of Defines ===============================*/
  
@@ -90,8 +96,9 @@ unsigned short ffi_xplink_type_code (ffi_type *);
  
 
 #pragma map(ffi_call_SYSV, "FFISYS")
-extern void ffi_call_SYSV(void (*fn)(void), extended_cif *, 
-                          unsigned, unsigned *, unsigned, unsigned);
+extern void ffi_call_SYSV(void (*fn)(void), extended_cif *,
+                          unsigned, unsigned *, unsigned, unsigned,
+                          unsigned);
 
 #pragma map(ffi_closure_SYSV, "FFISYS2")
 extern void ffi_closure_SYSV(void);
@@ -382,6 +389,11 @@ ffi_xplink_type_code (ffi_type *arg_type)
 ffi_status
 ffi_prep_cif_machdep(ffi_cif *cif)
 {
+
+  // preemptively set nfixedargs to nargs, so that the default is correct for non-variadic functions
+  // we will correct this in ffi_prep_cif_machdep_var if this is a variadic function
+  cif->nfixedargs = cif->nargs;
+
   size_t struct_size = 0;
   int n_gpr = 0;
   int n_fpr = 0;
@@ -415,22 +427,28 @@ ffi_prep_cif_machdep(ffi_cif *cif)
         cif->flags = FFI390_RET_VOID;
         break;
 
-      /* Structures are returned in GPR or buffer depending on size.  */
-      /* TODO CLEANUP */
+      /* Structures are returned in GPR or buffer depending on size.
+         But a struct containing exactly two floats / doubles / long doubles
+         is returned in FPR pairs, just like the corresponding complex type.  */
       case FFI_TYPE_STRUCT:
-        struct_size = cif->rtype->size;
-        if (struct_size <= 24)
-          cif->flags = FFI390_RET_STRUCT;
-        else
-          /* dummy point arg, might need to fix for float only struct returns */
-          n_gpr++;
-          //n_ov++; 
-          //n_ov = struct_size;
-        break; 
+        {
+          unsigned short sub = ffi_check_struct_for_complex (cif->rtype);
+          struct_size = cif->rtype->size;
+          if (sub == FFI_TYPE_STRUCT_FF)
+            cif->flags = FFI390_RET_STRUCT_FF;
+          else if (sub == FFI_TYPE_STRUCT_DD)
+            cif->flags = FFI390_RET_STRUCT_DD;
+          else if (sub == FFI_TYPE_STRUCT_LDLD)
+            cif->flags = FFI390_RET_STRUCT_LDLD;
+          else if (struct_size <= 24)
+            cif->flags = FFI390_RET_STRUCT;
+          else
+            n_gpr++;   /* hidden return-pointer argument */
+        }
+        break;
 
-      /* Floating point and complex values are returned in fpr0, 2, 4, 6 */
+      /* Scalar float/double/long-double */
       case FFI_TYPE_FLOAT:
-      case FFI_TYPE_COMPLEX:
         cif->flags = FFI390_RET_FLOAT;
         break;
 
@@ -443,8 +461,18 @@ ffi_prep_cif_machdep(ffi_cif *cif)
         cif->flags = FFI390_RET_LDBLE;
         break;
 #endif
-      /* Integer values are returned in gpr 3 (and gpr 2
-         for 64-bit values on 31-bit machines).  */
+
+      /* Complex types: returned in FPR pairs, same as struct-float pairs.  */
+      case FFI_TYPE_COMPLEX:
+        if (cif->rtype->size == 8)          /* _Complex float  */
+          cif->flags = FFI390_RET_STRUCT_FF;
+        else if (cif->rtype->size == 16)    /* _Complex double */
+          cif->flags = FFI390_RET_STRUCT_DD;
+        else                                /* _Complex long double */
+          cif->flags = FFI390_RET_STRUCT_LDLD;
+        break;
+
+      /* Integer values are returned in GPR3.  */
       case FFI_TYPE_UINT64:
       case FFI_TYPE_SINT64:
       case FFI_TYPE_POINTER:
@@ -455,13 +483,8 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       case FFI_TYPE_SINT16:
       case FFI_TYPE_UINT8:
       case FFI_TYPE_SINT8:
-
         cif->flags = FFI390_RET_INT64;
         break;
-
-
-
- 
       default:
         FFI_ASSERT (0);
         break;
@@ -487,46 +510,62 @@ ffi_prep_cif_machdep(ffi_cif *cif)
         }
 
       /* Now handle all primitive int/float data types.  */
-      switch (type) 
+      switch (type)
       {
-               /* The first MAX_FPRARGS floating point arguments
-             go in FPRs, the rest overflow to the stack.  */ 
-        
+        /* The first MAX_FPRARGS floating point arguments go in FPRs.  */
         case FFI_TYPE_LONGDOUBLE:
+          /* long double occupies two adjacent FPRs (e.g. FPR0+FPR2) */
           if (n_fpr < MAX_FPRARGS)
-            n_fpr+=2;
+            n_fpr += 2;
           else
             n_ov += sizeof(long double) / sizeof(long);
-          break; 
-        
-        case FFI_TYPE_COMPLEX:
-               case FFI_TYPE_DOUBLE:
-               case FFI_TYPE_FLOAT:
+          break;
+
+        case FFI_TYPE_STRUCT_LDLD:
+          /* {long double, long double} or _Complex long double: 4 FPRs */
+          if (n_fpr + 4 <= MAX_FPRARGS)
+            n_fpr += 4;
+          else
+            n_ov += 2 * (sizeof(long double) / sizeof(long));
+          break;
+
+        case FFI_TYPE_STRUCT_DD:
+          /* {double, double} or _Complex double: 2 FPRs */
+          if (n_fpr + 2 <= MAX_FPRARGS)
+            n_fpr += 2;
+          else
+            n_ov += 2;
+          break;
+
+        case FFI_TYPE_STRUCT_FF:
+          /* {float, float} or _Complex float: 2 FPRs */
+          if (n_fpr + 2 <= MAX_FPRARGS)
+            n_fpr += 2;
+          else
+            n_ov += 1;
+          break;
+
+        case FFI_TYPE_DOUBLE:
+        case FFI_TYPE_FLOAT:
           if (n_fpr < MAX_FPRARGS)
             n_fpr++;
           else
-            n_ov += sizeof (double) / sizeof (long);
-          break; 
-          
-          /* On 31-bit machines, 64-bit integers are passed in GPR pairs,
-             if one is still available, or else on the stack.  If only one
-             register is free, skip the register (it won't be used for any 
-             subsequent argument either).  */ 
-        
+            n_ov += sizeof(double) / sizeof(long);
+          break;
+
         case FFI_TYPE_UINT64:
-               case FFI_TYPE_SINT64:
+        case FFI_TYPE_SINT64:
           if (n_gpr == MAX_GPRARGS-1)
             n_gpr = MAX_GPRARGS;
           if (n_gpr < MAX_GPRARGS)
             n_gpr += 2;
           else
             n_ov += 2;
-          break; 
-          
-          /* Everything else is passed in GPRs (until MAX_GPRARGS
-             have been used) or overflows to the stack.  */ 
-        
-        default: 
+          break;
+
+        /* Everything else is passed in GPRs (until MAX_GPRARGS
+           have been used) or overflows to the stack.  */
+        default:
           if (n_gpr < MAX_GPRARGS)
             n_gpr++;
           else
@@ -550,6 +589,18 @@ ffi_prep_cif_machdep(ffi_cif *cif)
   return FFI_OK;
 }
  
+/*======================== End of Routine ============================*/
+
+ffi_status
+ffi_prep_cif_machdep_var(ffi_cif *cif,
+                         unsigned int nfixedargs,
+                         unsigned int ntotalargs)
+{
+  ffi_status status = ffi_prep_cif_machdep(cif);
+  cif->nfixedargs = nfixedargs;
+  return status;
+}
+
 /*======================== End of Routine ============================*/
  
 /*====================================================================*/
@@ -590,7 +641,8 @@ ffi_call(ffi_cif *cif,
   switch (cif->abi)
     {
       case FFI_XPLINK:
-        ffi_call_SYSV(fn, &ecif, cif->flags, ecif.rvalue, cif->bytes, cif->nargs);
+        ffi_call_SYSV(fn, &ecif, cif->flags, ecif.rvalue, cif->bytes, cif->nargs,
+                      cif->nfixedargs);
 
 #ifdef FFI_DEBUG
         printf("called_ffi_call_sysv nargs=%d\n",cif->nargs);
@@ -624,83 +676,62 @@ ffi_call(ffi_cif *cif,
 * return = 7 -> fpr0+2+4 contains the return
 * return = 8 -> fpr0+2+4+6 contains the return
 */
-int ffi_determine_return_type(ffi_closure *closure) {
+/* Maps closure->cif->flags back to a closure-side return-dispatch index.
+ * closure_xplink.S RTABLE entries:
+ *   0 = nothing (pointer was hidden arg)
+ *   1 = GPR3
+ *   2 = GPR1
+ *   3 = GPR1+GPR2
+ *   4 = GPR1+GPR2+GPR3
+ *   5 = FPR0
+ *   6 = FPR0+FPR2        (double pair or _Complex double)
+ *   7 = FPR0+FPR2        (float pair or _Complex float, 4-byte offsets)
+ *   8 = FPR0+FPR2+FPR4+FPR6 (long-double pair or _Complex long double)
+ */
+int ffi_determine_return_type(ffi_closure *closure)
+{
+  /* Use the flags already computed by ffi_prep_cif_machdep — they are the
+     canonical return classification and keep call-side and closure-side
+     dispatch tables in sync without re-classifying.  */
+  switch (closure->cif->flags)
+    {
+      case FFI390_RET_VOID:
+        return 1;   /* no meaningful return value; GPR3 is harmless */
 
+      case FFI390_RET_INT32:
+      case FFI390_RET_INT64:
+        return 1;   /* GPR3 */
 
+      case FFI390_RET_FLOAT:
+        return 5;   /* FPR0 */
 
+      case FFI390_RET_DOUBLE:
+        return 5;   /* FPR0 */
 
-  ffi_type *type = closure->cif->rtype;
-  unsigned short type_code;
-  if (type == NULL) {
-    return 1; // do nothing
-  }
+      case FFI390_RET_LDBLE:
+        return 6;   /* FPR0+FPR2 (long-double is 128-bit, two DFP regs) */
 
-  type_code = ffi_xplink_type_code (type);
+      case FFI390_RET_STRUCT_FF:
+        return 7;   /* FPR0 (float) + FPR2 (float), 4-byte strides */
 
-  switch(type_code) {
-    
-    case FFI_TYPE_UINT8:
-    case FFI_TYPE_SINT8:
-    case FFI_TYPE_UINT16:
-    case FFI_TYPE_SINT16:
-    case FFI_TYPE_UINT32:
-    case FFI_TYPE_SINT32:
-    case FFI_TYPE_INT:
-    case FFI_TYPE_UINT64:
-    case FFI_TYPE_SINT64:
-    case FFI_TYPE_POINTER:
-      return 1; // grp3
-      break;
+      case FFI390_RET_STRUCT_DD:
+        return 6;   /* FPR0 + FPR2, 8-byte strides */
 
-    case FFI_TYPE_FLOAT:
-    case FFI_TYPE_DOUBLE:
-      return 5; // fpr0
-      break;
+      case FFI390_RET_STRUCT_LDLD:
+        return 8;   /* FPR0+FPR2+FPR4+FPR6 */
 
-    case FFI_TYPE_COMPLEX:
-      if (type->size == 8) {
-        return 7;
-      }
-      else if (type->size == 16) {
-        return 6;
-      }
-      else if (type->size == 32) {
-        return 8;
-      }
-      else {
-        return 0; // this should never happen but if it does
-        // Maybe assert?
-      }
-      break;
+      case FFI390_RET_STRUCT:
+        {
+          size_t sz = closure->cif->rtype->size;
+          if (sz <= 8)  return 2;
+          if (sz <= 16) return 3;
+          if (sz <= 24) return 4;
+          return 0;   /* hidden pointer was passed; callee wrote result */
+        }
 
-    case FFI_TYPE_STRUCT_DD:
-      return 6; // fpr0+2
-
-    case FFI_TYPE_STRUCT_FF:
-      return 7; // fpr0+2+4 (floats)
-
-    case FFI_TYPE_STRUCT_LDLD:
-      return 8; // fpr0+2+4+6
-
-    case FFI_TYPE_STRUCT:
-      if (type->size <= 8) {
-        return 2; // grp1
-      }
-      else if (type->size <= 16) {
-        return 3; // grp1+2
-      }
-      else if (type->size <= 24) {
-        return 4; // gpr1+2+3
-      }
-      else {
-        return 0; // pointer was passed in
-      }
-      break;
-    case FFI_TYPE_VOID:
-      return 1;
-
-  }
-
+      default:
+        return 0;
+    }
 }
 
 
@@ -722,23 +753,16 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
   ffi_cif *cif = closure->cif;
 
   unsigned short struct_subtype = FFI_TYPE_VOID;
-  if(cif->rtype) {
-    struct_subtype = ffi_xplink_type_code(cif->rtype);
-  }
+  if (cif->rtype)
+    struct_subtype = ffi_xplink_type_code (cif->rtype);
 
   int num_args = cif->nargs;
-  if (cif->rtype)
-    ret_size = cif->rtype->size;
-  else if (cif->rtype->type == FFI_TYPE_VOID) {
-    ret_size = 24;
-  }
-  else if(struct_subtype == FFI_TYPE_STRUCT_LDLD) {
+  if (cif->rtype == NULL || cif->rtype->type == FFI_TYPE_VOID)
+    ret_size = 8;
+  else if (cif->flags == FFI390_RET_STRUCT_LDLD)
     ret_size = 32;
-  }
-  else {
-    // allocate memory regardless
-    ret_size = 24;
-  }
+  else
+    ret_size = cif->rtype->size;
 
 
   // allocate a pointer per arg
@@ -750,7 +774,7 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
   float *cmplx_arg;
   double *cmplx_arg_double;
 
-  double *arg_longdouble;
+  long double *arg_longdouble;
 
   ffi_type **atype = cif->arg_types;
 
@@ -882,7 +906,7 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
           n_gprs--;
           n_fprs--;
           n_arg += 8;
-        }        
+        }
         else if (n_fprs == 1) {
           args[i] = &closure->reg.fpr[6];
           n_gprs--;
@@ -897,39 +921,39 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
       case FFI_TYPE_LONGDOUBLE:
         if (n_fprs == 4) {
           arg_longdouble = alloca(sizeof(long double));
-          arg_longdouble[0] = closure->reg.fpr[0];
-          arg_longdouble[1] = closure->reg.fpr[2];
+          ((double *) arg_longdouble)[0] = closure->reg.fpr[0];
+          ((double *) arg_longdouble)[1] = closure->reg.fpr[2];
           args[i] = arg_longdouble;
-          n_gprs-=2;
-          n_fprs-=2;
-          n_arg += 16;
-        } 
-        else if ( (n_fprs == 3) || (n_fprs == 2) ) { // TODO FIX
-          arg_longdouble = alloca(sizeof(long double));
-          arg_longdouble[0] = closure->reg.fpr[4];
-          arg_longdouble[1] = closure->reg.fpr[6];
-          args[i] = arg_longdouble;
-          n_gprs-=2;
-          n_fprs-=2;
+          n_gprs -= 2;
+          n_fprs -= 2;
           n_arg += 16;
         }
-        else if (n_fprs == 1) { // TODO FIX
+        else if (n_fprs == 3 || n_fprs == 2) {
+          arg_longdouble = alloca(sizeof(long double));
+          ((double *) arg_longdouble)[0] = closure->reg.fpr[4];
+          ((double *) arg_longdouble)[1] = closure->reg.fpr[6];
+          args[i] = arg_longdouble;
+          n_gprs -= 2;
+          n_fprs -= 2;
+          n_arg += 16;
+        }
+        else if (n_fprs == 1) {
           args[i] = (savearea + n_arg);
-          n_gprs-=2;
-          n_fprs-=2;
+          n_gprs -= 2;
+          n_fprs -= 2;
           n_arg += 16;
         }
         else {
           args[i] = (savearea + n_arg);
           n_arg += 16;
         }
-        break; 
+        break;
       case FFI_TYPE_STRUCT:
       case FFI_TYPE_STRUCT_DD:
       case FFI_TYPE_STRUCT_FF:
       case FFI_TYPE_STRUCT_LDLD:	
       unsigned short struct_subtype = ffi_check_struct_for_complex(atype[i]);
-        if (struct_subtype == FFI_TYPE_STRUCT) {
+        if (struct_subtype == FFI_TYPE_STRUCT || struct_subtype == FFI_TYPE_COMPLEX) {
         // TODO fill this in
         if (atype[i]->size <= 8) {
           // handle like an int basically
@@ -1145,53 +1169,55 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
 
   closure->fun(cif, ret, args, closure->user_data);
 
-  if (cif->rtype == NULL) {
-  	*(void**)(retbuf) = *(void**)ret;
-  }
-  else if (cif->rtype->type == FFI_TYPE_VOID) {
-	*(void**)(retbuf) = *(void**)ret;
-  }
-
-
-  if (((cif->rtype != NULL) || (cif->rtype->type != FFI_TYPE_VOID)) && (ret_size <= 24 || struct_subtype == FFI_TYPE_STRUCT_LDLD)) {
-    switch(cif->rtype->type) {
-      case FFI_TYPE_UINT8:
-        *(unsigned long*)(retbuf) = *(unsigned long*)ret;
-        break;
-      case FFI_TYPE_SINT8:
-        *(signed long*)(retbuf) = *(unsigned long*)ret;
-        break;
-      case FFI_TYPE_UINT16:
-        *(unsigned long*)(retbuf) = *(unsigned long*)ret;
-        break;
-      case FFI_TYPE_SINT16:
-        *(signed long*)(retbuf) = *(signed long*)ret;
-        break;
-      case FFI_TYPE_UINT32:
-        *(unsigned long*)(retbuf) = *(unsigned long*)ret;
-        break;
-      case FFI_TYPE_INT:
-      case FFI_TYPE_SINT32:
-        *(signed long*)(retbuf) = *(signed long*)ret;
-        break;
-      case FFI_TYPE_UINT64:
-      case FFI_TYPE_SINT64:
-      case FFI_TYPE_POINTER:
-        *(void**)(retbuf) = *(void**)ret;
-        break;
-      case FFI_TYPE_FLOAT:
-        *(float*)(retbuf) = *(float*)ret;
-        break;
-      case FFI_TYPE_DOUBLE:
-        *(double*)(retbuf) = *(double*)ret;
-        break;
-      default:
-        for (int i = 0; i < ret_size; i++) {
-          ((char*)retbuf)[i] = ((char*)ret)[i];
+  /* Write ret to retbuf unless the callee wrote the result directly via a
+     hidden pointer (flags == FFI390_RET_STRUCT with size > 24).  For that
+     case ret_size was still set correctly above but the actual data is
+     already in the caller's buffer, so no copy is needed.  */
+  int needs_copy = (cif->rtype != NULL)
+                   && (cif->rtype->type != FFI_TYPE_VOID)
+                   && !(cif->flags == FFI390_RET_STRUCT
+                        && cif->rtype->size > 24);
+  if (needs_copy)
+    {
+      switch (cif->rtype->type)
+        {
+          case FFI_TYPE_UINT8:
+            *(unsigned long*)(retbuf) = *(unsigned long*)ret;
+            break;
+          case FFI_TYPE_SINT8:
+            *(signed long*)(retbuf) = *(unsigned long*)ret;
+            break;
+          case FFI_TYPE_UINT16:
+            *(unsigned long*)(retbuf) = *(unsigned long*)ret;
+            break;
+          case FFI_TYPE_SINT16:
+            *(signed long*)(retbuf) = *(signed long*)ret;
+            break;
+          case FFI_TYPE_UINT32:
+            *(unsigned long*)(retbuf) = *(unsigned long*)ret;
+            break;
+          case FFI_TYPE_INT:
+          case FFI_TYPE_SINT32:
+            *(signed long*)(retbuf) = *(signed long*)ret;
+            break;
+          case FFI_TYPE_UINT64:
+          case FFI_TYPE_SINT64:
+          case FFI_TYPE_POINTER:
+            *(void**)(retbuf) = *(void**)ret;
+            break;
+          case FFI_TYPE_FLOAT:
+            *(float*)(retbuf) = *(float*)ret;
+            break;
+          case FFI_TYPE_DOUBLE:
+            *(double*)(retbuf) = *(double*)ret;
+            break;
+          default:
+            /* Covers STRUCT, COMPLEX, LONGDOUBLE, STRUCT_FF/DD/LDLD subtypes */
+            for (int i = 0; i < ret_size; i++)
+              ((char*)retbuf)[i] = ((char*)ret)[i];
+            break;
         }
-        break;
     }
-  }
 
 
 
@@ -1283,4 +1309,3 @@ ffi_prep_closure_loc (ffi_closure *closure,
 }
 
 /*======================== End of Routine ============================*/
- 
