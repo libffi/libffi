@@ -68,6 +68,38 @@ RET8     DS 0H
          LD 6,24(,1)
          B RETURN
 
+* RET9: integer-based _Complex — real at ret[0], imag at ret[element_size].
+* Caller expects real in GPR3, imaginary in GPR2, sign-extended to 64 bits.
+* Dispatch on rtype->size to pick load width.
+RET9     DS 0H
+         LA  9,CLOSURE
+         LG  9,0(,9)            closure ptr
+         LG  9,64(,9)           closure->cif
+         LG  9,16(,9)           cif->rtype
+         LG  9,0(,9)            rtype->size (total complex size)
+         CFI 9,2
+         BE  RET9A              size==2: _Complex char (1+1)
+         CFI 9,4
+         BE  RET9B              size==4: _Complex short (2+2)
+         CFI 9,16
+         BE  RET9D              size==16: _Complex long/longlong (8+8)
+*                               size==8: _Complex int (4+4) — default
+         LGF 3,0(,1)            real (4 bytes, sign-extend)
+         LGF 2,4(,1)            imag (4 bytes, sign-extend)
+         B RETURN
+RET9A    DS 0H
+         LGB 3,0(,1)            real (1 byte, sign-extend)
+         LGB 2,1(,1)            imag (1 byte, sign-extend)
+         B RETURN
+RET9B    DS 0H
+         LGH 3,0(,1)            real (2 bytes, sign-extend)
+         LGH 2,2(,1)            imag (2 bytes, sign-extend)
+         B RETURN
+RET9D    DS 0H
+         LG  3,0(,1)            real (8 bytes)
+         LG  2,8(,1)            imag (8 bytes)
+         B RETURN
+
          LA 3,RET
          LG 3,0(,3)
 
@@ -83,6 +115,7 @@ RTABLE  DC A(RET0)
  DC A(RET6)
  DC A(RET7)
  DC A(RET8)
+ DC A(RET9)
 
 CEEDSAHP CEEDSA SECTYPE=XPLINK
 CLOSURE DS   XL8
