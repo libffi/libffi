@@ -51,14 +51,19 @@ FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
 
 *Dumb handling for now, but if struct return with size > 24
 *bytes, we need to allocate space for the dummy argument
-*that holds the return value pointer 
+*that holds the return value pointer.
+*Skip for: FFI_TYPE_COMPLEX (15) - always returns in FPR/GPR pairs
+*          FFI_TYPE_STRUCT_FF/DD/LDLD (16/17/18) - returns in FPR pairs
+*          anything with size <= 24 - returns in GPR1/2/3
          LG 15,(2176+(((DSASZ+31)/32)*32)+8)(,4)
          LG 15,0(,15)           ecif->cif
          LG 15,16(,15)          cif->rtype
-         LLGH 11,10(,15)
+         LLGH 11,10(,15)        rtype->type
          LG 15,0(,15)           rtype->size
-         CFI 11,18
-         BE GETNARGS
+         CFI 11,15              FFI_TYPE_COMPLEX?
+         BE GETNARGS            yes: always returns in registers, no hidden ptr
+         CFI 11,16              FFI_TYPE_STRUCT_FF?
+         BNL GETNARGS           yes (>=16 means FF/DD/LDLD): returns in FPR pairs
          CFI 15,24
          BNH GETNARGS
 
@@ -588,8 +593,13 @@ LDBLSTR  DS 0H
 
 * CPXANY: called for FFI_TYPE_COMPLEX (type code 15).
 * Reads elements[0]->type to dispatch to CPXF/CPXD/CPXLD.
+* When r12==0 (past the variadic fixed-arg boundary) treat the
+* whole complex value as an opaque struct in GPR/memory, same as
+* FLT and D do when they redirect to UI32/UI64.
 * Register state on entry is the same as for CPXF/CPXD/CPXLD.
 CPXANY   DS 0H
+         CFI  12,0                 past variadic fence?
+         BE   STRCT                if yes, treat like a struct (no FPRs)
          LG  11,0(10,5)            pointer to current ffi_type
          LG  11,16(,11)            ffi_type->elements (pointer to array)
          LG  11,0(,11)             elements[0] pointer
@@ -598,7 +608,9 @@ CPXANY   DS 0H
          BE  CPXF
          CFI  11,3                 FFI_TYPE_DOUBLE?
          BE  CPXD
-         B   CPXLD                 assume FFI_TYPE_LONGDOUBLE
+         CFI  11,4                 FFI_TYPE_LONGDOUBLE?
+         BE  CPXLD
+         B   STRCT                 non-float complex, treat as struct
 
 CPXF     DS 0H
          CFI 14,4               no FPRs are available
@@ -1119,6 +1131,44 @@ R64      DS 0H
          STG 3,0(7)
          B RET
 
+* FFI390_RET_COMPLEX_INT (10): integer-based _Complex types.
+* Compiler returns real component in GPR3, imaginary in GPR2,
+* each sign/zero-extended to 64 bits.
+* Dispatch on rtype->size to pick the right store width:
+*   size 2  -> 2 x 1-byte (STC)
+*   size 4  -> 2 x 2-byte (STH)
+*   size 8  -> 2 x 4-byte (ST)
+*   size 16 -> 2 x 8-byte (STG)
+RCPXI    DS 0H
+         LG 7,(2176+(((DSASZ+31)/32)*32)+24)(,4)    rvalue ptr
+         LG 9,(2176+(((DSASZ+31)/32)*32)+8)(,4)     ecif ptr
+         LG 9,0(,9)                                 ecif->cif
+         LG 9,16(,9)                                cif->rtype
+         LG 9,0(,9)                                 rtype->size
+         CFI 9,2
+         BE  RCPXI1                                 size==2: _Complex char
+         CFI 9,4
+         BE  RCPXI2                                 size==4: _Complex short
+         CFI 9,16
+         BE  RCPXI8                                 size==16: _Complex long/longlong
+*                                                  size==8: _Complex int (default)
+RCPXI4   DS 0H
+         ST  3,0(,7)            real (4 bytes)
+         ST  2,4(,7)            imag (4 bytes)
+         B RET
+RCPXI1   DS 0H
+         STC 3,0(,7)            real (1 byte)
+         STC 2,1(,7)            imag (1 byte)
+         B RET
+RCPXI2   DS 0H
+         STH 3,0(,7)            real (2 bytes)
+         STH 2,2(,7)            imag (2 bytes)
+         B RET
+RCPXI8   DS 0H
+         STG 3,0(,7)            real (8 bytes)
+         STG 2,8(,7)            imag (8 bytes)
+         B RET
+
 RV       DS 0H
          B RET
 
@@ -1305,6 +1355,7 @@ RTABLE DC A(RV)
  DC A(STOREF1)
  DC A(STORED1)
  DC A(STORELD1)
+ DC A(RCPXI)
 RETVOID  EQU  X'0'
 RETSTRT  EQU  X'1'
 RETFLOT  EQU  X'2'
