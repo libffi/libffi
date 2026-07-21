@@ -79,9 +79,10 @@ extern "C" {
 #define FFI_TYPE_COMPLEX    15
 #define FFI_TYPE_UINT128    16
 #define FFI_TYPE_SINT128    17
+#define FFI_TYPE_VECTOR     18
 
 /* This should always refer to the last type code (for sanity checks).  */
-#define FFI_TYPE_LAST       FFI_TYPE_SINT128
+#define FFI_TYPE_LAST       FFI_TYPE_VECTOR
 
 #include <ffitarget.h>
 
