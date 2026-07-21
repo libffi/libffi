@@ -19,9 +19,32 @@ libffi-init
 
 global srcdir subdir
 
+# The tests are written with the GCC/Clang vector extension
+# (__attribute__ ((vector_size (N)))).  A target port can support
+# FFI_TYPE_VECTOR at the ABI level while the compiler under test (e.g.
+# MSVC) cannot compile that syntax, so probe the compiler with an actual
+# compilation, not just a preprocessor check.
+proc libffi_vector_syntax_test { } {
+    set src "vecprobe[pid].c"
+    set obj "vecprobe[pid].o"
+
+    set f [open $src "w"]
+    puts $f "typedef float probe_v4 __attribute__ ((vector_size (16)));"
+    puts $f "probe_v4 probe_var;"
+    puts $f "int main (void) { return 0; }"
+    close $f
+
+    set lines [libffi_target_compile $src $obj object ""]
+    file delete $src
+    file delete $obj
+
+    return [string match "" $lines]
+}
+
 set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/*.{c,cc}]]
 
-if { [libffi_feature_test "#ifdef FFI_TARGET_HAS_VECTOR_TYPE"] } {
+if { [libffi_feature_test "#ifdef FFI_TARGET_HAS_VECTOR_TYPE"]
+     && [libffi_vector_syntax_test] } {
     run-many-tests $tlist ""
 } else {
     foreach test $tlist {

@@ -63,7 +63,6 @@ main (void)
   {
     /* x86-64 (and any other opted-in port without >16B support): the >16-byte
        vector must be rejected, both as a return type and as an argument.  */
-    ffi_type *void_args[1];
     ffi_status s_ret, s_arg;
 
     s_ret = ffi_prep_cif (&cif, FFI_DEFAULT_ABI, 0, &vec_type, NULL);
@@ -71,8 +70,7 @@ main (void)
 	    s_ret, FFI_BAD_TYPEDEF);
     CHECK (s_ret == FFI_BAD_TYPEDEF);
 
-    void_args[0] = &vec_type;
-    s_arg = ffi_prep_cif (&cif, FFI_DEFAULT_ABI, 1, &ffi_type_void, void_args);
+    s_arg = ffi_prep_cif (&cif, FFI_DEFAULT_ABI, 1, &ffi_type_void, args);
     printf ("32-byte vector argument: status %d (want %d = FFI_BAD_TYPEDEF)\n",
 	    s_arg, FFI_BAD_TYPEDEF);
     CHECK (s_arg == FFI_BAD_TYPEDEF);
