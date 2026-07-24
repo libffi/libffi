@@ -29,12 +29,15 @@
 /*                          --------                                  */
 /*====================================================================*/
 
+#define FFI_CLOSURE_DEBUG
+
 #include <ffi.h>
 #include <ffi_common.h>
  
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
  
 /*====================== End of Includes =============================*/
  
@@ -53,12 +56,12 @@
 #define ROUND_SIZE(size) (((size) + 15) & ~15)
 
 /* If these values change, xplink.S RTABLE must be updated to match!  */
-#define FFI390_RET_VOID		    0
-#define FFI390_RET_STRUCT	    1
-#define FFI390_RET_FLOAT	    2
-#define FFI390_RET_DOUBLE	    3
+#define FFI390_RET_VOID		      0
+#define FFI390_RET_STRUCT	      1
+#define FFI390_RET_FLOAT	      2
+#define FFI390_RET_DOUBLE	      3
 #define FFI390_RET_LDBLE        4
-#define FFI390_RET_INT32	    5
+#define FFI390_RET_INT32	      5
 #define FFI390_RET_INT64        6
 /* struct containing two floats or complexf returned in FPR0 + FPR2 (float halves) */
 #define FFI390_RET_STRUCT_FF    7
@@ -85,6 +88,10 @@ void ffi_closure_helper_SYSV (ffi_closure *, void *, struct ffi_reg_data *);
 int ffi_determine_return_type(ffi_closure *);
 #pragma map(ffi_xplink_type_code, "TYPCLASS")
 unsigned short ffi_xplink_type_code (ffi_type *);
+#pragma map(ffi_struct_float_pair_type, "STFPTYP")
+unsigned int ffi_struct_float_pair_type (ffi_type **);
+#pragma map(ffi_dummy, "FFIDUMMY")
+void ffi_dummy (void);
 
 // void ffi_closure_helper_SYSV (ffi_closure *, unsigned long *, 
 //                          unsigned long long *, unsigned long *);
@@ -100,7 +107,7 @@ unsigned short ffi_xplink_type_code (ffi_type *);
 #pragma map(ffi_call_SYSV, "FFISYS")
 extern void ffi_call_SYSV(void (*fn)(void), extended_cif *,
                           unsigned, unsigned *, unsigned, unsigned,
-                          unsigned);
+                          unsigned, void *);
 
 #pragma map(ffi_closure_SYSV, "FFISYS2")
 extern void ffi_closure_SYSV(void);
@@ -377,7 +384,78 @@ ffi_check_struct_for_complex(ffi_type *arg_type)
 unsigned short
 ffi_xplink_type_code (ffi_type *arg_type)
 {
+  if (arg_type->type == FFI_TYPE_STRUCT)
+    {
+      unsigned int fp = ffi_struct_float_pair_type (&arg_type);
+      if (fp == FFI_TYPE_FLOAT)      return FFI_TYPE_STRUCT_FF;
+      if (fp == FFI_TYPE_DOUBLE)     return FFI_TYPE_STRUCT_DD;
+      if (fp == FFI_TYPE_LONGDOUBLE) return FFI_TYPE_STRUCT_LDLD;
+      return FFI_TYPE_STRUCT;
+    }
   return ffi_check_struct_for_complex (arg_type);
+}
+
+/*====================================================================*/
+/*                                                                    */
+/* Name     - ffi_struct_float_pair_type.                             */
+/*                                                                    */
+/* Function - Determine whether a struct matches the z/OS XPLINK HFA    */
+/*            (homogeneous float aggregate) rule.  IBM XL C requires     */
+/*            the direct struct members to BE float/double/long double   */
+/*            scalars — a single-element struct wrapper around a float   */
+/*            does NOT qualify.  Only a flat {float,float}, {double,     */
+/*            double}, or {long double, long double} at the top level    */
+/*            is treated as HFA.                                         */
+/*                                                                       */
+/* Returns  - FFI_TYPE_FLOAT      (2) for {float, float}                */
+/*            FFI_TYPE_DOUBLE     (3) for {double, double}               */
+/*            FFI_TYPE_LONGDOUBLE (4) for {long double, long double}     */
+/*            0 otherwise                                                */
+/*                                                                       */
+/* Called from xplink.S STRCTDISP via CELQCALL as "STFPTYP".            */
+/* The struct pointer is passed as the sole argument; the return         */
+/* value is placed in GPR3 per 64-bit XPLINK convention.                */
+/*====================================================================*/
+
+/* Helper to unwrap single-element struct wrappers */
+static ffi_type *
+unwrap_single_element_struct(ffi_type *t)
+{
+  while (t->type == FFI_TYPE_STRUCT
+         && t->elements[0] != NULL
+         && t->elements[1] == NULL)
+    t = t->elements[0];
+  return t;
+}
+
+unsigned int
+ffi_struct_float_pair_type (ffi_type **argp)
+{
+  ffi_type *arg = *argp;
+
+  if (arg->type != FFI_TYPE_STRUCT)
+    return 0;
+
+  /* Must have exactly two direct elements (elements[2] == NULL). */
+  if (arg->elements[0] == NULL || arg->elements[1] == NULL
+      || arg->elements[2] != NULL)
+    return 0;
+
+  /* Unwrap single-element struct wrappers to get leaf types */
+  ffi_type *leaf0 = unwrap_single_element_struct(arg->elements[0]);
+  ffi_type *leaf1 = unwrap_single_element_struct(arg->elements[1]);
+
+  unsigned int t0 = leaf0->type;
+  unsigned int t1 = leaf1->type;
+
+  if (t0 != t1)
+    return 0;
+
+  if (t0 == FFI_TYPE_FLOAT || t0 == FFI_TYPE_DOUBLE
+      || t0 == FFI_TYPE_LONGDOUBLE)
+    return t0;
+
+  return 0;
 }
 
 /*====================================================================*/
@@ -386,6 +464,14 @@ ffi_xplink_type_code (ffi_type *arg_type)
 /*                                                                    */
 /* Function - Perform machine dependent CIF processing.               */
 /*                                                                    */
+void
+ffi_dummy (void)
+{
+  /* intentional no-op: used from xplink.S STRCTDISP to probe
+     that CELQCALL works correctly in that context.  */
+     printf("abc\n");
+}
+
 /*====================================================================*/
  
 ffi_status
@@ -430,17 +516,18 @@ ffi_prep_cif_machdep(ffi_cif *cif)
         break;
 
       /* Structures are returned in GPR or buffer depending on size.
-         But a struct containing exactly two floats / doubles / long doubles
-         is returned in FPR pairs, just like the corresponding complex type.  */
+         A struct whose only scalar leaves are exactly two values of the
+         same float/double/longdouble type is returned in FPR pairs.
+         ffi_struct_float_pair_type recurses through any nesting depth.  */
       case FFI_TYPE_STRUCT:
         {
-          unsigned short sub = ffi_check_struct_for_complex (cif->rtype);
+          unsigned int fp = ffi_struct_float_pair_type (&cif->rtype);
           struct_size = cif->rtype->size;
-          if (sub == FFI_TYPE_STRUCT_FF)
+          if (fp == FFI_TYPE_FLOAT)
             cif->flags = FFI390_RET_STRUCT_FF;
-          else if (sub == FFI_TYPE_STRUCT_DD)
+          else if (fp == FFI_TYPE_DOUBLE)
             cif->flags = FFI390_RET_STRUCT_DD;
-          else if (sub == FFI_TYPE_STRUCT_LDLD)
+          else if (fp == FFI_TYPE_LONGDOUBLE)
             cif->flags = FFI390_RET_STRUCT_LDLD;
           else if (struct_size <= 24)
             cif->flags = FFI390_RET_STRUCT;
@@ -656,13 +743,20 @@ ffi_call(ffi_cif *cif,
   switch (cif->abi)
     {
       case FFI_XPLINK:
-        ffi_call_SYSV(fn, &ecif, cif->flags, ecif.rvalue, cif->bytes, cif->nargs,
-                      cif->nfixedargs);
+        {
+          unsigned lstor_size = 24; // initialize with enough space for 3 GPRs
+          for (unsigned i = 0; i < cif->nargs; i++)
+            lstor_size += cif->arg_types[i]->size;
+          
+          ffi_call_SYSV(fn, &ecif, cif->flags, ecif.rvalue, cif->bytes,
+                        cif->nargs, cif->nfixedargs,
+                        alloca(lstor_size));
 
 #ifdef FFI_DEBUG
-        printf("called_ffi_call_sysv nargs=%d\n",cif->nargs);
-#endif 
-       break;	
+          printf("called_ffi_call_sysv nargs=%d\n",cif->nargs);
+#endif
+        }
+        break;
       default:
         FFI_ASSERT (0);
         break;
@@ -679,18 +773,6 @@ ffi_call(ffi_cif *cif,
 /*                                                                    */
 /*====================================================================*/
 
-/*  
-* this routine determines the type of return to be used
-* return = 0 -> space allocated by caller, pointer passed in to r1
-* return = 1 -> gpr3 contains the return (integral type returns)
-* return = 2 -> gpr1 contains the return
-* return = 3 -> gpr1+2 contains the return
-* return = 4 -> gpr1+2+3 contains the return
-* return = 5 -> fpr0 contains the return
-* return = 6 -> fpr0+2 contains the return
-* return = 7 -> fpr0+2+4 contains the return
-* return = 8 -> fpr0+2+4+6 contains the return
-*/
 /* Maps closure->cif->flags back to a closure-side return-dispatch index.
  * closure_xplink.S RTABLE entries:
  *   0 = nothing (pointer was hidden arg)
@@ -764,10 +846,11 @@ int ffi_determine_return_type(ffi_closure *closure)
 /*                                                                    */
 /*====================================================================*/
  
- void 
-ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data *reg) 
+ void
+ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data *reg)
 {
 
+  /* ---- CLOSURE POINTER SANITY ----------------------------------------- */
   int ret_size;
   ffi_cif *cif = closure->cif;
 
@@ -783,11 +866,49 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
   else
     ret_size = cif->rtype->size;
 
-
   // allocate a pointer per arg
   void **args = (void**)alloca(sizeof(void*) * num_args);
   void *ret = (void*)alloca(ret_size);
-  char *savearea = ((char*)closure->reg.gpr[3]) + 2176;
+  char *savearea = ((char*)reg->gpr[3]) + 2176;
+
+#ifdef FFI_CLOSURE_DEBUG
+  /* Dump incoming register state so we can verify what the trampoline
+     captured.  Gate behind FFI_CLOSURE_DEBUG to avoid noise in normal
+     builds.  Enable with -DFFI_CLOSURE_DEBUG at compile time.        */
+  fprintf(stderr, "CLSRHLP entry: closure=%p retbuf=%p reg=%p\n",
+          (void*)closure, retbuf, (void*)reg);
+  fprintf(stderr, "  sizeof(ffi_cif)=%zu sizeof(ffi_closure)=%zu\n",
+          sizeof(ffi_cif), sizeof(ffi_closure));
+  fprintf(stderr, "  cif=%p  cif raw bytes[0..31]:", (void*)cif);
+  { unsigned char *_cp = (unsigned char*)cif;
+    for (int _b = 0; _b < 32; _b++) fprintf(stderr, " %02x", _cp[_b]);
+    fprintf(stderr, "\n"); }
+  fprintf(stderr, "  cif->abi=%u nargs=%d arg_types=%p rtype=%p bytes=%u flags=%u nfixedargs=%u\n",
+          (unsigned)cif->abi, cif->nargs, (void*)cif->arg_types,
+          (void*)cif->rtype, cif->bytes, cif->flags, cif->nfixedargs);
+  if (cif->arg_types && cif->nargs > 0)
+    fprintf(stderr, "  cif->arg_types[0]=%p\n", (void*)cif->arg_types[0]);
+  fprintf(stderr, "  cif->flags=%u nargs=%d rtype->type=%u ret_size=%d\n",
+          cif->flags, num_args,
+          cif->rtype ? (unsigned)cif->rtype->type : 99u, ret_size);
+  /* GPRs 0-3 (the ones that carry incoming args / stack ptr) */
+  for (int _d = 0; _d < 4; _d++)
+    fprintf(stderr, "  gpr[%d] = %p\n", _d, (void*)reg->gpr[_d]);
+  /* FPRs 0..6 as stored by STD in the trampoline; show value and raw high 32 bits */
+  for (int _d = 0; _d < 7; _d++) {
+    uint64_t _raw; memcpy(&_raw, &reg->fpr[_d], 8);
+    fprintf(stderr, "  fpr[%d] = %.17g  (raw hi32=0x%08x lo32=0x%08x)\n",
+            _d, reg->fpr[_d],
+            (unsigned)(_raw >> 32), (unsigned)(_raw & 0xffffffff));
+  }
+  fprintf(stderr, "  savearea=%p\n", (void*)savearea);
+  /* First 32 bytes of the savearea (first 4 arg slots) */
+  { unsigned char *_p = (unsigned char*)savearea;
+    fprintf(stderr, "  savearea[0..31]:");
+    for (int _b = 0; _b < 32; _b++) fprintf(stderr, " %02x", _p[_b]);
+    fprintf(stderr, "\n"); }
+  fflush(stderr);
+#endif /* FFI_CLOSURE_DEBUG */
   
   // incase we need to pass a complex type, messy but functional
   float *cmplx_arg;
@@ -795,6 +916,7 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
 
   long double *arg_longdouble;
 
+  // This possible causes a compiler bug?
   ffi_type **atype = cif->arg_types;
 
   // number of remaining registers
@@ -811,25 +933,33 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
     // passed into r1
     n_gprs--;
     n_arg += 8;
-    ret = closure->reg.gpr[0];
+    ret = reg->gpr[0];
   }
 
   for (int i = 0; i < cif->nargs; i++) {
+#ifdef FFI_CLOSURE_DEBUG
+    fprintf(stderr, "  arg[%d]: atype=%p atype->type=%u typecode=%u size=%zu\n",
+            i, (void*)atype[i],
+            atype[i] ? (unsigned)atype[i]->type : 99u,
+            (unsigned)ffi_xplink_type_code(atype[i]),
+            atype[i] ? atype[i]->size : 0);
+    fflush(stderr);
+#endif
     switch (ffi_xplink_type_code (atype[i])) {
       case FFI_TYPE_UINT8:
       case FFI_TYPE_SINT8:
         if (n_gprs == 3) {
-          args[i] = (void*)(((long)(&closure->reg.gpr[0])) + 7);
+          args[i] = (void*)(((long)(&reg->gpr[0])) + 7);
           n_gprs--;
           n_arg += 8;
         }
         else if (n_gprs == 2) { 
-          args[i] = (void*)(((long)(&closure->reg.gpr[1])) + 7);
+          args[i] = (void*)(((long)(&reg->gpr[1])) + 7);
           n_gprs--;
           n_arg += 8;
         }
         else if (n_gprs == 1) { 
-          args[i] = (void*)(((long)(&closure->reg.gpr[2])) + 7);
+          args[i] = (void*)(((long)(&reg->gpr[2])) + 7);
           n_gprs--;
           n_arg += 8;
         } 
@@ -842,17 +972,17 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
       case FFI_TYPE_UINT16:
       case FFI_TYPE_SINT16:
         if (n_gprs == 3) {
-          args[i] = (void*)(((long)(&closure->reg.gpr[0])) + 6);
+          args[i] = (void*)(((long)(&reg->gpr[0])) + 6);
           n_gprs--;
           n_arg += 8;
         }
         else if (n_gprs == 2) { 
-          args[i] = (void*)(((long)(&closure->reg.gpr[1])) + 6);
+          args[i] = (void*)(((long)(&reg->gpr[1])) + 6);
           n_gprs--;
           n_arg += 8;
         }
         else if (n_gprs == 1) { 
-          args[i] = (void*)(((long)(&closure->reg.gpr[2])) + 6);
+          args[i] = (void*)(((long)(&reg->gpr[2])) + 6);
           n_gprs--;
           n_arg += 8;
         } 
@@ -866,17 +996,17 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
       case FFI_TYPE_SINT32:
       case FFI_TYPE_INT:
         if (n_gprs == 3) {
-          args[i] = (void*)(((long)(&closure->reg.gpr[0])) + 4); 
+          args[i] = (void*)(((long)(&reg->gpr[0])) + 4); 
           n_gprs--;
           n_arg += 8;
         }
         else if (n_gprs == 2) { 
-          args[i] = (void*)(((long)(&closure->reg.gpr[1])) + 4); 
+          args[i] = (void*)(((long)(&reg->gpr[1])) + 4); 
           n_gprs--;
           n_arg += 8;
         }
         else if (n_gprs == 1) { 
-          args[i] = (void*)(((long)(&closure->reg.gpr[2])) + 4); 
+          args[i] = (void*)(((long)(&reg->gpr[2])) + 4); 
           n_gprs--;
           n_arg += 8;
         } 
@@ -889,17 +1019,17 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
       case FFI_TYPE_SINT64:
       case FFI_TYPE_POINTER:
         if (n_gprs == 3) {
-          args[i] = &closure->reg.gpr[0];
+          args[i] = &reg->gpr[0];
           n_gprs--;
           n_arg += 8;
         }
         else if (n_gprs == 2) { 
-          args[i] = &closure->reg.gpr[1]; 
+          args[i] = &reg->gpr[1]; 
           n_gprs--;
           n_arg += 8;
         }
         else if (n_gprs == 1) { 
-          args[i] = &closure->reg.gpr[2];
+          args[i] = &reg->gpr[2];
           n_gprs--;
           n_arg += 8;
         } 
@@ -914,7 +1044,7 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
         if (n_fixed_remaining == 0) {
           /* variadic: floats/doubles passed in GPR/memory, not FPRs */
           if (n_gprs > 0) {
-            args[i] = &closure->reg.gpr[3 - n_gprs];
+            args[i] = &reg->gpr[3 - n_gprs];
             n_gprs--;
           } else {
             args[i] = (savearea + n_arg);
@@ -922,25 +1052,25 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
           n_arg += 8;
         }
         else if (n_fprs == 4) {
-          args[i] = &closure->reg.fpr[0];
+          args[i] = &reg->fpr[0];
           n_gprs--;
           n_fprs--;
           n_arg += 8;
         }
         else if (n_fprs == 3) {
-          args[i] = &closure->reg.fpr[2];
+          args[i] = &reg->fpr[2];
           n_gprs--;
           n_fprs--;
           n_arg += 8;
         }
         else if (n_fprs == 2) {
-          args[i] = &closure->reg.fpr[4];
+          args[i] = &reg->fpr[4];
           n_gprs--;
           n_fprs--;
           n_arg += 8;
         }
         else if (n_fprs == 1) {
-          args[i] = &closure->reg.fpr[6];
+          args[i] = &reg->fpr[6];
           n_gprs--;
           n_fprs--;
           n_arg += 8;
@@ -958,8 +1088,8 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
         }
         else if (n_fprs == 4) {
           arg_longdouble = alloca(sizeof(long double));
-          ((double *) arg_longdouble)[0] = closure->reg.fpr[0];
-          ((double *) arg_longdouble)[1] = closure->reg.fpr[2];
+          ((double *) arg_longdouble)[0] = reg->fpr[0];
+          ((double *) arg_longdouble)[1] = reg->fpr[2];
           args[i] = arg_longdouble;
           n_gprs -= 2;
           n_fprs -= 2;
@@ -967,8 +1097,8 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
         }
         else if (n_fprs == 3 || n_fprs == 2) {
           arg_longdouble = alloca(sizeof(long double));
-          ((double *) arg_longdouble)[0] = closure->reg.fpr[4];
-          ((double *) arg_longdouble)[1] = closure->reg.fpr[6];
+          ((double *) arg_longdouble)[0] = reg->fpr[4];
+          ((double *) arg_longdouble)[1] = reg->fpr[6];
           args[i] = arg_longdouble;
           n_gprs -= 2;
           n_fprs -= 2;
@@ -982,24 +1112,52 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
       case FFI_TYPE_STRUCT:
       case FFI_TYPE_STRUCT_DD:
       case FFI_TYPE_STRUCT_FF:
-      case FFI_TYPE_STRUCT_LDLD:	
-      unsigned short struct_subtype = ffi_check_struct_for_complex(atype[i]);
-        if (struct_subtype == FFI_TYPE_STRUCT || struct_subtype == FFI_TYPE_COMPLEX) {
+      case FFI_TYPE_STRUCT_LDLD:
+ {
+      /* For _Complex T the element type is in elements[0]; for a struct
+         use the recursive leaf checker.  Either way fp == FFI_TYPE_FLOAT/
+         DOUBLE/LONGDOUBLE means FPR-pair passing, 0 means GPR/memory.  */
+      unsigned int fp;
+        if (atype[i]->type == FFI_TYPE_COMPLEX)
+          fp = (atype[i]->elements && atype[i]->elements[0])
+               ? atype[i]->elements[0]->type : 0;
+        else
+          fp = ffi_struct_float_pair_type(&atype[i]);
+#ifdef FFI_CLOSURE_DEBUG
+        fprintf(stderr,
+          "  STRUCT dispatch arg[%d]: atype->type=%u typecode=%u fp=%u n_fprs=%d n_gprs=%d\n",
+          i, (unsigned)atype[i]->type,
+          (unsigned)ffi_xplink_type_code(atype[i]),
+          fp, n_fprs, n_gprs);
+        fflush(stderr);
+#endif
+#ifdef FFI_CLOSURE_DEBUG
+        fprintf(stderr, "  fp-branch: fp=%u (0=none 2=FLOAT 3=DBL 4=LD)\n", fp);
+        fflush(stderr);
+#endif
+        if (fp == 0) {
+#ifdef FFI_CLOSURE_DEBUG
+        fprintf(stderr, "  --> fp==0 (GPR/mem) size=%zu\n", atype[i]->size);
+        fflush(stderr);
+#endif
         // TODO fill this in
         if (atype[i]->size <= 8) {
           // handle like an int basically
           if (n_gprs == 3) {
-            args[i] = &closure->reg.gpr[0];
+#ifdef FFI_CLOSURE_DEBUG
+            fprintf(stderr, "    fp0: size<=8 n_gprs==3 -> &gpr[0]=%p\n", (void*)&reg->gpr[0]); fflush(stderr);
+#endif
+            args[i] = &reg->gpr[0];
             n_gprs--;
             n_arg += 8;
           }
           else if (n_gprs == 2) { 
-            args[i] = &closure->reg.gpr[1]; 
+            args[i] = &reg->gpr[1]; 
             n_gprs--;
             n_arg += 8;
           }
           else if (n_gprs == 1) { 
-            args[i] = &closure->reg.gpr[2];
+            args[i] = &reg->gpr[2];
             n_gprs--;
             n_arg += 8;
           } 
@@ -1012,19 +1170,19 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
         }
         else if (atype[i]->size <= 16) {
           if (n_gprs == 3) {
-            args[i] = &closure->reg.gpr[0];
+            args[i] = &reg->gpr[0];
             n_gprs -= 2;
             n_arg += 16;
           }
           else if (n_gprs == 2) { 
-            args[i] = &closure->reg.gpr[1]; 
+            args[i] = &reg->gpr[1]; 
             n_gprs -= 2;
             n_arg += 16;
           }
           else if (n_gprs == 1) { 
             // so we have overlap with closure->reg+memory
             // think we can just save to save area and use that
-            *(long*)(savearea + n_arg) = (long)closure->reg.gpr[2];
+            *(long*)(savearea + n_arg) = (long)reg->gpr[2];
             args[i] = (savearea + n_arg);
             n_gprs--;
             n_arg += 16;
@@ -1036,19 +1194,19 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
         }
         else if (atype[i]->size <= 24) {
           if (n_gprs == 3) {
-            args[i] = &closure->reg.gpr[0];
+            args[i] = &reg->gpr[0];
             n_gprs -= 3;
             n_arg += 24;
           }
           else if (n_gprs == 2) {
-            *(long*)(savearea + n_arg) = (long)closure->reg.gpr[1];
-            *(long*)(savearea + n_arg + 8) = (long)closure->reg.gpr[2];
+            *(long*)(savearea + n_arg) = (long)reg->gpr[1];
+            *(long*)(savearea + n_arg + 8) = (long)reg->gpr[2];
             args[i] = (savearea + n_arg);
             n_gprs -= 2;
             n_arg += 24;
           }
           else if (n_gprs == 1) {
-            *(long*)(savearea + n_arg) = (long)closure->reg.gpr[2];
+            *(long*)(savearea + n_arg) = (long)reg->gpr[2];
             args[i] = (savearea + n_arg);
             n_gprs--;
             n_arg += 24;
@@ -1061,22 +1219,22 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
         else {
           // really big
           if (n_gprs == 3) {
-            *(long*)(savearea + n_arg) = (long)closure->reg.gpr[0];
-            *(long*)(savearea + n_arg + 8) = (long)closure->reg.gpr[1];
-            *(long*)(savearea + n_arg + 16) = (long)closure->reg.gpr[2];
+            *(long*)(savearea + n_arg) = (long)reg->gpr[0];
+            *(long*)(savearea + n_arg + 8) = (long)reg->gpr[1];
+            *(long*)(savearea + n_arg + 16) = (long)reg->gpr[2];
             args[i] = (savearea + n_arg);
             n_gprs -= 3;
             n_arg += atype[i]->size;
           }
           else if (n_gprs == 2) {
-            *(long*)(savearea + n_arg) = (long)closure->reg.gpr[1];
-            *(long*)(savearea + n_arg + 8) = (long)closure->reg.gpr[2];
+            *(long*)(savearea + n_arg) = (long)reg->gpr[1];
+            *(long*)(savearea + n_arg + 8) = (long)reg->gpr[2];
             args[i] = (savearea + n_arg);
             n_gprs -= 2;
             n_arg += atype[i]->size;
           }
           else if (n_gprs == 1) {
-            *(long*)(savearea + n_arg) = (long)closure->reg.gpr[2];
+            *(long*)(savearea + n_arg) = (long)reg->gpr[2];
             args[i] = (savearea + n_arg);
             n_gprs--;
             n_arg += atype[i]->size;
@@ -1088,29 +1246,32 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
           }
         }
     }
-        else if(struct_subtype == FFI_TYPE_STRUCT_DD){
+        else if(fp == FFI_TYPE_DOUBLE){
+#ifdef FFI_CLOSURE_DEBUG
+        fprintf(stderr, "  --> fp==DOUBLE n_fprs=%d n_fixed_remaining=%d\n", n_fprs, n_fixed_remaining); fflush(stderr);
+#endif
         if (n_fixed_remaining == 0) {
           /* variadic: _Complex double passed as 16-byte opaque value in GPR/memory */
           args[i] = (savearea + n_arg);
           n_arg += 16;
         }
         else if (n_fprs == 4) {
-          args[i] = &closure->reg.fpr[0];
-          closure->reg.fpr[1] = closure->reg.fpr[2];
+          args[i] = &reg->fpr[0];
+          reg->fpr[1] = reg->fpr[2];
           n_gprs--;
           n_fprs -= 2;
           n_arg += 16;
         }
         else if (n_fprs == 3) {
-          args[i] = &closure->reg.fpr[2];
-          closure->reg.fpr[3] = closure->reg.fpr[4];
+          args[i] = &reg->fpr[2];
+          reg->fpr[3] = reg->fpr[4];
           n_gprs--;
           n_fprs -= 2;
           n_arg += 16;
         }
         else if (n_fprs == 2) {
-          args[i] = &closure->reg.fpr[4];
-          closure->reg.fpr[5] = closure->reg.fpr[6];
+          args[i] = &reg->fpr[4];
+          reg->fpr[5] = reg->fpr[6];
           n_gprs--;
           n_fprs -= 2;
           n_arg += 16;
@@ -1118,7 +1279,7 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
         else if (n_fprs == 1) {
           cmplx_arg_double = alloca(2*sizeof(double));
           args[i] = cmplx_arg_double;
-          cmplx_arg_double[0] = closure->reg.fpr[6];
+          cmplx_arg_double[0] = reg->fpr[6];
           cmplx_arg_double[1] = *(double*)(savearea + n_arg + 8);
           n_gprs--;
           n_fprs -= 2;
@@ -1129,52 +1290,82 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
           n_arg += 16;
         }
         }
-        else if(struct_subtype == FFI_TYPE_STRUCT_FF){
+        else if(fp == FFI_TYPE_FLOAT){
+#ifdef FFI_CLOSURE_DEBUG
+            fprintf(stderr, "  --> fp==FLOAT n_fprs=%d n_fixed_remaining=%d\n", n_fprs, n_fixed_remaining); fflush(stderr);
+#endif
             cmplx_arg = alloca(2*sizeof(float));
+#ifdef FFI_CLOSURE_DEBUG
+            fprintf(stderr, "    alloca -> cmplx_arg=%p\n", (void*)cmplx_arg); fflush(stderr);
+#endif
             if (n_fixed_remaining == 0) {
+#ifdef FFI_CLOSURE_DEBUG
+            fprintf(stderr, "    FLOAT: variadic path, args[i]=savearea+%d\n", n_arg); fflush(stderr);
+#endif
             /* variadic: _Complex float passed as 8-byte opaque value in GPR/memory */
             args[i] = (savearea + n_arg);
             n_arg += 8;
             }
             else if (n_fprs == 4) {
+#ifdef FFI_CLOSURE_DEBUG
+            fprintf(stderr, "    FLOAT: n_fprs==4 path\n"); fflush(stderr);
+#endif
             args[i] = cmplx_arg;
-            cmplx_arg[0] = *(float*)&closure->reg.fpr[0];
-            cmplx_arg[1] = *(float*)&closure->reg.fpr[2];
+            cmplx_arg[0] = *(float*)&reg->fpr[0];
+            cmplx_arg[1] = *(float*)&reg->fpr[2];
+#ifdef FFI_CLOSURE_DEBUG
+            { uint64_t _r0, _r2; memcpy(&_r0,&reg->fpr[0],8); memcpy(&_r2,&reg->fpr[2],8);
+              fprintf(stderr, "    wrote: [0]=0x%08x [1]=0x%08x  fpr0_raw=0x%016llx fpr2_raw=0x%016llx\n",
+                *(unsigned*)&cmplx_arg[0], *(unsigned*)&cmplx_arg[1],
+                (unsigned long long)_r0, (unsigned long long)_r2); fflush(stderr); }
+#endif
             n_gprs--;
             n_fprs -= 2;
             n_arg += 8;
             }
             else if ((n_fprs == 3)) {
+#ifdef FFI_CLOSURE_DEBUG
+            fprintf(stderr, "    FLOAT: n_fprs==3 path\n"); fflush(stderr);
+#endif
             args[i] = cmplx_arg;
-            cmplx_arg[0] = *(float*)&closure->reg.fpr[2];
-            cmplx_arg[1] = *(float*)&closure->reg.fpr[4];
+            cmplx_arg[0] = *(float*)&reg->fpr[2];
+            cmplx_arg[1] = *(float*)&reg->fpr[4];
             n_gprs--;
             n_fprs -= 2;
             n_arg += 8;
             }
             else if ((n_fprs == 2)) {
+#ifdef FFI_CLOSURE_DEBUG
+            fprintf(stderr, "    FLOAT: n_fprs==2 path\n"); fflush(stderr);
+#endif
             args[i] = cmplx_arg;
-            cmplx_arg[0] = *(float*)&closure->reg.fpr[4];
-            cmplx_arg[1] = *(float*)&closure->reg.fpr[6];
+            cmplx_arg[0] = *(float*)&reg->fpr[4];
+            cmplx_arg[1] = *(float*)&reg->fpr[6];
             n_gprs--;
             n_fprs -= 2;
             n_arg += 8;
             }
             else if (n_fprs == 1) {
+#ifdef FFI_CLOSURE_DEBUG
+            fprintf(stderr, "    FLOAT: n_fprs==1 path\n"); fflush(stderr);
+#endif
             args[i] = cmplx_arg;
-            cmplx_arg[0] = *(float*)&closure->reg.fpr[6];
+            cmplx_arg[0] = *(float*)&reg->fpr[6];
             cmplx_arg[1] = *(float*)(savearea + n_arg + 4);
             n_gprs--;
             n_fprs -= 2;
             n_arg += 8;
             }
             else {
+#ifdef FFI_CLOSURE_DEBUG
+            fprintf(stderr, "    FLOAT: n_fprs==0 (mem) path\n"); fflush(stderr);
+#endif
             args[i] = (savearea + n_arg);
             cmplx_arg = (savearea + n_arg);
             n_arg += 8;
             }
         }
-        else if(struct_subtype == FFI_TYPE_STRUCT_LDLD){
+        else if(fp == FFI_TYPE_LONGDOUBLE){
             if (n_fixed_remaining == 0) {
             /* variadic: _Complex long double passed as 32-byte opaque value in memory */
             args[i] = (savearea + n_arg);
@@ -1182,10 +1373,10 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
             }
             else if (n_fprs == 4) {
                 arg_longdouble = alloca(2*sizeof(long double));
-                ((double *) arg_longdouble)[0] = closure->reg.fpr[0];
-                ((double *) arg_longdouble)[1] = closure->reg.fpr[2];
-                ((double *) arg_longdouble)[2] = closure->reg.fpr[4];
-                ((double *) arg_longdouble)[3] = closure->reg.fpr[6];
+                ((double *) arg_longdouble)[0] = reg->fpr[0];
+                ((double *) arg_longdouble)[1] = reg->fpr[2];
+                ((double *) arg_longdouble)[2] = reg->fpr[4];
+                ((double *) arg_longdouble)[3] = reg->fpr[6];
                 args[i] = arg_longdouble;
                 n_gprs = 0;
                 n_fprs = 0;
@@ -1193,8 +1384,8 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
             }
      else if(n_fprs == 2){
                 arg_longdouble = alloca(2*sizeof(long double));
-                ((double *) arg_longdouble)[0] = closure->reg.fpr[4];
-                ((double *) arg_longdouble)[1] = closure->reg.fpr[6];
+                ((double *) arg_longdouble)[0] = reg->fpr[4];
+                ((double *) arg_longdouble)[1] = reg->fpr[6];
                 ((double *) arg_longdouble)[2] = *(double *)(savearea + n_arg + 16);
                 ((double *) arg_longdouble)[3] = *(double *)(savearea + n_arg + 24);
                 args[i] = arg_longdouble;
@@ -1209,7 +1400,8 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
                 n_arg += 32;
             }
         }
-        break;
+        break; 
+	}
     }
 
     /* Variadic fence: mirror xplink.S CONT/VARFNC logic.
@@ -1273,9 +1465,6 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
             break;
         }
     }
-
-
-
 
   return;
 }
@@ -1364,3 +1553,4 @@ ffi_prep_closure_loc (ffi_closure *closure,
 }
 
 /*======================== End of Routine ============================*/
+
