@@ -133,7 +133,6 @@ FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
 *bytes, we need to allocate space for the dummy argument
 *that holds the return value pointer.
 *Skip for: FFI_TYPE_COMPLEX (15) - always returns in FPR/GPR pairs
-*          FFI_TYPE_STRUCT_FF/DD/LDLD (16/17/18) - returns in FPR pairs
 *          anything with size <= 24 - returns in GPR1/2/3
          LG 15,(2176+(((DSASZ+31)/32)*32)+8)(,4)
          LG 15,0(,15)           ecif->cif
@@ -142,8 +141,6 @@ FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
          LG 15,0(,15)           rtype->size
          CFI 11,15              FFI_TYPE_COMPLEX?
          BE GETNARGS            yes: always returns in registers, no hidden ptr
-         CFI 11,16              FFI_TYPE_STRUCT_FF?
-         BNL GETNARGS           yes (>=16 means FF/DD/LDLD): returns in FPR pairs
          CFI 15,24
          BNH GETNARGS
 
@@ -1252,8 +1249,6 @@ RS       DS 0H
          LG 14,0(,14)           ecif->cif
          LG 9,16(,14)           cif->rtype
          LLGH 11,10(,9)         rtype->type
-         CFI 11,18              rtype->type == FFI_TYPE_STRUCT_LDLD
-         BE STORELD1
          LG 14,0(,9)            rtype->size
          CGIBH 14,24,RSP
 
@@ -1284,14 +1279,7 @@ RS       DS 0H
 * r9 = cif->rtype
 * r7 = ecif->rvalue
 RSREG    DS 0H
-         LLGH 11,10(,9)       rtype->type
          LA 15,SSTOR
-         CFI 11,16            rtype->type == FFI_TYPE_STRUCT_FF
-         BE STOREF1
-         CFI 11,17            rtype->type == FFI_TYPE_STRUCT_DD
-         BE STORED1
-         CFI 11,18            rtype->type == FFI_TYPE_STRUCT_LDLD
-         BE STORELD1
          STG  1,0(,15)
          STG  2,8(,15)
          STG  3,16(,15)
