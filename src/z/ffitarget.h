@@ -70,43 +70,6 @@ typedef enum ffi_abi {
 #define FFI_NATIVE_RAW_API 0
 
 
-/* If these change, update src/mips/ffitarget.h. */
-/**
-#define FFI_TYPE_VOID       0
-#define FFI_TYPE_INT        1
-#define FFI_TYPE_FLOAT      2
-#define FFI_TYPE_DOUBLE     3
-#if @HAVE_LONG_DOUBLE@
-#define FFI_TYPE_LONGDOUBLE 4
-#else
-#define FFI_TYPE_LONGDOUBLE FFI_TYPE_DOUBLE
-#endif
-#define FFI_TYPE_UINT8      5
-#define FFI_TYPE_SINT8      6
-#define FFI_TYPE_UINT16     7
-#define FFI_TYPE_SINT16     8
-#define FFI_TYPE_UINT32     9
-#define FFI_TYPE_SINT32     10
-#define FFI_TYPE_UINT64     11
-#define FFI_TYPE_SINT64     12
-#define FFI_TYPE_STRUCT     13
-#define FFI_TYPE_POINTER    14
-#define FFI_TYPE_COMPLEX    15
-#define FFI_TYPE_STRUCT_FF  16
-#define FFI_TYPE_STRUCT_DD  17
-**/
-
-#define FFI_TYPE_STRUCT_FF  16
-#define FFI_TYPE_STRUCT_DD  17
-#define FFI_TYPE_STRUCT_LDLD  18
-
-// HACK ALERT!!! (maybe fix this?)
-#ifdef FFI_TYPE_LAST
-#undef FFI_TYPE_LAST
-/* This should always refer to the last type code (for sanity checks) */
-#define FFI_TYPE_LAST       FFI_TYPE_STRUCT_LDLD
-#endif
-
 /* struct data to save registers */
 struct ffi_reg_data {
   long* gpr[16];

@@ -86,8 +86,6 @@ void ffi_prep_args (unsigned char *, extended_cif *);
 void ffi_closure_helper_SYSV (ffi_closure *, void *, struct ffi_reg_data *);
 #pragma map(ffi_determine_return_type, "DETRET")
 int ffi_determine_return_type(ffi_closure *);
-#pragma map(ffi_xplink_type_code, "TYPCLASS")
-unsigned short ffi_xplink_type_code (ffi_type *);
 #pragma map(ffi_struct_float_pair_type, "STFPTYP")
 unsigned int ffi_struct_float_pair_type (ffi_type **);
 #pragma map(ffi_dummy, "FFIDUMMY")
@@ -244,9 +242,6 @@ ffi_prep_args (unsigned char *stack, extended_cif *ecif)
         {
 
           case FFI_TYPE_STRUCT:
-          case FFI_TYPE_STRUCT_FF:
-          case FFI_TYPE_STRUCT_DD:
-	        case FFI_TYPE_STRUCT_LDLD:
           case FFI_TYPE_COMPLEX:
             memcpy(arg_ptr, *p_argv, size);
             break;
@@ -318,83 +313,6 @@ ffi_prep_args (unsigned char *stack, extended_cif *ecif)
 
 /*======================== End of Routine ============================*/
  
-/**
- * Helper functions to know if the given struct needs to be treated for complex
- * type for float or double.
- */
-static unsigned short
-get_ffi_element_type_in_struct(ffi_type *arg_type)
-{
-  while ((FFI_TYPE_STRUCT == arg_type->type)
-        && (NULL != arg_type->elements[0])
-        && (NULL == arg_type->elements[1])
-  ) {
-    arg_type = arg_type->elements[0];
-  }
-  return arg_type->type;
-}
-
-static unsigned short
-ffi_check_struct_for_complex(ffi_type *arg_type)
-{
-  if ((FFI_TYPE_STRUCT == arg_type->type) && (NULL != arg_type->elements[0]))
-  {
-    unsigned short firstArgType = get_ffi_element_type_in_struct(arg_type->elements[0]);
-    if (FFI_TYPE_FLOAT == firstArgType)
-    {
-      if ((NULL != arg_type->elements[1])
-          && (NULL == arg_type->elements[2])
-          && (FFI_TYPE_FLOAT == get_ffi_element_type_in_struct(arg_type->elements[1]))
-      ) {
-        return FFI_TYPE_STRUCT_FF;
-      }
-    }
-    else if (FFI_TYPE_DOUBLE == firstArgType)
-    {
-      if ((NULL != arg_type->elements[1])
-          && (NULL == arg_type->elements[2])
-          && (FFI_TYPE_DOUBLE == get_ffi_element_type_in_struct(arg_type->elements[1]))
-      ) {
-        return FFI_TYPE_STRUCT_DD;
-      }
-    }
-    else if (FFI_TYPE_LONGDOUBLE == firstArgType)
-    {
-      if ((NULL != arg_type->elements[1])
-          && (NULL == arg_type->elements[2])
-          && (FFI_TYPE_LONGDOUBLE == get_ffi_element_type_in_struct(arg_type->elements[1]))
-      ) {
-        return FFI_TYPE_STRUCT_LDLD;
-      }
-    }
-  }
-  else if ((FFI_TYPE_COMPLEX == arg_type->type) && (NULL != arg_type->elements[0]))
-  {
-    unsigned short elementType = get_ffi_element_type_in_struct(arg_type->elements[0]);
-    if (FFI_TYPE_FLOAT == elementType)
-      return FFI_TYPE_STRUCT_FF;
-    else if (FFI_TYPE_DOUBLE == elementType)
-      return FFI_TYPE_STRUCT_DD;
-    else if (FFI_TYPE_LONGDOUBLE == elementType)
-      return FFI_TYPE_STRUCT_LDLD;
-  }
-  return arg_type->type;
-}
-
-unsigned short
-ffi_xplink_type_code (ffi_type *arg_type)
-{
-  if (arg_type->type == FFI_TYPE_STRUCT)
-    {
-      unsigned int fp = ffi_struct_float_pair_type (&arg_type);
-      if (fp == FFI_TYPE_FLOAT)      return FFI_TYPE_STRUCT_FF;
-      if (fp == FFI_TYPE_DOUBLE)     return FFI_TYPE_STRUCT_DD;
-      if (fp == FFI_TYPE_LONGDOUBLE) return FFI_TYPE_STRUCT_LDLD;
-      return FFI_TYPE_STRUCT;
-    }
-  return ffi_check_struct_for_complex (arg_type);
-}
-
 /*====================================================================*/
 /*                                                                    */
 /* Name     - ffi_struct_float_pair_type.                             */
@@ -558,12 +476,13 @@ ffi_prep_cif_machdep(ffi_cif *cif)
          Integer-based complex (e.g. _Complex int): real in GPR3, imag in GPR2.  */
       case FFI_TYPE_COMPLEX:
         {
-          unsigned short sub = ffi_check_struct_for_complex (cif->rtype);
-          if (sub == FFI_TYPE_STRUCT_FF)
+          unsigned int fp = (cif->rtype->elements && cif->rtype->elements[0])
+                            ? cif->rtype->elements[0]->type : 0;
+          if (fp == FFI_TYPE_FLOAT)
             cif->flags = FFI390_RET_STRUCT_FF;
-          else if (sub == FFI_TYPE_STRUCT_DD)
+          else if (fp == FFI_TYPE_DOUBLE)
             cif->flags = FFI390_RET_STRUCT_DD;
-          else if (sub == FFI_TYPE_STRUCT_LDLD)
+          else if (fp == FFI_TYPE_LONGDOUBLE)
             cif->flags = FFI390_RET_STRUCT_LDLD;
           else
             cif->flags = FFI390_RET_COMPLEX_INT; /* real→GPR3, imag→GPR2 */
@@ -588,23 +507,51 @@ ffi_prep_cif_machdep(ffi_cif *cif)
         break;
     }
 
-  //cif->rtype->type = ffi_check_struct_for_complex(cif->rtype);
   /* Now for the arguments.  */
  
   for (ptr = cif->arg_types, i = cif->nargs;
        i > 0;
        i--, ptr++)
     {
-      int type = ffi_xplink_type_code (*ptr);
+      int type = (*ptr)->type;
 
       /* Check how a structure type is passed.  */
-      if (type == FFI_TYPE_STRUCT)
+      if (type == FFI_TYPE_STRUCT || type == FFI_TYPE_COMPLEX)
         {
-          type = ffi_check_struct_type (*ptr);
-          /* If we pass the struct via pointer, we must reserve space
-             to copy its data for proper call-by-value semantics.  */
-          if (type == FFI_TYPE_POINTER)
-            struct_size += ROUND_SIZE ((*ptr)->size);
+          unsigned int fp;
+          if (type == FFI_TYPE_COMPLEX)
+            fp = ((*ptr)->elements && (*ptr)->elements[0])
+                 ? (*ptr)->elements[0]->type : 0;
+          else
+            fp = ffi_struct_float_pair_type (ptr);
+
+          if (fp == FFI_TYPE_FLOAT || fp == FFI_TYPE_DOUBLE)
+            {
+              /* {float,float} / _Complex float  or  {double,double} / _Complex double:
+                 2 FPRs */
+              if (n_fpr + 2 <= MAX_FPRARGS)
+                n_fpr += 2;
+              else
+                n_ov += (fp == FFI_TYPE_FLOAT) ? 1 : 2;
+              continue;
+            }
+          else if (fp == FFI_TYPE_LONGDOUBLE)
+            {
+              /* {long double, long double} or _Complex long double: 4 FPRs */
+              if (n_fpr + 4 <= MAX_FPRARGS)
+                n_fpr += 4;
+              else
+                n_ov += 2 * (sizeof(long double) / sizeof(long));
+              continue;
+            }
+          else if (type == FFI_TYPE_STRUCT)
+            {
+              type = ffi_check_struct_type (*ptr);
+              /* If we pass the struct via pointer, we must reserve space
+                 to copy its data for proper call-by-value semantics.  */
+              if (type == FFI_TYPE_POINTER)
+                struct_size += ROUND_SIZE ((*ptr)->size);
+            }
         }
 
       /* Now handle all primitive int/float data types.  */
@@ -617,30 +564,6 @@ ffi_prep_cif_machdep(ffi_cif *cif)
             n_fpr += 2;
           else
             n_ov += sizeof(long double) / sizeof(long);
-          break;
-
-        case FFI_TYPE_STRUCT_LDLD:
-          /* {long double, long double} or _Complex long double: 4 FPRs */
-          if (n_fpr + 4 <= MAX_FPRARGS)
-            n_fpr += 4;
-          else
-            n_ov += 2 * (sizeof(long double) / sizeof(long));
-          break;
-
-        case FFI_TYPE_STRUCT_DD:
-          /* {double, double} or _Complex double: 2 FPRs */
-          if (n_fpr + 2 <= MAX_FPRARGS)
-            n_fpr += 2;
-          else
-            n_ov += 2;
-          break;
-
-        case FFI_TYPE_STRUCT_FF:
-          /* {float, float} or _Complex float: 2 FPRs */
-          if (n_fpr + 2 <= MAX_FPRARGS)
-            n_fpr += 2;
-          else
-            n_ov += 1;
           break;
 
         case FFI_TYPE_DOUBLE:
@@ -856,7 +779,7 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
 
   unsigned short struct_subtype = FFI_TYPE_VOID;
   if (cif->rtype)
-    struct_subtype = ffi_xplink_type_code (cif->rtype);
+    struct_subtype = cif->rtype->type;
 
   int num_args = cif->nargs;
   if (cif->rtype == NULL || cif->rtype->type == FFI_TYPE_VOID)
@@ -928,7 +851,7 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
   // for subsequent args (matching xplink.S VARFNC logic)
   int n_fixed_remaining = (int)cif->nfixedargs;
 
-  if (ret_size > 24 && struct_subtype != FFI_TYPE_STRUCT_LDLD) {
+  if (ret_size > 24 && cif->flags != FFI390_RET_STRUCT_LDLD) {
     // if we have a return pointer
     // passed into r1
     n_gprs--;
@@ -938,14 +861,13 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
 
   for (int i = 0; i < cif->nargs; i++) {
 #ifdef FFI_CLOSURE_DEBUG
-    fprintf(stderr, "  arg[%d]: atype=%p atype->type=%u typecode=%u size=%zu\n",
+    fprintf(stderr, "  arg[%d]: atype=%p atype->type=%u size=%zu\n",
             i, (void*)atype[i],
             atype[i] ? (unsigned)atype[i]->type : 99u,
-            (unsigned)ffi_xplink_type_code(atype[i]),
             atype[i] ? atype[i]->size : 0);
     fflush(stderr);
 #endif
-    switch (ffi_xplink_type_code (atype[i])) {
+    switch (atype[i]->type) {
       case FFI_TYPE_UINT8:
       case FFI_TYPE_SINT8:
         if (n_gprs == 3) {
@@ -1110,9 +1032,7 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
         }
         break;
       case FFI_TYPE_STRUCT:
-      case FFI_TYPE_STRUCT_DD:
-      case FFI_TYPE_STRUCT_FF:
-      case FFI_TYPE_STRUCT_LDLD:
+      case FFI_TYPE_COMPLEX:
  {
       /* For _Complex T the element type is in elements[0]; for a struct
          use the recursive leaf checker.  Either way fp == FFI_TYPE_FLOAT/
@@ -1125,9 +1045,8 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
           fp = ffi_struct_float_pair_type(&atype[i]);
 #ifdef FFI_CLOSURE_DEBUG
         fprintf(stderr,
-          "  STRUCT dispatch arg[%d]: atype->type=%u typecode=%u fp=%u n_fprs=%d n_gprs=%d\n",
+          "  STRUCT dispatch arg[%d]: atype->type=%u fp=%u n_fprs=%d n_gprs=%d\n",
           i, (unsigned)atype[i]->type,
-          (unsigned)ffi_xplink_type_code(atype[i]),
           fp, n_fprs, n_gprs);
         fflush(stderr);
 #endif
