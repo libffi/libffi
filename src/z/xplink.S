@@ -1,15 +1,95 @@
 * Copyright IBM Corp. and others 2026
 FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
 
-*FFISYS ARGS:
-*r1 <- foreign_function_address (2176) (+0)
-*r2 <- &ecif (2116) (+8)
-*r3 <- cif->flags (2120) (+20)
-*@2124(,4) <- ecif->rvalue (+24)?
-*@2128(,4) <- cif->bytes (+36)?
-*@2132(,4) <- cif->nargs (+44)?
-*@2136(,4) <- cif->nfixedargs (+52)?
-
+*===================================================================
+* FFISYS - xplink call trampoline
+*===================================================================
+*
+* PURPOSE
+*   Prepare arguments per the z/OS XPLINK calling convention,
+*   call the foreign function, then store the return value.
+*
+* INCOMING ARGUMENTS
+*   r1/r2/r3 carry the first three arguments; args 4+ live in
+*   the caller's outgoing argument area at r4+2176+(rounded DSA).
+*   Offsets are relative to that arg-area base:
+*
+*     +0   r1    foreign_function_address
+*     +8   r2    ecif          (extended_ffi_cif *)
+*     +20  r3    cif->flags    (FFI390_RET_* constant)
+*     +24  @(r4) ecif->rvalue  (return-value buffer pointer)
+*     +36  @(r4) cif->bytes    (total arg-area bytes required)
+*     +44  @(r4) cif->nargs    (total argument count)
+*     +52  @(r4) cif->nfixedargs (fixed args before '...')
+*     +56  @(r4) lstor         (alloca'd buffer, cif->bytes long)
+*
+* NOTE: r4 is the XPLINK stack pointer biased by 2048.
+*       r4+2048 = start of the DSA (register save area).
+*       r4+2176 = start of the outgoing argument area.
+*
+* GPR USAGE
+*-------------------------------------------------------------------
+*  r0   GPR arg-slot counter.  0=none consumed; increments to 3
+*       as r1/r2/r3 are assigned to outgoing args.  When r0==3
+*       all GPR slots are full; further args spill to the stack.
+*  r1   Outgoing arg register 1 (first integer/pointer slot).
+*       Also used as scratch during setup.
+*  r2   Outgoing arg register 2 (second integer/pointer slot).
+*  r3   Outgoing arg register 3 (third integer/pointer slot).
+*  r4   XPLINK stack pointer (biased by 2048); constant.
+*  r5   Base address of cif->arg_types pointer array.  Set once
+*       from r14 after the initial LG; not changed in the loop.
+*  r6   Byte offset into the lstor buffer (alloca'd by caller,
+*       filled by ffi_prep_args_call).  Index in 0(r6,r13).
+*       Re-purposed at CALL: loaded with the fn-descriptor ptr
+*       so LMG 5,6,0(r6) fetches the descriptor words.
+*  r7   Byte offset into the outgoing argument area (base
+*       r4+2176) during the argument loop.  Advanced by 8 (or
+*       the struct size) after each argument.
+*       Re-purposed at CALL and return handlers: holds the
+*       ecif->rvalue pointer (return-value buffer).
+*       After BASR 7,6 also serves as the post-call base reg.
+*  r8   Not used as a GPR in the argument loop.
+*  r9   Argument loop iteration counter.  Loaded from cif->nargs;
+*       decremented by BCT at CONT2 (once per argument).
+*  r10  Byte offset into the ffi_type* array (base r5).
+*       Advanced by 8 after each argument.
+*  r11  Integer scratch: ffi_type->type codes, intermediate
+*       addresses, argument values.
+*       Distinct from fpr11 (see FPR section below).
+*  r12  Variadic fence counter.  Loaded from cif->nfixedargs;
+*       decremented at CONT.  When it reaches 0, r14 is forced
+*       to 4 to route FLT/D through GPRs instead of FPRs.
+*       Also scratch inside STRCTDISP (struct HFA detection);
+*       safe because STRCTDISP is only reached from ARGLOOP
+*       after CONT has already decremented r12.
+*  r13  lstor base pointer during the argument loop; loaded from
+*       the lstor pointer at arg-area offset +60.
+*       Re-purposed at CALL: reset to 0 then loaded with
+*       rtype->type for return-value dispatch.
+*  r14  FPR arg-slot counter.  0=none consumed; +1 per float/
+*       double, +2 per long double.  When r14==4 all four FPR
+*       slots (fpr0/2/4/6) are full; further FP args spill.
+*       Forced to 4 at the variadic fence.
+*  r15  Scratch: dispatch address, table base, and remaining
+*       byte count in the struct copy loop (STRCTLP).
+*
+* FPR USAGE
+*-------------------------------------------------------------------
+*  fpr0   Outgoing FP arg slot 0; return value for float/double
+*         and low half of long double return.
+*  fpr2   Outgoing FP arg slot 1; imaginary part of complex
+*         float/double return; high half of long double return.
+*  fpr4   Outgoing FP arg slot 2.
+*  fpr6   Outgoing FP arg slot 3.
+*  fpr8   Scratch for the high-word half of a long-double pair
+*         (DFPR0, DFPR4, DARGF, STFPCHKLD*); stored via
+*         STD 8,8(r7,r15).
+*  fpr11  Float/double staging register.  Loaded via LE/LD/
+*         LER/LDR then written to the arg area with STE/STD.
+*         Distinct from GPR 11.
+*-------------------------------------------------------------------
+*
          USING  CEEDSAHP,4
 
 *Store argument registers on the stack
@@ -32,8 +112,8 @@ FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
 *Action:  Is an external call to C-XPLINK routine
 *         It saves function's arguments in this 
 *         routine's local storage
-         LA 1,LSTOR          
-         LGR 13,1 
+         LG 1,(2176+(((DSASZ+31)/32)*32)+56)(,4)  lstor ptr
+         LGR 13,1
          CELQCALL   PREPARGS,WORKREG=10
 
          LGR 5,14              Copy of parameter types
@@ -94,7 +174,7 @@ ARGLOOP  LG  11,0(10,5)       Get pointer to current ffi_type
  
 *Following code prepares ffi arguments, according to xplink
 
-* technically, this isn't allowed 
+* technically, this isn't allowed?
 * but openJ9 uses ffi_type_void for void functions
 * so support it since it doesn't break anything
 * assuming we don't have something weird like a void type
@@ -335,7 +415,7 @@ SI64     DS 0H                ffi_type_sint64
          LA 0,3               Reached max gprs
          B  J5
 INC5     DS 0H
-         AHI 0,1              Now we have two less gpr left
+         AHI 0,1              Now we have one less gpr left
 J5       DS 0H
          BR 15 
 
@@ -344,12 +424,12 @@ S64GPR1 DS 0H                INT64 type passed in gpr1
          AHI 7,8              Advance next two words in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
          B CONT               Next parameter
-S64GPR2 DS 0H                INT64 type passed in gpr2,gpr3
+S64GPR2 DS 0H                INT64 type passed in gpr2
          LG  2,0(6,13)
          AHI 7,8              Advance next two words in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
          B CONT               Next parameter
-S64GPR3  DS 0H                INT64 type passed in gpr2
+S64GPR3  DS 0H                INT64 type passed in gpr3
          LG  3,0(6,13)
          AHI 7,8              Advance next two words in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
@@ -413,17 +493,17 @@ INC64    DS 0H
 J64      DS 0H
          BR 15
 
-U64GP1   DS 0H                u_INT64 passed in gpr1, gpr2
+U64GP1   DS 0H                u_INT64 passed in gpr1
          LG 1,0(6,13)  
          AHI 7,8              Advance two slots in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
          B CONT               Next parameter
-U64GP2   DS 0H                u_INT64 passed in gpr2, gpr3
+U64GP2   DS 0H                u_INT64 passed in gpr2
          LG 2,0(6,13) 
          AHI 7,8              Advance two slots in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
          B CONT               Next parameter
-U64GP3   DS 0H                u_INT64 passed in gpr2
+U64GP3   DS 0H                u_INT64 passed in gpr3
          LG 3,0(6,13)
          AHI 7,8              Advance next word in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
@@ -524,7 +604,7 @@ FLDR4    DS 0H                DOUBLE passed in fpr4
          LD 4,0(6,13)
          LDR 11,4
          B DBLSTR
-FLDR6    DS 0H                DOUBLED passed in fpr6
+FLDR6    DS 0H                DOUBLE passed in fpr6
          LD 6,0(6,13)
          LDR 11,6
          B DBLSTR
@@ -645,7 +725,7 @@ STFPCHKF26 DS 0H
 STFPCHKF202 DS 0H
          LE 0,0(6,13)           first float
          LE 2,4(6,13)           second float
-         AFI 0,2                one less GPR available
+         AFI 0,2                two less GPRs available
          AFI 14,2               two less FPRs available
 
          AFI 6,8                bump arg area by 8 bytes
@@ -657,7 +737,7 @@ STFPCHKF202 DS 0H
 STFPCHKF224 DS 0H
          LE 2,0(6,13)           first float
          LE 4,4(6,13)           second float
-         AFI 0,2                one less GPR available
+         AFI 0,2                two less GPRs available
          AFI 14,2               two less FPRs available
 
          AFI 6,8                bump arg area by 8 bytes
@@ -670,7 +750,7 @@ STFPCHKF224 DS 0H
 STFPCHKF246 DS 0H
          LE 4,0(6,13)           first float
          LE 6,4(6,13)           second float
-         AFI 0,2                one less GPR available
+         AFI 0,2                two less GPRs available
          AFI 14,2               two less FPRs available
 
          AFI 6,8                bump arg area by 8 bytes
@@ -712,7 +792,7 @@ STFPCHKD26 DS 0H
 STFPCHKD202 DS 0H
          LD 0,0(6,13)           first double
          LD 2,8(6,13)           second double
-         AFI 0,2                one less GPR available
+         AFI 0,2                two less GPR available
          AFI 14,2               two less FPRs available
 
          AFI 6,16
@@ -724,7 +804,7 @@ STFPCHKD202 DS 0H
 STFPCHKD224 DS 0H
          LD 2,0(6,13)           first double
          LD 4,8(6,13)           second double
-         AFI 0,2                one less GPR available
+         AFI 0,2                two less GPR available
          AFI 14,2               two less FPRs available
 
          AFI 6,16
@@ -737,7 +817,7 @@ STFPCHKD224 DS 0H
 STFPCHKD246 DS 0H
          LD 4,0(6,13)           first double
          LD 6,8(6,13)           second double
-         AFI 0,2                one less GPR available
+         AFI 0,2                two less GPR available
          AFI 14,2               two less FPRs available
 
          AFI 6,16
@@ -788,36 +868,30 @@ STFPCHKLD1 DS 0H
          B CPXMRG
 
 *STRCTDISP: entry for FFI_TYPE_STRUCT (type 13) from ATABLE.
-*Check whether this struct is a homogeneous float aggregate (HFA):
-*  exactly two elements, both the same float/double/longdouble type.
-*If so, dispatch to CPXF/CPXD/CPXLD (FPR-pair passing).
-*Otherwise fall through to STRCT (GPR/memory passing).
+*Call STFPTYP (ffi_struct_float_pair_type) via CELQCALL.
+*Save ALL GPRs (r0-r15) so no clobbered register is missed.
+*r1 = ffi_type* loaded before r5 is replaced with LE env.
+*Result in r3 moved to r11; then full restore via LMG.
 STRCTDISP DS 0H
-         LG  11,0(10,5)         pointer to ffi_type
-         LG  12,16(,11)         ffi_type->elements pointer
-         LTGR 12,12             elements == NULL?
-         BZ  STRCT
-         LG  15,0(,12)          elements[0]
-         LTGR 15,15             elements[0] == NULL?
-         BZ  STRCT
-         LG  11,8(,12)          elements[1]
-         LTGR 11,11             elements[1] == NULL? (single-element struct)
-         BZ  STRCT
-         LG  12,16(,12)         elements[2]
-         LTGR 12,12             elements[2] non-NULL? (>2 elements)
-         BNZ STRCT
-* exactly two elements; check that both have the same float type
-         LLGC 12,11(,15)        elements[0]->type low byte
-         LLGC 11,11(,11)        elements[1]->type low byte
-         CR   12,11             both same type?
-         BNE  STRCT
-         CFI  12,2              FFI_TYPE_FLOAT?
-         BE   CPXF
-         CFI  12,3              FFI_TYPE_DOUBLE?
-         BE   CPXD
-         CFI  12,4              FFI_TYPE_LONGDOUBLE?
-         BE   CPXLD
-* not a homogeneous float struct - fall through to STRCT
+         STMG 0,15,SDALL        save all GPRs
+* Store ffi_type* into STFARG while r5 still holds arg_types base.
+* CELQCALL (STFARG) passes &STFARG in r1; C receives ffi_type**.
+         LG  1,0(10,5)          r1 = current ffi_type*
+         STG 1,STFARG           STFARG = ffi_type*
+         LG  5,SAVREGS+40       r5 = LE env for CELQCALL
+         CELQCALL STFPTYP,(STFARG),WORKREG=10
+* Patch r11 slot in SDALL with result (r3) before LMG restores it.
+* GPR 11 slot = SDALL + 11*8 = SDALL+88.
+         STG 3,SDALL+88         r11 slot = STFPTYP result
+         LMG 0,15,SDALL         restore all GPRs; r11 = result
+* Dispatch on result.
+         CFI 11,2               FFI_TYPE_FLOAT?
+         BE  CPXF
+         CFI 11,3               FFI_TYPE_DOUBLE?
+         BE  CPXD
+         CFI 11,4               FFI_TYPE_LONGDOUBLE?
+         BE  CPXLD
+* not an HFA - fall through to STRCT
 
 *determine how to pass the struct based on size
 *at this point we've weeded out all the float/double
@@ -1371,7 +1445,6 @@ STKREG   EQU  13
 FPX      EQU  14
 CEEDSAHP CEEDSA SECTYPE=XPLINK
 ARGSL DS  XL800
-LSTOR DS  XL800
 TEST DS XL8
 * storage space for the returns regs maximum 4*8 fpr
 * TODO check long doubles, might be 8*8
@@ -1381,5 +1454,9 @@ SAVREGS DS XL128
 SAVFPRS DS XL32
 * storage space for scratch registers
 SCRREGS DS XL128
+* full GPR save area for STRCTDISP CELQCALL (r0-r15, 128 bytes)
+SDALL  DS XL128
+* single slot holding the ffi_type* passed by ref to STFPTYP
+STFARG DS XL8
 DSASZ    EQU (*-CEEDSAHP_FIXED)
  END FFISYS

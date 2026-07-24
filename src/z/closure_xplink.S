@@ -16,6 +16,7 @@ FFISYS2 CELQPRLG DSASIZE=DSASZ2,PSECT=FFISYS22
          STG 1,0(,2)
 
          LA 2,RET
+         LA 3,88(,1)
 
 * call the function to actually figure everything out
          CELQCALL   CLSRHLP,WORKREG=10
@@ -68,9 +69,6 @@ RET8     DS 0H
          LD 6,24(,1)
          B RETURN
 
-* RET9: integer-based _Complex — real at ret[0], imag at ret[element_size].
-* Caller expects real in GPR3, imaginary in GPR2, sign-extended to 64 bits.
-* Dispatch on rtype->size to pick load width.
 RET9     DS 0H
          LA  9,CLOSURE
          LG  9,0(,9)            closure ptr
@@ -83,7 +81,7 @@ RET9     DS 0H
          BE  RET9B              size==4: _Complex short (2+2)
          CFI 9,16
          BE  RET9D              size==16: _Complex long/longlong (8+8)
-*                               size==8: _Complex int (4+4) — default
+*                               size==8: _Complex int (4+4) default
          LGF 3,0(,1)            real (4 bytes, sign-extend)
          LGF 2,4(,1)            imag (4 bytes, sign-extend)
          B RETURN
