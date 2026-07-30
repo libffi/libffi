@@ -1067,6 +1067,14 @@ ffi_tramp_is_present (void *ptr)
 
 #include <stdlib.h>
 
+#ifdef __MVS__
+/* z/OS: CELQEPLG returns via "BCR 15,R7" in AMODE31.  The closure
+   trampoline must therefore live in 31-bit (below-the-bar) storage so
+   that the branch target address fits in 31 bits.  __malloc31 allocates
+   below-the-bar memory; the matching free() is the normal one.  */
+extern void *__malloc31(size_t);
+#endif
+
 void *
 ffi_closure_alloc (size_t size, void **code)
 {
@@ -1075,7 +1083,11 @@ ffi_closure_alloc (size_t size, void **code)
   if (!code)
     return NULL;
 
+#ifdef __MVS__
+  c = __malloc31 (size);
+#else
   c = malloc (size);
+#endif
   *code = FFI_FN (c);
   return c;
 }

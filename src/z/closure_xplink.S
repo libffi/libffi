@@ -1,31 +1,66 @@
 * Copyright IBM Corp. and others 2026
+
+
+* INCOMING ARGUMENTS
+*   r1/r2/r3 carry the first three arguments; args 4+ live in
+*   the caller's outgoing argument area at r4+2176+(rounded DSA).
+*   Offsets are relative to that arg-area base:
+*
+*     +0   r1    closure address 
+*     +8   r2    old stack pointer (used to argument area)
+*     +20  r3    cif->flags    (FFI390_RET_* constant)
+
 FFISYS2 CELQPRLG DSASIZE=DSASZ2,PSECT=FFISYS22
 
          USING  CEEDSAHP,4
          
-* store the floats here to minimize trampoline
-         STD 0,216(,1)
-         STD 1,224(,1)
-         STD 2,232(,1)
-         STD 3,240(,1)
-         STD 4,248(,1)
-         STD 5,256(,1)
-         STD 6,264(,1)
+* register for save buffer 
+         LA 13,REGSAV
 
-         LA 2,CLOSURE
-         STG 1,0(,2)
+* store the incoming arguments, into the trampoline's arg area
+        STG 1,(2176+(((DSASZ2+31)/32)*32))(,4)
+        STG 2,(2176+(((DSASZ2+31)/32)*32)+8)(,4)
+        STG 3,(2176+(((DSASZ2+31)/32)*32)+16)(,4)
+
+* load the stored GPRs from the trampoline's caller's arg area
+        LG 11,2176(,2)
+        STG 11,0(,13)
+
+        LG 11,2176+8(,2)
+        STG 11,8(,13)
+
+        LG 11,2176+16(,2)
+        STG 11,16(,13)
+
+* store old stack pointer
+        STG 2,24(,13)
+
+* make sure to save return address
+        STG 7,TRAMPR
+
+* store the floats here to minimize trampoline
+         STD 0,128(,13)
+         STD 1,136(,13)
+         STD 2,144(,13)
+         STD 3,152(,13)
+         STD 4,160(,13)
+         STD 5,168(,13)
+         STD 6,176(,13)
 
          LA 2,RET
-         LA 3,88(,1)
+         LR 3,13
 
 * call the function to actually figure everything out
          CELQCALL   CLSRHLP,WORKREG=10
 
-* figure out what kind of return 
+* figure out what kind of return
 * we're dealing with here
-         LA 1,CLOSURE
+         LA 1,(2176+(((DSASZ2+31)/32)*32))(,4)
          LG 1,0(,1)
          CELQCALL   DETRET,WORKREG=10
+
+* restore trampoline return address before we branch back through it
+         LG 7,TRAMPR
 
          LA 1,RET
 
@@ -72,7 +107,7 @@ RET8     DS 0H
 RET9     DS 0H
          LA  9,CLOSURE
          LG  9,0(,9)            closure ptr
-         LG  9,64(,9)           closure->cif
+         LG  9,128(,9)          closure->cif
          LG  9,16(,9)           cif->rtype
          LG  9,0(,9)            rtype->size (total complex size)
          CFI 9,2
@@ -116,13 +151,16 @@ RTABLE  DC A(RET0)
  DC A(RET9)
 
 CEEDSAHP CEEDSA SECTYPE=XPLINK
+ARGAREA DS XL32
 CLOSURE DS   XL8
 CIF  DS   XL8
 RET  DS   XL32
 RETP DS   XL8
 USER DS   XL8
+TRAMPR DS  XL8
 
-REG1 DS   XL8
+* save area for registers at time of trampoline entry
+REGSAV DS   XL192
 
 DSASZ2   EQU (*-CEEDSAHP_FIXED)
  END FFISYS2
