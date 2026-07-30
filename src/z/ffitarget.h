@@ -62,11 +62,7 @@ typedef enum ffi_abi {
 /* ---- Definitions for closures ----------------------------------------- */
 
 #define FFI_CLOSURES 1
-#ifdef S390X
-#define FFI_TRAMPOLINE_SIZE 64
-#else
-#define FFI_TRAMPOLINE_SIZE 64
-#endif
+#define FFI_TRAMPOLINE_SIZE 128
 #define FFI_NATIVE_RAW_API 0
 
 

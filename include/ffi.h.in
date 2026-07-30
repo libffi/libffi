@@ -372,9 +372,6 @@ typedef struct {
 #if defined(_MSC_VER) && defined(_M_IX86)
   void      *padding;
 #endif
-#if defined(__MVS__)
-  struct ffi_reg_data reg;
-#endif
 } ffi_closure
 #ifdef __GNUC__
     __attribute__((aligned (8)))

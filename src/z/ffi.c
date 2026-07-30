@@ -29,6 +29,7 @@
 /*                          --------                                  */
 /*====================================================================*/
 
+#define TRAMP_DEBUG
 #define FFI_CLOSURE_DEBUG
 
 #include <ffi.h>
@@ -52,8 +53,8 @@
 /* Maximum number of FPRs available for argument passing.  */ 
 #define MAX_FPRARGS 4
 
-/* Round to multiple of 16.  */
-#define ROUND_SIZE(size) (((size) + 15) & ~15)
+/* Round to multiple of 32.  */
+#define ROUND_SIZE(size) (((size) + 31) & ~32)
 
 /* If these values change, xplink.S RTABLE must be updated to match!  */
 #define FFI390_RET_VOID		      0
@@ -174,10 +175,10 @@ void
 ffi_prep_args (unsigned char *stack, extended_cif *ecif)
 {
   /* The stack space will be filled with these areas:
-     Note: XPLINK Stack is downward growing
+     Note: XPLINK Stack is downward growing (ie. towards low addresses)
 
      ------------------------------------ <- Low Addresses
-       Guard Page (4KB)
+       Guard Area (1 MB)
      ------------------------------------ 
        Stack Frame for Called functions
      ------------------------------------ <- Stack Ptr (r4)
@@ -186,18 +187,18 @@ ffi_prep_args (unsigned char *stack, extended_cif *ecif)
        Environment                          |
      ------------------------------------   |
        Entry Point                          |  Savearea 
-     ------------------------------------   |  48 bytes
+     ------------------------------------   |  96 bytes
        Return Address                       |
      ------------------------------------   |
        R8 - R15                             |
      ------------------------------------ <-
-       Reserved (8 bytes)                   +2096
+       Reserved (16 bytes)                   +2144
      ------------------------------------ 
-       Debug Area (4 bytes)                 +2104
+       Debug Area (8 bytes)                 +2160
      ------------------------------------ 
-       Arg area prefix (4 bytes)            +2108
+       Arg area prefix (8 bytes)            +2168
      ------------------------------------ 
-       Argument area: Parm1 ... ParmN       +2112
+       Argument area: Parm1 ... ParmN       +2176
      ------------------------------------ 
        Local (automatic storage)
       Saved FPRs   Saved  ARs   Saved VRs 
@@ -315,27 +316,13 @@ ffi_prep_args (unsigned char *stack, extended_cif *ecif)
  
 /*====================================================================*/
 /*                                                                    */
-/* Name     - ffi_struct_float_pair_type.                             */
+/* Name     - unwrap_single_element_struct.                           */
 /*                                                                    */
-/* Function - Determine whether a struct matches the z/OS XPLINK HFA    */
-/*            (homogeneous float aggregate) rule.  IBM XL C requires     */
-/*            the direct struct members to BE float/double/long double   */
-/*            scalars — a single-element struct wrapper around a float   */
-/*            does NOT qualify.  Only a flat {float,float}, {double,     */
-/*            double}, or {long double, long double} at the top level    */
-/*            is treated as HFA.                                         */
-/*                                                                       */
-/* Returns  - FFI_TYPE_FLOAT      (2) for {float, float}                */
-/*            FFI_TYPE_DOUBLE     (3) for {double, double}               */
-/*            FFI_TYPE_LONGDOUBLE (4) for {long double, long double}     */
-/*            0 otherwise                                                */
-/*                                                                       */
-/* Called from xplink.S STRCTDISP via CELQCALL as "STFPTYP".            */
-/* The struct pointer is passed as the sole argument; the return         */
-/* value is placed in GPR3 per 64-bit XPLINK convention.                */
+/* Function - Unwrap nested single-element struct wrappers to reach   */
+/*            the leaf type.                                          */
+/*                                                                    */
 /*====================================================================*/
 
-/* Helper to unwrap single-element struct wrappers */
 static ffi_type *
 unwrap_single_element_struct(ffi_type *t)
 {
@@ -345,6 +332,19 @@ unwrap_single_element_struct(ffi_type *t)
     t = t->elements[0];
   return t;
 }
+
+/*======================== End of Routine ============================*/
+
+/*====================================================================*/
+/*                                                                    */
+/* Name     - ffi_struct_float_pair_type.                             */
+/*                                                                    */
+/* Function - Determine whether a struct matches the z/OS XPLINK HFA */
+/*            (homogeneous float aggregate) rule.                     */
+/*            Returns FFI_TYPE_FLOAT, FFI_TYPE_DOUBLE,                */
+/*            FFI_TYPE_LONGDOUBLE, or 0.                              */
+/*                                                                    */
+/*====================================================================*/
 
 unsigned int
 ffi_struct_float_pair_type (ffi_type **argp)
@@ -376,20 +376,31 @@ ffi_struct_float_pair_type (ffi_type **argp)
   return 0;
 }
 
+/*======================== End of Routine ============================*/
+
+/*====================================================================*/
+/*                                                                    */
+/* Name     - ffi_dummy.                                              */
+/*                                                                    */
+/* Function - Intentional no-op; used from xplink.S STRCTDISP to     */
+/*            probe that CELQCALL works correctly in that context.    */
+/*                                                                    */
+/*====================================================================*/
+
+void
+ffi_dummy (void)
+{
+  printf("abc\n");
+}
+
+/*======================== End of Routine ============================*/
+
 /*====================================================================*/
 /*                                                                    */
 /* Name     - ffi_prep_cif_machdep.                                   */
 /*                                                                    */
 /* Function - Perform machine dependent CIF processing.               */
 /*                                                                    */
-void
-ffi_dummy (void)
-{
-  /* intentional no-op: used from xplink.S STRCTDISP to probe
-     that CELQCALL works correctly in that context.  */
-     printf("abc\n");
-}
-
 /*====================================================================*/
  
 ffi_status
@@ -400,30 +411,31 @@ ffi_prep_cif_machdep(ffi_cif *cif)
   // we will correct this in ffi_prep_cif_machdep_var if this is a variadic function
   cif->nfixedargs = cif->nargs;
 
-  size_t struct_size = 0;
-  int n_gpr = 0;
-  int n_fpr = 0;
-  int n_ov = 0;
-
   ffi_type **ptr;
   int i;
 
   /* 64-bit XPLINK handling below */
 
-  /* TODO: This comment is describing 31-bit behaviour */
-  /* Determine return value handling.  
-     Integral values <=4bytes are widened and put in GPR3
-     Integral values >4bytes and <=8bytes are widened and put in
-     GPR2 (left most 32-bits) and GPR3 (right most 32-bits)
+  /* Determine return value handling. 
+
+     Integral values <=8bytes are widened and put in GPR3
+    
+     Integral values >8bytes and <=16bytes are widened and put in
+     GPR2 (left most 64-bits) and GPR3 (right most 64-bits)
+    
      Floating point values, including complex type, are returned in 
      FPR0, FPR2, FPR4, FPR6 (as many registers as required)
-     Aggregates size of <=4 are returned GPR1 (left adjusted)
-     Aggregates size between 5bytes-8bytes are returned in GPR1 and 
+     
+     Aggregates not return in floats are handled as follows: 
+     
+     Aggregates size of <=8 are returned GPR1 (left adjusted)
+     Aggregates size between 9 bytes- 16 bytes are returned in GPR1 and 
      GPR2 (left adjusted)
-     Aggregates size between 9bytes-12bytes are returned in GPR1, GPR2,
+     Aggregates size between 17 bytes - 24 bytes are returned in GPR1, GPR2,
      and GPR3 (left adjusted)
-     Anything greater in size and anyother type is returned in a buffer,
-     the buffer is passed in as hidden first argument.
+     
+     Anything greater in size and any other type is returned in a buffer,
+     the buffer is passed in as hidden first argument (ie. in GPR1).
      */
 
   switch (cif->rtype->type)
@@ -440,20 +452,14 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       case FFI_TYPE_STRUCT:
         {
           unsigned int fp = ffi_struct_float_pair_type (&cif->rtype);
-          struct_size = cif->rtype->size;
           if (fp == FFI_TYPE_FLOAT)
             cif->flags = FFI390_RET_STRUCT_FF;
           else if (fp == FFI_TYPE_DOUBLE)
             cif->flags = FFI390_RET_STRUCT_DD;
           else if (fp == FFI_TYPE_LONGDOUBLE)
             cif->flags = FFI390_RET_STRUCT_LDLD;
-          else if (struct_size <= 24)
-            cif->flags = FFI390_RET_STRUCT;
           else
-            {
-              cif->flags = FFI390_RET_STRUCT;
-              n_gpr++;   /* hidden return-pointer argument */
-            }
+            cif->flags = FFI390_RET_STRUCT;
         }
         break;
 
@@ -485,7 +491,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
           else if (fp == FFI_TYPE_LONGDOUBLE)
             cif->flags = FFI390_RET_STRUCT_LDLD;
           else
-            cif->flags = FFI390_RET_COMPLEX_INT; /* real→GPR3, imag→GPR2 */
+            cif->flags = FFI390_RET_COMPLEX_INT; /* GPR3=real, GPR2=imag */
         }
         break;
 
@@ -507,110 +513,53 @@ ffi_prep_cif_machdep(ffi_cif *cif)
         break;
     }
 
-  /* Now for the arguments.  */
- 
-  for (ptr = cif->arg_types, i = cif->nargs;
-       i > 0;
-       i--, ptr++)
+  /* Compute the required argument area size.
+   *
+   * Every argument occupies a slot whose size is:
+   *   - 8 bytes if the argument's type size is <= 8 (fits in one register slot,
+   *     right-adjusted big-endian within the slot)
+   *   - rounded up to the next multiple of 8 if the argument's type size > 8
+   *     (e.g. long double = 16, a 24-byte struct = 24)
+   *
+   * A hidden return pointer for structs > 24 bytes also occupies one 8-byte slot.
+   * The total must be a multiple of 32 and at least 32 bytes (ABI minimum of
+   * 4 doublewords).
+   */
+  unsigned int bytes = 0;
+
+  /* Hidden return pointer for large struct returns. */
+  if (cif->rtype->type == FFI_TYPE_STRUCT && cif->rtype->size > 24)
+    bytes += 8;
+
+  for (ptr = cif->arg_types, i = cif->nargs; i > 0; i--, ptr++)
     {
-      int type = (*ptr)->type;
-
-      /* Check how a structure type is passed.  */
-      if (type == FFI_TYPE_STRUCT || type == FFI_TYPE_COMPLEX)
-        {
-          unsigned int fp;
-          if (type == FFI_TYPE_COMPLEX)
-            fp = ((*ptr)->elements && (*ptr)->elements[0])
-                 ? (*ptr)->elements[0]->type : 0;
-          else
-            fp = ffi_struct_float_pair_type (ptr);
-
-          if (fp == FFI_TYPE_FLOAT || fp == FFI_TYPE_DOUBLE)
-            {
-              /* {float,float} / _Complex float  or  {double,double} / _Complex double:
-                 2 FPRs */
-              if (n_fpr + 2 <= MAX_FPRARGS)
-                n_fpr += 2;
-              else
-                n_ov += (fp == FFI_TYPE_FLOAT) ? 1 : 2;
-              continue;
-            }
-          else if (fp == FFI_TYPE_LONGDOUBLE)
-            {
-              /* {long double, long double} or _Complex long double: 4 FPRs */
-              if (n_fpr + 4 <= MAX_FPRARGS)
-                n_fpr += 4;
-              else
-                n_ov += 2 * (sizeof(long double) / sizeof(long));
-              continue;
-            }
-          else if (type == FFI_TYPE_STRUCT)
-            {
-              type = ffi_check_struct_type (*ptr);
-              /* If we pass the struct via pointer, we must reserve space
-                 to copy its data for proper call-by-value semantics.  */
-              if (type == FFI_TYPE_POINTER)
-                struct_size += ROUND_SIZE ((*ptr)->size);
-            }
-        }
-
-      /* Now handle all primitive int/float data types.  */
-      switch (type)
-      {
-        /* The first MAX_FPRARGS floating point arguments go in FPRs.  */
-        case FFI_TYPE_LONGDOUBLE:
-          /* long double occupies two adjacent FPRs (e.g. FPR0+FPR2) */
-          if (n_fpr < MAX_FPRARGS)
-            n_fpr += 2;
-          else
-            n_ov += sizeof(long double) / sizeof(long);
-          break;
-
-        case FFI_TYPE_DOUBLE:
-        case FFI_TYPE_FLOAT:
-          if (n_fpr < MAX_FPRARGS)
-            n_fpr++;
-          else
-            n_ov += sizeof(double) / sizeof(long);
-          break;
-
-        case FFI_TYPE_UINT64:
-        case FFI_TYPE_SINT64:
-          if (n_gpr == MAX_GPRARGS-1)
-            n_gpr = MAX_GPRARGS;
-          if (n_gpr < MAX_GPRARGS)
-            n_gpr += 2;
-          else
-            n_ov += 2;
-          break;
-
-        /* Everything else is passed in GPRs (until MAX_GPRARGS
-           have been used) or overflows to the stack.  */
-        default:
-          if (n_gpr < MAX_GPRARGS)
-            n_gpr++;
-          else
-            n_ov++;
-          break;
-      }
+      size_t size = (*ptr)->size;
+      if (size <= 8)
+        bytes += 8;
+      else
+        bytes += (size + 7) & ~7;  /* round up to multiple of 8 */
     }
 
-  /* Total stack space as required for:
-     -empty slots for arguments passed in registers
-     - overflow arguments,
-     - and temporary structure copies.  */
+  if (bytes < 32)
+    bytes = 32;
+  cif->bytes = (bytes + 31) & ~31;  /* round up to multiple of 32 */
 
-  /* TODO
-    |- for a number of reasons this code is incorrect
-    |- n_ov includes arg struct, should probably just be the 1 point dummy arg 
-  */
-  cif->bytes = ROUND_SIZE ((n_ov * sizeof (long)) + (n_fpr * sizeof (long long)) + (n_gpr * sizeof (long)) ) + struct_size;
-/*  printf("prep_cif_machdep_cif_bytes: %d n_gpr=%d n_ov=%d n_fpr=%d\n",cif->bytes,n_gpr,n_ov,n_fpr); */
- 
+#ifdef FFI_DEBUG
+  printf("prep_cif_machdep_cif_bytes: %u\n", cif->bytes);
+#endif
   return FFI_OK;
 }
  
 /*======================== End of Routine ============================*/
+
+/*====================================================================*/
+/*                                                                    */
+/* Name     - ffi_prep_cif_machdep_var.                               */
+/*                                                                    */
+/* Function - Perform machine dependent CIF processing for variadic   */
+/*            functions.                                              */
+/*                                                                    */
+/*====================================================================*/
 
 ffi_status
 ffi_prep_cif_machdep_var(ffi_cif *cif,
@@ -690,28 +639,19 @@ ffi_call(ffi_cif *cif,
 
 /*====================================================================*/
 /*                                                                    */
-/* Name     - ffi_closure_helper_SYSV.                                */
+/* Name     - ffi_determine_return_type.                              */
 /*                                                                    */
-/* Function - Call a FFI closure target function.                     */
+/* Function - Map closure->cif->flags to a closure-side return-       */
+/*            dispatch index for closure_xplink.S RTABLE.             */
 /*                                                                    */
 /*====================================================================*/
 
-/* Maps closure->cif->flags back to a closure-side return-dispatch index.
- * closure_xplink.S RTABLE entries:
- *   0 = nothing (pointer was hidden arg)
- *   1 = GPR3
- *   2 = GPR1
- *   3 = GPR1+GPR2
- *   4 = GPR1+GPR2+GPR3
- *   5 = FPR0
- *   6 = FPR0+FPR2        (double pair or _Complex double)
- *   7 = FPR0+FPR2        (float pair or _Complex float, 4-byte offsets)
- *   8 = FPR0+FPR2+FPR4+FPR6 (long-double pair or _Complex long double)
- *   9 = integer-based _Complex (GPR3=real, GPR2=imag, width from rtype->size)
- */
 int ffi_determine_return_type(ffi_closure *closure)
 {
-  /* Use the flags already computed by ffi_prep_cif_machdep — they are the
+  fprintf(stderr, "DETRET entry: closure=%p flags=%u\n",
+          (void*)closure, closure->cif->flags);
+  fflush(stderr);
+  /* Use the flags already computed by ffi_prep_cif_machdep, they are the
      canonical return classification and keep call-side and closure-side
      dispatch tables in sync without re-classifying.  */
   switch (closure->cif->flags)
@@ -721,6 +661,7 @@ int ffi_determine_return_type(ffi_closure *closure)
 
       case FFI390_RET_INT32:
       case FFI390_RET_INT64:
+        fprintf(stderr, "DETRET: INT return path, returning 1\n"); fflush(stderr);
         return 1;   /* GPR3 */
 
       case FFI390_RET_FLOAT:
@@ -751,7 +692,7 @@ int ffi_determine_return_type(ffi_closure *closure)
         }
 
       case FFI390_RET_COMPLEX_INT:
-        return 9;   /* real→GPR3, imag→GPR2 */
+        return 9;   /* GPR3=real, GPR2=imag */
 
       default:
         return 0;
@@ -772,10 +713,30 @@ int ffi_determine_return_type(ffi_closure *closure)
  void
 ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data *reg)
 {
+  fprintf(stderr, "CLSRHLP: closure=%p retbuf=%p reg=%p\n",
+          (void*)closure, (void*)retbuf, (void*)reg);
+  fflush(stderr);
 
   /* ---- CLOSURE POINTER SANITY ----------------------------------------- */
   int ret_size;
   ffi_cif *cif = closure->cif;
+  fprintf(stderr, "CLSRHLP: cif=%p fun=%p user_data=%p\n",
+          (void*)cif, (void*)closure->fun, closure->user_data);
+  fprintf(stderr, "CLSRHLP: cif->flags=%u nargs=%d nfixedargs=%u bytes=%u\n",
+          cif->flags, cif->nargs, cif->nfixedargs, cif->bytes);
+  fprintf(stderr, "CLSRHLP: rtype=%p rtype->type=%u rtype->size=%zu\n",
+          (void*)cif->rtype,
+          cif->rtype ? (unsigned)cif->rtype->type : 99u,
+          cif->rtype ? cif->rtype->size : 0);
+  for (int _i = 0; _i < 16; _i++)
+    fprintf(stderr, "CLSRHLP: gpr[%2d]=%p\n", _i, (void*)reg->gpr[_i]);
+  { uint64_t _r;
+    for (int _i = 0; _i < 7; _i++) {
+      memcpy(&_r, &reg->fpr[_i], 8);
+      fprintf(stderr, "CLSRHLP: fpr[%d]=0x%016llx\n", _i, (unsigned long long)_r);
+    }
+  }
+  fflush(stderr);
 
   unsigned short struct_subtype = FFI_TYPE_VOID;
   if (cif->rtype)
@@ -1385,6 +1346,7 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
         }
     }
 
+  fprintf(stderr, "holy shit we made it\n"); fflush(stderr);
   return;
 }
 /*======================== End of Routine ============================*/
@@ -1398,6 +1360,81 @@ ffi_closure_helper_SYSV (ffi_closure *closure, void *retbuf, struct ffi_reg_data
 /*====================================================================*/
  
 
+void debug_stub(ffi_closure *closure, char *sp, double *fpr) {
+  return;
+  ffi_cif *cif = closure->cif;
+
+  fprintf(stderr, "=== debug_stub ===\n");
+
+  fprintf(stderr, "sp = %p\n", sp);
+  fprintf(stderr, "fpr = %p\n", fpr);
+
+  sp += 2176;
+
+  fprintf(stderr, "sp [2048..2200]:");
+  for (int i = 0; i <= 16*8; i++) {
+      if (i % 8 == 0) {
+        fprintf(stderr, "\n\t");
+      }
+      fprintf(stderr, " %02x", sp[i]);
+  }
+  fprintf(stderr, "\n");
+
+
+  unsigned char *p = (unsigned char*)closure->cif;
+  fprintf(stderr, "cif raw [20..31]:");
+  for (int i = 20; i <= 31; i++)
+    fprintf(stderr, " %02x", p[i]);
+  fprintf(stderr, "\n");
+
+  /* ---- ffi_closure fields ----------------------------------------- */
+  fprintf(stderr, "ffi_closure @ %p\n", (void *)closure);
+  fprintf(stderr, "  .cif       = %p\n", (void *)closure->cif);
+  fprintf(stderr, "  .fun       = %p\n", (void *)(uintptr_t)closure->fun);
+  fprintf(stderr, "  .user_data = %p\n", closure->user_data);
+
+  /* First 32 bytes of the trampoline in hex */
+  fprintf(stderr, "  .tramp[0..31] =");
+  for (int i = 0; i < 32; i++)
+    fprintf(stderr, " %02x", (unsigned char)closure->tramp[i]);
+  fprintf(stderr, "\n");
+
+  /* ---- ffi_cif fields --------------------------------------------- */
+  fprintf(stderr, "ffi_cif @ %p\n", (void *)cif);
+  if (cif == NULL) {
+    fprintf(stderr, "  (null)\n");
+    fflush(stderr);
+    return;
+  }
+  fprintf(stderr, "  .abi        = %u\n",  (unsigned)cif->abi);
+  fprintf(stderr, "  .nargs      = %u\n",  cif->nargs);
+  fprintf(stderr, "  .nfixedargs = %u\n",  cif->nfixedargs);
+  fprintf(stderr, "  .bytes      = %u\n",  cif->bytes);
+  fprintf(stderr, "  .flags      = %u\n",  cif->flags);
+  fprintf(stderr, "  .rtype      = %p",    (void *)cif->rtype);
+  if (cif->rtype)
+    fprintf(stderr, "  (type=%u size=%zu align=%u)",
+            (unsigned)cif->rtype->type,
+            cif->rtype->size,
+            (unsigned)cif->rtype->alignment);
+  fprintf(stderr, "\n");
+  fprintf(stderr, "  .arg_types  = %p\n",  (void *)cif->arg_types);
+  for (unsigned i = 0; i < cif->nargs && cif->arg_types; i++) {
+    ffi_type *at = cif->arg_types[i];
+    if (at)
+      fprintf(stderr, "  .arg_types[%u] = %p  type=%u size=%zu align=%u\n",
+              i, (void *)at,
+              (unsigned)at->type, at->size, (unsigned)at->alignment);
+    else
+      fprintf(stderr, "  .arg_types[%u] = (null)\n", i);
+  }
+
+  fprintf(stderr, "=== debug_stub done ===\n");
+  fflush(stderr);
+  exit(0);
+}
+
+
 ffi_status
 ffi_prep_closure_loc (ffi_closure *closure,
                       ffi_cif *cif,
@@ -1410,59 +1447,355 @@ ffi_prep_closure_loc (ffi_closure *closure,
     return FFI_BAD_ABI;
 
   /*
-  * 0.) remember z/OS is weird, the first 16 bytes of the tramp 
+  * 0.) remember z/OS is weird, the first 16 bytes of the tramp
   *     are the "function descriptor", so the tramp code starts
   *     8 bytes ahead of where it seems like it shoulds
   * 1.) "branch" to self - basr with r0 sets the first register (r5)
   *     to the value of the PC (in this case the trampoline)
   * 2.) using this addr, save the GPRs and FPRs to the closure
-  * 3.) branch to our helper function to figure out how to deal 
+  * 3.) branch to our helper function to figure out how to deal
   *     with the calling parameters
   */
 
+  /* Trampoline V2
+  *  0.) figure out where we are by doing the fake branch
+         to load the PC into %r5
+     1.) extract "cif->bytes", so we can allocate the DSA+save information
+     2.) call FFISYS2 (closure_xplink.S),
+         function signature FFISYS2(closure, register save info)
+     3.) on return, restore registers (including stack pointer)
+     4.) return to caller, return value itself is done in FFISYS2
+  */
+
+  /* Trampoline V2 assembly-ish
+  *  0x000000000000000       (8 bytes "env pointer")
+  *  &(closure->tramp[8])    (function entry point)
+  *  basr %r5,0              (r5 = pc = &closure->tramp [16])
+  *  stmg %r6,%r15,1848(%r4) (save r6-r7 to save area 2048-dsasize+16)
+  *  aghi %r4,-216           (update stack pointer r4 = r4 - dsasize
+                              dsasize=save area (12 registers * 8 bytes = 96 bytes)
+                              + 16 bytes (reserved) + 8 (bytes debug area)
+                              + 8 bytes (reserved) + argument area (stored in cif->bytes)
+                              )
+  *
+  */
+
+  #if 0
   *(long  *)&closure->tramp [0]  = 0x000000000000000;
   *(long  *)&closure->tramp [8]  = (long)(&(closure->tramp[16]));
 
   // put the pc in r5 so we can find the closure
   *(short *)&closure->tramp [16] = 0x0d50;   /* basr %r5,0 */
-    
-  // offset into closure register save area 
-  *(short *)&closure->tramp [18] = 0xa75b;   /* aghi %r5,70 */
-  *(short *)&closure->tramp [20] = 0x0046;
 
-  // save the registers into the closure
-  *(short *)&closure->tramp [22] = 0xeb1f;   /* stmg %r1,%r15,0(%r5) */
-  *(short *)&closure->tramp [24] = 0x5000;
-  *(short *)&closure->tramp [26] = 0x0024;
+  *(short *)&closure->tramp [18] = 0xe300;  /* lg %r0,112(,%r5) */
+  *(short *)&closure->tramp [20] = 0x5070;
+  *(short *)&closure->tramp [22] = 0x0004;
 
-  // put the addr of the closure into r1 
-  *(short *)&closure->tramp [28] = 0xe310;   /* lay %r1,-86(,%r5) */ 
-  *(short *)&closure->tramp [30] = 0x5fa8;
-  *(short *)&closure->tramp [32] = 0xff71;
+  *(short *)&closure->tramp [24] = 0xe300;  /* llgf %r0,24(,%r0) */
+  *(short *)&closure->tramp [26] = 0x0018;
+  *(short *)&closure->tramp [28] = 0x0016;
 
-  // adjust r5 to point to the help address 
-  *(short *)&closure->tramp [34] = 0xa75b;   /* aghi %r5,-34*/
-  *(short *)&closure->tramp [36] = 0xffde;
+  *(short *)&closure->tramp [30] = 0xa70b;  /* aghi  %r0,216 */
+  *(short *)&closure->tramp [32] = 0x00d8;
 
-  // // load the pointer to the helper address
-  *(short *)&closure->tramp [38] = 0xe350;  /* lg %r5,0(,%r5) */
-  *(short *)&closure->tramp [40] = 0x5000;   
-  *(short *)&closure->tramp [42] = 0x0004;
+  // *(short *)&closure->tramp [24] = 0xa74b;  /* aghi  %r0,216 */
+  // *(short *)&closure->tramp [26] = 0xffd8;
 
-  *(short *)&closure->tramp [44] = 0xeb56;  /* lmg %r5,%r6,0(,%r5) */
-  *(short *)&closure->tramp [46] = 0x5000;
-  *(short *)&closure->tramp [48] = 0x0004;
+  *(short *)&closure->tramp [34] = 0xb909;  /* sgr   %r4,%r0 */
+  *(short *)&closure->tramp [36] = 0x0040;
 
-  // load the actual address of the help 
-  // *(short *)&closure->tramp [44] = 0xe350;   /* lg %r5,8(,%r5) */
-  // *(short *)&closure->tramp [46] = 0x5008;   
-  // *(short *)&closure->tramp [48] = 0x0004;
+  // save preserved registers
+  *(short  *)&closure->tramp [38]  = 0xeb6f;   /* stmg %r6,%r15,2064(%r4) */
+  *(short  *)&closure->tramp [40]  = 0x4810;
+  *(short  *)&closure->tramp [42]  = 0x0024;
 
-  // branch to the helper
-  *(short *)&closure->tramp [50] = 0x0d66;   /* basr %r5,%r5 */
+  // save arguments
+  *(short  *)&closure->tramp [44]  = 0xeb13;   /* stmg %r1,%r3,2176(%r4) */
+  *(short  *)&closure->tramp [46]  = 0x4880;
+  *(short  *)&closure->tramp [48]  = 0x0024;
 
-  // pointer to the helper address
-  *(long  *)&closure->tramp [54] = ((long)&ffi_closure_SYSV);
+  *(short *)&closure->tramp [50] = 0xe360;   /* lg  %r6,104(,%r5) */
+  *(short *)&closure->tramp [52] = 0x5068;
+  *(short *)&closure->tramp [54] = 0x0004;
+
+  *(short *)&closure->tramp [56] = 0xe360;  /* lg %r5,0(,%r6) */
+  *(short *)&closure->tramp [58] = 0x6000;
+  *(short *)&closure->tramp [60] = 0x0004;
+
+  *(short *)&closure->tramp [62] = 0xeb56;  /* lmg %r5,%r6,0(,%r6) */
+  *(short *)&closure->tramp [64] = 0x6000;
+  *(short *)&closure->tramp [66] = 0x0004;
+
+  *(short *)&closure->tramp[68]  = 0x0d76;               /* basr  %fr7,%r6 */
+
+  // branch to debug stub for testing
+  *(long  *)&closure->tramp [120] = ((long)&debug_stub);
+#endif
+
+*(long  *)&closure->tramp[0]   = 0x0000000000000000;
+*(long  *)&closure->tramp[8]   = (long)(&closure->tramp[16]);
+
+/* Trampoline frame layout (TRAMP_ALLOC = 512)
+ * ============================================
+ * Stack adjust and register save happen first (per XPLINK prolog rules).
+ * r4_old is recomputed after the fact as r4_new + TRAMP_ALLOC.
+ *
+ * XPLINK save area of the new frame (r4_new+2048):
+ *   r4_new+2048  backchain = r4_old
+ *   r4_new+2056  r5
+ *   r4_new+2064  r6
+ *   r4_new+2072  r7  ← caller's return address; lmg restores this
+ *   r4_new+2080  r8 .. r4_new+2144  r15
+ *
+ * We must NOT save into r4_old's local storage (r4_old+0..r4_old+2047):
+ * the caller uses it, and FFISYS2's CELQPRLG writes there too, so any
+ * value we place there will be overwritten before we can read it back.
+ *
+ * Instruction sequence:
+ *   [16] aghi r4, -512            r4 = r4_new   (stack adjust first)
+ *   [20] stmg r5,r15, 2056(r4)    save r5..r15 into r4_new save area
+ *   [26] stmg r1,r3, 2688(r4)     save r1/r2/r3 BEFORE r2 is clobbered
+ *   [32] basr r5, 0               r5 = tramp+34  (PC anchor)
+ *   [34] lay  r2, 512(r4)         r2 = r4_old  (r2 already saved above)
+ *   [40] stg  r2, 2048(r4)        backchain at r4_new+2048
+ *   [46] lay  r1, -34(r5)         r1 = closure  (tramp+34-34 = tramp+0)
+ *   [52] lay  r3, 2688(r4)        r3 = arg area (FFISYS2 ignores it)
+ *   [58] lg   r6, 86(r5)          r6 = tramp[120]  (tramp+34+86=tramp+120)
+ *   [64] lmg  r5,r6, 0(r6)        load env+entry from descriptor
+ *   [70] basr r7, r6              call FFISYS2; r7 = tramp+72
+ *   [72] nopr                     CELQEPLG "BCR 15,r7" lands here
+ *   [74] lmg  r4,r15, 2048(r4)    restore r4..r15 from r4_new+2048
+ *   [80] nopr nopr                padding
+ *   [84] br   r7                  return; r7 = caller's return address
+ *   [86] nopr                     padding
+ */
+
+/* [16] aghi %r4,-512               A74B FE00   r4 = r4_new  (stack first) */
+*(short *)&closure->tramp[16]  = 0xa74b;
+*(short *)&closure->tramp[18]  = 0xfe00;
+
+/* [20] stmg %r5,%r15,2056(%r4)     EB5F 4808 0024
+ * Save r5..r15 immediately after stack adjust.
+ * r7 (caller return address) lands at r4_new+2072; restored by lmg. */
+*(short *)&closure->tramp[20]  = 0xeb5f;
+*(short *)&closure->tramp[22]  = 0x4808;
+*(short *)&closure->tramp[24]  = 0x0024;
+
+/* [26] stmg %r1,%r3,2688(%r4)      EB13 4B80 0024
+ * Save incoming arg registers BEFORE r2 is clobbered by lay below.
+ * 2176+512=2688=0xB80.                                             */
+*(short *)&closure->tramp[26]  = 0xeb13;
+*(short *)&closure->tramp[28]  = 0x4a80;
+*(short *)&closure->tramp[30]  = 0x0024;
+
+/* [32] basr %r5,0                  0D50                r5 = tramp+34 */
+*(short *)&closure->tramp[32]  = 0x0d50;
+
+/* [34] lay %r2,512(,%r4)           E3 20 42 00 00 71   r2 = r4_old
+ * r2 is now free to clobber (already saved by stmg above).        */
+*(short *)&closure->tramp[34]  = 0xe320;
+*(short *)&closure->tramp[36]  = 0x4200;
+*(short *)&closure->tramp[38]  = 0x0071;
+
+/* [40] stg %r2,2048(%r4)           E3 20 48 00 00 24   backchain */
+*(short *)&closure->tramp[40]  = 0xe320;
+*(short *)&closure->tramp[42]  = 0x4800;
+*(short *)&closure->tramp[44]  = 0x0024;
+
+/* [46] lay %r1,-34(,%r5)           E3 10 5F DE FF 71
+ * r5=tramp+34; tramp+34-34=tramp+0 = closure address.
+ * -34 = 0xFFDE as 20-bit signed: DL=0xFDE, DH=0xFF.               */
+*(short *)&closure->tramp[46]  = 0xe310;
+*(short *)&closure->tramp[48]  = 0x5fde;
+*(short *)&closure->tramp[50]  = 0xff71;
+
+/* [52] lay %r3,2688(,%r4)          E3 30 4B 80 00 71
+ * r3 = arg area base; FFISYS2 ignores it (does LR 3,13 immediately). */
+*(short *)&closure->tramp[52]  = 0xe330;
+*(short *)&closure->tramp[54]  = 0x4b80;
+*(short *)&closure->tramp[56]  = 0x0071;
+
+/* [58] lg %r6,86(,%r5)             E3 60 50 56 00 04
+ * r5=tramp+34; 34+86=120 = tramp[120] = &ffi_closure_SYSV.
+ * 86 = 0x056.                                                      */
+*(short *)&closure->tramp[58]  = 0xe360;
+*(short *)&closure->tramp[60]  = 0x5056;
+*(short *)&closure->tramp[62]  = 0x0004;
+
+/* [64] lmg %r5,%r6,0(,%r6)         EB56 6000 0004
+ * Load env→r5, entry→r6 from ffi_closure_SYSV function descriptor. */
+*(short *)&closure->tramp[64]  = 0xeb56;
+*(short *)&closure->tramp[66]  = 0x6000;
+*(short *)&closure->tramp[68]  = 0x0004;
+
+/* [70] basr %r7,%r6                0D76
+ * Call FFISYS2; r7 = tramp+72 (the return landing address).       */
+*(short *)&closure->tramp[70]  = 0x0d76;
+
+/* [72] nopr                        0707
+ * CELQEPLG does "BCR 15,r7" → tramp+72; falls through to [74].   */
+*(short *)&closure->tramp[72]  = 0x0707;
+
+/* [74] lmg %r4,%r15,2048(%r4)      EB4F 4800 0004
+ * r4=r4_new here. Restores r4=r4_old, r7=caller_r7 from r4_new+2048.
+ * Opcode byte = 0x04 (LMG = load multiple 64-bit).
+ * 0x24 would be STMG (store) — wrong direction, causes infinite loop. */
+*(short *)&closure->tramp[74]  = 0xeb4f;
+*(short *)&closure->tramp[76]  = 0x4800;
+*(short *)&closure->tramp[78]  = 0x0004;
+
+/* [80] nopr nopr                   padding */
+*(short *)&closure->tramp[80]  = 0x0707;
+*(short *)&closure->tramp[82]  = 0x0707;
+
+/* [84] br %r7                      07F7
+ * r7 restored by lmg = caller's return address (set by caller's BASR). */
+*(short *)&closure->tramp[84]  = 0x07f7;
+
+/* [86] nopr                        padding */
+*(short *)&closure->tramp[86]  = 0x0707;
+
+*(long  *)&closure->tramp[120] = (long)&ffi_closure_SYSV;
+//*(long  *)&closure->tramp[120] = (long)&debug_stub;
+
+/* descriptor probe */
+{
+  long *desc = (long *)&ffi_closure_SYSV;
+  fprintf(stderr, "ffi_closure_SYSV    @ %p: env=%016lx entry=%016lx\n",
+          (void*)desc, desc[0], desc[1]);
+  long *dbg = (long *)&debug_stub;
+  fprintf(stderr, "debug_stub          @ %p: env=%016lx entry=%016lx\n",
+          (void*)dbg, dbg[0], dbg[1]);
+  long *tramp120 = *(long **)&closure->tramp[120];
+  fprintf(stderr, "tramp[120] -> %p: [0]=%016lx [1]=%016lx\n",
+          (void*)tramp120, tramp120[0], tramp120[1]);
+  fflush(stderr);
+}
+
+fprintf(stderr, "tramp base = %p\n", (void*)closure->tramp);
+fprintf(stderr, "tramp[8]   = %p\n", &closure->tramp[8]);
+fprintf(stderr, "tramp[70]  = %p  (basr r7,r6)\n", &closure->tramp[70]);
+fprintf(stderr, "tramp[72]  = %p  (nopr; CELQEPLG returns here)\n", &closure->tramp[72]);
+fprintf(stderr, "tramp[74]  = %p  (return landing after nopr)\n", &closure->tramp[74]);
+fprintf(stderr, "tramp[120] = %p  (&ffi_closure_SYSV = %p)\n",
+        *(void**)&closure->tramp[120], (void*)&ffi_closure_SYSV);
+fprintf(stderr, "tramp bytes [16..88]:");
+for (int i = 16; i <= 88; i++)
+    fprintf(stderr, " %02x", (unsigned char)closure->tramp[i]);
+fprintf(stderr, "\n");
+fflush(stderr);
+
+//   *(long  *)&closure->tramp [0]  = 0x000000000000000;
+//   *(long  *)&closure->tramp [8]  = (long)(&(closure->tramp[16]));
+
+//   // put the pc in r5 so we can find the closure
+//   *(short *)&closure->tramp [16] = 0x0d50;   /* basr %r5,0 */
+
+// #ifdef NEW_TAMP
+
+//   // load closure->cif->bytes (we have &closure->tramp[16] in %r5)
+//   // so just (%r5 - 16) = closure address
+//   //         &closure->cif = closure address + 64
+//   //         closure->cif + 24 = closure->cif->bytes
+
+//   // step 1. r6 = closure->cif
+//   *(short *)&closure->tramp [] = 0xe360;  /* lg %r6,48(,%r5) */
+//   *(short *)&closure->tramp [] = 0x5030;
+//   *(short *)&closure->tramp [] = 0x0004;
+
+//   // step 2. r6 = cif->bytes
+//   *(short *)&closure->tramp [] = 0xe360;  /* l %r6,24(,%r6) */
+//   *(short *)&closure->tramp [] = 0x6018;
+
+//   // adjust stack pointer to include arg area
+//   *(short *)&closure->tramp [] = 0xb909;   /* sgr %r4,r6 */
+//   *(short *)&closure->tramp [] = 0x0046;
+
+//   // allocate trampoline's local storage space
+//   *(short *)&closure->tramp [] = 0xa740;   /* aghi %r4,-216 */
+//   *(short *)&closure->tramp [] = 0xff28;
+
+//   // save preserved registers to callers savearea (plus backchain and fake "env")
+//   // the offset here looks weird, I think technically we ought to save this first
+//   // then adjust the stack pointer, but we have the chicken egg scenario of having
+//   // to do the work to determine the stack size, but we're still using
+//   // the same location ie. 2048-dsasize+16, we're just subtracting dsasize from r4 first
+//   *(short  *)&closure->tramp []  = 0xeb6f;   /* stmg %r6,%r15,2064(%r4) */
+//   *(short  *)&closure->tramp []  = 0x4810;
+//   *(short  *)&closure->tramp []  = 0x0024;
+
+//   // now that we've saved our registers, we can actually do real stuff
+//   // save the dsa size in a register that will be preserved for easy adjustment of the stack
+//   // on the return side, since we don't actually save r4 or know dsasize without it
+//   *(short  *)&closure->tramp []  = 0xeb6f;   /* lgr %r9,%r6,2064(%r4) */
+//   *(short  *)&closure->tramp []  = 0x4810;
+//   *(short  *)&closure->tramp []  = 0x0024;
+
+//   // reload the entry point into r6 (maybe?)
+
+//   // save the argument registers in the trampolines arg area
+//   *(short  *)&closure->tramp []  = 0xeb13;   /* stmg %r1,%r3,2176(%r4) */
+//   *(short  *)&closure->tramp []  = 0x4880;
+//   *(short  *)&closure->tramp []  = 0x0024;
+
+
+//   /* la %r5,(,%r4) */
+
+//   // store the FPRs
+//   //
+//   // branch to the helper
+
+//   // restore the preserved registers
+//   *(short *)&closure->tramp [] = 0xeb7f;  /* lmg %r7,%r15,2048+24(,%r4) */
+//   *(short *)&closure->tramp [] = 0x4818;
+//   *(short *)&closure->tramp [] = 0x0004;
+
+//   // deallocate the stack
+//   *(short *)&closure->tramp [] = 0xa740;   /* aghi %r4,216 */
+//   *(short *)&closure->tramp [] = 0x00d8;
+
+//   // return
+//   *(short *)&closure->tramp [] = 0x47f0;   /* b 2(,7) */
+//   *(short *)&closure->tramp [] = 0x7002;
+// #endif
+
+//   // offset into closure register save area
+//   *(short *)&closure->tramp [18] = 0xa75b;   /* aghi %r5,70 */
+//   *(short *)&closure->tramp [20] = 0x0046;
+
+//   // save the registers into the closure
+//   *(short *)&closure->tramp [22] = 0xeb1f;   /* stmg %r1,%r15,0(%r5) */
+//   *(short *)&closure->tramp [24] = 0x5000;
+//   *(short *)&closure->tramp [26] = 0x0024;
+
+//   // put the addr of the closure into r1
+//   *(short *)&closure->tramp [28] = 0xe310;   /* lay %r1,-86(,%r5) */
+//   *(short *)&closure->tramp [30] = 0x5fa8;
+//   *(short *)&closure->tramp [32] = 0xff71;
+
+//   // adjust r5 to point to the help address
+//   *(short *)&closure->tramp [34] = 0xa75b;   /* aghi %r5,-34*/
+//   *(short *)&closure->tramp [36] = 0xffde;
+
+//   // // load the pointer to the helper address
+//   *(short *)&closure->tramp [38] = 0xe350;  /* lg %r5,0(,%r5) */
+//   *(short *)&closure->tramp [40] = 0x5000;
+//   *(short *)&closure->tramp [42] = 0x0004;
+
+//   *(short *)&closure->tramp [44] = 0xeb56;  /* lmg %r5,%r6,0(,%r5) */
+//   *(short *)&closure->tramp [46] = 0x5000;
+//   *(short *)&closure->tramp [48] = 0x0004;
+
+//   // load the actual address of the help
+//   // *(short *)&closure->tramp [44] = 0xe350;   /* lg %r5,8(,%r5) */
+//   // *(short *)&closure->tramp [46] = 0x5008;
+//   // *(short *)&closure->tramp [48] = 0x0004;
+
+//   // branch to the helper
+//   *(short *)&closure->tramp [50] = 0x0d66;   /* basr %r6,%r6 */
+
+//   // pointer to the helper address
+//   *(long  *)&closure->tramp [54] = ((long)&ffi_closure_SYSV);
 
   closure->cif = cif;
   closure->user_data = user_data;
