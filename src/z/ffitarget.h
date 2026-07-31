@@ -2,7 +2,7 @@
    ffitarget.h - Copyright (c) 2012  Anthony Green
                  Copyright (c) 1996-2003  Red Hat, Inc.
                  Copyright IBM Corp. 2021
-   Target configuration macros for S390.
+   Target configuration macros for z/OS.
 
    Permission is hereby granted, free of charge, to any person obtaining
    a copy of this software and associated documentation files (the
@@ -34,12 +34,6 @@
 #error "Please do not include ffitarget.h directly into your source.  Use ffi.h instead."
 #endif
 
-#if defined (__s390x__)
-#ifndef S390X
-#define S390X
-#endif
-#endif
-
 /* ---- System specific configurations ----------------------------------- */
 
 #ifndef LIBFFI_ASM
@@ -68,12 +62,9 @@ typedef enum ffi_abi {
 
 /* struct data to save registers */
 struct ffi_reg_data {
-  long* gpr[16];
+  long *gpr[16];
   double fpr[7];
 };
 
-// #define FFI_EXTRA_CIF_FIELDS struct ffi_reg_data reg
-
 #endif
-
 
