@@ -31,7 +31,7 @@ FFISYS2 CELQPRLG DSASIZE=DSASZ2,PSECT=FFISYS22
         LG 11,2176+16(,2)
         STG 11,16(,13)
 
-* store caller's stack pointer (becomes reg->gpr[3] for ffi_closure_helper_SYSV)
+* store caller's stack pointer (becomes reg->gpr[3] for ffi_closure_helper_XPLINK)
         STG 2,24(,13)
 
 * save closure ptr from r0 into DSA slot so we can restore it later
