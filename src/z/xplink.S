@@ -416,22 +416,22 @@ INC5     DS 0H
 J5       DS 0H
          BR 15 
 
-S64GPR1 DS 0H                INT64 type passed in gpr1
+S64GPR1 DS 0H                SINT64 type passed in gpr1
          LG  1,0(6,13)
-         AHI 7,8              Advance next two words in arg area
+         AHI 7,8              Advance one slot in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
          B CONT               Next parameter
-S64GPR2 DS 0H                INT64 type passed in gpr2
+S64GPR2 DS 0H                SINT64 type passed in gpr2
          LG  2,0(6,13)
-         AHI 7,8              Advance next two words in arg area
+         AHI 7,8              Advance one slot in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
          B CONT               Next parameter
-S64GPR3  DS 0H                INT64 type passed in gpr3
+S64GPR3  DS 0H                SINT64 type passed in gpr3
          LG  3,0(6,13)
-         AHI 7,8              Advance next two words in arg area
+         AHI 7,8              Advance one slot in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
          B CONT               Next parameter
-S64ARGA  DS 0H                INT64 in arg area
+S64ARGA  DS 0H                SINT64 in arg area
          LG  11,0(6,13)        Argument value
          LA 15,2176(,4)       Start of arg area
          STG  11,0(7,15)       Store in next word in arg area
@@ -481,7 +481,7 @@ UI64     DS 0H                ffi_type_uint64
          LR 11,0
          SLL 11,2             Pass this parm in gpr or arg area
          L 15,0(11,15)
-         CFI 0,2              GPRs left to pass parms in?
+         CFI 0,3              GPRs left to pass parms in?
          BL INC64
          LA 0,3               Reached max gprs
          B J64
@@ -491,24 +491,24 @@ J64      DS 0H
          BR 15
 
 U64GP1   DS 0H                u_INT64 passed in gpr1
-         LG 1,0(6,13)  
-         AHI 7,8              Advance two slots in arg area
+         LG 1,0(6,13)
+         AHI 7,8              Advance one slot in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
          B CONT               Next parameter
 U64GP2   DS 0H                u_INT64 passed in gpr2
-         LG 2,0(6,13) 
-         AHI 7,8              Advance two slots in arg area
+         LG 2,0(6,13)
+         AHI 7,8              Advance one slot in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
          B CONT               Next parameter
 U64GP3   DS 0H                u_INT64 passed in gpr3
          LG 3,0(6,13)
-         AHI 7,8              Advance next word in arg area
+         AHI 7,8              Advance one slot in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
          B CONT               Next parameter
 U64ARGA  DS 0H                u_INT64 in arg area
          LG 11,0(6,13)      Argument value
          LA 15,2176(,4)       Start of arg area
-         STG  11,0(7,15)       Store in next two words in arg area
+         STG  11,0(7,15)       Store in next word in arg area
          AHI 7,8              Bump one word in arg area
          AHI 6,8              Advance the first 8 bytes of parm value
          B CONT               Next parameter
@@ -614,10 +614,10 @@ DBLSTR   DS 0H
          AHI 6,8              Bump stack twice, cuz double is 8byte
          B CONT               Next parameter
 
-LD       DS 0H                ffi_type_long_double
+LD       DS 0H                ffi_type_longdouble
 * for variadics 12 is number of fixed args left
 * if it's zero we just use GPRs/memory no FPRs
-* branch to the 16 byte struct label for that 
+* branch to the 16 byte struct label for that
          CFI  12,0
          BNE  LDNVP
          LA   15,16           "struct" size 16
@@ -627,44 +627,44 @@ LDNVP    DS   0H
          LR 11,14
          SLL 11,2             Pass in fpr or arg area
          L  15,0(11,15)
-         CFI  14,3            FPRs left to pass parms in?
+         CFI  14,3            fewer than 2 FPR pairs left?
          BL INC8
-         LA 14,3              Reached max fprs
+         LA 14,4              Reached max fprs (long double needs 2 slots)
          B  J8
 INC8     DS 0H
-         AHI 14,2             Now we have two less fpr left
-         CFI 0,2              Reached max gprs
+         AHI 14,2             long double takes two FPR slots
+         CFI 0,2              room for two more GPR shadow slots?
          BL INCGLLD
          LA 0,3
          B J8
-INCGLLD  DS 0H                LONG_DOUBLE occupies two registers
-         AHI 0,2              So increment gpr count by 2
+INCGLLD  DS 0H                long double shadows two GPR slots
+         AHI 0,2              so bump GPR counter by 2
 J8       DS 0H
          BR 15
 
-DFPR0    DS 0H                LONG_DOUBLE passed in fpr0
+DFPR0    DS 0H                long double passed in fpr0+fpr2
          LD 0,0(6,13)
          LD 2,8(6,13)
          LDR 11,0
          LDR 8,2
          B LDBLSTR
-DFPR4    DS 0H                LONG_DOUBLE passed in fpr4
+DFPR4    DS 0H                long double passed in fpr4+fpr6
          LD 4,0(6,13)
          LD 6,8(6,13)
          LDR 11,4
          LDR 8,6
-         LA 14,4              All fprs are now in use
-         LA 0,3               All gprs are now in use
+         LA 14,4              all FPR slots now in use
+         LA 0,3               all GPR slots now in use
          B LDBLSTR
-DARGF    DS 0H                LONG_DOUBLE in arg area
-         LD 11,0(6,13)        Argument value
-         LD 8,8(6,13)
+DARGF    DS 0H                long double spilled to arg area
+         LD 11,0(6,13)        low half
+         LD 8,8(6,13)         high half
 LDBLSTR  DS 0H
          LA 15,2176(,4)       Start of arg area
-         STD 11,0(7,15)       Store in next two doublewords in arg area
-         STD 8,8(7,15)
-         AHI 7,16             Bump to the next two words in arg area
-         AHI 6,16             Bump stack twice, cuz ldouble is 16byte
+         STD 11,0(7,15)       Store low half in arg area
+         STD 8,8(7,15)        Store high half in arg area
+         AHI 7,16             Bump two slots (16 bytes)
+         AHI 6,16             Advance 16 bytes in local store
          B CONT               Next parameter
 
 
@@ -824,27 +824,27 @@ STFPCHKD246 DS 0H
          B CPXMRG
 
 CPXLD    DS 0H
-         CFI 14,3               Cant fit longdouble into available FPRs
-         BNL STRCT              if yes, not special case
+         CFI 14,3               fewer than 2 FPR pairs left, cant fit
+         BNL STRCT              fall through to struct path
          LG 11,0(10,5)          ensure we have size
          LG 15,0(,11)           ready for labels we branch to
 
-         CFI 14,0               4 FPRs are available
-         BE STFPCHKLD           use fpr0+fpr2+fpr4+fpr6
+         CFI 14,0               4 FPR slots free, use fpr0+fpr2+fpr4+fpr6
+         BE STFPCHKLD
 
-         CFI 14,1               3 FPRs are available
-         BE STFPCHKLD1          use fpr4+fpr6+argarea
+         CFI 14,1               3 FPR slots free, use fpr4+fpr6+argarea
+         BE STFPCHKLD1
 
-         CFI 14,2               2 FPRs are available
-         BE STFPCHKLD1          use fpr4+fpr6+argarea
+         CFI 14,2               2 FPR slots free, use fpr4+fpr6+argarea
+         BE STFPCHKLD1
 
 STFPCHKLD DS 0H
-         LD 0,0(6,13)           first half of first longdouble
-         LD 2,8(6,13)           second half of first longdouble
-         LD 4,16(6,13)          first half of second longdouble
-         LD 6,24(6,13)          second half of second longdouble
-         AFI 0,3                three less GPR available
-         AFI 14,4               four less FPRs available
+         LD 0,0(6,13)           low half of first long double
+         LD 2,8(6,13)           high half of first long double
+         LD 4,16(6,13)          low half of second long double
+         LD 6,24(6,13)          high half of second long double
+         AFI 0,3                all 3 GPR shadow slots now used
+         AFI 14,4               all 4 FPR slots now used
 
          AFI 6,32
          AFI 15,-32
@@ -853,10 +853,10 @@ STFPCHKLD DS 0H
          B CPXMRG
 
 STFPCHKLD1 DS 0H
-         LD 4,0(6,13)           first half longdouble
-         LD 6,8(6,13)           second half longdouble
-         AFI 0,2                two less GPR available
-         AFI 14,2               two less FPRs available
+         LD 4,0(6,13)           low half of first long double (fpr4)
+         LD 6,8(6,13)           high half of first long double (fpr6)
+         AFI 0,2                two GPR shadow slots used
+         AFI 14,2               two FPR slots used
 
          AFI 6,16
          AFI 15,-16
@@ -994,8 +994,8 @@ BYTE16R2 DS 0H               Struct goes in R2-R3
          B STRCTLP
          
 
-BYTE16R3 DS 0H               Struct goes in R3+Memory
-         CFI 0,3             are R3 available?
+BYTE16R3 DS 0H               Struct head in R3, remainder in memory
+         CFI 0,3             is R3 available?
          BNL STRCTLP
          LG 3,0(6,13)
 
@@ -1025,8 +1025,8 @@ BYTE24R1 DS 0H               Struct goes in R1-R3
          LA 0,3
          B STRCTLP
 
-BYTE24R2 DS 0H               Struct goes in R2,R3+(potentially)Memory
-         CFI 0,2             are R1+R2+R3 available?
+BYTE24R2 DS 0H               Struct goes in R2+R3+memory
+         CFI 0,2             are R2+R3 available?
          BNL BYTE24R3 
          LG 2,0(6,13)
          LG 3,8(6,13)
@@ -1034,8 +1034,8 @@ BYTE24R2 DS 0H               Struct goes in R2,R3+(potentially)Memory
          LA 0,3
          B STRCTLP
 
-BYTE24R3 DS 0H               Struct goes in R3+Memory
-         CFI 0,3             are R3 available?
+BYTE24R3 DS 0H               Struct goes in R3+memory
+         CFI 0,3             is R3 available?
          BNL STRCTLP 
          LG 3,0(6,13)
 
@@ -1047,7 +1047,7 @@ BYTE24F2 DS 0H               Struct goes in FPR2-FPR6+Memory
 BYTE24F4 DS 0H               Struct goes in FPR4-FPR6+Memory
 BYTE24F6 DS 0H               Struct goes in FPR6+Memory
 
-CPXMRG   DS 0H               Reached max GPRs, set R0 to 3
+CPXMRG   DS 0H               clamp GPR counter to 3 after FPR-split
          CFI 0,4
          BL STRCTLP
          LA 0,3
@@ -1086,9 +1086,9 @@ CONT2    DS   0H
          BCT 9,ARGLOOP
 
   
-*Get function address, first argument passed,
-*and return type, third argument passed from caller's
-*argument area.
+*Load function descriptor ptr (arg 1) and cif->flags return-type
+*(arg 3) from caller's argument area, then read rtype->type
+*for the RS handler.
 CALL     DS 0H
 *         SR 11,11
          LA 11,0
@@ -1110,36 +1110,39 @@ CALL     DS 0H
          BASR 7,6
          DC    X'0700'
  
-*What: Processing the return value based
-*      on information in cif->flags, 3rd
-*      parameter passed to this routine
+*Dispatch to return handler using cif->flags (FFI390_RET_* index)
 
          LA 15,RTABLE
          SLL 11,2             Return type
          L  15,0(11,15)
          BR 15
 
+* FFI390_RET_FLOAT (2): scalar float in FPR0
 RF       DS 0H
          LG 7,(2176+(((DSASZ+31)/32)*32)+24)(,4)
          STE 0,0(,7)
          B RET
 
+* FFI390_RET_DOUBLE (3): scalar double in FPR0
 RD       DS 0H
          LG 7,(2176+(((DSASZ+31)/32)*32)+24)(,4)
          STD 0,0(,7)
          B RET
 
+* FFI390_RET_LDBLE (4): long double in FPR0 (low) + FPR2 (high)
 RLD      DS 0H
          LG 7,(2176+(((DSASZ+31)/32)*32)+24)(,4)
          STD 0,0(,7)
          STD 2,8(,7)
          B RET
 
+* FFI390_RET_INT32 (5): 32-bit int in GPR3 (sign-extended)
 RI       DS 0H
          LG 7,(2176+(((DSASZ+31)/32)*32)+24)(,4)
          ST 3,0(,7)
          B RET
 
+* FFI390_RET_INT64 (6): 64-bit int/pointer in GPR3
 RLL      DS 0H
          LG 7,(2176+(((DSASZ+31)/32)*32)+24)(,4)
          
@@ -1240,9 +1243,11 @@ RCPXI8   DS 0H
          STG 2,8(,7)            imag (8 bytes)
          B RET
 
+* FFI390_RET_VOID (0): nothing to store
 RV       DS 0H
          B RET
 
+* FFI390_RET_STRUCT (1): struct return, size-dispatched to GPR or FPR stores
 RS       DS 0H
          LG 7,(2176+(((DSASZ+31)/32)*32)+24)(,4)
          LG 14,(2176+(((DSASZ+31)/32)*32)+8)(,4)
@@ -1285,21 +1290,24 @@ RSREG    DS 0H
          STG  3,16(,15)
          B RSCPY
 
+* FFI390_RET_STRUCT_FF (7): struct{float;float} or _Complex float
+* both floats in FPR0 (low 4 bytes) and FPR2 (low 4 bytes)
 STOREF1  DS 0H
          LG 7,(2176+(((DSASZ+31)/32)*32)+24)(,4)
          STE 0,0(,7)
          STE 2,4(,7)
          B RET
-*        B RSCPY
 
+* FFI390_RET_STRUCT_DD (8): struct{double;double} or _Complex double
+* first double in FPR0, second double in FPR2
 STORED1  DS 0H
          LG 7,(2176+(((DSASZ+31)/32)*32)+24)(,4)
          STD 0,0(,7)
          STD 2,8(,7)
          B RET
-*        STD 0,0(,15)
-*        STD 2,8(,15)
 
+* FFI390_RET_STRUCT_LDLD (9): struct{ldbl;ldbl} or _Complex long double
+* FPR0+FPR2 hold first long double, FPR4+FPR6 hold second
 STORELD1 DS 0H
          LG 7,(2176+(((DSASZ+31)/32)*32)+24)(,4)
          STD 0,0(,7)
@@ -1307,12 +1315,8 @@ STORELD1 DS 0H
          STD 4,16(,7)
          STD 6,24(,7)
          B RET
-*        STD 0,0(,15)
-*        STD 2,8(,15)
         
-* label to copy the struct to the return area
-* just move one byte at a time from r15 to r7
-* while r14 is non-zero
+* byte-by-byte copy from SSTOR (r15) into rvalue (r7), r14 bytes
 RSCPY    DS 0H
          CFI 14,0
          BNH RET
@@ -1324,10 +1328,8 @@ RSCPY    DS 0H
          B RSCPY
 
 
-* return struct in pointer passed as dummy first argument
-* this should be the same pointer passed to ffi_call
-* and should have been set up in  prep_args
-* only using an explicit label for clarity
+* struct > 24 bytes: hidden first arg was the rvalue pointer,
+* the callee already wrote the result there so nothing to do
 RSP      DS 0H                 
          B RET                  
   
@@ -1418,30 +1420,13 @@ RTABLE DC A(RV)
  DC A(STORED1)
  DC A(STORELD1)
  DC A(RCPXI)
-RETVOID  EQU  X'0'
-RETSTRT  EQU  X'1'
-RETFLOT  EQU  X'2'
-RETDBLE  EQU  X'3'
-RETINT3  EQU  X'4'
-RETINT6  EQU  X'5'
-OFFSET   EQU  7
-BASEREG  EQU  8
-GPX      EQU  0
-WRKREG   EQU  11    
-IDXREG   EQU  10    
-STKREG   EQU  13
-FPX      EQU  14
 CEEDSAHP CEEDSA SECTYPE=XPLINK
-ARGSL DS  XL800
-TEST DS XL8
-* storage space for the returns regs maximum 4*8 fpr
-* TODO check long doubles, might be 8*8
+* 32-byte buffer for struct return values (GPR1/2/3 copy + RSCPY source)
 SSTOR DS  XL32
-SSIZE DS  XL8
+* save area for r0-r15 across CELQCALL PREPARGS
 SAVREGS DS XL128
+* save area for fpr0/2/4/6 across CELQCALL PREPARGS
 SAVFPRS DS XL32
-* storage space for scratch registers
-SCRREGS DS XL128
 * full GPR save area for STRCTDISP CELQCALL (r0-r15, 128 bytes)
 SDALL  DS XL128
 * single slot holding the ffi_type* passed by ref to STFPTYP
