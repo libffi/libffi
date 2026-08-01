@@ -58,6 +58,13 @@
 #define FFI_TARGET_HAS_INT128
 #endif
 
+/* The System V x86-64 psABI passes 8- and 16-byte vectors in SSE registers;
+   this is implemented by the ffi64.c (FFI_UNIX64) backend only.  32-bit x86
+   and the Windows x86-64 backend (ffiw64.c) do not marshal vectors.  */
+#if defined(X86_64) && !defined(X86_WIN64)
+#define FFI_TARGET_HAS_VECTOR_TYPE
+#endif
+
 /* ---- Generic type definitions ----------------------------------------- */
 
 #ifndef LIBFFI_ASM
