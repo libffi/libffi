@@ -203,6 +203,13 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
+    Development source only -- no release yet
+        Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
+          layout, for aarch64 and x86-64 (#1000, closes #773).
+        Add powerpc64 ELFv2 _Complex long double support for both
+          IBM-128 (double-double) and IEEE-128 formats (#1003, closes #1001).
+        Fix powerpc Darwin closure returns broken by #951 (#1002).
+
     3.7.1 July-10-2026
         Fix aarch64 ffi_call memory corruption when passing many large
           structs by value.
