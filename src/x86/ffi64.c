@@ -330,6 +330,25 @@ classify_argument (ffi_type *type, enum x86_64_reg_class classes[],
 	  }
 	return words;
       }
+    case FFI_TYPE_VECTOR:
+      /* A Short Vector occupies SSE registers: an 8-byte vector is a single
+	 SSE eightbyte; a 16-byte vector is one %xmm register (SSE + SSEUP).
+	 Wider vectors would need %ymm/%zmm handling this port does not
+	 implement; classify them as memory here and reject them outright in
+	 ffi_prep_cif_machdep so the caller gets FFI_BAD_TYPEDEF, not a
+	 silently wrong in-memory pass.  */
+      if (type->size == 8)
+	{
+	  classes[0] = X86_64_SSE_CLASS;
+	  return 1;
+	}
+      else if (type->size == 16)
+	{
+	  classes[0] = X86_64_SSE_CLASS;
+	  classes[1] = X86_64_SSEUP_CLASS;
+	  return 2;
+	}
+      return 0;
     case FFI_TYPE_COMPLEX:
       {
 	ffi_type *inner = type->elements[0];
@@ -533,6 +552,16 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	    }
 	}
       break;
+    case FFI_TYPE_VECTOR:
+      /* An 8-byte vector returns in the low half of %xmm0; a 16-byte vector
+	 fills %xmm0 (SSE + SSEUP).  Wider vectors are unsupported here.  */
+      if (rtype_size == 8)
+	flags = UNIX64_RET_XMM64;
+      else if (rtype_size == 16)
+	flags = UNIX64_RET_XMM128;
+      else
+	return FFI_BAD_TYPEDEF;
+      break;
     case FFI_TYPE_COMPLEX:
       switch (rtype->elements[0]->type)
 	{
@@ -576,6 +605,15 @@ ffi_prep_cif_machdep (ffi_cif *cif)
     default:
       return FFI_BAD_TYPEDEF;
     }
+
+  /* Reject vectors wider than 16 bytes as arguments: correct %ymm/%zmm
+     passing needs unix64.S register-save changes that are out of scope for
+     this port, and classify_argument would otherwise silently treat them as
+     an in-memory aggregate.  */
+  for (i = 0, avn = cif->nargs; i < avn; i++)
+    if (cif->arg_types[i]->type == FFI_TYPE_VECTOR
+	&& cif->arg_types[i]->size > 16)
+      return FFI_BAD_TYPEDEF;
 
   /* Go over all arguments and determine the way they should be passed.
      If it's in a register and there is space for it, let that be so. If

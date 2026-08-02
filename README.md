@@ -203,11 +203,16 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
-    3.7.2 (in development)
+    Development source only -- no release yet
         Cache the static trampoline "unsupported" result on hosts whose
           page size exceeds the trampoline table mapping, avoiding
           redundant re-initialization on every closure allocation
           (e.g. 64K-page aarch64).
+        Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
+          layout, for aarch64 and x86-64 (#1000, closes #773).
+        Add powerpc64 ELFv2 _Complex long double support for both
+          IBM-128 (double-double) and IEEE-128 formats (#1003, closes #1001).
+        Fix powerpc Darwin closure returns broken by #951 (#1002).
 
     3.7.1 July-10-2026
         Fix aarch64 ffi_call memory corruption when passing many large
