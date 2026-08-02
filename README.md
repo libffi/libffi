@@ -203,6 +203,12 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
+    3.7.2 (in development)
+        Cache the static trampoline "unsupported" result on hosts whose
+          page size exceeds the trampoline table mapping, avoiding
+          redundant re-initialization on every closure allocation
+          (e.g. 64K-page aarch64).
+
     3.7.1 July-10-2026
         Fix aarch64 ffi_call memory corruption when passing many large
           structs by value.
