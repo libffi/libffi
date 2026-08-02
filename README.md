@@ -204,6 +204,10 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     Development source only -- no release yet
+        Cache the static trampoline "unsupported" result on hosts whose
+          page size exceeds the trampoline table mapping, avoiding
+          redundant re-initialization on every closure allocation
+          (e.g. 64K-page aarch64).
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
           layout, for aarch64 and x86-64 (#1000, closes #773).
         Add powerpc64 ELFv2 _Complex long double support for both
