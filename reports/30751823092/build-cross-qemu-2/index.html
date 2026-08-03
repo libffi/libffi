@@ -190,7 +190,7 @@ code {
                 </div>
                 <h1 class="mt-5"> DejaGnu Summary Report </h1>
             <a href="rlgl-report-original.log" target="_blank">
-              Original Report (sha3-256: 4b1aec4e21ec104d8daf896a38b4fa4dcde71c904395f3ddaf6b9c224eb0ee92)
+              Original Report (sha3-256: d536e082567987a5445dd77e91e52fd613eb3c82191b8e4bd4a2786fc476b970)
             </a>
             <table>
                  
@@ -201,19 +201,34 @@ code {
               <tr> <th> RESULT </th><th> ID </th>
               </tr>
               
-	                    <tr class="view fail">
-                              <td> FAIL </td><td> <a target="_blank"> libffi.call/callback2.c -W -Wall -Wno-psabi -fno-diagnostics-color -O2 execution test </a> </td>
+	                    <tr class="view xfail">
+                              <td> XFAIL </td><td> <a target="_blank"> libffi.call/callback2.c -W -Wall -Wno-psabi -fno-diagnostics-color -O2 execution test </a> </td>
                             </tr>
 	                    <tr class="fold">
 		              <td colspan="2">
 		                <div class="fold-content">
 		                  <div id="border">
-                                    <a href="https://github.com/libffi/rlgl-policy/commit/022954a02a6ca590a971f94321ca9f49e775a13" target="_blank">
-		                      <pre> commit 022954a02a6ca590a971f94321ca9f49e775a132 </pre>
+                                    <a href="https://github.com/libffi/rlgl-policy/commit/f19b177d7953311192d2349026005688786cd7ec" target="_blank">
+		                      <pre> commit f19b177d7953311192d2349026005688786cd7ec </pre>
                                     </a>
-		                    <pre> Author: Anthony Green &lt;green@moxielogic.com&gt;
-Date:   Mon Nov 11 21:11:17 2019 -0500
-    Initial commit </pre>
+		                    <pre> Author: Anthony Green &lt;anthony@atgreen.org&gt;
+Date:   Mon Aug 3 07:27:18 2026 -0400
+    XFAIL: renew expired exceptions (2026-07-31 -&gt; 2027-07-31)
+    
+    The 113 exceptions dated 2026-07-31 lapsed, which flipped master RED on
+    the first CI run after that date (libffi PR #1000, 2026-08-01; the prior
+    green run, #1004, was 2026-07-28).  These are all long-standing known
+    failures -- QEMU/simulator emulation limits and known-bug regression
+    trackers (darwin unwindtest/i128, powerpc64le/s390x unwindtest excess
+    errors, sparc64 callback, the powerpc-unknown-eabisim baseline, bfin,
+    or1k, i386/m32r/moxie struct baselines, etc.) -- so renew them one year
+    to restore the July-31 review cadence and unblock master.
+    
+    No test results changed; this only bumps the expiration dates.
+    
+    Note: the Windows/MSVC struct-passing failures are NOT covered here and
+    remain to be investigated separately (suspected VS18/MSVC 14.51 preview
+    toolchain regression on the runner). </pre>
                                   </div>
   	                          <div id="border">
 		                    <pre> {
@@ -231,19 +246,34 @@ Date:   Mon Nov 11 21:11:17 2019 -0500
                                 </div>
                              </td>
               </tr>
-	                    <tr class="view fail">
-                              <td> FAIL </td><td> <a target="_blank"> libffi.call/callback2.c -W -Wall -Wno-psabi -fno-diagnostics-color -O0 execution test </a> </td>
+	                    <tr class="view xfail">
+                              <td> XFAIL </td><td> <a target="_blank"> libffi.call/callback2.c -W -Wall -Wno-psabi -fno-diagnostics-color -O0 execution test </a> </td>
                             </tr>
 	                    <tr class="fold">
 		              <td colspan="2">
 		                <div class="fold-content">
 		                  <div id="border">
-                                    <a href="https://github.com/libffi/rlgl-policy/commit/022954a02a6ca590a971f94321ca9f49e775a13" target="_blank">
-		                      <pre> commit 022954a02a6ca590a971f94321ca9f49e775a132 </pre>
+                                    <a href="https://github.com/libffi/rlgl-policy/commit/f19b177d7953311192d2349026005688786cd7ec" target="_blank">
+		                      <pre> commit f19b177d7953311192d2349026005688786cd7ec </pre>
                                     </a>
-		                    <pre> Author: Anthony Green &lt;green@moxielogic.com&gt;
-Date:   Mon Nov 11 21:11:17 2019 -0500
-    Initial commit </pre>
+		                    <pre> Author: Anthony Green &lt;anthony@atgreen.org&gt;
+Date:   Mon Aug 3 07:27:18 2026 -0400
+    XFAIL: renew expired exceptions (2026-07-31 -&gt; 2027-07-31)
+    
+    The 113 exceptions dated 2026-07-31 lapsed, which flipped master RED on
+    the first CI run after that date (libffi PR #1000, 2026-08-01; the prior
+    green run, #1004, was 2026-07-28).  These are all long-standing known
+    failures -- QEMU/simulator emulation limits and known-bug regression
+    trackers (darwin unwindtest/i128, powerpc64le/s390x unwindtest excess
+    errors, sparc64 callback, the powerpc-unknown-eabisim baseline, bfin,
+    or1k, i386/m32r/moxie struct baselines, etc.) -- so renew them one year
+    to restore the July-31 review cadence and unblock master.
+    
+    No test results changed; this only bumps the expiration dates.
+    
+    Note: the Windows/MSVC struct-passing failures are NOT covered here and
+    remain to be investigated separately (suspected VS18/MSVC 14.51 preview
+    toolchain regression on the runner). </pre>
                                   </div>
   	                          <div id="border">
 		                    <pre> {
@@ -261,19 +291,34 @@ Date:   Mon Nov 11 21:11:17 2019 -0500
                                 </div>
                              </td>
               </tr>
-	                    <tr class="view fail">
-                              <td> FAIL </td><td> <a target="_blank"> libffi.call/callback.c -W -Wall -Wno-psabi -fno-diagnostics-color -O2 execution test </a> </td>
+	                    <tr class="view xfail">
+                              <td> XFAIL </td><td> <a target="_blank"> libffi.call/callback.c -W -Wall -Wno-psabi -fno-diagnostics-color -O2 execution test </a> </td>
                             </tr>
 	                    <tr class="fold">
 		              <td colspan="2">
 		                <div class="fold-content">
 		                  <div id="border">
-                                    <a href="https://github.com/libffi/rlgl-policy/commit/022954a02a6ca590a971f94321ca9f49e775a13" target="_blank">
-		                      <pre> commit 022954a02a6ca590a971f94321ca9f49e775a132 </pre>
+                                    <a href="https://github.com/libffi/rlgl-policy/commit/f19b177d7953311192d2349026005688786cd7ec" target="_blank">
+		                      <pre> commit f19b177d7953311192d2349026005688786cd7ec </pre>
                                     </a>
-		                    <pre> Author: Anthony Green &lt;green@moxielogic.com&gt;
-Date:   Mon Nov 11 21:11:17 2019 -0500
-    Initial commit </pre>
+		                    <pre> Author: Anthony Green &lt;anthony@atgreen.org&gt;
+Date:   Mon Aug 3 07:27:18 2026 -0400
+    XFAIL: renew expired exceptions (2026-07-31 -&gt; 2027-07-31)
+    
+    The 113 exceptions dated 2026-07-31 lapsed, which flipped master RED on
+    the first CI run after that date (libffi PR #1000, 2026-08-01; the prior
+    green run, #1004, was 2026-07-28).  These are all long-standing known
+    failures -- QEMU/simulator emulation limits and known-bug regression
+    trackers (darwin unwindtest/i128, powerpc64le/s390x unwindtest excess
+    errors, sparc64 callback, the powerpc-unknown-eabisim baseline, bfin,
+    or1k, i386/m32r/moxie struct baselines, etc.) -- so renew them one year
+    to restore the July-31 review cadence and unblock master.
+    
+    No test results changed; this only bumps the expiration dates.
+    
+    Note: the Windows/MSVC struct-passing failures are NOT covered here and
+    remain to be investigated separately (suspected VS18/MSVC 14.51 preview
+    toolchain regression on the runner). </pre>
                                   </div>
   	                          <div id="border">
 		                    <pre> {
@@ -291,19 +336,34 @@ Date:   Mon Nov 11 21:11:17 2019 -0500
                                 </div>
                              </td>
               </tr>
-	                    <tr class="view fail">
-                              <td> FAIL </td><td> <a target="_blank"> libffi.call/callback.c -W -Wall -Wno-psabi -fno-diagnostics-color -O0 execution test </a> </td>
+	                    <tr class="view xfail">
+                              <td> XFAIL </td><td> <a target="_blank"> libffi.call/callback.c -W -Wall -Wno-psabi -fno-diagnostics-color -O0 execution test </a> </td>
                             </tr>
 	                    <tr class="fold">
 		              <td colspan="2">
 		                <div class="fold-content">
 		                  <div id="border">
-                                    <a href="https://github.com/libffi/rlgl-policy/commit/022954a02a6ca590a971f94321ca9f49e775a13" target="_blank">
-		                      <pre> commit 022954a02a6ca590a971f94321ca9f49e775a132 </pre>
+                                    <a href="https://github.com/libffi/rlgl-policy/commit/f19b177d7953311192d2349026005688786cd7ec" target="_blank">
+		                      <pre> commit f19b177d7953311192d2349026005688786cd7ec </pre>
                                     </a>
-		                    <pre> Author: Anthony Green &lt;green@moxielogic.com&gt;
-Date:   Mon Nov 11 21:11:17 2019 -0500
-    Initial commit </pre>
+		                    <pre> Author: Anthony Green &lt;anthony@atgreen.org&gt;
+Date:   Mon Aug 3 07:27:18 2026 -0400
+    XFAIL: renew expired exceptions (2026-07-31 -&gt; 2027-07-31)
+    
+    The 113 exceptions dated 2026-07-31 lapsed, which flipped master RED on
+    the first CI run after that date (libffi PR #1000, 2026-08-01; the prior
+    green run, #1004, was 2026-07-28).  These are all long-standing known
+    failures -- QEMU/simulator emulation limits and known-bug regression
+    trackers (darwin unwindtest/i128, powerpc64le/s390x unwindtest excess
+    errors, sparc64 callback, the powerpc-unknown-eabisim baseline, bfin,
+    or1k, i386/m32r/moxie struct baselines, etc.) -- so renew them one year
+    to restore the July-31 review cadence and unblock master.
+    
+    No test results changed; this only bumps the expiration dates.
+    
+    Note: the Windows/MSVC struct-passing failures are NOT covered here and
+    remain to be investigated separately (suspected VS18/MSVC 14.51 preview
+    toolchain regression on the runner). </pre>
                                   </div>
   	                          <div id="border">
 		                    <pre> {

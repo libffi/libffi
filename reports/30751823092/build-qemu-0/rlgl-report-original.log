@@ -1,4 +1,4 @@
-Test run by builder on Sun Aug  2 14:47:35 2026
+Test run by builder on Mon Aug  3 11:34:41 2026
 Native configuration is powerpc64le-unknown-linux-gnu
 
 		=== libffi tests ===
@@ -2575,7 +2575,7 @@ spawn [open ...]
 double f(7*long,double,long):(1,2,3,4,5,6,7,3.87506e+18,9)->3.87506e+18
 double f(7*long,double,long):(1,2,3,4,5,6,7,3.87506e+18,9)->3.87506e+18
 PASS: libffi.bhaible/test-callback.c -W -Wall -Wno-psabi -fno-diagnostics-color -DDGTEST=80 -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-uninitialized execution test
-testcase ../../testsuite/libffi.bhaible/bhaible.exp completed in 508 seconds
+testcase ../../testsuite/libffi.bhaible/bhaible.exp completed in 501 seconds
 Running ../../testsuite/libffi.call/call.exp ...
 set_ld_library_path_env_vars: ld_library_path=.::/opt/powerpc64le-unknown-linux-gnu/testsuite/../.libs
 Executing on host: gcc  ffitest12574.c   -I/opt/powerpc64le-unknown-linux-gnu/testsuite/../include -I/opt/powerpc64le-unknown-linux-gnu/testsuite/.. -I../../testsuite/../include -E -o ffitest12574.c.i    (timeout = 300)
@@ -4316,7 +4316,7 @@ spawn -ignore SIGHUP gcc ffitest12574.c -I/opt/powerpc64le-unknown-linux-gnu/tes
     5 | # [01;31m[Kerror[m[K Failed #ifdef __i386__
       |   [01;31m[K^~~~~[m[K
 compiler exited with status 1
-testcase ../../testsuite/libffi.call/call.exp completed in 122 seconds
+testcase ../../testsuite/libffi.call/call.exp completed in 119 seconds
 Running ../../testsuite/libffi.closures/closure.exp ...
 set_ld_library_path_env_vars: ld_library_path=.::/opt/powerpc64le-unknown-linux-gnu/testsuite/../.libs
 Executing on host: gcc  ffitest12574.c   -I/opt/powerpc64le-unknown-linux-gnu/testsuite/../include -I/opt/powerpc64le-unknown-linux-gnu/testsuite/.. -I../../testsuite/../include -E -o ffitest12574.c.i    (timeout = 300)
@@ -5418,7 +5418,7 @@ FAIL: libffi.closures/unwindtest_ffi_call.cc -W -Wall -Wno-psabi -fno-diagnostic
 Excess errors:
 default_target_compile: Can't find g++.
 UNRESOLVED: libffi.closures/unwindtest_ffi_call.cc -W -Wall -Wno-psabi -fno-diagnostics-color compilation failed to produce executable
-testcase ../../testsuite/libffi.closures/closure.exp completed in 154 seconds
+testcase ../../testsuite/libffi.closures/closure.exp completed in 147 seconds
 Running ../../testsuite/libffi.complex/complex.exp ...
 set_ld_library_path_env_vars: ld_library_path=.::/opt/powerpc64le-unknown-linux-gnu/testsuite/../.libs
 Executing on host: gcc  ffitest12574.c   -I/opt/powerpc64le-unknown-linux-gnu/testsuite/../include -I/opt/powerpc64le-unknown-linux-gnu/testsuite/.. -I../../testsuite/../include -E -o ffitest12574.c.i    (timeout = 300)
@@ -8043,7 +8043,7 @@ spawn [open ...]
 126.000000,874.000000i
 252.000000,1748.000000i vs 252.000000,1748.000000i
 PASS: libffi.complex/return_complex_longdouble.c -W -Wall -Wno-psabi -fno-diagnostics-color execution test
-testcase ../../testsuite/libffi.complex/complex.exp completed in 46 seconds
+testcase ../../testsuite/libffi.complex/complex.exp completed in 44 seconds
 Running ../../testsuite/libffi.go/go.exp ...
 set_ld_library_path_env_vars: ld_library_path=.::/opt/powerpc64le-unknown-linux-gnu/testsuite/../.libs
 Executing on host: gcc  ffitest12574.c   -I/opt/powerpc64le-unknown-linux-gnu/testsuite/../include -I/opt/powerpc64le-unknown-linux-gnu/testsuite/.. -I../../testsuite/../include -E -o ffitest12574.c.i    (timeout = 300)
@@ -8085,7 +8085,7 @@ Execution timeout is: 300
 spawn [open ...]
 Completed
 PASS: libffi.threads/tsan.c -W -Wall -Wno-psabi -fno-diagnostics-color execution test
-testcase ../../testsuite/libffi.threads/threads.exp completed in 3 seconds
+testcase ../../testsuite/libffi.threads/threads.exp completed in 2 seconds
 Running ../../testsuite/libffi.vector/vector.exp ...
 set_ld_library_path_env_vars: ld_library_path=.::/opt/powerpc64le-unknown-linux-gnu/testsuite/../.libs
 Executing on host: gcc  ffitest12574.c   -I/opt/powerpc64le-unknown-linux-gnu/testsuite/../include -I/opt/powerpc64le-unknown-linux-gnu/testsuite/.. -I../../testsuite/../include -E -o ffitest12574.c.i    (timeout = 300)
@@ -8104,7 +8104,7 @@ UNSUPPORTED: ../../testsuite/libffi.vector/vector_hva.c
 UNSUPPORTED: ../../testsuite/libffi.vector/vector_int32x4.c
 UNSUPPORTED: ../../testsuite/libffi.vector/vector_validate.c
 UNSUPPORTED: ../../testsuite/libffi.vector/vector_vec3.c
-testcase ../../testsuite/libffi.vector/vector.exp completed in 0 seconds
+testcase ../../testsuite/libffi.vector/vector.exp completed in 1 seconds
 
 		=== libffi Summary ===
 
@@ -8112,4 +8112,4 @@ testcase ../../testsuite/libffi.vector/vector.exp completed in 0 seconds
 # of unexpected failures	2
 # of unresolved testcases	2
 # of unsupported tests		10
-runtest completed at Sun Aug  2 15:01:31 2026
+runtest completed at Mon Aug  3 11:48:18 2026

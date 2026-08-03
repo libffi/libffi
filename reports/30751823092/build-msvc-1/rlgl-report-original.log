@@ -1,4 +1,4 @@
-Test run by runneradmin on Sun Aug  2 14:36:58 2026
+Test run by runneradmin on Mon Aug  3 11:34:13 2026
 Native configuration is x86_64-w64-mingw32
 
 		=== libffi tests ===
@@ -178,8 +178,8 @@ PASS: libffi.bhaible/test-call.c -DDGTEST=19 -wd4996 -wd4116 -wd4101 -wd4244 (te
 Setting LD_LIBRARY_PATH to :/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs::/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs
 Execution timeout is: 300
 spawn [open ...]
-void* f(void*,double*,char*,Int*):(0x00007FF7A4E19003,0x00007FF7A4E19100,0x00007FF7A4E19208,0x00007FF7A4E19244)->0x00007FF7A4E19101
-void* f(void*,double*,char*,Int*):(0x00007FF7A4E19003,0x00007FF7A4E19100,0x00007FF7A4E19208,0x00007FF7A4E19244)->0x00007FF7A4E19101
+void* f(void*,double*,char*,Int*):(0x00007FF6B7B09003,0x00007FF6B7B09100,0x00007FF6B7B09208,0x00007FF6B7B09244)->0x00007FF6B7B09101
+void* f(void*,double*,char*,Int*):(0x00007FF6B7B09003,0x00007FF6B7B09100,0x00007FF6B7B09208,0x00007FF6B7B09244)->0x00007FF6B7B09101
 PASS: libffi.bhaible/test-call.c -DDGTEST=19 -wd4996 -wd4116 -wd4101 -wd4244 execution test
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-call.c   -DDGTEST=20 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-call.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-call.c -DDGTEST=20 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-call.exe
@@ -732,8 +732,8 @@ spawn [open ...]
 double f(7*long,double,long):(1,2,3,4,5,6,7,0.2,9)->37.2
 double f(7*long,double,long):(1,2,3,4,5,6,7,0.2,9)->37.2
 PASS: libffi.bhaible/test-call.c -DDGTEST=81 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=1 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=1 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=1 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -741,8 +741,8 @@ Setting LD_LIBRARY_PATH to :/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/tests
 Execution timeout is: 300
 spawn [open ...]
 PASS: libffi.bhaible/test-callback.c -DDGTEST=1 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=2 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=2 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=2 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -752,8 +752,8 @@ spawn [open ...]
 int f(void):->99
 int f(void):->99
 PASS: libffi.bhaible/test-callback.c -DDGTEST=2 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=3 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=3 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=3 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -763,8 +763,8 @@ spawn [open ...]
 int f(int):(1)->2
 int f(int):(1)->2
 PASS: libffi.bhaible/test-callback.c -DDGTEST=3 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=4 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=4 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=4 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -774,8 +774,8 @@ spawn [open ...]
 int f(2*int):(1,2)->3
 int f(2*int):(1,2)->3
 PASS: libffi.bhaible/test-callback.c -DDGTEST=4 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=5 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=5 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=5 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -785,8 +785,8 @@ spawn [open ...]
 int f(4*int):(1,2,3,4)->10
 int f(4*int):(1,2,3,4)->10
 PASS: libffi.bhaible/test-callback.c -DDGTEST=5 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=6 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=6 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=6 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -796,8 +796,8 @@ spawn [open ...]
 int f(8*int):(1,2,3,4,5,6,7,8)->36
 int f(8*int):(1,2,3,4,5,6,7,8)->36
 PASS: libffi.bhaible/test-callback.c -DDGTEST=6 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=7 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=7 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=7 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -807,8 +807,8 @@ spawn [open ...]
 int f(16*int):(1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17)->143
 int f(16*int):(1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17)->143
 PASS: libffi.bhaible/test-callback.c -DDGTEST=7 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=8 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=8 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=8 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -818,8 +818,8 @@ spawn [open ...]
 float f(float):(0.1)->1.1
 float f(float):(0.1)->1.1
 PASS: libffi.bhaible/test-callback.c -DDGTEST=8 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=9 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=9 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=9 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -829,8 +829,8 @@ spawn [open ...]
 float f(2*float):(0.1,0.2)->0.3
 float f(2*float):(0.1,0.2)->0.3
 PASS: libffi.bhaible/test-callback.c -DDGTEST=9 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=10 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=10 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=10 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -840,8 +840,8 @@ spawn [open ...]
 float f(4*float):(0.1,0.2,0.3,0.4)->1
 float f(4*float):(0.1,0.2,0.3,0.4)->1
 PASS: libffi.bhaible/test-callback.c -DDGTEST=10 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=11 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=11 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=11 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -851,8 +851,8 @@ spawn [open ...]
 float f(8*float):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8)->3.6
 float f(8*float):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8)->3.6
 PASS: libffi.bhaible/test-callback.c -DDGTEST=11 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=12 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=12 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=12 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -862,8 +862,8 @@ spawn [open ...]
 float f(16*float):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,1.5,1.6,1.7)->14.3
 float f(16*float):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,1.5,1.6,1.7)->14.3
 PASS: libffi.bhaible/test-callback.c -DDGTEST=12 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=13 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=13 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=13 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -873,8 +873,8 @@ spawn [open ...]
 float f(24*float):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.1,2.2,2.3,2.4,2.5,2.6)->32.1
 float f(24*float):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.1,2.2,2.3,2.4,2.5,2.6)->32.1
 PASS: libffi.bhaible/test-callback.c -DDGTEST=13 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=14 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=14 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=14 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -884,8 +884,8 @@ spawn [open ...]
 double f(double):(0.1)->1.1
 double f(double):(0.1)->1.1
 PASS: libffi.bhaible/test-callback.c -DDGTEST=14 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=15 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=15 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=15 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -895,8 +895,8 @@ spawn [open ...]
 double f(2*double):(0.1,0.2)->0.3
 double f(2*double):(0.1,0.2)->0.3
 PASS: libffi.bhaible/test-callback.c -DDGTEST=15 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=16 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=16 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=16 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -906,8 +906,8 @@ spawn [open ...]
 double f(4*double):(0.1,0.2,0.3,0.4)->1
 double f(4*double):(0.1,0.2,0.3,0.4)->1
 PASS: libffi.bhaible/test-callback.c -DDGTEST=16 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=17 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=17 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=17 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -917,8 +917,8 @@ spawn [open ...]
 double f(8*double):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8)->3.6
 double f(8*double):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8)->3.6
 PASS: libffi.bhaible/test-callback.c -DDGTEST=17 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=18 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=18 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=18 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -928,19 +928,19 @@ spawn [open ...]
 double f(16*double):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,1.5,1.6,1.7)->14.3
 double f(16*double):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,1.5,1.6,1.7)->14.3
 PASS: libffi.bhaible/test-callback.c -DDGTEST=18 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=19 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=19 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=19 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
 Setting LD_LIBRARY_PATH to :/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs::/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs
 Execution timeout is: 300
 spawn [open ...]
-void* f(void*,double*,char*,Int*):(0x00007FF653583003,0x00007FF653583100,0x00007FF653583208,0x00007FF653583244)->0x00007FF653583101
-void* f(void*,double*,char*,Int*):(0x00007FF653583003,0x00007FF653583100,0x00007FF653583208,0x00007FF653583244)->0x00007FF653583101
+void* f(void*,double*,char*,Int*):(0x00007FF7FBC93003,0x00007FF7FBC93100,0x00007FF7FBC93208,0x00007FF7FBC93244)->0x00007FF7FBC93101
+void* f(void*,double*,char*,Int*):(0x00007FF7FBC93003,0x00007FF7FBC93100,0x00007FF7FBC93208,0x00007FF7FBC93244)->0x00007FF7FBC93101
 PASS: libffi.bhaible/test-callback.c -DDGTEST=19 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=20 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=20 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=20 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -950,8 +950,8 @@ spawn [open ...]
 uchar f(uchar,ushort,uint,ulong):(97,2,3,4)->255
 uchar f(uchar,ushort,uint,ulong):(97,2,3,4)->255
 PASS: libffi.bhaible/test-callback.c -DDGTEST=20 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=21 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=21 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=21 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -961,8 +961,8 @@ spawn [open ...]
 double f(int,int,double,double):(1,2,0.3,0.4)->3.7
 double f(int,int,double,double):(1,2,0.3,0.4)->3.7
 PASS: libffi.bhaible/test-callback.c -DDGTEST=21 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=22 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=22 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=22 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -972,8 +972,8 @@ spawn [open ...]
 double f(int,int,int,double,int):(1,2,3,0.4,5)->11.4
 double f(int,int,int,double,int):(1,2,3,0.4,5)->11.4
 PASS: libffi.bhaible/test-callback.c -DDGTEST=22 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=23 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=23 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=23 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -983,8 +983,8 @@ spawn [open ...]
 double f(int,double,int,double):(1,0.2,3,0.4)->4.6
 double f(int,double,int,double):(1,0.2,3,0.4)->4.6
 PASS: libffi.bhaible/test-callback.c -DDGTEST=23 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=24 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=24 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=24 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -994,8 +994,8 @@ spawn [open ...]
 double f(float,double,int):(0.1,0.2,3)->3.3
 double f(float,double,int):(0.1,0.2,3)->3.3
 PASS: libffi.bhaible/test-callback.c -DDGTEST=24 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=25 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=25 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=25 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1005,8 +1005,8 @@ spawn [open ...]
 ushort f(char,double,char,double):('a',0.2,'',0.4)->98
 ushort f(char,double,char,double):('a',0.2,'',0.4)->98
 PASS: libffi.bhaible/test-callback.c -DDGTEST=25 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=26 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=26 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=26 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1016,8 +1016,8 @@ spawn [open ...]
 long long f(int,int,int,long long,int):(1,2,3,0x35c6f707fffffffa,14)->0x35c6f7080000000e
 long long f(int,int,int,long long,int):(1,2,3,0x35c6f707fffffffa,14)->0x35c6f7080000000e
 PASS: libffi.bhaible/test-callback.c -DDGTEST=26 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=27 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=27 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=27 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1027,8 +1027,8 @@ spawn [open ...]
 long long f(float,long long,int):(1.4,0x35c6f707fffffffa,0xe)->0x35c6f70800000009
 long long f(float,long long,int):(1.4,0x35c6f707fffffffa,0xe)->0x35c6f70800000009
 PASS: libffi.bhaible/test-callback.c -DDGTEST=27 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=28 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=28 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=28 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1038,8 +1038,8 @@ spawn [open ...]
 float f(float,int):(0.1,9)->9.1
 float f(float,int):(0.1,9)->9.1
 PASS: libffi.bhaible/test-callback.c -DDGTEST=28 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=29 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=29 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=29 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1049,8 +1049,8 @@ spawn [open ...]
 float f(2*float,int):(0.1,0.2,9)->9.3
 float f(2*float,int):(0.1,0.2,9)->9.3
 PASS: libffi.bhaible/test-callback.c -DDGTEST=29 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=30 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=30 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=30 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1060,8 +1060,8 @@ spawn [open ...]
 float f(3*float,int):(0.1,0.2,0.3,9)->9.6
 float f(3*float,int):(0.1,0.2,0.3,9)->9.6
 PASS: libffi.bhaible/test-callback.c -DDGTEST=30 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=31 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=31 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=31 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1071,8 +1071,8 @@ spawn [open ...]
 float f(4*float,int):(0.1,0.2,0.3,0.4,9)->10
 float f(4*float,int):(0.1,0.2,0.3,0.4,9)->10
 PASS: libffi.bhaible/test-callback.c -DDGTEST=31 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=32 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=32 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=32 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1082,8 +1082,8 @@ spawn [open ...]
 float f(7*float,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,9)->11.8
 float f(7*float,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,9)->11.8
 PASS: libffi.bhaible/test-callback.c -DDGTEST=32 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=33 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=33 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=33 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1093,8 +1093,8 @@ spawn [open ...]
 float f(8*float,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,9)->12.6
 float f(8*float,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,9)->12.6
 PASS: libffi.bhaible/test-callback.c -DDGTEST=33 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=34 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=34 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=34 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1104,8 +1104,8 @@ spawn [open ...]
 float f(13*float,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,9)->18.5
 float f(13*float,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,9)->18.5
 PASS: libffi.bhaible/test-callback.c -DDGTEST=34 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=35 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=35 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=35 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1115,8 +1115,8 @@ spawn [open ...]
 double f(double,int):(0.1,9)->9.1
 double f(double,int):(0.1,9)->9.1
 PASS: libffi.bhaible/test-callback.c -DDGTEST=35 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=36 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=36 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=36 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1126,8 +1126,8 @@ spawn [open ...]
 double f(2*double,int):(0.1,0.2,9)->9.3
 double f(2*double,int):(0.1,0.2,9)->9.3
 PASS: libffi.bhaible/test-callback.c -DDGTEST=36 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=37 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=37 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=37 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1137,8 +1137,8 @@ spawn [open ...]
 double f(3*double,int):(0.1,0.2,0.3,9)->9.6
 double f(3*double,int):(0.1,0.2,0.3,9)->9.6
 PASS: libffi.bhaible/test-callback.c -DDGTEST=37 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=38 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=38 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=38 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1148,8 +1148,8 @@ spawn [open ...]
 double f(4*double,int):(0.1,0.2,0.3,0.4,9)->10
 double f(4*double,int):(0.1,0.2,0.3,0.4,9)->10
 PASS: libffi.bhaible/test-callback.c -DDGTEST=38 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=39 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=39 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=39 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1159,8 +1159,8 @@ spawn [open ...]
 double f(7*double,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,9)->11.8
 double f(7*double,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,9)->11.8
 PASS: libffi.bhaible/test-callback.c -DDGTEST=39 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=40 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=40 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=40 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1170,8 +1170,8 @@ spawn [open ...]
 double f(8*double,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,9)->12.6
 double f(8*double,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,9)->12.6
 PASS: libffi.bhaible/test-callback.c -DDGTEST=40 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=41 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=41 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=41 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1181,8 +1181,8 @@ spawn [open ...]
 double f(12*double,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,9)->17.1
 double f(12*double,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,9)->17.1
 PASS: libffi.bhaible/test-callback.c -DDGTEST=41 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=42 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=42 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=42 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1192,8 +1192,8 @@ spawn [open ...]
 double f(13*double,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,9)->18.5
 double f(13*double,int):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,9)->18.5
 PASS: libffi.bhaible/test-callback.c -DDGTEST=42 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=43 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=43 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=43 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1203,8 +1203,8 @@ spawn [open ...]
 Size1 f(void):->{a}
 Size1 f(void):->{a}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=43 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=44 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=44 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=44 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1214,8 +1214,8 @@ spawn [open ...]
 Size2 f(void):->{ab}
 Size2 f(void):->{ab}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=44 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=45 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=45 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=45 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1225,8 +1225,8 @@ spawn [open ...]
 Size3 f(void):->{abc}
 Size3 f(void):->{abc}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=45 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=46 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=46 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=46 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1236,8 +1236,8 @@ spawn [open ...]
 Size4 f(void):->{abcd}
 Size4 f(void):->{abcd}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=46 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=47 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=47 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=47 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1247,8 +1247,8 @@ spawn [open ...]
 Size7 f(void):->{abcdefg}
 Size7 f(void):->{abcdefg}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=47 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=48 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=48 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=48 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1258,8 +1258,8 @@ spawn [open ...]
 Size8 f(void):->{abcdefgh}
 Size8 f(void):->{abcdefgh}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=48 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=49 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=49 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=49 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1269,8 +1269,8 @@ spawn [open ...]
 Size12 f(void):->{abcdefghijkl}
 Size12 f(void):->{abcdefghijkl}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=49 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=50 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=50 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=50 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1280,8 +1280,8 @@ spawn [open ...]
 Size15 f(void):->{abcdefghijklmno}
 Size15 f(void):->{abcdefghijklmno}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=50 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=51 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=51 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=51 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1291,8 +1291,8 @@ spawn [open ...]
 Size16 f(void):->{abcdefghijklmnop}
 Size16 f(void):->{abcdefghijklmnop}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=51 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=52 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=52 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=52 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1302,8 +1302,8 @@ spawn [open ...]
 Int f(Int,Int,Int):({1},{2},{3})->{6}
 Int f(Int,Int,Int):({1},{2},{3})->{6}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=52 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=53 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=53 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=53 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1313,8 +1313,8 @@ spawn [open ...]
 Char f(Char,double,Char):({'A'},0.2,{'C'})->{'B'}
 Char f(Char,double,Char):({'A'},0.2,{'C'})->{'B'}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=53 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=54 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=54 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=54 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1324,8 +1324,8 @@ spawn [open ...]
 Float f(Float,float,double):({0.1},0.2,0.3)->{0.6}
 Float f(Float,float,double):({0.1},0.2,0.3)->{0.6}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=54 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=55 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=55 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=55 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1335,8 +1335,8 @@ spawn [open ...]
 Double f(float,Double,double):(0.1,{0.2},0.3)->{0.6}
 Double f(float,Double,double):(0.1,{0.2},0.3)->{0.6}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=55 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=56 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=56 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=56 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1346,8 +1346,8 @@ spawn [open ...]
 Double f(Double,float,double):({0.1},0.2,0.3)->{0.6}
 Double f(Double,float,double):({0.1},0.2,0.3)->{0.6}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=56 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=57 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=57 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=57 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1357,8 +1357,8 @@ spawn [open ...]
 J f(J,int,J):({47,11},2,{73,55})->{120,68}
 J f(J,int,J):({47,11},2,{73,55})->{120,68}
 PASS: libffi.bhaible/test-callback.c -DDGTEST=57 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=58 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=58 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=58 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1366,8 +1366,8 @@ Setting LD_LIBRARY_PATH to :/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/tests
 Execution timeout is: 300
 spawn [open ...]
 PASS: libffi.bhaible/test-callback.c -DDGTEST=58 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=59 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=59 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=59 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1375,8 +1375,8 @@ Setting LD_LIBRARY_PATH to :/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/tests
 Execution timeout is: 300
 spawn [open ...]
 PASS: libffi.bhaible/test-callback.c -DDGTEST=59 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=60 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=60 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=60 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1386,8 +1386,8 @@ spawn [open ...]
 long f(K,long):(19,69,12,28,9)->137
 long f(K,long):(19,69,12,28,9)->137
 PASS: libffi.bhaible/test-callback.c -DDGTEST=60 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=61 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=61 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=61 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1397,8 +1397,8 @@ spawn [open ...]
 long f(long,K,long):(1,19,69,12,28,9)->138
 long f(long,K,long):(1,19,69,12,28,9)->138
 PASS: libffi.bhaible/test-callback.c -DDGTEST=61 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=62 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=62 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=62 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1408,8 +1408,8 @@ spawn [open ...]
 long f(2*long,K,long):(1,2,19,69,12,28,9)->140
 long f(2*long,K,long):(1,2,19,69,12,28,9)->140
 PASS: libffi.bhaible/test-callback.c -DDGTEST=62 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=63 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=63 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=63 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1419,8 +1419,8 @@ spawn [open ...]
 long f(3*long,K,long):(1,2,3,19,69,12,28,9)->143
 long f(3*long,K,long):(1,2,3,19,69,12,28,9)->143
 PASS: libffi.bhaible/test-callback.c -DDGTEST=63 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=64 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=64 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=64 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1430,8 +1430,8 @@ spawn [open ...]
 long f(4*long,K,long):(1,2,3,4,19,69,12,28,9)->147
 long f(4*long,K,long):(1,2,3,4,19,69,12,28,9)->147
 PASS: libffi.bhaible/test-callback.c -DDGTEST=64 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=65 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=65 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=65 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1441,8 +1441,8 @@ spawn [open ...]
 long f(5*long,K,long):(1,2,3,4,5,19,69,12,28,9)->152
 long f(5*long,K,long):(1,2,3,4,5,19,69,12,28,9)->152
 PASS: libffi.bhaible/test-callback.c -DDGTEST=65 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=66 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=66 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=66 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1452,8 +1452,8 @@ spawn [open ...]
 long f(6*long,K,long):(1,2,3,4,5,6,19,69,12,28,9)->158
 long f(6*long,K,long):(1,2,3,4,5,6,19,69,12,28,9)->158
 PASS: libffi.bhaible/test-callback.c -DDGTEST=66 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=67 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=67 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=67 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1463,8 +1463,8 @@ spawn [open ...]
 float f(17*float,3*int,L):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,6,7,8,561,1105,1729,2465,2821,6601)->15319.1
 float f(17*float,3*int,L):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,6,7,8,561,1105,1729,2465,2821,6601)->15319.1
 PASS: libffi.bhaible/test-callback.c -DDGTEST=67 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=68 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=68 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=68 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1474,8 +1474,8 @@ spawn [open ...]
 double f(17*double,3*int,L):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,6,7,8,561,1105,1729,2465,2821,6601)->15319.1
 double f(17*double,3*int,L):(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,6,7,8,561,1105,1729,2465,2821,6601)->15319.1
 PASS: libffi.bhaible/test-callback.c -DDGTEST=68 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=69 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=69 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=69 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1485,8 +1485,8 @@ spawn [open ...]
 long long f(2*long,long long,long):(1,2,0x35c6f707fffffffa,9)->0x35c6f70800000006
 long long f(2*long,long long,long):(1,2,0x35c6f707fffffffa,9)->0x35c6f70800000006
 PASS: libffi.bhaible/test-callback.c -DDGTEST=69 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=70 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=70 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=70 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1496,8 +1496,8 @@ spawn [open ...]
 long long f(3*long,long long,long):(1,2,3,0x35c6f707fffffffa,9)->0x35c6f70800000009
 long long f(3*long,long long,long):(1,2,3,0x35c6f707fffffffa,9)->0x35c6f70800000009
 PASS: libffi.bhaible/test-callback.c -DDGTEST=70 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=71 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=71 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=71 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1507,8 +1507,8 @@ spawn [open ...]
 long long f(4*long,long long,long):(1,2,3,4,0x35c6f707fffffffa,9)->0x35c6f7080000000d
 long long f(4*long,long long,long):(1,2,3,4,0x35c6f707fffffffa,9)->0x35c6f7080000000d
 PASS: libffi.bhaible/test-callback.c -DDGTEST=71 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=72 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=72 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=72 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1518,8 +1518,8 @@ spawn [open ...]
 long long f(5*long,long long,long):(1,2,3,4,5,0x35c6f707fffffffa,9)->0x35c6f70800000012
 long long f(5*long,long long,long):(1,2,3,4,5,0x35c6f707fffffffa,9)->0x35c6f70800000012
 PASS: libffi.bhaible/test-callback.c -DDGTEST=72 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=73 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=73 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=73 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1529,8 +1529,8 @@ spawn [open ...]
 long long f(6*long,long long,long):(1,2,3,4,5,6,0x35c6f707fffffffa,9)->0x35c6f70800000018
 long long f(6*long,long long,long):(1,2,3,4,5,6,0x35c6f707fffffffa,9)->0x35c6f70800000018
 PASS: libffi.bhaible/test-callback.c -DDGTEST=73 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=74 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=74 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=74 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1540,8 +1540,8 @@ spawn [open ...]
 long long f(7*long,long long,long):(1,2,3,4,5,6,7,0x35c6f707fffffffa,9)->0x35c6f7080000001f
 long long f(7*long,long long,long):(1,2,3,4,5,6,7,0x35c6f707fffffffa,9)->0x35c6f7080000001f
 PASS: libffi.bhaible/test-callback.c -DDGTEST=74 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=75 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=75 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=75 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1551,8 +1551,8 @@ spawn [open ...]
 double f(2*long,double,long):(1,2,3.87506e+18,9)->3.87506e+18
 double f(2*long,double,long):(1,2,3.87506e+18,9)->3.87506e+18
 PASS: libffi.bhaible/test-callback.c -DDGTEST=75 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=76 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=76 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=76 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1562,8 +1562,8 @@ spawn [open ...]
 double f(3*long,double,long):(1,2,3,3.87506e+18,9)->3.87506e+18
 double f(3*long,double,long):(1,2,3,3.87506e+18,9)->3.87506e+18
 PASS: libffi.bhaible/test-callback.c -DDGTEST=76 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=77 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=77 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=77 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1573,8 +1573,8 @@ spawn [open ...]
 double f(4*long,double,long):(1,2,3,4,3.87506e+18,9)->3.87506e+18
 double f(4*long,double,long):(1,2,3,4,3.87506e+18,9)->3.87506e+18
 PASS: libffi.bhaible/test-callback.c -DDGTEST=77 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=78 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=78 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=78 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1584,8 +1584,8 @@ spawn [open ...]
 double f(5*long,double,long):(1,2,3,4,5,3.87506e+18,9)->3.87506e+18
 double f(5*long,double,long):(1,2,3,4,5,3.87506e+18,9)->3.87506e+18
 PASS: libffi.bhaible/test-callback.c -DDGTEST=78 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=79 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=79 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=79 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1595,8 +1595,8 @@ spawn [open ...]
 double f(6*long,double,long):(1,2,3,4,5,6,3.87506e+18,9)->3.87506e+18
 double f(6*long,double,long):(1,2,3,4,5,6,3.87506e+18,9)->3.87506e+18
 PASS: libffi.bhaible/test-callback.c -DDGTEST=79 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.bhaible/test-callback.c   -DDGTEST=80 -wd4996 -wd4116 -wd4101 -wd4244  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./test-callback.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.bhaible/test-callback.c -DDGTEST=80 -wd4996 -wd4116 -wd4101 -wd4244 -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./test-callback.exe
 PASS: libffi.bhaible/test-callback.c -DDGTEST=80 -wd4996 -wd4116 -wd4101 -wd4244 (test for excess errors)
@@ -1606,7 +1606,7 @@ spawn [open ...]
 double f(7*long,double,long):(1,2,3,4,5,6,7,3.87506e+18,9)->3.87506e+18
 double f(7*long,double,long):(1,2,3,4,5,6,7,3.87506e+18,9)->3.87506e+18
 PASS: libffi.bhaible/test-callback.c -DDGTEST=80 -wd4996 -wd4116 -wd4101 -wd4244 execution test
-testcase ../../testsuite/libffi.bhaible/bhaible.exp completed in 130 seconds
+testcase ../../testsuite/libffi.bhaible/bhaible.exp completed in 146 seconds
 Running ../../testsuite/libffi.call/call.exp ...
 set_ld_library_path_env_vars: ld_library_path=:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.call/align_mixed.c   -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./align_mixed.exe    (timeout = 300)
@@ -3330,11 +3330,11 @@ Setting LD_LIBRARY_PATH to :/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/tests
 Execution timeout is: 300
 spawn [open ...]
 PASS: libffi.call/x32.c -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc execution test
-testcase ../../testsuite/libffi.call/call.exp completed in 47 seconds
+testcase ../../testsuite/libffi.call/call.exp completed in 48 seconds
 Running ../../testsuite/libffi.closures/closure.exp ...
 set_ld_library_path_env_vars: ld_library_path=:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.closures/closure_fn0.c   -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./closure_fn0.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.closures/closure_fn0.c -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./closure_fn0.exe
 PASS: libffi.closures/closure_fn0.c -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc (test for excess errors)
@@ -4375,8 +4375,8 @@ spawn [open ...]
 4 5 1 8
 PASS: libffi.closures/testclosure.c -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc execution test
 PASS: libffi.closures/testclosure.c -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc output pattern test
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64  ../../testsuite/libffi.closures/unwindtest.cc   -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs     -lffi -lm  -o ./unwindtest.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 ../../testsuite/libffi.closures/unwindtest.cc -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./unwindtest.exe
 PASS: libffi.closures/unwindtest.cc -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc (test for excess errors)
@@ -4397,11 +4397,11 @@ spawn [open ...]
 part one OK
 PASS: libffi.closures/unwindtest_ffi_call.cc -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc execution test
 PASS: libffi.closures/unwindtest_ffi_call.cc -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc output pattern test
-testcase ../../testsuite/libffi.closures/closure.exp completed in 55 seconds
+testcase ../../testsuite/libffi.closures/closure.exp completed in 63 seconds
 Running ../../testsuite/libffi.complex/complex.exp ...
 set_ld_library_path_env_vars: ld_library_path=.:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 compiler exited with status 1
 UNSUPPORTED: ../../testsuite/libffi.complex/cls_align_complex_double.c
 UNSUPPORTED: ../../testsuite/libffi.complex/cls_align_complex_float.c
@@ -4435,8 +4435,8 @@ UNSUPPORTED: ../../testsuite/libffi.complex/return_complex_longdouble.c
 testcase ../../testsuite/libffi.complex/complex.exp completed in 0 seconds
 Running ../../testsuite/libffi.go/go.exp ...
 set_ld_library_path_env_vars: ld_library_path=.:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ../../testsuite/libffi.go/aa-direct.c   -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc  -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs  -lffi -lm  -o ./aa-direct.exe    (timeout = 300)
 spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ../../testsuite/libffi.go/aa-direct.c -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -L ../.libs -lffi -lm -o ./aa-direct.exe
 PASS: libffi.go/aa-direct.c -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc (test for excess errors)
@@ -4451,15 +4451,15 @@ Setting LD_LIBRARY_PATH to .:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/test
 Execution timeout is: 300
 spawn [open ...]
 PASS: libffi.go/closure1.c -wd4005 -wd4244 -wd4305 -wd4477 -wd4312 -wd4311 -EHsc execution test
-testcase ../../testsuite/libffi.go/go.exp completed in 2 seconds
+testcase ../../testsuite/libffi.go/go.exp completed in 1 seconds
 Running ../../testsuite/libffi.threads/threads.exp ...
 set_ld_library_path_env_vars: ld_library_path=.:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs
 UNSUPPORTED: ../../testsuite/libffi.threads/tsan.c
 testcase ../../testsuite/libffi.threads/threads.exp completed in 0 seconds
 Running ../../testsuite/libffi.vector/vector.exp ...
 set_ld_library_path_env_vars: ld_library_path=.:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs:/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../.libs
-Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5759.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i    (timeout = 300)
-spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5759.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5759.c.i
+Executing on host: /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11  ffitest5468.c   -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i    (timeout = 300)
+spawn -ignore SIGHUP /cygdrive/d/a/libffi/libffi/msvcc.sh -m64 -std:c11 ffitest5468.c -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/../include -I/cygdrive/d/a/libffi/libffi/x86_64-w64-mingw32/testsuite/.. -I../../testsuite/../include -E -o ffitest5468.c.i
 compiler exited with status 1
 UNSUPPORTED: ../../testsuite/libffi.vector/cls_vector.c
 UNSUPPORTED: ../../testsuite/libffi.vector/vector_args_spill.c
@@ -4471,11 +4471,11 @@ UNSUPPORTED: ../../testsuite/libffi.vector/vector_hva.c
 UNSUPPORTED: ../../testsuite/libffi.vector/vector_int32x4.c
 UNSUPPORTED: ../../testsuite/libffi.vector/vector_validate.c
 UNSUPPORTED: ../../testsuite/libffi.vector/vector_vec3.c
-testcase ../../testsuite/libffi.vector/vector.exp completed in 0 seconds
+testcase ../../testsuite/libffi.vector/vector.exp completed in 1 seconds
 
 		=== libffi Summary ===
 
 # of expected passes		771
 # of unexpected failures	14
 # of unsupported tests		40
-runtest completed at Sun Aug  2 14:40:52 2026
+runtest completed at Mon Aug  3 11:38:32 2026
