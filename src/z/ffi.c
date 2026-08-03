@@ -33,12 +33,11 @@
 #include <ffi_common.h>
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
 /*====================== End of Includes =============================*/
- 
+
 /*====================================================================*/
 /*                           Defines                                  */
 /*                           -------                                  */
@@ -50,8 +49,16 @@
 /* Maximum number of FPRs available for argument passing.  */
 #define MAX_FPRARGS 4
 
-/* Round to multiple of 32.  */
-#define ROUND_SIZE(size) (((size) + 31) & ~32)
+/* Maximum bytes passable in GPR slots (3 regs x 8 bytes).
+   Also the struct size threshold above which a hidden return pointer is used,
+   and the base size of the lstor buffer in ffi_call.  */
+#define MAX_GPRARG_BYTES (MAX_GPRARGS * 8)
+
+/* Offset from the XPLINK stack pointer (r4) to the argument area.  */
+#define XPLINK_ARGAREA_OFFSET 2176
+
+/* Size of one GPR slot in bytes.  */
+#define GPR_SIZE 8
 
 /* If these values change, xplink.S RTABLE must be updated to match!  */
 #define FFI390_RET_VOID         0
@@ -204,11 +211,11 @@ ffi_prep_args (unsigned char *stack, extended_cif *ecif)
   void **p_argv = ecif->avalue;
   unsigned char *arg_ptr = stack;
 
-  /* If we returning a structure larger than 12 bytes,
+  /* If we returning a structure larger than MAX_GPRARG_BYTES,
      we set the first parameter register
      to the address of where we are returning this structure.  */
   if (ecif->cif->flags == FFI_TYPE_STRUCT &&
-      (ecif->cif->rtype->size > 12))
+      (ecif->cif->rtype->size > MAX_GPRARG_BYTES))
     arg_ptr += (unsigned long) ecif->rvalue;
 
   /* Now for the arguments.  */
@@ -486,7 +493,7 @@ ffi_prep_cif_machdep(ffi_cif *cif)
   unsigned int bytes = 0;
 
   /* Hidden return pointer for large struct returns. */
-  if (cif->rtype->type == FFI_TYPE_STRUCT && cif->rtype->size > 24)
+  if (cif->rtype->type == FFI_TYPE_STRUCT && cif->rtype->size > MAX_GPRARG_BYTES)
     bytes += 8;
 
   for (ptr = cif->arg_types, i = cif->nargs; i > 0; i--, ptr++)
@@ -557,7 +564,7 @@ ffi_call(ffi_cif *cif,
          ecif.rvalue.  Provide scratch space so we don't store to NULL.
          For hidden-pointer returns (flags == FFI_TYPE_STRUCT with size > 24)
          the hidden pointer was already passed as arg, so just discard.  */
-      if (cif->flags == FFI390_RET_STRUCT && cif->rtype->size <= 24)
+      if (cif->flags == FFI390_RET_STRUCT && cif->rtype->size <= MAX_GPRARG_BYTES)
         ecif.rvalue = alloca (cif->rtype->size);
       else
         ret_type = FFI_TYPE_VOID;
@@ -567,8 +574,8 @@ ffi_call(ffi_cif *cif,
     {
       case FFI_XPLINK:
         {
-          /* 24 bytes: initial space for up to 3 GPR-sized arguments.  */
-          unsigned int lstor_size = 24;
+          /* initial space for the GPR argument slots.  */
+          unsigned int lstor_size = MAX_GPRARG_BYTES;
           for (unsigned int i = 0; i < cif->nargs; i++)
             lstor_size += cif->arg_types[i]->size;
           
@@ -626,9 +633,9 @@ ffi_determine_return_type(ffi_closure *closure)
       case FFI390_RET_STRUCT:
         {
           size_t sz = closure->cif->rtype->size;
-          if (sz <= 8)  return 2;
-          if (sz <= 16) return 3;
-          if (sz <= 24) return 4;
+          if (sz <= 1 * GPR_SIZE) return 2;
+          if (sz <= 2 * GPR_SIZE) return 3;
+          if (sz <= 3 * GPR_SIZE) return 4;
           return 0;   /* hidden pointer was passed; callee wrote result */
         }
 
@@ -657,11 +664,6 @@ ffi_closure_helper_XPLINK (ffi_closure *closure, void *retbuf,
   int ret_size;
   ffi_cif *cif = closure->cif;
 
-  unsigned short struct_subtype = FFI_TYPE_VOID;
-  if (cif->rtype)
-    struct_subtype = cif->rtype->type;
-
-  int num_args = cif->nargs;
   if (cif->rtype == NULL || cif->rtype->type == FFI_TYPE_VOID)
     ret_size = 8;
   else if (cif->flags == FFI390_RET_STRUCT_LDLD)
@@ -669,9 +671,9 @@ ffi_closure_helper_XPLINK (ffi_closure *closure, void *retbuf,
   else
     ret_size = cif->rtype->size;
 
-  void **args = (void **) alloca(sizeof(void *) * num_args);
+  void **args = (void **) alloca(sizeof(void *) * cif->nargs);
   void *ret = (void *) alloca(ret_size);
-  char *savearea = ((char *) reg->gpr[3]) + 2176;
+  char *savearea = ((char *) reg->gpr[3]) + XPLINK_ARGAREA_OFFSET;
 
   /* Scratch buffers for _Complex float/double/longdouble assembly.  */
   float *cmplx_arg;
@@ -681,15 +683,15 @@ ffi_closure_helper_XPLINK (ffi_closure *closure, void *retbuf,
   ffi_type **atype = cif->arg_types;
 
   /* Remaining incoming register slots.  */
-  int n_gprs = 3;
-  int n_fprs = 4;
+  int n_gprs = MAX_GPRARGS;
+  int n_fprs = MAX_FPRARGS;
   /* Byte offset into the XPLINK save area.  */
   int n_arg = 0;
   /* Fixed-arg countdown: when it hits 0, exhaust n_fprs so subsequent
      fp-typed args use the GPR/memory path (mirrors xplink.S VARFNC).  */
   int n_fixed_remaining = (int)cif->nfixedargs;
 
-  if (ret_size > 24 && cif->flags != FFI390_RET_STRUCT_LDLD)
+  if (ret_size > MAX_GPRARG_BYTES && cif->flags != FFI390_RET_STRUCT_LDLD)
     {
       n_gprs--;
       n_arg += 8;
@@ -810,361 +812,409 @@ ffi_closure_helper_XPLINK (ffi_closure *closure, void *retbuf,
               }
             break;
 
-              case FFI_TYPE_DOUBLE:
-                if (n_fixed_remaining == 0)
+          case FFI_TYPE_FLOAT:
+            if (n_fixed_remaining == 0)
+              {
+                /* variadic: float passed in GPR/memory, not FPR */
+                if (n_gprs > 0)
                   {
-                    /* variadic: floats/doubles passed in GPR/memory, not FPRs */
-                    if (n_gprs > 0)
-                      {
-                        args[i] = &reg->gpr[3 - n_gprs];
-                        n_gprs--;
-                      }
-                    else
-                      args[i] = (savearea + n_arg);
-                    n_arg += 8;
-                  }
-                else if (n_fprs == 4)
-                  {
-                    args[i] = &reg->fpr[0];
+                    args[i] = (char *)&reg->gpr[3 - n_gprs] + 4;
                     n_gprs--;
-                    n_fprs--;
-                    n_arg += 8;
-                  }
-                else if (n_fprs == 3)
-                  {
-                    args[i] = &reg->fpr[2];
-                    n_gprs--;
-                    n_fprs--;
-                    n_arg += 8;
-                  }
-                else if (n_fprs == 2)
-                  {
-                    args[i] = &reg->fpr[4];
-                    n_gprs--;
-                    n_fprs--;
-                    n_arg += 8;
-                  }
-                else if (n_fprs == 1)
-                  {
-                    args[i] = &reg->fpr[6];
-                    n_gprs--;
-                    n_fprs--;
-                    n_arg += 8;
                   }
                 else
+                  args[i] = (savearea + n_arg + 4);
+                n_arg += 8;
+              }
+            else if (n_fprs == 4)
+              {
+                args[i] = &reg->fpr[0];
+                n_gprs--;
+                n_fprs--;
+                n_arg += 8;
+              }
+            else if (n_fprs == 3)
+              {
+                args[i] = &reg->fpr[2];
+                n_gprs--;
+                n_fprs--;
+                n_arg += 8;
+              }
+            else if (n_fprs == 2)
+              {
+                args[i] = &reg->fpr[4];
+                n_gprs--;
+                n_fprs--;
+                n_arg += 8;
+              }
+            else if (n_fprs == 1)
+              {
+                args[i] = &reg->fpr[6];
+                n_gprs--;
+                n_fprs--;
+                n_arg += 8;
+              }
+            else
+              {
+                args[i] = (savearea + n_arg);
+                n_arg += 8;
+              }
+            break;
+
+          case FFI_TYPE_DOUBLE:
+            if (n_fixed_remaining == 0)
+              {
+                /* variadic: double passed in GPR/memory, not FPR */
+                if (n_gprs > 0)
                   {
-                    args[i] = (savearea + n_arg);
-                    n_arg += 8;
-                  }
-                break;
-    
-              case FFI_TYPE_LONGDOUBLE:
-                if (n_fixed_remaining == 0)
-                  {
-                    /* variadic: long double as 16-byte opaque in GPR/memory */
-                    args[i] = (savearea + n_arg);
-                    n_arg += 16;
-                  }
-                else if (n_fprs == 4)
-                  {
-                    arg_longdouble = alloca(sizeof(long double));
-                    ((double *) arg_longdouble)[0] = reg->fpr[0];
-                    ((double *) arg_longdouble)[1] = reg->fpr[2];
-                    args[i] = arg_longdouble;
-                    n_gprs -= 2;
-                    n_fprs -= 2;
-                    n_arg += 16;
-                  }
-                else if (n_fprs == 3 || n_fprs == 2)
-                  {
-                    arg_longdouble = alloca(sizeof(long double));
-                    ((double *) arg_longdouble)[0] = reg->fpr[4];
-                    ((double *) arg_longdouble)[1] = reg->fpr[6];
-                    args[i] = arg_longdouble;
-                    n_gprs -= 2;
-                    n_fprs -= 2;
-                    n_arg += 16;
+                    args[i] = &reg->gpr[3 - n_gprs];
+                    n_gprs--;
                   }
                 else
-                  {
-                    args[i] = (savearea + n_arg);
-                    n_arg += 16;
-                  }
-                break;
-    
-              case FFI_TYPE_STRUCT:
-              case FFI_TYPE_COMPLEX:
+                  args[i] = (savearea + n_arg);
+                n_arg += 8;
+              }
+            else if (n_fprs == 4)
+              {
+                args[i] = &reg->fpr[0];
+                n_gprs--;
+                n_fprs--;
+                n_arg += 8;
+              }
+            else if (n_fprs == 3)
+              {
+                args[i] = &reg->fpr[2];
+                n_gprs--;
+                n_fprs--;
+                n_arg += 8;
+              }
+            else if (n_fprs == 2)
+              {
+                args[i] = &reg->fpr[4];
+                n_gprs--;
+                n_fprs--;
+                n_arg += 8;
+              }
+            else if (n_fprs == 1)
+              {
+                args[i] = &reg->fpr[6];
+                n_gprs--;
+                n_fprs--;
+                n_arg += 8;
+              }
+            else
+              {
+                args[i] = (savearea + n_arg);
+                n_arg += 8;
+              }
+            break;
+
+          case FFI_TYPE_LONGDOUBLE:
+            if (n_fixed_remaining == 0)
+              {
+                /* variadic: long double as 16-byte opaque in GPR/memory */
+                args[i] = (savearea + n_arg);
+                n_arg += 16;
+              }
+            else if (n_fprs == 4)
+              {
+                arg_longdouble = alloca(sizeof(long double));
+                ((double *) arg_longdouble)[0] = reg->fpr[0];
+                ((double *) arg_longdouble)[1] = reg->fpr[2];
+                args[i] = arg_longdouble;
+                n_gprs -= 2;
+                n_fprs -= 2;
+                n_arg += 16;
+              }
+            else if (n_fprs == 3 || n_fprs == 2)
+              {
+                arg_longdouble = alloca(sizeof(long double));
+                ((double *) arg_longdouble)[0] = reg->fpr[4];
+                ((double *) arg_longdouble)[1] = reg->fpr[6];
+                args[i] = arg_longdouble;
+                n_gprs -= 2;
+                n_fprs -= 2;
+                n_arg += 16;
+              }
+            else
+              {
+                args[i] = (savearea + n_arg);
+                n_arg += 16;
+              }
+            break;
+
+          case FFI_TYPE_STRUCT:
+          case FFI_TYPE_COMPLEX:
+            {
+              /* For _Complex T the element type is in elements[0]; for a
+                 struct use the recursive leaf checker.  fp == FFI_TYPE_FLOAT/
+                 DOUBLE/LONGDOUBLE means FPR-pair passing, 0 means GPR/memory. */
+              unsigned int fp;
+              if (atype[i]->type == FFI_TYPE_COMPLEX)
+                fp = (atype[i]->elements && atype[i]->elements[0])
+                     ? atype[i]->elements[0]->type : 0;
+              else
+                fp = ffi_struct_float_pair_type(&atype[i]);
+
+              if (fp == 0)
                 {
-                  /* For _Complex T the element type is in elements[0]; for a
-                     struct use the recursive leaf checker.  fp == FFI_TYPE_FLOAT/
-                     DOUBLE/LONGDOUBLE means FPR-pair passing, 0 means GPR/memory. */
-                  unsigned int fp;
-                  if (atype[i]->type == FFI_TYPE_COMPLEX)
-                    fp = (atype[i]->elements && atype[i]->elements[0])
-                         ? atype[i]->elements[0]->type : 0;
+                  if (atype[i]->size <= 8)
+                    {
+                      if (n_gprs == 3)
+                        {
+                          args[i] = &reg->gpr[0];
+                          n_gprs--;
+                          n_arg += 8;
+                        }
+                      else if (n_gprs == 2)
+                        {
+                          args[i] = &reg->gpr[1];
+                          n_gprs--;
+                          n_arg += 8;
+                        }
+                      else if (n_gprs == 1)
+                        {
+                          args[i] = &reg->gpr[2];
+                          n_gprs--;
+                          n_arg += 8;
+                        }
+                      else
+                        {
+                          args[i] = (savearea + n_arg);
+                          n_arg += atype[i]->size;
+                        }
+                    }
+                  else if (atype[i]->size <= 16)
+                    {
+                      if (n_gprs == 3)
+                        {
+                          args[i] = &reg->gpr[0];
+                          n_gprs -= 2;
+                          n_arg += 16;
+                        }
+                      else if (n_gprs == 2)
+                        {
+                          args[i] = &reg->gpr[1];
+                          n_gprs -= 2;
+                          n_arg += 16;
+                        }
+                      else if (n_gprs == 1)
+                        {
+                          *(long *)(savearea + n_arg) = (long)reg->gpr[2];
+                          args[i] = (savearea + n_arg);
+                          n_gprs--;
+                          n_arg += 16;
+                        }
+                      else
+                        {
+                          args[i] = (savearea + n_arg);
+                          n_arg += atype[i]->size;
+                        }
+                    }
+                  else if (atype[i]->size <= 24)
+                    {
+                      if (n_gprs == 3)
+                        {
+                          args[i] = &reg->gpr[0];
+                          n_gprs -= 3;
+                          n_arg += 24;
+                        }
+                      else if (n_gprs == 2)
+                        {
+                          *(long *)(savearea + n_arg) = (long)reg->gpr[1];
+                          *(long *)(savearea + n_arg + 8) = (long)reg->gpr[2];
+                          args[i] = (savearea + n_arg);
+                          n_gprs -= 2;
+                          n_arg += 24;
+                        }
+                      else if (n_gprs == 1)
+                        {
+                          *(long *)(savearea + n_arg) = (long)reg->gpr[2];
+                          args[i] = (savearea + n_arg);
+                          n_gprs--;
+                          n_arg += 24;
+                        }
+                      else
+                        {
+                          args[i] = (savearea + n_arg);
+                          n_arg += atype[i]->size;
+                        }
+                    }
                   else
-                    fp = ffi_struct_float_pair_type(&atype[i]);
-    
-                  if (fp == 0)
                     {
-                      if (atype[i]->size <= 8)
+                      if (n_gprs == 3)
                         {
-                          if (n_gprs == 3)
-                            {
-                              args[i] = &reg->gpr[0];
-                              n_gprs--;
-                              n_arg += 8;
-                            }
-                          else if (n_gprs == 2)
-                            {
-                              args[i] = &reg->gpr[1];
-                              n_gprs--;
-                              n_arg += 8;
-                            }
-                          else if (n_gprs == 1)
-                            {
-                              args[i] = &reg->gpr[2];
-                              n_gprs--;
-                              n_arg += 8;
-                            }
-                          else
-                            {
-                              args[i] = (savearea + n_arg);
-                              n_arg += atype[i]->size;
-                            }
-                        }
-                      else if (atype[i]->size <= 16)
-                        {
-                          if (n_gprs == 3)
-                            {
-                              args[i] = &reg->gpr[0];
-                              n_gprs -= 2;
-                              n_arg += 16;
-                            }
-                          else if (n_gprs == 2)
-                            {
-                              args[i] = &reg->gpr[1];
-                              n_gprs -= 2;
-                              n_arg += 16;
-                            }
-                          else if (n_gprs == 1)
-                            {
-                              *(long *)(savearea + n_arg) = (long)reg->gpr[2];
-                              args[i] = (savearea + n_arg);
-                              n_gprs--;
-                              n_arg += 16;
-                            }
-                          else
-                            {
-                              args[i] = (savearea + n_arg);
-                              n_arg += atype[i]->size;
-                            }
-                        }
-                      else if (atype[i]->size <= 24)
-                        {
-                          if (n_gprs == 3)
-                            {
-                              args[i] = &reg->gpr[0];
-                              n_gprs -= 3;
-                              n_arg += 24;
-                            }
-                          else if (n_gprs == 2)
-                            {
-                              *(long *)(savearea + n_arg) = (long)reg->gpr[1];
-                              *(long *)(savearea + n_arg + 8) = (long)reg->gpr[2];
-                              args[i] = (savearea + n_arg);
-                              n_gprs -= 2;
-                              n_arg += 24;
-                            }
-                          else if (n_gprs == 1)
-                            {
-                              *(long *)(savearea + n_arg) = (long)reg->gpr[2];
-                              args[i] = (savearea + n_arg);
-                              n_gprs--;
-                              n_arg += 24;
-                            }
-                          else
-                            {
-                              args[i] = (savearea + n_arg);
-                              n_arg += atype[i]->size;
-                            }
-                        }
-                      else
-                        {
-                          if (n_gprs == 3)
-                            {
-                              *(long *)(savearea + n_arg) = (long)reg->gpr[0];
-                              *(long *)(savearea + n_arg + 8) = (long)reg->gpr[1];
-                              *(long *)(savearea + n_arg + 16) = (long)reg->gpr[2];
-                              args[i] = (savearea + n_arg);
-                              n_gprs -= 3;
-                              n_arg += atype[i]->size;
-                            }
-                          else if (n_gprs == 2)
-                            {
-                              *(long *)(savearea + n_arg) = (long)reg->gpr[1];
-                              *(long *)(savearea + n_arg + 8) = (long)reg->gpr[2];
-                              args[i] = (savearea + n_arg);
-                              n_gprs -= 2;
-                              n_arg += atype[i]->size;
-                            }
-                          else if (n_gprs == 1)
-                            {
-                              *(long *)(savearea + n_arg) = (long)reg->gpr[2];
-                              args[i] = (savearea + n_arg);
-                              n_gprs--;
-                              n_arg += atype[i]->size;
-                            }
-                          else
-                            {
-                              args[i] = (savearea + n_arg);
-                              n_arg += atype[i]->size;
-                            }
-                        }
-                    }
-                  else if (fp == FFI_TYPE_DOUBLE)
-                    {
-                      if (n_fixed_remaining == 0)
-                        {
-                          /* variadic: _Complex double as 16-byte opaque in GPR/memory */
+                          *(long *)(savearea + n_arg) = (long)reg->gpr[0];
+                          *(long *)(savearea + n_arg + 8) = (long)reg->gpr[1];
+                          *(long *)(savearea + n_arg + 16) = (long)reg->gpr[2];
                           args[i] = (savearea + n_arg);
-                          n_arg += 16;
+                          n_gprs -= 3;
+                          n_arg += atype[i]->size;
                         }
-                      else if (n_fprs == 4)
+                      else if (n_gprs == 2)
                         {
-                          args[i] = &reg->fpr[0];
-                          reg->fpr[1] = reg->fpr[2];
-                          n_gprs--;
-                          n_fprs -= 2;
-                          n_arg += 16;
+                          *(long *)(savearea + n_arg) = (long)reg->gpr[1];
+                          *(long *)(savearea + n_arg + 8) = (long)reg->gpr[2];
+                          args[i] = (savearea + n_arg);
+                          n_gprs -= 2;
+                          n_arg += atype[i]->size;
                         }
-                      else if (n_fprs == 3)
+                      else if (n_gprs == 1)
                         {
-                          args[i] = &reg->fpr[2];
-                          reg->fpr[3] = reg->fpr[4];
+                          *(long *)(savearea + n_arg) = (long)reg->gpr[2];
+                          args[i] = (savearea + n_arg);
                           n_gprs--;
-                          n_fprs -= 2;
-                          n_arg += 16;
-                        }
-                      else if (n_fprs == 2)
-                        {
-                          args[i] = &reg->fpr[4];
-                          reg->fpr[5] = reg->fpr[6];
-                          n_gprs--;
-                          n_fprs -= 2;
-                          n_arg += 16;
-                        }
-                      else if (n_fprs == 1)
-                        {
-                          cmplx_arg_double = alloca(2 * sizeof(double));
-                          args[i] = cmplx_arg_double;
-                          cmplx_arg_double[0] = reg->fpr[6];
-                          cmplx_arg_double[1] = *(double *)(savearea + n_arg + 8);
-                          n_gprs--;
-                          n_fprs -= 2;
-                          n_arg += 16;
+                          n_arg += atype[i]->size;
                         }
                       else
                         {
                           args[i] = (savearea + n_arg);
-                          n_arg += 16;
+                          n_arg += atype[i]->size;
                         }
                     }
-                  else if (fp == FFI_TYPE_FLOAT)
-                    {
-                      cmplx_arg = alloca(2 * sizeof(float));
-                      if (n_fixed_remaining == 0)
-                        {
-                          /* variadic: _Complex float as 8-byte opaque in GPR/memory */
-                          args[i] = (savearea + n_arg);
-                          n_arg += 8;
-                        }
-                      else if (n_fprs == 4)
-                        {
-                          args[i] = cmplx_arg;
-                          cmplx_arg[0] = *(float *)&reg->fpr[0];
-                          cmplx_arg[1] = *(float *)&reg->fpr[2];
-                          n_gprs--;
-                          n_fprs -= 2;
-                          n_arg += 8;
-                        }
-                      else if (n_fprs == 3)
-                        {
-                          args[i] = cmplx_arg;
-                          cmplx_arg[0] = *(float *)&reg->fpr[2];
-                          cmplx_arg[1] = *(float *)&reg->fpr[4];
-                          n_gprs--;
-                          n_fprs -= 2;
-                          n_arg += 8;
-                        }
-                      else if (n_fprs == 2)
-                        {
-                          args[i] = cmplx_arg;
-                          cmplx_arg[0] = *(float *)&reg->fpr[4];
-                          cmplx_arg[1] = *(float *)&reg->fpr[6];
-                          n_gprs--;
-                          n_fprs -= 2;
-                          n_arg += 8;
-                        }
-                      else if (n_fprs == 1)
-                        {
-                          args[i] = cmplx_arg;
-                          cmplx_arg[0] = *(float *)&reg->fpr[6];
-                          cmplx_arg[1] = *(float *)(savearea + n_arg + 4);
-                          n_gprs--;
-                          n_fprs -= 2;
-                          n_arg += 8;
-                        }
-                      else
-                        {
-                          args[i] = (savearea + n_arg);
-                          cmplx_arg = (savearea + n_arg);
-                          n_arg += 8;
-                        }
-                    }
-                  else if (fp == FFI_TYPE_LONGDOUBLE)
-                    {
-                      if (n_fixed_remaining == 0)
-                        {
-                          /* variadic: _Complex long double as 32-byte opaque in memory */
-                          args[i] = (savearea + n_arg);
-                          n_arg += 32;
-                        }
-                      else if (n_fprs == 4)
-                        {
-                          arg_longdouble = alloca(2 * sizeof(long double));
-                          ((double *) arg_longdouble)[0] = reg->fpr[0];
-                          ((double *) arg_longdouble)[1] = reg->fpr[2];
-                          ((double *) arg_longdouble)[2] = reg->fpr[4];
-                          ((double *) arg_longdouble)[3] = reg->fpr[6];
-                          args[i] = arg_longdouble;
-                          n_gprs = 0;
-                          n_fprs = 0;
-                          n_arg += 32;
-                        }
-                      else if (n_fprs == 2)
-                        {
-                          arg_longdouble = alloca(2 * sizeof(long double));
-                          ((double *) arg_longdouble)[0] = reg->fpr[4];
-                          ((double *) arg_longdouble)[1] = reg->fpr[6];
-                          ((double *) arg_longdouble)[2] = *(double *)(savearea + n_arg + 16);
-                          ((double *) arg_longdouble)[3] = *(double *)(savearea + n_arg + 24);
-                          args[i] = arg_longdouble;
-                          n_gprs = 0;
-                          n_fprs = 0;
-                          n_arg += 32;
-                        }
-                      else
-                        {
-                          args[i] = (savearea + n_arg);
-                          n_gprs = 0;
-                          n_fprs = 0;
-                          n_arg += 32;
-                        }
-                    }
-                  break;
                 }
+              else if (fp == FFI_TYPE_DOUBLE)
+                {
+                  if (n_fixed_remaining == 0)
+                    {
+                      /* variadic: _Complex double as 16-byte opaque in GPR/memory */
+                      args[i] = (savearea + n_arg);
+                      n_arg += 16;
+                    }
+                  else if (n_fprs == 4)
+                    {
+                      args[i] = &reg->fpr[0];
+                      reg->fpr[1] = reg->fpr[2];
+                      n_gprs--;
+                      n_fprs -= 2;
+                      n_arg += 16;
+                    }
+                  else if (n_fprs == 3)
+                    {
+                      args[i] = &reg->fpr[2];
+                      reg->fpr[3] = reg->fpr[4];
+                      n_gprs--;
+                      n_fprs -= 2;
+                      n_arg += 16;
+                    }
+                  else if (n_fprs == 2)
+                    {
+                      args[i] = &reg->fpr[4];
+                      reg->fpr[5] = reg->fpr[6];
+                      n_gprs--;
+                      n_fprs -= 2;
+                      n_arg += 16;
+                    }
+                  else if (n_fprs == 1)
+                    {
+                      cmplx_arg_double = alloca(2 * sizeof(double));
+                      args[i] = cmplx_arg_double;
+                      cmplx_arg_double[0] = reg->fpr[6];
+                      cmplx_arg_double[1] = *(double *)(savearea + n_arg + 8);
+                      n_gprs--;
+                      n_fprs -= 2;
+                      n_arg += 16;
+                    }
+                  else
+                    {
+                      args[i] = (savearea + n_arg);
+                      n_arg += 16;
+                    }
+                }
+              else if (fp == FFI_TYPE_FLOAT)
+                {
+                  cmplx_arg = alloca(2 * sizeof(float));
+                  if (n_fixed_remaining == 0)
+                    {
+                      /* variadic: _Complex float as 8-byte opaque in GPR/memory */
+                      args[i] = (savearea + n_arg);
+                      n_arg += 8;
+                    }
+                  else if (n_fprs == 4)
+                    {
+                      args[i] = cmplx_arg;
+                      cmplx_arg[0] = *(float *)&reg->fpr[0];
+                      cmplx_arg[1] = *(float *)&reg->fpr[2];
+                      n_gprs--;
+                      n_fprs -= 2;
+                      n_arg += 8;
+                    }
+                  else if (n_fprs == 3)
+                    {
+                      args[i] = cmplx_arg;
+                      cmplx_arg[0] = *(float *)&reg->fpr[2];
+                      cmplx_arg[1] = *(float *)&reg->fpr[4];
+                      n_gprs--;
+                      n_fprs -= 2;
+                      n_arg += 8;
+                    }
+                  else if (n_fprs == 2)
+                    {
+                      args[i] = cmplx_arg;
+                      cmplx_arg[0] = *(float *)&reg->fpr[4];
+                      cmplx_arg[1] = *(float *)&reg->fpr[6];
+                      n_gprs--;
+                      n_fprs -= 2;
+                      n_arg += 8;
+                    }
+                  else if (n_fprs == 1)
+                    {
+                      args[i] = cmplx_arg;
+                      cmplx_arg[0] = *(float *)&reg->fpr[6];
+                      cmplx_arg[1] = *(float *)(savearea + n_arg + 4);
+                      n_gprs--;
+                      n_fprs -= 2;
+                      n_arg += 8;
+                    }
+                  else
+                    {
+                      args[i] = (savearea + n_arg);
+                      cmplx_arg = (savearea + n_arg);
+                      n_arg += 8;
+                    }
+                }
+              else if (fp == FFI_TYPE_LONGDOUBLE)
+                {
+                  if (n_fixed_remaining == 0)
+                    {
+                      /* variadic: _Complex long double as 32-byte opaque in memory */
+                      args[i] = (savearea + n_arg);
+                      n_arg += 32;
+                    }
+                  else if (n_fprs == 4)
+                    {
+                      arg_longdouble = alloca(2 * sizeof(long double));
+                      ((double *) arg_longdouble)[0] = reg->fpr[0];
+                      ((double *) arg_longdouble)[1] = reg->fpr[2];
+                      ((double *) arg_longdouble)[2] = reg->fpr[4];
+                      ((double *) arg_longdouble)[3] = reg->fpr[6];
+                      args[i] = arg_longdouble;
+                      n_gprs = 0;
+                      n_fprs = 0;
+                      n_arg += 32;
+                    }
+                  else if (n_fprs == 2)
+                    {
+                      arg_longdouble = alloca(2 * sizeof(long double));
+                      ((double *) arg_longdouble)[0] = reg->fpr[4];
+                      ((double *) arg_longdouble)[1] = reg->fpr[6];
+                      ((double *) arg_longdouble)[2] = *(double *)(savearea + n_arg + 16);
+                      ((double *) arg_longdouble)[3] = *(double *)(savearea + n_arg + 24);
+                      args[i] = arg_longdouble;
+                      n_gprs = 0;
+                      n_fprs = 0;
+                      n_arg += 32;
+                    }
+                  else
+                    {
+                      args[i] = (savearea + n_arg);
+                      n_gprs = 0;
+                      n_fprs = 0;
+                      n_arg += 32;
+                    }
+                }
+              break;
             }
+        }
     
           /* Variadic fence: mirror xplink.S CONT/VARFNC logic.
              Decrement the fixed-arg countdown; when it reaches 0, exhaust
@@ -1186,7 +1236,7 @@ ffi_closure_helper_XPLINK (ffi_closure *closure, void *retbuf,
   int needs_copy = (cif->rtype != NULL)
                    && (cif->rtype->type != FFI_TYPE_VOID)
                    && !(cif->flags == FFI390_RET_STRUCT
-                        && cif->rtype->size > 24);
+                        && cif->rtype->size > MAX_GPRARG_BYTES);
   if (needs_copy)
     {
       switch (cif->rtype->type)
