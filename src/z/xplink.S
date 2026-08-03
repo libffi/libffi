@@ -100,11 +100,11 @@ FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
          LG 14,0(,2)           ecif->cif
          LG 14,8(,14)          cif->arg_types
          STMG 0,15,SAVREGS     save live GPRs across helper calls
-         STD 0,SAVFPRS        save volatile FPRs 0/2/4/6
+         STD 0,SAVFPRS
          STD 2,SAVFPRS+8
          STD 4,SAVFPRS+16
          STD 6,SAVFPRS+24
-         STD 8,SAVFPRS+32     save non-volatile FPRs 8-15
+         STD 8,SAVFPRS+32
          STD 9,SAVFPRS+40
          STD 10,SAVFPRS+48
          STD 11,SAVFPRS+56
@@ -489,7 +489,7 @@ UI64     DS 0H                ffi_type_uint64
          LR 11,0
          SLL 11,2             Pass this parm in gpr or arg area
          L 15,0(11,15)
-         CFI 0,2              GPRs left to pass parms in?
+         CFI 0,3              GPRs left to pass parms in?
          BL INC64
          LA 0,3               Reached max gprs
          B J64
@@ -637,7 +637,7 @@ LDNVP    DS   0H
          L  15,0(11,15)
          CFI  14,3            fewer than 2 FPR pairs left?
          BL INC8
-         LA 14,3              Reached max fprs
+         LA 14,4              Reached max fprs (ldbl needs 2 slots)
          B  J8
 INC8     DS 0H
          AHI 14,2             long double takes two FPR slots
@@ -1007,7 +1007,7 @@ BYTE16R3 DS 0H               Struct head in R3, remainder in memory
          BNL STRCTLP
          LG 3,0(6,13)
 
-         LA 0,3
+         LA 0,3 
          B STRCTLP
 
 BYTE16F0 DS 0H               Struct goes in FPR0-FPR2
@@ -1035,16 +1035,16 @@ BYTE24R1 DS 0H               Struct goes in R1-R3
 
 BYTE24R2 DS 0H               Struct goes in R2+R3+memory
          CFI 0,2             are R2+R3 available?
-         BNL BYTE24R3
+         BNL BYTE24R3 
          LG 2,0(6,13)
          LG 3,8(6,13)
-
+        
          LA 0,3
          B STRCTLP
 
 BYTE24R3 DS 0H               Struct goes in R3+memory
          CFI 0,3             is R3 available?
-         BNL STRCTLP
+         BNL STRCTLP 
          LG 3,0(6,13)
 
          LA 0,3
@@ -1342,11 +1342,11 @@ RSP      DS 0H
          B RET                  
   
 RET      DS 0H
-         LD 0,SAVFPRS          restore FPRs 0/2/4/6
+         LD 0,SAVFPRS
          LD 2,SAVFPRS+8
          LD 4,SAVFPRS+16
          LD 6,SAVFPRS+24
-         LD 8,SAVFPRS+32       restore non-volatile FPRs 8-15
+         LD 8,SAVFPRS+32
          LD 9,SAVFPRS+40
          LD 10,SAVFPRS+48
          LD 11,SAVFPRS+56
@@ -1441,15 +1441,12 @@ RTABLE DC A(RV)
  DC A(STORELD1)
  DC A(RCPXI)
 CEEDSAHP CEEDSA SECTYPE=XPLINK
-ARGSL DS  XL800
-TEST DS XL8
-* storage space for the returns regs maximum 4*8 fpr
+* 32-byte buffer for struct return (GPR1/2/3 copy + RSCPY source)
 SSTOR DS  XL32
-SSIZE DS  XL8
+* save area for r0-r15 across CELQCALL PREPARGS
 SAVREGS DS XL128
+* save area for fpr0-fpr15 across CELQCALL PREPARGS
 SAVFPRS DS XL96
-* storage space for scratch registers
-SCRREGS DS XL128
 * full GPR save area for STRCTDISP CELQCALL (r0-r15, 128 bytes)
 SDALL  DS XL128
 * single slot holding the ffi_type* passed by ref to STFPTYP
