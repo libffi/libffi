@@ -108,13 +108,13 @@ unsigned int ffi_struct_float_pair_type (ffi_type **);
 /*====================================================================*/
 
 /* located in xplink.S */
-#pragma map(ffi_call_XPLINK, "FFISYS")
+#pragma map(ffi_call_XPLINK, "FFIXCALL")
 extern void ffi_call_XPLINK(void (*fn)(void), extended_cif *,
                           unsigned, unsigned *, unsigned, unsigned,
                           unsigned, void *);
 
 /* located in closure_xplink.S */
-#pragma map(ffi_closure_XPLINK, "FFISYS2")
+#pragma map(ffi_closure_XPLINK, "FFIXCLSR")
 extern void ffi_closure_XPLINK(void);
 
 /*====================== End of Externals ============================*/
@@ -1317,7 +1317,7 @@ ffi_prep_closure_loc (ffi_closure *closure,
  * r1/r2/r3/r4 are left completely untouched so CELQPRLG saves the
  * real caller arguments into 2176(,r4).
  *
- * r0 carries the closure ptr into FFISYS2 (r0 is not an argument
+ * r0 carries the closure ptr into FFIXCLSR (r0 is not an argument
  * register and is not saved by CELQPRLG into the arg area).
  *
  * tramp[8..15]    = entry point = &tramp[16]
@@ -1328,10 +1328,10 @@ ffi_prep_closure_loc (ffi_closure *closure,
  *   [18]  lgr   r0, r5          r0 = tramp+18
  *   [22]  ahi   r0, -18         r0 = tramp+0   = closure ptr
  *   [26]  lg    r5, 102(,r5)    r5 = value at tramp[120]  (18+102=120 ✓)
- *   [32]  lmg   r5, r6, 0(,r5) r5 = env, r6 = FFISYS2 entry point
+ *   [32]  lmg   r5, r6, 0(,r5) r5 = env, r6 = FFIXCLSR entry point
  *   [38]  bcr   15, r6          branch — r0=closure, r1/r2/r3/r4 untouched
  *
- * In FFISYS2: closure ptr is in r0 on entry.
+ * In FFIXCLSR: closure ptr is in r0 on entry.
    */
 
   /* [16]  basr %r5,0              0D 50         r5 = tramp+18 */
@@ -1361,7 +1361,7 @@ ffi_prep_closure_loc (ffi_closure *closure,
   *(short *)&closure->tramp[36] = 0x0004;
 
   /* [38]  bcr 15,%r6              07 F6
-   * Branch to FFISYS2.  r0=closure ptr, r1/r2/r3/r4/r7 all untouched. */
+   * Branch to FFIXCLSR.  r0=closure ptr, r1/r2/r3/r4/r7 all untouched. */
   *(short *)&closure->tramp[38] = 0x07f6;
 
   *(long *)&closure->tramp[120] = (long)&ffi_closure_XPLINK;

@@ -1,8 +1,8 @@
 * Copyright IBM Corp. and others 2026
-FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
+FFIXCALL CELQPRLG DSASIZE=DSASZ,PSECT=ASP
 
 *===================================================================
-* FFISYS - xplink call trampoline
+* FFIXCALL - xplink call trampoline
 *===================================================================
 *
 * PURPOSE
@@ -1456,4 +1456,4 @@ SDALL  DS XL128
 * single slot holding the ffi_type* passed by ref to STFPTYP
 STFARG DS XL8
 DSASZ    EQU (*-CEEDSAHP_FIXED)
- END FFISYS
+ END FFIXCALL
