@@ -60,11 +60,5 @@ typedef enum ffi_abi {
 #define FFI_NATIVE_RAW_API 0
 
 
-/* struct data to save registers */
-struct ffi_reg_data {
-  long *gpr[16];
-  double fpr[7];
-};
-
 #endif
 
