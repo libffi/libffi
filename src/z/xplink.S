@@ -1441,7 +1441,8 @@ RTABLE DC A(RV)
  DC A(STORELD1)
  DC A(RCPXI)
 CEEDSAHP CEEDSA SECTYPE=XPLINK
-ARGSL DS  XL800
+* this is the arg area for the outgoing call
+ARGSL DS  XL1200
 TEST DS XL8
 * storage space for the returns regs maximum 4*8 fpr
 SSTOR DS  XL32
