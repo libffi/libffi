@@ -2,10 +2,10 @@
 
 
 *   Incoming register layout 
-*   r0        closure ptr (not saved or preserved anywhere, just for trampoline)
+*   r0        closure ptr (not saved/preserved; trampoline use only)
 *   r1/r2/r3  caller's first three arguments (untouched by trampoline;
 *             saved by CELQPRLG at 2176(,r4_caller))
-*   r4        caller's stack pointer (CELQPRLG adjusts before body runs;
+*   r4        caller's stack pointer (CELQPRLG adjusts before body;
 *             r4_caller recovered from backchain at r4_new+2048)
 *   r5,r6     standard env/entry point registers of this function
 *   r7-r15    untouched by trampoline, registers from callee       
@@ -31,7 +31,7 @@ FFISYS2 CELQPRLG DSASIZE=DSASZ2,PSECT=FFISYS22
         LG 11,2176+16(,2)
         STG 11,16(,13)
 
-* store caller's stack pointer (becomes reg->gpr[3] for ffi_closure_helper_XPLINK)
+* store caller's stack pointer (becomes reg->gpr[3] for helper)
         STG 2,24(,13)
 
 * save closure ptr from r0 into DSA slot so we can restore it later
@@ -113,7 +113,7 @@ RET8     DS 0H
          LD 4,16(,1)
          LD 6,24(,1)
          B RETURN
-* _Complex int/short/char/long, real in GPR3 and imag in GPR2, size-dispatched
+* _Complex int/short/char/long: real in GPR3, imag in GPR2, sized
 RET9     DS 0H
          LA  9,CLOSURE
          LG  9,0(,9)            closure ptr

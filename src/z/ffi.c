@@ -1,7 +1,7 @@
 /* -----------------------------------------------------------------------
    ffi.c   - Copyright (c) 2000, 2007 Software AG
              Copyright (c) 2008 Red Hat, Inc
-             Copyright IBM Corp. 2016
+             Copyright (c) IBM Corp. 2026
  
    z/OS Foreign Function Interface
  
@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 /*====================== End of Includes =============================*/
 
