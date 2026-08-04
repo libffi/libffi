@@ -598,6 +598,7 @@ developers:
     x86                 Anthony Green, Jon Beniston
     x86-64              Bo Thorsen
     xtensa              Chris Zankel
+    z/OS                Austin S. Wells
 
 Jesper Skov and Andrew Haley both did more than their fair share of
 stepping through the code and tracking down bugs.
