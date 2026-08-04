@@ -1,7 +1,7 @@
 /* -----------------------------------------------------------------*-C-*-
    ffitarget.h - Copyright (c) 2012  Anthony Green
                  Copyright (c) 1996-2003  Red Hat, Inc.
-                 Copyright IBM Corp. 2021
+                 Copyright (c) IBM Corp. 2026
    Target configuration macros for z/OS.
 
    Permission is hereby granted, free of charge, to any person obtaining

@@ -100,10 +100,18 @@ FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
          LG 14,0(,2)           ecif->cif
          LG 14,8(,14)          cif->arg_types
          STMG 0,15,SAVREGS     save live GPRs across helper calls
-         STD 0,SAVFPRS
+         STD 0,SAVFPRS        save volatile FPRs 0/2/4/6
          STD 2,SAVFPRS+8
          STD 4,SAVFPRS+16
          STD 6,SAVFPRS+24
+         STD 8,SAVFPRS+32     save non-volatile FPRs 8-15
+         STD 9,SAVFPRS+40
+         STD 10,SAVFPRS+48
+         STD 11,SAVFPRS+56
+         STD 12,SAVFPRS+64
+         STD 13,SAVFPRS+72
+         STD 14,SAVFPRS+80
+         STD 15,SAVFPRS+88
 *What: Storing arguments in this routine's
 *      local storage for future use
 *Name:    ffi_prep_args_call
@@ -140,7 +148,7 @@ FFISYS CELQPRLG DSASIZE=DSASZ,PSECT=ASP
          LLGH 11,10(,15)        rtype->type
          LG 15,0(,15)           rtype->size
          CFI 11,15              FFI_TYPE_COMPLEX?
-         BE GETNARGS            yes: always returns in registers, no hidden ptr
+         BE GETNARGS            yes: returns in regs, no hidden ptr
          CFI 15,24
          BNH GETNARGS
 
@@ -481,7 +489,7 @@ UI64     DS 0H                ffi_type_uint64
          LR 11,0
          SLL 11,2             Pass this parm in gpr or arg area
          L 15,0(11,15)
-         CFI 0,3              GPRs left to pass parms in?
+         CFI 0,2              GPRs left to pass parms in?
          BL INC64
          LA 0,3               Reached max gprs
          B J64
@@ -629,7 +637,7 @@ LDNVP    DS   0H
          L  15,0(11,15)
          CFI  14,3            fewer than 2 FPR pairs left?
          BL INC8
-         LA 14,4              Reached max fprs (long double needs 2 slots)
+         LA 14,3              Reached max fprs
          B  J8
 INC8     DS 0H
          AHI 14,2             long double takes two FPR slots
@@ -676,9 +684,9 @@ LDBLSTR  DS 0H
 * Register state on entry is the same as for CPXF/CPXD/CPXLD.
 CPXANY   DS 0H
          CFI  12,0                 past variadic fence?
-         BE   STRCT                if yes, treat like a struct (no FPRs)
+         BE   STRCT                if yes, treat as struct (no FPRs)
          LG  11,0(10,5)            pointer to current ffi_type
-         LG  11,16(,11)            ffi_type->elements (pointer to array)
+         LG  11,16(,11)            ffi_type->elements ptr
          LG  11,0(,11)             elements[0] pointer
          LLGC 11,11(,11)           elements[0]->type (low byte)
          CFI  11,2                 FFI_TYPE_FLOAT?
@@ -829,7 +837,7 @@ CPXLD    DS 0H
          LG 11,0(10,5)          ensure we have size
          LG 15,0(,11)           ready for labels we branch to
 
-         CFI 14,0               4 FPR slots free, use fpr0+fpr2+fpr4+fpr6
+         CFI 14,0               4 FPR slots free: fpr0+fpr2+fpr4+fpr6
          BE STFPCHKLD
 
          CFI 14,1               3 FPR slots free, use fpr4+fpr6+argarea
@@ -999,7 +1007,7 @@ BYTE16R3 DS 0H               Struct head in R3, remainder in memory
          BNL STRCTLP
          LG 3,0(6,13)
 
-         LA 0,3 
+         LA 0,3
          B STRCTLP
 
 BYTE16F0 DS 0H               Struct goes in FPR0-FPR2
@@ -1027,16 +1035,16 @@ BYTE24R1 DS 0H               Struct goes in R1-R3
 
 BYTE24R2 DS 0H               Struct goes in R2+R3+memory
          CFI 0,2             are R2+R3 available?
-         BNL BYTE24R3 
+         BNL BYTE24R3
          LG 2,0(6,13)
          LG 3,8(6,13)
-        
+
          LA 0,3
          B STRCTLP
 
 BYTE24R3 DS 0H               Struct goes in R3+memory
          CFI 0,3             is R3 available?
-         BNL STRCTLP 
+         BNL STRCTLP
          LG 3,0(6,13)
 
          LA 0,3
@@ -1220,12 +1228,12 @@ RCPXI    DS 0H
          LG 9,16(,9)                                cif->rtype
          LG 9,0(,9)                                 rtype->size
          CFI 9,2
-         BE  RCPXI1                                 size==2: _Complex char
+         BE  RCPXI1                    size==2: _Complex char
          CFI 9,4
-         BE  RCPXI2                                 size==4: _Complex short
+         BE  RCPXI2                    size==4: _Complex short
          CFI 9,16
-         BE  RCPXI8                                 size==16: _Complex long/longlong
-*                                                  size==8: _Complex int (default)
+         BE  RCPXI8                    size==16: _Complex long/longlong
+*                                      size==8: _Complex int (default)
 RCPXI4   DS 0H
          ST  3,0(,7)            real (4 bytes)
          ST  2,4(,7)            imag (4 bytes)
@@ -1247,7 +1255,7 @@ RCPXI8   DS 0H
 RV       DS 0H
          B RET
 
-* FFI390_RET_STRUCT (1): struct return, size-dispatched to GPR or FPR stores
+* FFI390_RET_STRUCT (1): struct return, size-dispatched to GPR/FPR
 RS       DS 0H
          LG 7,(2176+(((DSASZ+31)/32)*32)+24)(,4)
          LG 14,(2176+(((DSASZ+31)/32)*32)+8)(,4)
@@ -1333,7 +1341,19 @@ RSCPY    DS 0H
 RSP      DS 0H                 
          B RET                  
   
-RET      DS 0H 
+RET      DS 0H
+         LD 0,SAVFPRS          restore FPRs 0/2/4/6
+         LD 2,SAVFPRS+8
+         LD 4,SAVFPRS+16
+         LD 6,SAVFPRS+24
+         LD 8,SAVFPRS+32       restore non-volatile FPRs 8-15
+         LD 9,SAVFPRS+40
+         LD 10,SAVFPRS+48
+         LD 11,SAVFPRS+56
+         LD 12,SAVFPRS+64
+         LD 13,SAVFPRS+72
+         LD 14,SAVFPRS+80
+         LD 15,SAVFPRS+88
          CELQEPLG
 
 ATABLE DC A(VOID)
@@ -1421,12 +1441,15 @@ RTABLE DC A(RV)
  DC A(STORELD1)
  DC A(RCPXI)
 CEEDSAHP CEEDSA SECTYPE=XPLINK
-* 32-byte buffer for struct return values (GPR1/2/3 copy + RSCPY source)
+ARGSL DS  XL800
+TEST DS XL8
+* storage space for the returns regs maximum 4*8 fpr
 SSTOR DS  XL32
-* save area for r0-r15 across CELQCALL PREPARGS
+SSIZE DS  XL8
 SAVREGS DS XL128
-* save area for fpr0/2/4/6 across CELQCALL PREPARGS
-SAVFPRS DS XL32
+SAVFPRS DS XL96
+* storage space for scratch registers
+SCRREGS DS XL128
 * full GPR save area for STRCTDISP CELQCALL (r0-r15, 128 bytes)
 SDALL  DS XL128
 * single slot holding the ffi_type* passed by ref to STFPTYP
