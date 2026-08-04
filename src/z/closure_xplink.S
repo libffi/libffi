@@ -1,6 +1,5 @@
 * Copyright IBM Corp. and others 2026
 
-
 *   Incoming register layout 
 *   r0        closure ptr (not saved/preserved; trampoline use only)
 *   r1/r2/r3  caller's first three arguments (untouched by trampoline;
