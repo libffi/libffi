@@ -104,6 +104,7 @@ tested:
 | VAX             | OpenBSD/vax      | GCC                     |
 | WASM32          | Emscripten       | EMCC                    |
 | WASM64          | Emscripten       | EMCC                    |
+| Z 64-bit        | z/OS             | IBM Open XL C/C++       |
 | X86             | FreeBSD          | GCC                     |
 | X86             | GNU HURD         | GCC                     |
 | X86             | Interix          | GCC                     |
@@ -213,6 +214,8 @@ See the git log for details at http://github.com/libffi/libffi.
         Add powerpc64 ELFv2 _Complex long double support for both
           IBM-128 (double-double) and IEEE-128 formats (#1003, closes #1001).
         Fix powerpc Darwin closure returns broken by #951 (#1002).
+        Add z/OS 64-bit XPLINK ABI support (IBM Open XL C/C++), including
+          closures, variadic calls, and _Complex types.
 
     3.7.1 July-10-2026
         Fix aarch64 ffi_call memory corruption when passing many large
