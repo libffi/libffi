@@ -637,7 +637,7 @@ LDNVP    DS   0H
          L  15,0(11,15)
          CFI  14,3            fewer than 2 FPR pairs left?
          BL INC8
-         LA 14,4              Reached max fprs (ldbl needs 2 slots)
+         LA 14,3              Reached max fprs (ldbl needs 2 slots)
          B  J8
 INC8     DS 0H
          AHI 14,2             long double takes two FPR slots
@@ -1441,12 +1441,15 @@ RTABLE DC A(RV)
  DC A(STORELD1)
  DC A(RCPXI)
 CEEDSAHP CEEDSA SECTYPE=XPLINK
-* 32-byte buffer for struct return (GPR1/2/3 copy + RSCPY source)
+ARGSL DS  XL800
+TEST DS XL8
+* storage space for the returns regs maximum 4*8 fpr
 SSTOR DS  XL32
-* save area for r0-r15 across CELQCALL PREPARGS
+SSIZE DS  XL8
 SAVREGS DS XL128
-* save area for fpr0-fpr15 across CELQCALL PREPARGS
 SAVFPRS DS XL96
+* storage space for scratch registers
+SCRREGS DS XL128
 * full GPR save area for STRCTDISP CELQCALL (r0-r15, 128 bytes)
 SDALL  DS XL128
 * single slot holding the ffi_type* passed by ref to STFPTYP
