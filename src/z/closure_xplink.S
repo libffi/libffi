@@ -9,7 +9,7 @@
 *   r5,r6     standard env/entry point registers of this function
 *   r7-r15    untouched by trampoline, registers from callee       
 
-FFIXCLSR CELQPRLG DSASIZE=DSASZ2,PSECT=FFIXCLSR
+FFIXCLSR CELQPRLG DSASIZE=DSASZ2,PSECT=FFIXCLSRP
 
          USING  CEEDSAHP,4
          
