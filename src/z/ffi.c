@@ -85,6 +85,12 @@
 /*                          ----------                                */
 /*====================================================================*/
 
+/* private struct to pass saved registers from closure trampoline to helper */
+struct ffi_reg_data {
+  long *gpr[16];
+  double fpr[7];
+};
+
 #pragma map(ffi_prep_args, "PREPARGS")
 void ffi_prep_args (unsigned char *, extended_cif *);
 #pragma map(ffi_closure_helper_XPLINK, "CLSRHLP")
