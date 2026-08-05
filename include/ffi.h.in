@@ -223,21 +223,17 @@ FFI_EXTERN ffi_type ffi_type_sint64;
 FFI_EXTERN ffi_type ffi_type_float;
 FFI_EXTERN ffi_type ffi_type_double;
 FFI_EXTERN ffi_type ffi_type_pointer;
-
-#if @HAVE_LONG_DOUBLE@
 FFI_EXTERN ffi_type ffi_type_longdouble;
-#else
-#define ffi_type_longdouble ffi_type_double
-#endif
 
 #ifdef FFI_TARGET_HAS_COMPLEX_TYPE
 FFI_EXTERN ffi_type ffi_type_complex_float;
 FFI_EXTERN ffi_type ffi_type_complex_double;
-#if @HAVE_LONG_DOUBLE@
 FFI_EXTERN ffi_type ffi_type_complex_longdouble;
-#else
-#define ffi_type_complex_longdouble ffi_type_complex_double
 #endif
+
+#ifdef FFI_TARGET_HAS_INT128
+FFI_EXTERN ffi_type ffi_type_uint128;
+FFI_EXTERN ffi_type ffi_type_sint128;
 #endif
 #endif /* LIBFFI_HIDE_BASIC_TYPES */
 
