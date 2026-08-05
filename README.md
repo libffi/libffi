@@ -104,7 +104,6 @@ tested:
 | VAX             | OpenBSD/vax      | GCC                     |
 | WASM32          | Emscripten       | EMCC                    |
 | WASM64          | Emscripten       | EMCC                    |
-| Z 64-bit        | z/OS             | IBM Open XL C/C++       |
 | X86             | FreeBSD          | GCC                     |
 | X86             | GNU HURD         | GCC                     |
 | X86             | Interix          | GCC                     |
@@ -126,6 +125,7 @@ tested:
 | X86-64          | Windows/MinGW    | GCC                     |
 | X86-64          | Mac OSX          | GCC                     |
 | Xtensa          | Linux            | GCC                     |
+| Z 64-bit        | z/OS             | IBM Open XL C/C++       |
 
 Please send additional platform test results to
 libffi-discuss@sourceware.org.
