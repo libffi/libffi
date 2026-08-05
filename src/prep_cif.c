@@ -417,4 +417,11 @@ ffi_call_plan_free (ffi_call_plan *plan)
   free (plan);
 }
 
+size_t
+ffi_call_plan_size (ffi_call_plan *plan)
+{
+  /* The generic plan is a bare handle; there is no separate move-list.  */
+  return plan != NULL ? sizeof (struct ffi_call_plan) : 0;
+}
+
 #endif /* generic ffi_call_plan fallback */

@@ -941,6 +941,16 @@ Releases a plan returned by @code{ffi_call_plan_alloc}.  Passing
 not affected.
 @end defun
 
+@findex ffi_call_plan_size
+@defun size_t ffi_call_plan_size (ffi_call_plan *@var{plan})
+Returns the total number of bytes @code{libffi} allocated for @var{plan},
+including any internal argument-placement data it owns.  Returns zero when
+@var{plan} is @code{NULL}.  The result does not include the
+@code{ffi_cif}, which the caller owns.  This is intended for embedders that
+account for the memory held by long-lived plans and would otherwise have to
+guess at the size of an opaque type.
+@end defun
+
 @node The Closure API
 @section The Closure API
 

@@ -204,6 +204,9 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     Development source only -- no release yet
+        Add ffi_call_plan_size to report the total memory a reusable call
+          plan owns, for embedders that account for the memory held by
+          long-lived plans.
         Cache the static trampoline "unsupported" result on hosts whose
           page size exceeds the trampoline table mapping, avoiding
           redundant re-initialization on every closure allocation
