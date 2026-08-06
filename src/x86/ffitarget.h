@@ -145,6 +145,18 @@ typedef enum ffi_abi {
 #define FFI_TYPE_SMALL_STRUCT_4B (FFI_TYPE_LAST + 3)
 #define FFI_TYPE_MS_STRUCT       (FFI_TYPE_LAST + 4)
 
+/* Tripwire: the win64.S / win64_intel.S return-value jump tables use one
+   8-byte slot per code value and place the FFI_TYPE_SMALL_STRUCT_* pseudo-types
+   (which are FFI_TYPE_LAST-relative) immediately after the generic FFI_TYPE_*
+   codes.  Adding a new generic type bumps FFI_TYPE_LAST, shifts those codes,
+   and opens a gap in the tables that silently misaligns small-struct returns.
+   When this fires: add a matching E() slot for the new type in both win64.S
+   and win64_intel.S, then bump FFI_X86_TYPE_LAST to match.  */
+#define FFI_X86_TYPE_LAST FFI_TYPE_VECTOR
+#if FFI_TYPE_LAST != FFI_X86_TYPE_LAST
+# error "new FFI_TYPE_* added: sync the win64.S/win64_intel.S jump tables and bump FFI_X86_TYPE_LAST"
+#endif
+
 #if defined (X86_64) || defined(X86_WIN64) \
     || (defined (__x86_64__) && defined (X86_DARWIN))
 /* 4 bytes of ENDBR64 + 7 bytes of LEA + 6 bytes of JMP + 7 bytes of NOP
