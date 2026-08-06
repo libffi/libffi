@@ -467,7 +467,7 @@ proc libffi_feature_test { test } {
 
     # On z/OS, files written by Tcl are untagged (EBCDIC); tag as ASCII
     # so the C compiler reads them correctly.
-    if {[istarget *-*-zos*]} {
+    if {[istarget *-*-openedition*]} {
         catch {exec chtag -tc ISO8859-1 $src}
     }
 
