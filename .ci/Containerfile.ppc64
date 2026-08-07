@@ -1,0 +1,24 @@
+# Big-endian ppc64 is ELFv2 on Adélie Linux (musl) -- exactly the endian/ABI
+# combination the Fedora and Debian multi-arch images do not provide, and the
+# one that exercises the ELFv2 big-endian call/closure paths (notably the
+# small-struct closure returns cls_5_1_byte / cls_6_1_byte / cls_7_1_byte).
+#
+# Built for ppc64 (big-endian) via `docker build --platform linux/ppc64`
+# (QEMU binfmt), then run natively-emulated like the other Containerfile jobs.
+FROM docker.io/adelielinux/adelie:latest
+
+# linux-headers is required by src/tramp.c (<linux/limits.h>); g++ covers the
+# .cc closure tests; dejagnu drives `make check`; the rest match the glibc
+# Containerfiles' build dependencies.
+RUN apk add --no-cache \
+      gcc g++ make musl-dev linux-headers binutils libtool \
+      autoconf automake texinfo dejagnu diffutils gawk bash
+
+# -----------------------------------------------------------------------------
+# Give UID 10000 a name so `whoami` works during DejaGnu tests.
+# -----------------------------------------------------------------------------
+RUN addgroup -g 10000 builder \
+ && adduser -u 10000 -G builder -h /home/builder -s /sbin/nologin -D builder \
+ && mkdir -p /home/builder \
+ && chown 10000:10000 /home/builder
+USER 10000

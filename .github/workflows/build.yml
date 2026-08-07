@@ -506,6 +506,14 @@ jobs:
             docker_arch: ppc64le
             image: libffi-ci-ppc64le
             containerfile: .ci/Containerfile.ppc64le
+          # Big-endian ppc64 ELFv2 (Adélie/musl): the only ppc64 combination
+          # that exercises the ELFv2 big-endian small-struct closure returns
+          # (cls_5_1_byte / cls_6_1_byte / cls_7_1_byte).  ppc64le above is
+          # little-endian; the powerpc64-linux-gnu cross job is ELFv1.
+          - HOST: powerpc64-unknown-linux-musl
+            docker_arch: ppc64
+            image: libffi-ci-ppc64
+            containerfile: .ci/Containerfile.ppc64
           - HOST: s390x-unknown-linux-gnu
             docker_arch: s390x
             image: libffi-ci-s390x
