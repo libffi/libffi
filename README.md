@@ -203,7 +203,7 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
-    Development source only -- no release yet
+    3.8.0 August-8-2026
         Return small (1, 2, 4 or 8 byte) structs in registers on the i386
           FreeBSD and OpenBSD targets, matching the platform ABI and
           fixing a segfault on struct returns through ffi_call and closures.
