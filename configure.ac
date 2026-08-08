@@ -381,6 +381,7 @@ AC_ARG_ENABLE(debug,
     AC_DEFINE(FFI_DEBUG, 1, [Define this if you want extra debugging.])
   fi)
 AM_CONDITIONAL(FFI_DEBUG, test "$enable_debug" = "yes")
+AM_CONDITIONAL(TARGET_ZOS, test "$TARGET" = "ZOS")
 
 AC_ARG_ENABLE(structs,
 [  --disable-structs       omit code for struct support],
