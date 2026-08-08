@@ -820,6 +820,7 @@ typedef struct
   unsigned fast;        /* nonzero -> lean trampoline eligible             */
   unsigned retcode;     /* UNIX64_RET_* (low byte of flags) for the store  */
   int      thunk_n;     /* >=0 -> ffi_gp_thunks[thunk_n], else -1          */
+  unsigned alloc_bytes; /* malloc'd size, reported by ffi_call_plan_size   */
   ffi_move moves[];
 } ffi_plan;
 
@@ -866,7 +867,7 @@ build_plan (ffi_cif *cif)
   unsigned i, avn = cif->nargs;
   enum x86_64_reg_class classes[MAX_CLASSES];
   unsigned nm, gprcount, ssecount;
-  size_t argp_off;
+  size_t argp_off, nbytes;
   ffi_plan *plan;
   int all_gp64 = 1;	/* every arg is exactly one 64-bit GP move? */
 
@@ -886,9 +887,11 @@ build_plan (ffi_cif *cif)
     }
 
   /* One self-contained allocation: header + moves, released with plain free(). */
-  plan = malloc (sizeof (ffi_plan) + sizeof (ffi_move) * (2 * avn + 1));
+  nbytes = sizeof (ffi_plan) + sizeof (ffi_move) * (2 * avn + 1);
+  plan = malloc (nbytes);
   if (plan == NULL)
     return NULL;
+  plan->alloc_bytes = (unsigned) nbytes;
 
   nm = gprcount = ssecount = 0;
   argp_off = 0;
@@ -1106,6 +1109,17 @@ ffi_call_plan_free (ffi_call_plan *plan)
       free (plan->fast);
       free (plan);
     }
+}
+
+size_t
+ffi_call_plan_size (ffi_call_plan *plan)
+{
+  if (plan == NULL)
+    return 0;
+  /* The move-list carries its own size; a signature with no fast path owns
+     nothing beyond the handle.  */
+  return sizeof (struct ffi_call_plan)
+	 + (plan->fast != NULL ? plan->fast->alloc_bytes : 0);
 }
 
 extern void
