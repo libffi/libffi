@@ -265,7 +265,11 @@ is_vfp_type (const ffi_type *ty)
       int num_registers;
       int first_level_element_type;
 
-      if (reg_size > 16 || size % reg_size != 0)
+      /* A Neon register slot is an S (4B), D (8B) or Q (16B).  A lane narrower
+	 than 4 bytes has no short-vector register class under AAPCS64 and would
+	 map below AARCH64_RET_S4, making extend_hfa_type() branch before its
+	 jump table; reject it and let the generic aggregate path handle it.  */
+      if (reg_size < 4 || reg_size > 16 || size % reg_size != 0)
 	return 0;
       num_registers = (int) (size / reg_size);
       if (num_registers > 4)

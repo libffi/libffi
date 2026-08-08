@@ -208,6 +208,11 @@ See the git log for details at http://github.com/libffi/libffi.
           page size exceeds the trampoline table mapping, avoiding
           redundant re-initialization on every closure allocation
           (e.g. 64K-page aarch64).
+        Fix ia64 return-value jump-table desync after the FFI_TYPE_LAST
+          bump, which corrupted small-struct and HFA returns.
+        Fix powerpc64 big-endian ELFv2 closures returning 5-, 6-, or
+          7-byte structs: missing return jump-table entries produced a
+          wrong result and leaked a libffi code pointer.
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
           layout, for aarch64 and x86-64 (#1000, closes #773).
         Add powerpc64 ELFv2 _Complex long double support for both
