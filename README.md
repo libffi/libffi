@@ -204,6 +204,9 @@ History
 See the git log for details at http://github.com/libffi/libffi.
 
     Development source only -- no release yet
+        Return small (1, 2, 4 or 8 byte) structs in registers on the i386
+          FreeBSD and OpenBSD targets, matching the platform ABI and
+          fixing a segfault on struct returns through ffi_call and closures.
         Add ffi_call_plan_size to report the total memory a reusable call
           plan owns, for embedders that account for the memory held by
           long-lived plans.
