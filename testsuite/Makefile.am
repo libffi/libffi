@@ -23,7 +23,7 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.call/many_small_structs.c \
 	libffi.call/negint.c libffi.call/offsets.c libffi.call/overread.c \
 	libffi.call/plan.c libffi.call/plan_mixed.c libffi.call/plan_spill.c \
-	libffi.call/plan_struct.c libffi.call/plan_var.c \
+	libffi.call/plan_struct.c libffi.call/plan_size.c libffi.call/plan_var.c \
 	libffi.call/pr1172638.c libffi.call/promotion.c libffi.call/pyobjc_tc.c libffi.call/return_dbl.c \
 	libffi.call/return_dbl1.c libffi.call/return_dbl2.c libffi.call/return_fl.c \
 	libffi.call/return_fl1.c libffi.call/return_fl2.c libffi.call/return_fl3.c \
