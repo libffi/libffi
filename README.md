@@ -1,7 +1,7 @@
 Status
 ======
 
-libffi-3.7.1 was released on July 10, 2026.
+libffi-3.8.0 was released on August 8, 2026.
 
 
 What is libffi?
