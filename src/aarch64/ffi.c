@@ -564,13 +564,9 @@ compress_hfa_type (void *dest, void *reg, int h)
     {
     case AARCH64_RET_S1:
       if (dest == reg)
-	{
-#ifdef __AARCH64EB__
-	  dest += 12;
-#endif
-	}
+	return (char *)dest + BE (12);
       else
-	*(float *)dest = *(float *)reg;
+	*(float *)dest = *(float *)((char *)reg + BE (12));
       break;
     case AARCH64_RET_S2:
       __asm__ ("ldp q16, q17, [%1]\n\t"
@@ -592,13 +588,9 @@ compress_hfa_type (void *dest, void *reg, int h)
 
     case AARCH64_RET_D1:
       if (dest == reg)
-	{
-#ifdef __AARCH64EB__
-	  dest += 8;
-#endif
-	}
+	return (char *)dest + BE (8);
       else
-	*(double *)dest = *(double *)reg;
+	*(double *)dest = *(double *)((char *)reg + BE (8));
       break;
     case AARCH64_RET_D2:
       __asm__ ("ldp q16, q17, [%1]\n\t"
@@ -637,10 +629,11 @@ allocate_int_to_reg_or_stack (struct call_context *context,
 			      void *stack, size_t size)
 {
   if (state->ngrn < N_X_ARG_REG)
-    return &context->x[state->ngrn++];
+    return (char *)&context->x[state->ngrn++] + BE (sizeof (UINT64) - size);
 
   state->ngrn = N_X_ARG_REG;
-  return allocate_to_stack (state, stack, size, size);
+  return (char *)allocate_to_stack (state, stack, size, size)
+	 + BE (sizeof (UINT64) - size);
 }
 
 static void *
@@ -937,7 +930,8 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
                   break;
                 }
                 state.nsrn = N_V_ARG_REG;
-                dest = allocate_to_stack (&state, stack, ty->alignment, s);
+                dest = (char *)allocate_to_stack (&state, stack, ty->alignment, s)
+                       + (t == FFI_TYPE_FLOAT ? BE (sizeof (UINT64) - s) : 0);
               }
 	      }
 	    else if (s > 16)
@@ -1222,8 +1216,9 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
                     {
                       state.ngrn = N_X_ARG_REG;
                       state.nsrn = N_V_ARG_REG;
-                      avalue[i] = allocate_to_stack(&state, stack,
-                             ty->alignment, s);
+                      avalue[i] = (char *)allocate_to_stack (&state, stack,
+                                                             ty->alignment, s)
+                                  + (t == FFI_TYPE_FLOAT ? BE (sizeof (UINT64) - s) : 0);
                     }
                 }
               else
@@ -1237,8 +1232,9 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
                   else
                     {
                       state.nsrn = N_V_ARG_REG;
-                      avalue[i] = allocate_to_stack(&state, stack,
-                                                   ty->alignment, s);
+                      avalue[i] = (char *)allocate_to_stack (&state, stack,
+                                                             ty->alignment, s)
+                                  + (t == FFI_TYPE_FLOAT ? BE (sizeof (UINT64) - s) : 0);
                     }
                 }
             }
