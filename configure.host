@@ -62,6 +62,11 @@ case "${host}" in
         SOURCES="ffi.c sysv.S"
         ;;
 
+  e2k*)
+	TARGET=E2K; TARGETDIR=e2k
+	SOURCES="ffi.c"
+	;;
+
   frv-*-*)
 	TARGET=FRV; TARGETDIR=frv
 	SOURCES="ffi.c eabi.S"
