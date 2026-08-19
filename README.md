@@ -203,6 +203,13 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
+    TBD
+        Fix aarch64 and arm big-endian closures receiving garbage
+          sub-word integer and scalar-float arguments, and aarch64
+          big-endian sub-word/float return values, by offsetting to the
+          least-significant bytes of the register or stack slot
+          (#1012, closes #1011 and #675).
+
     3.8.0 August-8-2026
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
           layout, for aarch64 and x86-64 (#1000, closes #773).
