@@ -192,26 +192,6 @@ Configure has many other options. Use ``configure --help`` to see them all.
 Once configure has finished, type "make". Note that you must be using
 GNU make.  You can ftp GNU make from ftp.gnu.org:/pub/gnu/make .
 
-### CMake
-
-The CMake build does not require Autoconf, Automake, Libtool, a Unix shell,
-or GNU make. Generated headers and preprocessed assembly are written only to
-the selected binary directory. A typical out-of-source build is:
-
-    cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/path/to/prefix
-    cmake --build build
-    ctest --test-dir build --output-on-failure
-    cmake --install build
-
-On Windows, run these commands in the appropriate Visual Studio developer
-command prompt. Shared libraries are built by default; pass
-``-DBUILD_SHARED_LIBS=OFF`` for a static library.
-
-Installed CMake consumers can use:
-
-    find_package(libffi 3.8 CONFIG REQUIRED)
-    target_link_libraries(application PRIVATE libffi::ffi)
-
 To ensure that libffi is working as advertised, type "make check".
 This will require that you have DejaGNU installed.
 
