@@ -13,13 +13,11 @@ on:
 
 
 env:
-  PYODIDE_VERSION: 0.58.4
-  # PYTHON_VERSION and EMSCRIPTEN_VERSION are determined by PYODIDE_VERSION.
-  # The appropriate versions can be found in the Pyodide repodata.json
-  # "info" field, or in Makefile.envs:
-  # https://github.com/pyodide/pyodide/blob/main/Makefile.envs#L2
-  PYTHON_VERSION: 3.12.7
-  EMSCRIPTEN_VERSION: 4.0.10
+  # pytest-pyodide is only used as a browser test runner here, so these
+  # versions are independent of each other and of any Pyodide release.
+  PYTEST_PYODIDE_VERSION: 0.59.2
+  PYTHON_VERSION: "3.14"
+  EMSCRIPTEN_VERSION: 6.0.9
   EM_CACHE_FOLDER: emsdk-cache
 
 jobs:
@@ -49,7 +47,7 @@ jobs:
           - name: wasm64
             host: wasm64
             configureflags:
-            testflags: -sMEMORY64=1
+            testflags: -m64
           - name: wasm64-2
             host: wasm64
             configureflags: WASM64_MEMORY64=2
@@ -80,7 +78,7 @@ jobs:
       - name: Setup node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 26
 
       # This step updates emsdk's configuration file ".emscripten" to point to
       # nodejs installed in the previous step.
@@ -128,7 +126,7 @@ jobs:
           - name: wasm64
             host: wasm64
             configureflags:
-            testflags: -sMEMORY64=1
+            testflags: -m64
           - name: wasm64-2
             host: wasm64
             configureflags: WASM64_MEMORY64=2
@@ -146,7 +144,7 @@ jobs:
           key: ${{ env.EMSCRIPTEN_VERSION }}
 
       - name: Setup emsdk
-        uses: mymindstorm/setup-emsdk@v12
+        uses: mymindstorm/setup-emsdk@v14
         with:
           version: ${{ env.EMSCRIPTEN_VERSION }}
           actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
@@ -204,7 +202,7 @@ jobs:
           channels: conda-forge
 
       - name: Install test dependencies
-        run: pip install pytest-pyodide==${{ env.PYODIDE_VERSION }}
+        run: pip install pytest-pyodide==${{ env.PYTEST_PYODIDE_VERSION }}
 
       - name: Run tests
         run: |

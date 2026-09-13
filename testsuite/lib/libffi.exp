@@ -432,6 +432,8 @@ proc libffi_target_compile { source dest type options } {
                 }
             } elseif { [string match "*android*" $target_triplet] } {
                 lappend options "libs= -lc++"
+            } elseif { [string match "wasm*-*" $target_triplet] } {
+                lappend options "additional_flags=-fexceptions"
             }
         }
 
@@ -447,8 +449,37 @@ proc libffi_target_compile { source dest type options } {
         lappend options "libs= -lpthread"
     }
 
+    # Newer clang warns about file-scope variables that are assigned
+    # but never read.  Several tests do this deliberately.
+    if { [libffi_compiler_accepts_flag "-Wno-unused-but-set-global"] } {
+        lappend options "additional_flags=-Wno-unused-but-set-global"
+    }
+
     verbose "options: $options"
     return [target_compile $source $dest $type $options]
+}
+
+# Returns true if the compiler accepts FLAG without complaint.  The
+# result is cached, so the probe only runs once per flag.
+proc libffi_compiler_accepts_flag { flag } {
+    global libffi_accepted_flags
+
+    if { [info exists libffi_accepted_flags($flag)] } {
+        return $libffi_accepted_flags($flag)
+    }
+
+    set src "ffiflag[pid].c"
+    set f [open $src "w"]
+    puts $f "int main() {return 0;}"
+    close $f
+
+    set lines [target_compile $src $src.i preprocess "additional_flags=$flag"]
+    file delete $src
+    file delete $src.i
+
+    set libffi_accepted_flags($flag) [string match "" $lines]
+    verbose "compiler accepts $flag: $libffi_accepted_flags($flag)"
+    return $libffi_accepted_flags($flag)
 }
 
 # TEST should be a preprocessor condition.  Returns true if it holds.
