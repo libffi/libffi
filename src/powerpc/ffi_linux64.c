@@ -393,6 +393,12 @@ homogeneous:
 	     under ELFv2, and is what differentiates _Complex from a
 	     same-sized struct{T;T;} which uses fewer GPR shadow slots.  */
 	  elt = (*ptr)->elements[0]->type;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+	  /* A 64-bit long double is passed exactly like a double.  */
+	  if (elt == FFI_TYPE_LONGDOUBLE
+	      && (cif->abi & FFI_LINUX_LONG_DOUBLE_128) == 0)
+	    elt = FFI_TYPE_DOUBLE;
+#endif
 	  switch (elt)
 	    {
 	    case FFI_TYPE_FLOAT:
@@ -776,6 +782,10 @@ ffi_prep_args64 (extended_cif *ecif, unsigned long *const stack)
 	case FFI_TYPE_COMPLEX:
 	  elt = (*ptr)->elements[0]->type;
 #if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+	  /* A 64-bit long double is passed exactly like a double.  */
+	  if (elt == FFI_TYPE_LONGDOUBLE
+	      && (ecif->cif->abi & FFI_LINUX_LONG_DOUBLE_128) == 0)
+	    elt = FFI_TYPE_DOUBLE;
 	  if (elt == FFI_TYPE_LONGDOUBLE
 	      && (ecif->cif->abi & FFI_LINUX_LONG_DOUBLE_IEEE128) != 0)
 	    {
@@ -1398,6 +1408,10 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
 	    unsigned int j;
 	    elt = arg_types[i]->elements[0]->type;
 #if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+	    /* A 64-bit long double arrives exactly like a double.  */
+	    if (elt == FFI_TYPE_LONGDOUBLE
+		&& (cif->abi & FFI_LINUX_LONG_DOUBLE_128) == 0)
+	      elt = FFI_TYPE_DOUBLE;
 	    if (elt == FFI_TYPE_LONGDOUBLE
 		&& (cif->abi & FFI_LINUX_LONG_DOUBLE_IEEE128) != 0)
 	      {
