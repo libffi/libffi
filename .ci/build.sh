@@ -36,7 +36,15 @@ function build_linux()
 
 function build_foreign_linux()
 {
-    ${DOCKER} run --rm -t -v $(pwd):/opt ${SET_QEMU_CPU} -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.ci/build-in-container.sh
+    # Forward a compiler override (e.g. CC="gcc -mlong-double-64") into the
+    # container when the job sets one; configure picks CC/CXX up from the
+    # environment.  Pass them only when non-empty, so an unset CC doesn't
+    # become CC="" and break configure.
+    local compiler_env=()
+    [ -n "${CC:-}" ] && compiler_env+=(-e "CC=${CC}")
+    [ -n "${CXX:-}" ] && compiler_env+=(-e "CXX=${CXX}")
+
+    ${DOCKER} run --rm -t -v $(pwd):/opt ${SET_QEMU_CPU} "${compiler_env[@]}" -e LIBFFI_TEST_OPTIMIZATION="${LIBFFI_TEST_OPTIMIZATION}" $2 bash -c /opt/.ci/build-in-container.sh
 
     ./rlgl e -l project=libffi -l sha=${GITHUB_SHA:0:7} -l CC="$CC" ${HOST+-l host=$HOST} --policy=https://github.com/libffi/rlgl-policy.git */testsuite/libffi.log
     exit $?

@@ -496,7 +496,7 @@ jobs:
   # ppc64le/s390x/etc. runners, so emulation is the only option.  Add a matrix
   # entry (HOST + a .ci/Containerfile.<arch>) to cover more architectures.
   build-qemu:
-    name: QEMU ${{ matrix.HOST }}
+    name: QEMU ${{ matrix.HOST }} ${{ matrix.label }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -506,6 +506,21 @@ jobs:
             docker_arch: ppc64le
             image: libffi-ci-ppc64le
             containerfile: .ci/Containerfile.ppc64le
+          # Same target with a 64-bit long double, which musl selects on
+          # ppc64le.  long double then keeps a distinct FFI_TYPE_LONGDOUBLE
+          # while FFI_DEFAULT_ABI lacks FFI_LINUX_LONG_DOUBLE_128, a
+          # combination no other job exercises.  The flag goes in CC (not
+          # CFLAGS) so that configure records it in CC_FOR_TARGET and the
+          # testsuite compiles the tests with it too.  CXX is deliberately
+          # left alone: this image has no g++, and an explicitly set CXX makes
+          # configure fail its C++ preprocessor check instead of quietly
+          # skipping the C++ tests the way the other ppc64le job does.
+          - HOST: powerpc64le-unknown-linux-gnu
+            label: (-mlong-double-64)
+            docker_arch: ppc64le
+            image: libffi-ci-ppc64le
+            containerfile: .ci/Containerfile.ppc64le
+            cc: gcc -mlong-double-64
           - HOST: s390x-unknown-linux-gnu
             docker_arch: s390x
             image: libffi-ci-s390x
@@ -531,6 +546,8 @@ jobs:
         env:
           HOST: ${{ matrix.HOST }}
           FOREIGN_IMAGE: ${{ matrix.image }}
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
         run: |
           # The emulated container runs as a non-root UID and writes build
           # artifacts into the mounted workspace, so make it writable.
