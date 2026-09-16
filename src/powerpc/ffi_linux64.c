@@ -61,6 +61,17 @@ ffi_prep_types_linux64 (ffi_abi abi)
       ffi_type_longdouble.size = 16;
       ffi_type_longdouble.alignment = 16;
     }
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+  /* _Complex long double is two halves of whatever long double just became.
+     Its size comes from sizeof(_Complex long double) at build time, which is
+     only right for the ABI libffi itself was built for, so keep it in step.
+     Leaving it behind makes the type disagree with its own element: a caller
+     that asks for the other long double width would get a return value copied
+     at cif->rtype->size (wrong by 16 bytes either way) and structs containing
+     the type laid out to the build-time size.  */
+  ffi_type_complex_longdouble.size = 2 * ffi_type_longdouble.size;
+  ffi_type_complex_longdouble.alignment = ffi_type_longdouble.alignment;
+#endif
 }
 #endif
 

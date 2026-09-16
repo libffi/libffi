@@ -84,6 +84,7 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.complex/complex.exp libffi.complex/complex.inc libffi.complex/complex_defs_double.inc \
 	libffi.complex/complex_defs_float.inc libffi.complex/complex_defs_longdouble.inc libffi.complex/complex_double.c \
 	libffi.complex/complex_float.c libffi.complex/complex_i128.c libffi.complex/complex_int.c libffi.complex/complex_longdouble.c \
+	libffi.complex/complex_longdouble_abi.c \
 	libffi.complex/ffitest.h libffi.complex/many_complex.inc libffi.complex/many_complex_double.c \
 	libffi.complex/many_complex_float.c libffi.complex/many_complex_longdouble.c libffi.complex/return_complex.inc \
 	libffi.complex/return_complex1.inc libffi.complex/return_complex1_double.c libffi.complex/return_complex1_float.c \
