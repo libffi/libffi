@@ -209,6 +209,14 @@ See the git log for details at http://github.com/libffi/libffi.
           big-endian sub-word/float return values, by offsetting to the
           least-significant bytes of the register or stack slot
           (#1012, closes #1011 and #675).
+        Fix powerpc64 _Complex long double when the ABI's long double
+          is 64 bits (e.g. -mlong-double-64 or musl).
+        Fix closure allocation to fail gracefully when the runtime
+          page size lookup fails (#1015).
+        Fix building the wasm port with newer Emscripten by declaring
+          the stack helper dependencies in EM_JS_DEPS (#1019).
+        Emit subsections_via_symbols on Apple platforms, enabling
+          linker dead-stripping of unused code (#1017).
 
     3.8.0 August-8-2026
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
