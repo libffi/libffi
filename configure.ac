@@ -427,6 +427,16 @@ AC_ARG_ENABLE(multi-os-directory,
 [  --disable-multi-os-directory
                           disable use of gcc --print-multi-os-directory to change the library installation directory])
 
+libdir_explicit=no
+eval "set x $ac_configure_args"
+shift
+for arg
+do
+  case $arg in
+    --libdir | --libdir=*) libdir_explicit=yes; break ;;
+  esac
+done
+
 # These variables are only ever used when we cross-build to X86_WIN32.
 # And we only support this with GCC, so...
 if test "x$GCC" = "xyes"; then
@@ -438,7 +448,8 @@ if test "x$GCC" = "xyes"; then
     toolexecdir='${libdir}'/gcc-lib/'$(target_alias)'
     toolexeclibdir='${libdir}'
   fi
-  if test x"$enable_multi_os_directory" != x"no"; then
+  if test x"$enable_multi_os_directory" != x"no" &&
+     test x"$libdir_explicit" != x"yes"; then
     multi_os_directory=`$CC $CFLAGS -print-multi-os-directory`
     case $multi_os_directory in
       .) ;; # Avoid trailing /.
