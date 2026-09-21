@@ -256,12 +256,23 @@ ffi_trampoline_table_alloc (void)
 
   /* We have valid trampoline and config pages */
   table = calloc (1, sizeof (ffi_trampoline_table));
+  if (table == NULL)
+    {
+      vm_deallocate (mach_task_self (), config_page, PAGE_MAX_SIZE * 2);
+      return NULL;
+    }
   table->free_count = FFI_TRAMPOLINE_COUNT;
   table->config_page = config_page;
 
   /* Create and initialize the free list */
   table->free_list_pool =
     calloc (FFI_TRAMPOLINE_COUNT, sizeof (ffi_trampoline_table_entry));
+  if (table->free_list_pool == NULL)
+    {
+      vm_deallocate (mach_task_self (), config_page, PAGE_MAX_SIZE * 2);
+      free (table);
+      return NULL;
+    }
 
   for (i = 0; i < table->free_count; i++)
     {
