@@ -68,6 +68,10 @@ jobs:
           ./.ci/install.sh
           ./.ci/build.sh
 
+      - name: Test configure libdir handling
+        if: matrix.HOST == 'x86_64-pc-linux-gnu' && matrix.CONFIGURE_OPTIONS == '--enable-shared'
+        run: ./testsuite/libffi.configure/libdir.sh
+
       - name: Upload rlgl report
         if: always()
         uses: actions/upload-artifact@v4
