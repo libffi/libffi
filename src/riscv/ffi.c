@@ -414,7 +414,7 @@ ffi_call_int (ffi_cif *cif, void (*fn) (void), void *rvalue, void **avalue,
     ffi_call_asm ((void *) alloc_base, cb.aregs, fn, closure);
 
     cb.used_float = cb.used_integer = 0;
-    if (!return_by_ref && rvalue)
+    if (!return_by_ref && rvalue && cif->rtype->type != FFI_TYPE_VOID)
       {
 	if (IS_INT(cif->rtype->type)
 	    && cif->rtype->size < sizeof (ffi_arg))
