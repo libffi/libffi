@@ -29,7 +29,7 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.call/return_fl1.c libffi.call/return_fl2.c libffi.call/return_fl3.c \
 	libffi.call/return_ldl.c libffi.call/return_ll.c libffi.call/return_ll1.c \
 	libffi.call/return_sc.c libffi.call/return_sl.c libffi.call/return_uc.c \
-	libffi.call/return_ul.c libffi.call/s55.c libffi.call/strlen.c \
+	libffi.call/return_ul.c libffi.call/return_void.c libffi.call/s55.c libffi.call/strlen.c \
 	libffi.call/strlen2.c libffi.call/strlen3.c libffi.call/strlen4.c \
 	libffi.call/struct1.c libffi.call/struct10.c libffi.call/struct2.c \
 	libffi.call/struct3.c libffi.call/struct4.c libffi.call/struct5.c \
