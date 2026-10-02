@@ -934,8 +934,14 @@ build_plan (ffi_cif *cif)
 	  switch (classes[j])
 	    {
 	    case X86_64_NO_CLASS:
-	    case X86_64_SSEUP_CLASS:
 	      continue;			/* nothing placed for this 8-byte */
+	    case X86_64_SSEUP_CLASS:
+	      /* Upper half of the preceding SSE class's %xmm slot.  */
+	      m.dst_off = (unsigned) (offsetof (struct register_args, sse)
+				      + (ssecount - 1)
+					* sizeof (union big_int_union) + 8);
+	      m.op = FFI_MOVE_SSE64;
+	      break;
 	    case X86_64_INTEGER_CLASS:
 	    case X86_64_INTEGERSI_CLASS:
 	      m.dst_off = gprcount * 8;	/* offsetof(register_args,gpr) == 0 */
