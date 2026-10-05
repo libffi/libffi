@@ -72,6 +72,10 @@ jobs:
         if: matrix.HOST == 'x86_64-pc-linux-gnu' && matrix.CONFIGURE_OPTIONS == '--enable-shared'
         run: ./testsuite/libffi.configure/libdir.sh
 
+      - name: Check documentation configure options
+        if: matrix.CONFIGURE_OPTIONS == '--enable-shared'
+        run: ./.ci/check-configure-docs.sh
+
       - name: Upload rlgl report
         if: always()
         uses: actions/upload-artifact@v4

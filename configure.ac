@@ -338,7 +338,7 @@ fi
 
 AC_ARG_ENABLE(docs,
               AS_HELP_STRING([--disable-docs],[Disable building of docs (default: no)]),
-              [enable_docs=no],
+              [],
               [enable_docs=yes])
 AM_CONDITIONAL(BUILD_DOCS, [test x$enable_docs = xyes])
 
