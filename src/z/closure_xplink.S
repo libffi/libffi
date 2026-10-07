@@ -15,13 +15,13 @@
 FFIXCLSR CELQPRLG DSASIZE=DSASZ2,PSECT=FFIXCLSRP
 
          USING  CEEDSAHP,4
-         
-* r5 points to tramp_data (tramp[16..31]).  Load the closure ptr into r0
-* and restore the original env word into r5 before the normal prologue runs.
+
+* r5 points to tramp_data (tramp[16..31]).
+* Load the closure ptr into r0 and restore the original env word into r5.
         LG 0,0(5)
         LG 5,8(5)
 
-* register for save buffer 
+* register for save buffer
 * this goes into the helper
         LA 13,REGSAV
 
@@ -45,7 +45,7 @@ FFIXCLSR CELQPRLG DSASIZE=DSASZ2,PSECT=FFIXCLSRP
         STG 0,CLOSURE
 
 * store the floats here to minimize trampoline
-* these are used in the helper if there are float arguments 
+* these are used in the helper if there are float arguments
          STD 0,128(,13)
          STD 1,136(,13)
          STD 2,144(,13)
