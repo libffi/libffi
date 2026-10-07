@@ -1,18 +1,26 @@
 * Copyright IBM Corp. and others 2026
 
-*   Incoming register layout 
-*   r0        closure ptr (not saved/preserved; trampoline use only)
+*   Incoming register layout (after trampoline dispatch)
+*   r0        undefined on entry; set to closure ptr by the two LG
+*             instructions below before any other use
 *   r1/r2/r3  caller's first three arguments (untouched by trampoline;
 *             saved by CELQPRLG at 2176(,r4_caller))
 *   r4        caller's stack pointer (CELQPRLG adjusts before body;
 *             r4_caller recovered from backchain at r4_new+2048)
-*   r5,r6     standard env/entry point registers of this function
-*   r7-r15    untouched by trampoline, registers from callee       
+*   r5        on entry points to tramp_data (tramp[16..31]);
+*             restored to the original env word by the first two LGs
+*   r6        FFIXCLSR entry point (set by XPLINK call mechanism)
+*   r7-r15    untouched by trampoline, registers from callee
 
 FFIXCLSR CELQPRLG DSASIZE=DSASZ2,PSECT=FFIXCLSRP
 
          USING  CEEDSAHP,4
          
+* r5 points to tramp_data (tramp[16..31]).  Load the closure ptr into r0
+* and restore the original env word into r5 before the normal prologue runs.
+        LG 0,0(5)
+        LG 5,8(5)
+
 * register for save buffer 
 * this goes into the helper
         LA 13,REGSAV
@@ -116,7 +124,7 @@ RET8     DS 0H
 RET9     DS 0H
          LA  9,CLOSURE
          LG  9,0(,9)            closure ptr
-         LG  9,128(,9)          closure->cif
+         LG  9,32(,9)           closure->cif
          LG  9,16(,9)           cif->rtype
          LG  9,0(,9)            rtype->size (total complex size)
          CFI 9,2

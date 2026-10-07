@@ -1298,7 +1298,6 @@ ffi_closure_helper_XPLINK (ffi_closure *closure, void *retbuf,
 /* Function - Prepare a FFI closure.                                  */
 /*                                                                    */
 /*====================================================================*/
- 
 
 ffi_status
 ffi_prep_closure_loc (ffi_closure *closure,
@@ -1310,61 +1309,25 @@ ffi_prep_closure_loc (ffi_closure *closure,
   if (cif->abi != FFI_XPLINK)
     return FFI_BAD_ABI;
 
-  *(long *)&closure->tramp[0] = 0x0000000000000000;
-  *(long *)&closure->tramp[8] = (long)(&closure->tramp[16]);
-
-  /* Trampoline layout: no DSA pushed, no frame on the stack.
- * r1/r2/r3/r4 are left completely untouched so CELQPRLG saves the
- * real caller arguments into 2176(,r4).
- *
- * r0 carries the closure ptr into FFIXCLSR (r0 is not an argument
- * register and is not saved by CELQPRLG into the arg area).
- *
- * tramp[8..15]    = entry point = &tramp[16]
- * tramp[120..127] = pointer to ffi_closure_XPLINK function descriptor
- *
- * Instruction sequence (all offsets relative to tramp[0]):
- *   [16]  basr  r5, 0           r5 = tramp+18  (PC anchor)
- *   [18]  lgr   r0, r5          r0 = tramp+18
- *   [22]  ahi   r0, -18         r0 = tramp+0   = closure ptr
- *   [26]  lg    r5, 102(,r5)    r5 = value at tramp[120]  (18+102=120 ✓)
- *   [32]  lmg   r5, r6, 0(,r5) r5 = env, r6 = FFIXCLSR entry point
- *   [38]  bcr   15, r6          branch — r0=closure, r1/r2/r3/r4 untouched
- *
- * In FFIXCLSR: closure ptr is in r0 on entry.
+  /* Trampoline layout: z/OS does not allow W+X page mappings, so we use
+   * the XPLINK function-descriptor convention to pass data into FFIXCLSR
+   * without disturbing argument registers r1-r3.  The 32-byte tramp[] is:
+   *
+   *   tramp[0..7]   = pointer to tramp_data  -> loaded into r5 on call
+   *   tramp[8..15]  = FFIXCLSR entry-point addr -> loaded into r6/PC
+   *   tramp[16..23] = closure ptr  (FFIXCLSR: LG 0,0(5) -> r0)
+   *   tramp[24..31] = original env word from descriptor
+   *                   (FFIXCLSR: LG 5,8(5) -> r5, restoring env)
    */
 
-  /* [16]  basr %r5,0              0D 50         r5 = tramp+18 */
-  *(short *)&closure->tramp[16] = 0x0d50;
+  void **desc       = (void **)&ffi_closure_XPLINK;
+  void **tramp_data = (void **)&closure->tramp[16];
 
-  /* [18]  lgr %r0,%r5             B9 04 00 05   r0 = tramp+18
-   * LGR: opcode B904, R1=0, R2=5.  */
-  *(short *)&closure->tramp[18] = 0xb904;
-  *(short *)&closure->tramp[20] = 0x0005;
+  tramp_data[0] = (void *)closure; /* r0 = closure ptr, loaded by FFIXCLSR */
+  tramp_data[1] = (void *)desc[0]; /* env word, restored into r5 by FFIXCLSR */
 
-  /* [22]  ahi %r0,-18             A7 0A FF EE   r0 = tramp+0 = closure ptr
-   * AHI: opcode A7, mask 0A (reg 0, sub-opcode A), immediate -18 = 0xFFEE. */
-  *(short *)&closure->tramp[22] = 0xa70a;
-  *(short *)&closure->tramp[24] = 0xffee;
-
-  /* [26]  lg %r5,102(,%r5)        E3 50 50 66 00 04
-   * r5=tramp+18; tramp+18+102 = tramp+120 = &ffi_closure_XPLINK descriptor ptr.
-   * 102 = 0x066.  */
-  *(short *)&closure->tramp[26] = 0xe350;
-  *(short *)&closure->tramp[28] = 0x5066;
-  *(short *)&closure->tramp[30] = 0x0004;
-
-  /* [32]  lmg %r5,%r6,0(,%r5)    EB 56 50 00 00 04
-   * Load env->r5, entry->r6 from the ffi_closure_XPLINK function descriptor. */
-  *(short *)&closure->tramp[32] = 0xeb56;
-  *(short *)&closure->tramp[34] = 0x5000;
-  *(short *)&closure->tramp[36] = 0x0004;
-
-  /* [38]  bcr 15,%r6              07 F6
-   * Branch to FFIXCLSR.  r0=closure ptr, r1/r2/r3/r4/r7 all untouched. */
-  *(short *)&closure->tramp[38] = 0x07f6;
-
-  *(long *)&closure->tramp[120] = (long)&ffi_closure_XPLINK;
+  *(long *)&closure->tramp[0] = (long)tramp_data; /* r5 -> tramp_data     */
+  *(long *)&closure->tramp[8] = (long)desc[1];    /* r6 -> FFIXCLSR entry */
 
   closure->cif = cif;
   closure->user_data = user_data;
