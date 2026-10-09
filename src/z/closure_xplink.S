@@ -16,10 +16,10 @@ FFIXCLSR CELQPRLG DSASIZE=DSASZ2,PSECT=FFIXCLSRP
 
          USING  CEEDSAHP,4
 
-* r5 points to tramp_data (tramp[16..31]).
-* Load the closure ptr into r0 and restore the original env word into r5.
-        LG 0,0(5)
-        LG 5,8(5)
+* r5 points to tramp_data (tramp[16..31])
+* Load the closure ptr into r0 and place the real env into r5
+        LG 0,0(,5)
+        LG 5,8(,5)
 
 * register for save buffer
 * this goes into the helper
