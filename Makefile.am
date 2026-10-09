@@ -71,7 +71,8 @@ noinst_HEADERS = src/aarch64/ffitarget.h src/aarch64/internal.h		\
 	src/x86/ffitarget.h src/x86/internal.h src/x86/internal64.h	\
 	src/x86/asmnames.h src/xtensa/ffitarget.h src/dlmalloc.c	\
 	src/kvx/ffitarget.h src/kvx/asm.h				\
-	src/loongarch/ffitarget.h
+	src/loongarch/ffitarget.h 					    \
+	src/z/ffitarget.h
 
 EXTRA_libffi_la_SOURCES = src/aarch64/ffi.c src/aarch64/sysv.S		\
 	src/aarch64/win64_armasm.S src/alpha/ffi.c src/alpha/osf.S	\
@@ -102,7 +103,8 @@ EXTRA_libffi_la_SOURCES = src/aarch64/ffi.c src/aarch64/sysv.S		\
 	src/x86/ffiw64.c src/x86/win64.S src/x86/ffi64.c		\
 	src/x86/unix64.S src/x86/sysv_intel.S src/x86/win64_intel.S	\
 	src/xtensa/ffi.c src/xtensa/sysv.S src/kvx/ffi.c		\
-	src/kvx/sysv.S src/loongarch/ffi.c src/loongarch/sysv.S
+	src/kvx/sysv.S src/loongarch/ffi.c src/loongarch/sysv.S \
+	src/z/closure_xplink.S src/z/ffi.c src/z/xplink.S
 
 TARGET_OBJ = @TARGET_OBJ@
 libffi_la_LIBADD = $(TARGET_OBJ)
@@ -151,7 +153,9 @@ libffi_la_LDFLAGS = -no-undefined $(libffi_version_info) $(libffi_version_script
 libffi_la_DEPENDENCIES = $(libffi_la_LIBADD) $(libffi_version_dep)
 
 AM_CPPFLAGS = -I. -I$(top_srcdir)/include -Iinclude -I$(top_srcdir)/src
-AM_CCASFLAGS = '$(AM_CPPFLAGS)'
+if TARGET_ZOS
+AM_CCASFLAGS = -fno-integrated-as -fasm -Wa,--GOFF -Wa,--ASA -P
+endif
 
 dist-hook:
 	d=`(cd $(distdir); pwd)`; (cd doc; make pdf; cp *.pdf $$d/doc)

@@ -125,6 +125,7 @@ tested:
 | X86-64          | Windows/MinGW    | GCC                     |
 | X86-64          | Mac OSX          | GCC                     |
 | Xtensa          | Linux            | GCC                     |
+| Z 64-bit        | z/OS             | IBM Open XL C/C++       |
 
 Please send additional platform test results to
 libffi-discuss@sourceware.org.
@@ -217,6 +218,8 @@ See the git log for details at http://github.com/libffi/libffi.
           the stack helper dependencies in EM_JS_DEPS (#1019).
         Emit subsections_via_symbols on Apple platforms, enabling
           linker dead-stripping of unused code (#1017).
+        Add z/OS 64-bit XPLINK ABI support (IBM Open XL C/C++), including
+          closures, variadic calls, and _Complex types.
 
     3.8.0 August-8-2026
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
@@ -239,6 +242,11 @@ See the git log for details at http://github.com/libffi/libffi.
           page size exceeds the trampoline table mapping, avoiding
           redundant re-initialization on every closure allocation
           (e.g. 64K-page aarch64).
+        Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
+          layout, for aarch64 and x86-64 (#1000, closes #773).
+        Add powerpc64 ELFv2 _Complex long double support for both
+          IBM-128 (double-double) and IEEE-128 formats (#1003, closes #1001).
+        Fix powerpc Darwin closure returns broken by #951 (#1002).
 
     3.7.1 July-10-2026
         Fix aarch64 ffi_call memory corruption when passing many large
@@ -621,6 +629,7 @@ developers:
     x86                 Anthony Green, Jon Beniston
     x86-64              Bo Thorsen
     xtensa              Chris Zankel
+    z/OS                Austin S. Wells
 
 Jesper Skov and Andrew Haley both did more than their fair share of
 stepping through the code and tracking down bugs.
