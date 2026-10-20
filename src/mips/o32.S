@@ -224,7 +224,24 @@ retcomplex:
 	b	epilogue
 
 5:
+	# Integer complex values: a _Complex char is returned right-justified
+	# in v0, a _Complex short in v0, a _Complex int in v0/v1 and a
+	# _Complex long long in v0/v1/a0/a1.
+	slti	t3, t1, FFI_TYPE_UINT16
+	bnez	t3, 6f
+	slti	t3, t1, FFI_TYPE_UINT32
+	bnez	t3, 7f
 	REG_S	v1, 4(t0)
+	REG_S	v0, 0(t0)
+	slti	t3, t1, FFI_TYPE_UINT64
+	bnez	t3, epilogue
+	REG_S	a1, 12(t0)
+	REG_S	a0, 8(t0)
+	b	epilogue
+6:
+	sh	v0, 0(t0)
+	b	epilogue
+7:
 	REG_S	v0, 0(t0)
 	b	epilogue
 
@@ -412,7 +429,7 @@ $do_closure:
 	beq	$8, $9, closure_done
 
 	li	$13, 1		# FFI_O32
-	bne	$16, $13, 1f	# Skip fp restore if FFI_O32_SOFT_FLOAT
+	bne	$16, $13, 2f	# Skip fp restore if FFI_O32_SOFT_FLOAT
 
 #ifndef __mips_soft_float
 	li	$9, FFI_TYPE_FLOAT
@@ -436,6 +453,20 @@ $do_closure:
 	l.d	$f2, (V0_OFF2+8)($fp)
 	beq     $3, $9, closure_done
 #endif
+	b	1f
+
+2:
+	# FFI_O32_SOFT_FLOAT returns complex values in up to four GPRs.
+	# ffi_closure_mips_inner_O32 stored them in the space for the
+	# FP argument registers.
+	li	$9, FFI_TYPE_COMPLEX
+	bne	$8, $9, 1f
+	REG_L	$2, FA_0_0_OFF2($fp)
+	REG_L	$3, FA_0_1_OFF2($fp)
+	REG_L	$4, FA_1_0_OFF2($fp)
+	REG_L	$5, FA_1_1_OFF2($fp)
+	b	closure_done
+
 1:	
 	REG_L	$3, V1_OFF2($fp)
 	REG_L	$2, V0_OFF2($fp)

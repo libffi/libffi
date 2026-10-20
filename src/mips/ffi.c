@@ -455,6 +455,24 @@ static ffi_status ffi_prep_cif_machdep_int(ffi_cif *cif, unsigned nfixedargs)
           cif->flags += FFI_TYPE_UINT64 << (FFI_FLAG_BITS * 2);
           break;
       
+        case FFI_TYPE_COMPLEX:
+          /* Complex values are returned in GPRs like integer complex
+             values of the same size.  */
+          cif->flags += FFI_TYPE_COMPLEX << (FFI_FLAG_BITS * 2);
+          switch (cif->rtype->elements[0]->type)
+            {
+            case FFI_TYPE_FLOAT:
+              cif->flags += FFI_TYPE_UINT32 << (FFI_FLAG_BITS * 4);
+              break;
+            case FFI_TYPE_DOUBLE:
+              cif->flags += FFI_TYPE_UINT64 << (FFI_FLAG_BITS * 4);
+              break;
+            default:
+              cif->flags += cif->rtype->elements[0]->type << (FFI_FLAG_BITS * 4);
+              break;
+            }
+          break;
+
         case FFI_TYPE_FLOAT:
         default:
           cif->flags += FFI_TYPE_INT << (FFI_FLAG_BITS * 2);
@@ -983,6 +1001,12 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
       rvalue = fpr;
       argn = 1;
     }
+  /* With soft float, complex values are returned in up to four GPRs,
+     which does not fit into the space for v0 and v1.  ffi_closure_O32
+     does not use the space for the FP argument registers in that case,
+     so return the value there.  */
+  if (cif->abi == FFI_O32_SOFT_FLOAT && cif->rtype->type == FFI_TYPE_COMPLEX)
+    rvalue = fpr;
 
   i = 0;
   avn = cif->nargs;
@@ -1049,6 +1073,16 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
           return FFI_TYPE_INT;
         case FFI_TYPE_DOUBLE:
           return FFI_TYPE_UINT64;
+        case FFI_TYPE_COMPLEX:
+          if (cif->rtype->size == 2)
+            {
+              /* A _Complex char is returned right-justified in v0.  */
+              UINT16 value;
+
+              memcpy (&value, rvalue, sizeof (value));
+              *(UINT32 *) rvalue = value;
+            }
+          return FFI_TYPE_COMPLEX;
         default:
           return cif->rtype->type;
         }
