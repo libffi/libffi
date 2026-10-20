@@ -960,9 +960,9 @@ ffi_closure_helper_SYSV (ffi_cif *cif,
 	switch (size)
 	  {
 	  case 1:
-	    return PPC_LD_U8;
+	    return PPC32_SYSV_LD_STRUCT_1;
 	  case 2:
-	    return PPC_LD_U16;
+	    return PPC32_SYSV_LD_STRUCT_2;
 	  case 3:
 	    return PPC32_SYSV_LD_STRUCT_3;
 	  case 4:

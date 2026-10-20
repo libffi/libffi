@@ -228,7 +228,15 @@ E PPC32_SYSV_LD_STRUCT_7
 	lwz %r3,112+0(%r1)
 	lwz %r4,112+4(%r1)
 	li %r5,8
-	nop
+	b .Lstruct567
+
+E PPC32_SYSV_LD_STRUCT_1
+	lbz %r3,112+0(%r1)
+	epilogue
+
+E PPC32_SYSV_LD_STRUCT_2
+	lhz %r3,112+0(%r1)
+	epilogue
 
 .Lstruct567:
 	subfic %r6,%r5,32
