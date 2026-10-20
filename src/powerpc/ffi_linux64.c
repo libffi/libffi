@@ -1649,13 +1649,13 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
 		case 0:
 		  return PPC_LD_NONE;
 		case 1:
-		  return PPC_LD_U8;
+		  return PPC64_LD_STRUCT_1;
 		case 2:
-		  return PPC_LD_U16;
+		  return PPC64_LD_STRUCT_2;
 		case 3:
 		  return PPC64_LD_STRUCT_3;
 		case 4:
-		  return PPC_LD_U32;
+		  return PPC64_LD_STRUCT_4;
 		case 5:
 		  return PPC64_LD_STRUCT_5;
 		case 6:
