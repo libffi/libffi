@@ -480,7 +480,7 @@ ffi_prep_incoming_args_SYSV (ffi_cif *cif, void *rvalue,
 
       argp = ffi_align (ty, argp);
 #ifdef __ARMEB__
-      if (z < 4 && ty->type != FFI_TYPE_STRUCT)
+      if (z < 4 && ty->type != FFI_TYPE_STRUCT && ty->type != FFI_TYPE_COMPLEX)
 	avalue[i] = (void *) (argp + 4 - z);
       else
 #endif
@@ -533,7 +533,7 @@ ffi_prep_incoming_args_VFP (ffi_cif *cif, void *rvalue, char *stack,
 	    {
 	      /* Because we're little endian, this is what it turns into.  */
 #ifdef __ARMEB__
-	      if (z < 4 && ty->type != FFI_TYPE_STRUCT)
+	      if (z < 4 && ty->type != FFI_TYPE_STRUCT && ty->type != FFI_TYPE_COMPLEX)
 		avalue[i] = (void *) (tregp + 4 - z);
 	      else
 #endif
@@ -560,7 +560,7 @@ ffi_prep_incoming_args_VFP (ffi_cif *cif, void *rvalue, char *stack,
       stack_used = 1;
       argp = ffi_align (ty, argp);
 #ifdef __ARMEB__
-      if (z < 4 && ty->type != FFI_TYPE_STRUCT)
+      if (z < 4 && ty->type != FFI_TYPE_STRUCT && ty->type != FFI_TYPE_COMPLEX)
 	avalue[i] = (void *) (argp + 4 - z);
       else
 #endif
