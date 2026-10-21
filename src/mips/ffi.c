@@ -727,6 +727,12 @@ static ffi_status ffi_prep_cif_machdep_int(ffi_cif *cif, unsigned nfixedargs)
 	cif->flags += cif->rtype->type << (FFI_FLAG_BITS * 8);
 	break;
       }
+
+    /* ffi_prep_args() puts the argument registers at the end of the
+       argument area and aligns arguments by their address, which only
+       matches their alignment relative to a0 if the size of the area
+       is a multiple of the largest argument alignment, 16 bytes.  */
+    cif->bytes = FFI_ALIGN(cif->bytes, 2 * FFI_SIZEOF_ARG);
   }
 #endif
   return FFI_OK;
