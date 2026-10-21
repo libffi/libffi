@@ -798,6 +798,18 @@ void ffi_call_int(ffi_cif *cif, void (*fn)(void), void *rvalue,
             rvalue_copy = alloca(16);
             copy_rvalue = 1;
           }
+	else if (cif->rtype->type == FFI_TYPE_COMPLEX && cif->rtype->size < 16)
+	  {
+	    /* The same holds for complex values, which also need not be
+	       8-byte aligned.  Those smaller than 8 bytes are returned
+	       right-justified in v0.  */
+	    rvalue_copy = alloca (16);
+	    copy_rvalue = 1;
+#if defined(__MIPSEB__) || defined(_MIPSEB)
+	    if (cif->rtype->size < 8)
+	      copy_offset = 8 - cif->rtype->size;
+#endif
+	  }
 	else if (cif->rtype->type == FFI_TYPE_FLOAT
 		 && (cif->abi == FFI_N64_SOFT_FLOAT
 		     || cif->abi == FFI_N32_SOFT_FLOAT))
@@ -1282,6 +1294,16 @@ ffi_closure_mips_inner_N32 (ffi_cif *cif,
 #endif
       )
     *(ffi_arg *) rvalue = (SINT32) *(UINT32 *) rvalue;
+
+  /* Complex values smaller than 8 bytes are returned right-justified in
+     v0, which ffi_closure_N32 loads as a whole.  */
+  if (cif->rtype->type == FFI_TYPE_COMPLEX && cif->rtype->size < 8)
+    {
+      size_t size = cif->rtype->size;
+
+      memmove ((char *) rvalue + 8 - size, rvalue, size);
+      memset (rvalue, 0, 8 - size);
+    }
 #endif
 
   return cif->flags >> (FFI_FLAG_BITS * 8);
