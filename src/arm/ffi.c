@@ -309,8 +309,20 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	flags = ARM_TYPE_INT;
       else
 	{
+	  /* The address of the return value goes in r0, ahead of the
+	     arguments, which can then need more padding than cif->bytes
+	     includes.  Lay them out again behind it.  */
+	  unsigned i;
+
 	  flags = ARM_TYPE_STRUCT;
-	  bytes += 4;
+	  bytes = 4;
+	  for (i = 0; i < cif->nargs; i++)
+	    {
+	      ffi_type *ty = cif->arg_types[i];
+
+	      bytes = (size_t) ffi_align (ty, (void *) bytes);
+	      bytes += FFI_ALIGN (ty->size, 4);
+	    }
 	}
       break;
 
