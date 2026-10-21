@@ -89,22 +89,17 @@ static void ffi_prep_args(char *stack,
   /* If more than 8 double words are used, the remainder go
      on the stack. We reorder stuff on the stack here to 
      support this easily. */
-  /* if ret is _Complex long double, args reg shift2, and a0 should holds pointer to rvalue */
+  if (bytes > 8 * sizeof(ffi_arg))
+    argp = &stack[bytes - (8 * sizeof(ffi_arg))];
+  else
+    argp = stack;
+
+  /* if ret is _Complex long double, a0 holds the pointer to rvalue */
   if (ecif->cif->rtype->type == FFI_TYPE_COMPLEX && ecif->cif->rtype->elements[0]->type == FFI_TYPE_LONGDOUBLE)
     {
-      if (bytes + 16 > 8 * sizeof(ffi_arg))
-        argp = &stack[bytes - (8 * sizeof(ffi_arg))];
-      else
-        argp = stack;
-      * (unsigned long *) argp = (unsigned long) ecif->rvalue;
-      argp += 16;
-    }
-  else
-    {
-      if (bytes > 8 * sizeof(ffi_arg))
-        argp = &stack[bytes - (8 * sizeof(ffi_arg))];
-      else
-        argp = stack;
+      * (ffi_arg *) argp = (ffi_arg) ecif->rvalue;
+      argp += sizeof(ffi_arg);
+      FIX_ARGP;
     }
 #else
   argp = stack;
@@ -518,7 +513,35 @@ static ffi_status ffi_prep_cif_machdep_int(ffi_cif *cif, unsigned nfixedargs)
 	    cif->rstruct_flag = 0;
       }
     else
-      cif->rstruct_flag = 0;
+      {
+	cif->rstruct_flag = 0;
+
+	if (cif->rtype->type == FFI_TYPE_COMPLEX
+	    && cif->rtype->elements[0]->type == FFI_TYPE_LONGDOUBLE)
+	  {
+	    /* The address of the return value is passed in a0, ahead of
+	       the arguments, which can then need more space than
+	       cif->bytes includes.  Account for laying them out again
+	       behind it.  */
+	    size_t without = 0, with = sizeof(ffi_arg);
+	    unsigned i;
+
+	    for (i = 0; i < cif->nargs; i++)
+	      {
+		ffi_type *t = cif->arg_types[i];
+		size_t a = t->alignment < sizeof(ffi_arg)
+		  ? sizeof(ffi_arg) : t->alignment;
+		size_t z = FFI_ALIGN(t->size, sizeof(ffi_arg));
+
+		without = FFI_ALIGN(without, a) + z;
+		with = FFI_ALIGN(with, a) + z;
+	      }
+	    cif->bytes += with - without;
+
+	    arg_reg = 1;
+	    count = (cif->nargs < 7) ? cif->nargs : 7;
+	  }
+      }
 
     while (count-- > 0 && arg_reg < 8)
       {
@@ -1166,7 +1189,7 @@ ffi_closure_mips_inner_N32 (ffi_cif *cif,
       argn = 1;
     }
   if (cif->rtype->type == FFI_TYPE_COMPLEX && cif->rtype->elements[0]->type == FFI_TYPE_LONGDOUBLE)
-    argn = 2;
+    argn = 1;
 
   i = 0;
   avn = cif->nargs;
