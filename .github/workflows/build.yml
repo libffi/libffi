@@ -574,18 +574,23 @@ jobs:
   # the gcc-<HOST> package, installed by install.sh) to cover more such targets.
   build-cross-qemu:
     name: QEMU-cross ${{ matrix.HOST }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - HOST: powerpc64-linux-gnu
-          - HOST: powerpc-linux-gnu
-          - HOST: sparc64-linux-gnu
-          - HOST: mips64el-linux-gnuabi64
+          - runner: ubuntu-latest
+            HOST: powerpc64-linux-gnu
+          - runner: ubuntu-latest
+            HOST: powerpc-linux-gnu
+          - runner: ubuntu-latest
+            HOST: sparc64-linux-gnu
+          - runner: ubuntu-24.04
+            HOST: mips64el-linux-gnuabi64
           # PA-RISC 32-bit (FFI_PA32): exercises the struct-by-value
           # marshalling regression in testsuite/libffi.call/many_small_structs.c.
-          - HOST: hppa-linux-gnu
+          - runner: ubuntu-latest
+            HOST: hppa-linux-gnu
     steps:
       - uses: actions/checkout@v4
 
