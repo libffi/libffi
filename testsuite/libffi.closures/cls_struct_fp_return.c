@@ -60,6 +60,7 @@ DEFINE (s_df, EQ2, 2.5 * k, -0.25f * k)
     ffi_cif cif;							\
     ffi_closure *pcl;							\
     void *code;								\
+    union { ffi_arg align; name value; } result;				\
     name want = fn_##name (k), got;					\
 									\
     type.size = 0;							\
@@ -68,9 +69,9 @@ DEFINE (s_df, EQ2, 2.5 * k, -0.25f * k)
     type.elements = elements;						\
     CHECK (ffi_prep_cif (&cif, ABI_NUM, 1, &type, args) == FFI_OK);	\
 									\
-    memset (&got, 0, sizeof (got));					\
-    ffi_call (&cif, FFI_FN (fn_##name), &got, values);			\
-    CHECK (eq_##name (got, want));					\
+    memset (&result, 0, sizeof (result));				\
+    ffi_call (&cif, FFI_FN (fn_##name), &result, values);		\
+    CHECK (eq_##name (result.value, want));				\
 									\
     pcl = ffi_closure_alloc (sizeof (ffi_closure), &code);		\
     CHECK (pcl != NULL);						\
