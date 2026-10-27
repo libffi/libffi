@@ -396,7 +396,7 @@ retstruct_f_f_soft:
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
 	sw	v0, 0(t4)
-	sw	v1, 4(t4)
+	sw	a0, 4(t4)
 	b	epilogue
 	
 retstruct_d_f_soft:	
@@ -404,7 +404,7 @@ retstruct_d_f_soft:
 	jal	t9
 	REG_L	t4, 4*FFI_SIZEOF_ARG($fp)
 	sd	v0, 0(t4)
-	sw	v1, 8(t4)
+	sw	a0, 8(t4)
 	b	epilogue
 	
 retstruct_f_d_soft:	
@@ -711,17 +711,54 @@ cls_retstruct_d_f:
 	b	cls_epilogue
 	
 cls_retstruct_f_d:	
-	bne	v0, FFI_TYPE_STRUCT_FD, cls_retcomplex_ld_ld
+	bne	v0, FFI_TYPE_STRUCT_FD, cls_retstruct_f_soft
 	l.s	$f0, V0_OFF2($sp)
 	l.d	$f2, V1_OFF2($sp)
 	b	cls_epilogue
 #else
 cls_longdouble_soft:
-	bne	v0, FFI_TYPE_LONGDOUBLE, cls_retcomplex_ld_ld
+	bne	v0, FFI_TYPE_LONGDOUBLE, cls_retstruct_f_soft
 	REG_L	v0, V0_OFF2($sp)
 	REG_L	a0, V1_OFF2($sp) # not typo, it is a0, I have no idea, gcc does do it
 	b	cls_epilogue
 #endif
+
+	# With soft float, a struct of one or two floating-point fields is
+	# returned with the first field in v0 and the second in a0, each
+	# like a scalar of its type.
+cls_retstruct_f_soft:
+	bne	v0, FFI_TYPE_STRUCT_F_SOFT, cls_retstruct_d_soft
+	lw	v0, V0_OFF2($sp)
+	b	cls_epilogue
+
+cls_retstruct_d_soft:
+	bne	v0, FFI_TYPE_STRUCT_D_SOFT, cls_retstruct_f_f_soft
+	ld	v0, V0_OFF2($sp)
+	b	cls_epilogue
+
+cls_retstruct_f_f_soft:
+	bne	v0, FFI_TYPE_STRUCT_FF_SOFT, cls_retstruct_d_d_soft
+	lw	v0, V0_OFF2($sp)
+	lw	a0, (V0_OFF2+4)($sp)
+	b	cls_epilogue
+
+cls_retstruct_d_d_soft:
+	bne	v0, FFI_TYPE_STRUCT_DD_SOFT, cls_retstruct_f_d_soft
+	ld	v0, V0_OFF2($sp)
+	ld	a0, (V0_OFF2+8)($sp)
+	b	cls_epilogue
+
+cls_retstruct_f_d_soft:
+	bne	v0, FFI_TYPE_STRUCT_FD_SOFT, cls_retstruct_d_f_soft
+	lw	v0, V0_OFF2($sp)
+	ld	a0, (V0_OFF2+8)($sp)
+	b	cls_epilogue
+
+cls_retstruct_d_f_soft:
+	bne	v0, FFI_TYPE_STRUCT_DF_SOFT, cls_retcomplex_ld_ld
+	ld	v0, V0_OFF2($sp)
+	lw	a0, (V0_OFF2+8)($sp)
+	b	cls_epilogue
 
 cls_retcomplex_ld_ld:
 	bne	v0, FFI_TYPE_COMPLEX_LDLD, cls_retstruct_small2

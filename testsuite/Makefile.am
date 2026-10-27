@@ -64,7 +64,7 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.closures/cls_multi_sshortchar.c libffi.closures/cls_multi_uchar.c libffi.closures/cls_multi_ushort.c \
 	libffi.closures/cls_multi_ushortchar.c libffi.closures/cls_pointer.c libffi.closures/cls_pointer_stack.c \
 	libffi.closures/cls_schar.c libffi.closures/cls_sint.c libffi.closures/cls_sshort.c \
-	libffi.closures/cls_struct_va1.c libffi.closures/cls_uchar.c libffi.closures/cls_uint.c \
+	libffi.closures/cls_struct_fp_return.c libffi.closures/cls_struct_va1.c libffi.closures/cls_uchar.c libffi.closures/cls_uint.c \
 	libffi.closures/cls_uint_va.c libffi.closures/cls_ulong_va.c libffi.closures/cls_ulonglong.c \
 	libffi.closures/cls_ushort.c libffi.closures/err_bad_abi.c libffi.closures/ffitest.h \
 	libffi.closures/huge_struct.c libffi.closures/nested_struct.c libffi.closures/nested_struct1.c \
