@@ -36,6 +36,8 @@ if [[ $RUNNER_OS != 'Linux' ]]; then
     download_rlgl
 
 else
+    set -e
+
     # Download the rlgl client for the runner's architecture
     download_rlgl
 
@@ -44,19 +46,20 @@ else
     sudo apt install libltdl-dev zip
 
     # Cross + qemu-user targets: install the Debian cross toolchain for $HOST
-    # and qemu-user-static (registers binfmt so test binaries run emulated).
+    # and the concrete qemu-user-binfmt provider.  qemu-user-static became a
+    # virtual package without a default candidate on Ubuntu 26.04.
     if [ -n "${CROSS_QEMU:-}" ]; then
-        sudo apt-get install -y gcc-${HOST} g++-${HOST} qemu-user-static
+        sudo apt-get install -y gcc-${HOST} g++-${HOST} qemu-user-binfmt
     fi
 
     case $HOST in
 	      mips64el-linux-gnu | sparc64-linux-gnu)
         ;;
 	      alpha-linux-gnu | arm32v7-linux-gnu | m68k-linux-gnu | sh4-linux-gnu)
-	          sudo apt-get install qemu-user-static
+	          sudo apt-get install qemu-user-binfmt
 	          ;;
 	      hppa-linux-gnu )
-	          # The gcc/g++-hppa-linux-gnu cross toolchain and qemu-user-static
+	          # The gcc/g++-hppa-linux-gnu cross toolchain and qemu-user-binfmt
 	          # are installed by the CROSS_QEMU block above; nothing extra here.
 	          ;;
 	      i386-pc-linux-gnu)
