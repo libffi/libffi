@@ -804,8 +804,7 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *avalue)
       size_t z = ty->size;
       int t = ty->type;
 
-      if (z <= FFI_SIZEOF_ARG && t != FFI_TYPE_STRUCT && t != FFI_TYPE_COMPLEX
-	  && t != FFI_TYPE_FLOAT)
+      if (z <= FFI_SIZEOF_ARG && t != FFI_TYPE_STRUCT && t != FFI_TYPE_FLOAT)
 	{
 	  ffi_arg val = extend_basic_type (avalue, t);
 	  frame->regs[pabi->regs[narg_reg++]] = val;
