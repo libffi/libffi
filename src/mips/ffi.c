@@ -1271,6 +1271,19 @@ ffi_closure_mips_inner_N32 (ffi_cif *cif,
   /* Invoke the closure. */
   fun (cif, rvalue, avaluep, user_data);
 
+#if defined(__MIPSEB__) || defined(_MIPSEB)
+  /* ffi_closure_N32 loads a 32-bit integer return value from the end of
+     an ffi_arg on big-endian.  A float with soft float and a pointer on
+     N32 are returned the same way, but the closure stores them at the
+     start, so widen them.  */
+  if ((cif->rtype->type == FFI_TYPE_FLOAT && soft_float)
+#if _MIPS_SIM == _ABIN32
+      || cif->rtype->type == FFI_TYPE_POINTER
+#endif
+      )
+    *(ffi_arg *) rvalue = (SINT32) *(UINT32 *) rvalue;
+#endif
+
   return cif->flags >> (FFI_FLAG_BITS * 8);
 }
 
