@@ -70,7 +70,7 @@ function build_cross()
 # Cross-compile on the host with a Debian cross toolchain and run the tests
 # under qemu-user (binfmt).  Used for big-endian PowerPC variants, which have
 # no ready foreign-arch container image.  Expects ${HOST}-gcc / ${HOST}-g++ and
-# qemu-user-static to be installed, plus the target sysroot at /usr/${HOST}.
+# qemu-user-binfmt to be installed, plus the target sysroot at /usr/${HOST}.
 function build_cross_qemu()
 {
     # Export the sysroot so qemu-user (invoked via binfmt when the test
