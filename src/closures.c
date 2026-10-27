@@ -65,6 +65,7 @@ ffi_closure_alloc (size_t size, void **code)
   static size_t page_size;
   size_t rounded_size;
   void *codeseg, *dataseg;
+  long ps;
   int prot;
 
   /* Expect that PAX mprotect is active and a separate code mapping is necessary. */
@@ -73,7 +74,12 @@ ffi_closure_alloc (size_t size, void **code)
 
   /* Obtain system page size. */
   if (!page_size)
-    page_size = sysconf(_SC_PAGESIZE);
+    {
+      ps = sysconf(_SC_PAGESIZE);
+      if (ps <= 0)
+        return NULL;
+      page_size = (size_t) ps;
+    }
 
   /* Round allocation size up to the next page, keeping in mind the size field and pointer to code map. */
   rounded_size = (size + overhead + page_size - 1) & ~(page_size - 1);
