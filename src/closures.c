@@ -759,12 +759,14 @@ static struct
 #endif /* HAVE_MNTENT */
 };
 
+#define OPEN_TEMP_EXEC_FILE_OPTS_COUNT \
+  (sizeof (open_temp_exec_file_opts) / sizeof (*open_temp_exec_file_opts))
+
 /* Current index into open_temp_exec_file_opts.  */
-static int open_temp_exec_file_opts_idx = 0;
+static size_t open_temp_exec_file_opts_idx = 0;
 
 /* Reset a current multi-call func, then advances to the next entry.
-   If we're at the last, go back to the first and return nonzero,
-   otherwise return zero.  */
+   Return nonzero after advancing past the last entry.  */
 static int
 open_temp_exec_file_opts_next (void)
 {
@@ -772,15 +774,7 @@ open_temp_exec_file_opts_next (void)
     open_temp_exec_file_opts[open_temp_exec_file_opts_idx].func (NULL);
 
   open_temp_exec_file_opts_idx++;
-  if (open_temp_exec_file_opts_idx
-      == (sizeof (open_temp_exec_file_opts)
-	  / sizeof (*open_temp_exec_file_opts)))
-    {
-      open_temp_exec_file_opts_idx = 0;
-      return 1;
-    }
-
-  return 0;
+  return open_temp_exec_file_opts_idx == OPEN_TEMP_EXEC_FILE_OPTS_COUNT;
 }
 
 /* Return a file descriptor of a temporary zero-sized file in a
@@ -789,6 +783,9 @@ int
 open_temp_exec_file (void)
 {
   int fd;
+
+  if (open_temp_exec_file_opts_idx == OPEN_TEMP_EXEC_FILE_OPTS_COUNT)
+    return -1;
 
   do
     {
@@ -873,6 +870,7 @@ dlmmap_locked (void *start, size_t length, int prot, int flags, off_t offset)
       if (!offset)
 	{
 	  close (execfd);
+	  execfd = -1;
 	  goto retry_open;
 	}
       if (ftruncate (execfd, offset) != 0)
@@ -885,6 +883,7 @@ dlmmap_locked (void *start, size_t length, int prot, int flags, off_t offset)
       return MFAIL;
     }
   else if (!offset
+	   && open_temp_exec_file_opts_idx < OPEN_TEMP_EXEC_FILE_OPTS_COUNT
 	   && open_temp_exec_file_opts[open_temp_exec_file_opts_idx].repeat)
     open_temp_exec_file_opts_next ();
 
