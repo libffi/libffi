@@ -52,7 +52,7 @@
 
 C(ffi_flush_icache):
 1:	iflush %o0
-	iflush %o+8
+	iflush %o0+8
 	nop
 	nop
 	nop
