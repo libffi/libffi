@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="0.064" timestamp="2026-10-28T13:12:27.804444+00:00" hostname="runnervmtai0g"><testcase classname="pytest" name="internal" time="0.000"><error message="internal error">Traceback (most recent call last):
+  File "/home/runner/.local/lib/python3.12/site-packages/_pytest/main.py", line 333, in wrap_session
+    session.exitstatus = doit(config, session) or 0
+                         ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/_pytest/main.py", line 386, in _main
+    config.hook.pytest_collection(session=session)
+  File "/home/runner/.local/lib/python3.12/site-packages/pluggy/_caller.py", line 197, in __call__
+    return self._hookexec(
+           ^^^^^^^^^^^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/pluggy/_manager.py", line 183, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/pluggy/_execution.py", line 195, in _multicall
+    raise exception
+  File "/home/runner/.local/lib/python3.12/site-packages/pluggy/_execution.py", line 167, in _multicall
+    teardown.throw(exception)
+  File "/home/runner/.local/lib/python3.12/site-packages/_pytest/logging.py", line 816, in pytest_collection
+    return (yield)
+            ^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/pluggy/_execution.py", line 167, in _multicall
+    teardown.throw(exception)
+  File "/home/runner/.local/lib/python3.12/site-packages/_pytest/warnings.py", line 84, in pytest_collection
+    return (yield)
+            ^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/pluggy/_execution.py", line 167, in _multicall
+    teardown.throw(exception)
+  File "/home/runner/.local/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1617, in pytest_collection
+    return (yield)
+            ^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/pluggy/_execution.py", line 147, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/pytest_pyodide/hook.py", line 202, in pytest_collection
+    set_runtime_fixture_params(session)
+  File "/home/runner/.local/lib/python3.12/site-packages/pytest_pyodide/hook.py", line 193, in set_runtime_fixture_params
+    rt = session._fixturemanager._arg2fixturedefs["runtime"]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'FixtureManager' object has no attribute '_arg2fixturedefs'. Did you mean: '_arg2node2fixturedefs'?</error></testcase></testsuite></testsuites>
