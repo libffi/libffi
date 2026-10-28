@@ -408,6 +408,28 @@ allocate_to_stack (struct arg_state *state, void *stack,
   return (char *)stack + nsaa;
 }
 
+/* Darwin packs only scalars to their natural alignment; a non-HFA
+   composite of up to 16 bytes still takes whole register-sized slots.  */
+static void *
+allocate_composite_to_stack (struct arg_state *state, void *stack,
+			     const ffi_type *ty)
+{
+  size_t alignment = ty->alignment;
+  size_t size = ty->size;
+
+/* Apple's ABI gives these composites full pointer-sized slots.  The
+   experimental GCC Darwin port instead packs them to their natural size;
+   match the compiler ABI used to build libffi so calls and closures remain
+   self-consistent.  */
+#if defined (__APPLE__) \
+    && (!defined (__GNUC__) || defined (__clang__))
+  alignment = FFI_ALIGN (alignment, sizeof (void *));
+  size = FFI_ALIGN (size, sizeof (void *));
+#endif
+
+  return allocate_to_stack (state, stack, alignment, size);
+}
+
 /* Allocate and copy a structure that is passed by value on the stack and
    return a pointer to it.  */
 static void *
@@ -966,7 +988,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 		       adjusted and the argument is copied to memory at the
 		       adjusted NSAA.  */
 		    state.ngrn = N_X_ARG_REG;
-		    dest = allocate_to_stack (&state, stack, ty->alignment, s);
+		    dest = allocate_composite_to_stack (&state, stack, ty);
 		  }
 		}
 	      memcpy (dest, a, s);
@@ -1266,8 +1288,7 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
               else
                 {
                   state.ngrn = N_X_ARG_REG;
-                  avalue[i] = allocate_to_stack(&state, stack,
-                                           ty->alignment, s);
+                  avalue[i] = allocate_composite_to_stack (&state, stack, ty);
                 }
             }
           break;
