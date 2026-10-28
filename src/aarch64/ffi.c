@@ -417,7 +417,12 @@ allocate_composite_to_stack (struct arg_state *state, void *stack,
   size_t alignment = ty->alignment;
   size_t size = ty->size;
 
-#if defined (__APPLE__)
+/* Apple's ABI gives these composites full pointer-sized slots.  The
+   experimental GCC Darwin port instead packs them to their natural size;
+   match the compiler ABI used to build libffi so calls and closures remain
+   self-consistent.  */
+#if defined (__APPLE__) \
+    && (!defined (__GNUC__) || defined (__clang__))
   alignment = FFI_ALIGN (alignment, sizeof (void *));
   size = FFI_ALIGN (size, sizeof (void *));
 #endif
