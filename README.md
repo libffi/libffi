@@ -206,7 +206,7 @@ See the git log for details at http://github.com/libffi/libffi.
     TBD
         Improve ABI conformance and test coverage for complex-number
           calls, closures, and small aggregate values across ARM, x86,
-          PowerPC, MIPS, RISC-V, and LoongArch.
+          PowerPC, MIPS, RISC-V, LoongArch, and SPARC.
         Fix aarch64 and arm big-endian closures receiving garbage
           sub-word integer and scalar-float arguments, and aarch64
           big-endian sub-word/float return values, by offsetting to the
