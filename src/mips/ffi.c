@@ -402,7 +402,7 @@ static ffi_status ffi_prep_cif_machdep_int(ffi_cif *cif, unsigned nfixedargs)
    * does not have special handling for floating point args.
    */
 
-  if (cif->rtype->type != FFI_TYPE_STRUCT && cif->rtype->type != FFI_TYPE_COMPLEX && cif->abi == FFI_O32)
+  if (cif->rtype->type != FFI_TYPE_STRUCT && cif->abi == FFI_O32)
     {
       if (cif->nargs > 0 && cif->nargs == nfixedargs)
 	{
@@ -455,6 +455,24 @@ static ffi_status ffi_prep_cif_machdep_int(ffi_cif *cif, unsigned nfixedargs)
           cif->flags += FFI_TYPE_UINT64 << (FFI_FLAG_BITS * 2);
           break;
       
+        case FFI_TYPE_COMPLEX:
+          /* Complex values are returned in GPRs like integer complex
+             values of the same size.  */
+          cif->flags += FFI_TYPE_COMPLEX << (FFI_FLAG_BITS * 2);
+          switch (cif->rtype->elements[0]->type)
+            {
+            case FFI_TYPE_FLOAT:
+              cif->flags += FFI_TYPE_UINT32 << (FFI_FLAG_BITS * 4);
+              break;
+            case FFI_TYPE_DOUBLE:
+              cif->flags += FFI_TYPE_UINT64 << (FFI_FLAG_BITS * 4);
+              break;
+            default:
+              cif->flags += cif->rtype->elements[0]->type << (FFI_FLAG_BITS * 4);
+              break;
+            }
+          break;
+
         case FFI_TYPE_FLOAT:
         default:
           cif->flags += FFI_TYPE_INT << (FFI_FLAG_BITS * 2);
@@ -978,11 +996,19 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
       argn = 1;
       seen_int = 1;
     }
-  if ((cif->flags >> (FFI_FLAG_BITS * 2)) == FFI_TYPE_COMPLEX)
+  if (cif->rtype->type == FFI_TYPE_COMPLEX
+      && (cif->rtype->elements[0]->type == FFI_TYPE_FLOAT
+          || cif->rtype->elements[0]->type == FFI_TYPE_DOUBLE
+          || cif->rtype->elements[0]->type == FFI_TYPE_LONGDOUBLE))
     {
       rvalue = fpr;
-      argn = 1;
     }
+  /* With soft float, complex values are returned in up to four GPRs,
+     which does not fit into the space for v0 and v1.  ffi_closure_O32
+     does not use the space for the FP argument registers in that case,
+     so return the value there.  */
+  if (cif->abi == FFI_O32_SOFT_FLOAT && cif->rtype->type == FFI_TYPE_COMPLEX)
+    rvalue = fpr;
 
   i = 0;
   avn = cif->nargs;
@@ -1041,6 +1067,15 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
   /* Invoke the closure. */
   fun(cif, rvalue, avaluep, user_data);
 
+  if (cif->rtype->type == FFI_TYPE_COMPLEX && cif->rtype->size == 2)
+    {
+      /* A _Complex char is returned right-justified in v0.  */
+      UINT16 value;
+
+      memcpy (&value, rvalue, sizeof (value));
+      *(UINT32 *) rvalue = value;
+    }
+
   if (cif->abi == FFI_O32_SOFT_FLOAT)
     {
       switch (cif->rtype->type)
@@ -1049,15 +1084,18 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
           return FFI_TYPE_INT;
         case FFI_TYPE_DOUBLE:
           return FFI_TYPE_UINT64;
+        case FFI_TYPE_COMPLEX:
+          return (FFI_TYPE_COMPLEX
+                  | (cif->rtype->size << (FFI_FLAG_BITS * 2)));
         default:
           return cif->rtype->type;
         }
     }
   else
     {
-      if (cif->rtype->type == FFI_TYPE_COMPLEX) {
-          __asm__ volatile ("move $v1, %0" : : "r"(cif->rtype->size));
-      }
+      if (cif->rtype->type == FFI_TYPE_COMPLEX)
+        return (FFI_TYPE_COMPLEX
+                | (cif->rtype->size << (FFI_FLAG_BITS * 2)));
       return cif->rtype->type;
     }
 }
