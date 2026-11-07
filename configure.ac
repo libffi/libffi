@@ -47,6 +47,11 @@ m4_rename_force([real_PRECIOUS],[_AC_ARG_VAR_PRECIOUS])
 
 AC_SUBST(CFLAGS)
 
+# Use the final compiler flags, including target flags added below, when make
+# assembles sources.  Keep explicit CCASFLAGS values, including empty ones.
+if test "${CCASFLAGS+set}" != set; then
+  CCASFLAGS='$(CFLAGS)'
+fi
 AM_PROG_AS
 AM_PROG_CC_C_O
 AC_PROG_EGREP
