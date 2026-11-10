@@ -27,6 +27,7 @@
 #define LIBFFI_ASM	
 #include <fficonfig.h>
 #include <ffi.h>
+#include <ffi_cfi.h>
 
 /* Only build this code if we are compiling for n32 */	
 
@@ -56,6 +57,7 @@
 	.ent	ffi_call_N32
 ffi_call_N32:	
 .LFB0:
+	cfi_startproc
 	.frame	$fp, SIZEOF_FRAME, ra
 	.mask	0xc0000000,-FFI_SIZEOF_ARG
 	.fmask	0x00000000,0
@@ -63,11 +65,15 @@ ffi_call_N32:
 	# Prologue
 	SUBU	$sp, SIZEOF_FRAME			# Frame size
 .LCFI00:
+	cfi_def_cfa_offset(SIZEOF_FRAME)
 	REG_S	$fp, SIZEOF_FRAME - 2*FFI_SIZEOF_ARG($sp)	# Save frame pointer
 	REG_S	ra, SIZEOF_FRAME - 1*FFI_SIZEOF_ARG($sp)	# Save return address
 .LCFI01:
+	cfi_offset($fp, -2*FFI_SIZEOF_ARG)
+	cfi_offset(ra, -1*FFI_SIZEOF_ARG)
 	move	$fp, $sp
 .LCFI02:
+	cfi_def_cfa_register($fp)
 	move	t9, callback	# callback function pointer
 	REG_S	bytes, 2*FFI_SIZEOF_ARG($fp) # bytes
 	REG_S	flags, 3*FFI_SIZEOF_ARG($fp) # flags
@@ -466,6 +472,7 @@ epilogue:
 	j	ra
 
 .LFE0:
+	cfi_endproc
 	.end	ffi_call_N32
 
 /* ffi_closure_N32. Expects address of the passed-in ffi_closure in t0
@@ -537,14 +544,18 @@ epilogue:
 	.ent	ffi_go_closure_N32
 ffi_go_closure_N32:
 .LFB1:
+	cfi_startproc
 	.frame	$sp, SIZEOF_FRAME2, ra
 	.mask	0x90000000,-(SIZEOF_FRAME2 - RA_OFF2)
 	.fmask	0x00000000,0
 	SUBU	$sp, SIZEOF_FRAME2
 .LCFI10:
+	cfi_def_cfa_offset(SIZEOF_FRAME2)
 	.cpsetup t9, GP_OFF2, ffi_go_closure_N32
 	REG_S	ra, RA_OFF2($sp)	# Save return address
 .LCFI11:
+	cfi_offset($gp, GP_OFF2 - SIZEOF_FRAME2)
+	cfi_offset(ra, RA_OFF2 - SIZEOF_FRAME2)
 
 	REG_S	a0, A0_OFF2($sp)
 	REG_S	a1, A1_OFF2($sp)
@@ -570,6 +581,7 @@ ffi_go_closure_N32:
 	b	$do_closure
 
 .LFE1:	
+	cfi_endproc
 	.end	ffi_go_closure_N32
 
 	.align	2
@@ -577,14 +589,18 @@ ffi_go_closure_N32:
 	.ent	ffi_closure_N32
 ffi_closure_N32:
 .LFB2:
+	cfi_startproc
 	.frame	$sp, SIZEOF_FRAME2, ra
 	.mask	0x90000000,-(SIZEOF_FRAME2 - RA_OFF2)
 	.fmask	0x00000000,0
 	SUBU	$sp, SIZEOF_FRAME2
 .LCFI20:
+	cfi_def_cfa_offset(SIZEOF_FRAME2)
 	.cpsetup t9, GP_OFF2, ffi_closure_N32
 	REG_S	ra, RA_OFF2($sp)	# Save return address
 .LCFI21:
+	cfi_offset($gp, GP_OFF2 - SIZEOF_FRAME2)
+	cfi_offset(ra, RA_OFF2 - SIZEOF_FRAME2)
 	REG_S	a0, A0_OFF2($sp)
 	REG_S	a1, A1_OFF2($sp)
 	REG_S	a2, A2_OFF2($sp)
@@ -784,9 +800,10 @@ cls_epilogue:
 	ADDU	$sp, SIZEOF_FRAME2
 	j	ra
 .LFE2:	
+	cfi_endproc
 	.end	ffi_closure_N32
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(HAVE_AS_CFI_PSEUDO_OP)
         .section        .eh_frame,EH_FRAME_FLAGS,@progbits
 .Lframe1:
         .4byte  .LECIE1-.LSCIE1		# length
@@ -863,7 +880,7 @@ cls_epilogue:
 	.uleb128 (SIZEOF_FRAME2 - RA_OFF2)/4
 	.align	EH_FRAME_ALIGN
 .LEFDE2:
-#endif /* __GNUC__ */	
+#endif /* __GNUC__ && !HAVE_AS_CFI_PSEUDO_OP */
 	
 #endif
 
