@@ -387,7 +387,13 @@ ffi_closure_free (void *ptr)
     }
   else if (ffi_trampoline_tables != table)
     {
-      /* Otherwise, bump this table to the top of the list */
+      /* Otherwise, bump this table to the top of the list.  Unlink it
+         from its current position first, so the old neighbours do not
+         keep pointing at it and corrupt the list (CWE-416). */
+      if (table->prev != NULL)
+	table->prev->next = table->next;
+      if (table->next != NULL)
+	table->next->prev = table->prev;
       table->prev = NULL;
       table->next = ffi_trampoline_tables;
       if (ffi_trampoline_tables != NULL)
