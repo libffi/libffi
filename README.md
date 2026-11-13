@@ -232,6 +232,12 @@ See the git log for details at http://github.com/libffi/libffi.
           type confusion where <1 x double> f(long) stored the return
           value through the caller's integer argument (CWE-843/CWE-787,
           GHSA-5pc3-hr6f-q3mm).
+        Fix s390x closures receiving a 128-bit integer argument: the
+          closure helper had no SINT128/UINT128 case, so it left that
+          argument's value pointer uninitialized and read every later
+          argument from a shifted slot.  Pass them by reference like
+          complex types, matching the call side (CWE-824/CWE-908,
+          GHSA-wf8m-qr3x-cch4).
 
     3.8.0 August-8-2026
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
