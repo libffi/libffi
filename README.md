@@ -237,6 +237,14 @@ See the git log for details at http://github.com/libffi/libffi.
           composite's alignment (up to 16) instead of 8 for the pointer
           slot, so the callee (and libffi's own closure path) read the
           pointer from a different offset (CWE-787, GHSA-h52h-3759-xqm4).
+        Fix aarch64 homogeneous-aggregate (HFA/HVA) detection to match
+          AAPCS64: flatten nested aggregates fully, and treat short
+          vectors as the same fundamental type by size rather than lane
+          type.  Vectors of the same size but different lane types (e.g.
+          { float32x4, int32x4 }) are now correctly passed in SIMD
+          registers, and a nested aggregate mixing a vector with scalars
+          is no longer misclassified as an HVA (CWE-843/CWE-787,
+          GHSA-h52h-3759-xqm4).
 
     3.8.0 August-8-2026
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
