@@ -967,6 +967,13 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
 		a = &dest;
 		t = FFI_TYPE_POINTER;
 		s = sizeof (void *);
+		/* The argument is now the pointer, which takes a plain 8-byte,
+		   8-aligned stack slot (AAPCS64 B.4).  Re-point `ty' so
+		   do_pointer aligns the slot by 8 and not by the composite's
+		   own alignment (up to 16), which would place the pointer at
+		   the wrong offset -- where the callee, and libffi's own
+		   closure path, do not look (GHSA-h52h-3759-xqm4).  */
+		ty = &ffi_type_pointer;
 		goto do_pointer;
 	      }
 	    else

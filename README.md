@@ -232,6 +232,11 @@ See the git log for details at http://github.com/libffi/libffi.
           type confusion where <1 x double> f(long) stored the return
           value through the caller's integer argument (CWE-843/CWE-787,
           GHSA-5pc3-hr6f-q3mm).
+        Fix aarch64 ffi_call placing the pointer to a by-value composite
+          larger than 16 bytes at the wrong stack offset: it used the
+          composite's alignment (up to 16) instead of 8 for the pointer
+          slot, so the callee (and libffi's own closure path) read the
+          pointer from a different offset (CWE-787, GHSA-h52h-3759-xqm4).
 
     3.8.0 August-8-2026
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
