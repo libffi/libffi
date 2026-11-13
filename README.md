@@ -257,6 +257,14 @@ See the git log for details at http://github.com/libffi/libffi.
           argument from a shifted slot.  Pass them by reference like
           complex types, matching the call side (CWE-824/CWE-908,
           GHSA-wf8m-qr3x-cch4).
+        Fix raw-API closures under static trampolines.  The generic
+          ffi_prep_raw_closure_loc passed codeloc (which points into the
+          read-only trampoline table) as the handler user_data, so it read
+          the handler from the wrong memory and made a wild indirect call;
+          the i386 native path wrote a dynamic trampoline over the ftramp
+          pointer and left the static trampoline without parameters.  Pass
+          the closure as user_data, and give the i386 raw closures static-
+          trampoline entry points (CWE-822/CWE-763, GHSA-w6j9-w53f-2857).
 
     3.8.0 August-8-2026
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
