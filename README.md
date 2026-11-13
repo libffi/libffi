@@ -232,6 +232,25 @@ See the git log for details at http://github.com/libffi/libffi.
           type confusion where <1 x double> f(long) stored the return
           value through the caller's integer argument (CWE-843/CWE-787,
           GHSA-5pc3-hr6f-q3mm).
+        Harden the static-trampoline code-table lookup on Linux: read the
+          full /proc/self/maps path instead of truncating it at the first
+          space, and verify the reopened file's inode against the mapping
+          before mapping it executable, so a file at a truncated or
+          replaced path can no longer be mapped as trampoline code
+          (CWE-59/CWE-367, GHSA-fq46-69xf-x5gf).
+        Fix aarch64 ffi_call placing the pointer to a by-value composite
+          larger than 16 bytes at the wrong stack offset: it used the
+          composite's alignment (up to 16) instead of 8 for the pointer
+          slot, so the callee (and libffi's own closure path) read the
+          pointer from a different offset (CWE-787, GHSA-h52h-3759-xqm4).
+        Fix aarch64 homogeneous-aggregate (HFA/HVA) detection to match
+          AAPCS64: flatten nested aggregates fully, and treat short
+          vectors as the same fundamental type by size rather than lane
+          type.  Vectors of the same size but different lane types (e.g.
+          { float32x4, int32x4 }) are now correctly passed in SIMD
+          registers, and a nested aggregate mixing a vector with scalars
+          is no longer misclassified as an HVA (CWE-843/CWE-787,
+          GHSA-h52h-3759-xqm4).
         Fix s390x closures receiving a 128-bit integer argument: the
           closure helper had no SINT128/UINT128 case, so it left that
           argument's value pointer uninitialized and read every later
