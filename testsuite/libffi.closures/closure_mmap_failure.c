@@ -1,6 +1,6 @@
 /* Area: closures */
-/* { dg-do run { target x86_64-*-linux* } } */
-/* { dg-options "-Wl,--export-dynamic" { target x86_64-*-linux* } } */
+/* { dg-do run { target x86_64-*-linux-gnu* } } */
+/* { dg-options "-Wl,--export-dynamic" { target x86_64-*-linux-gnu* } } */
 
 #define _GNU_SOURCE 1
 #include "ffitest.h"

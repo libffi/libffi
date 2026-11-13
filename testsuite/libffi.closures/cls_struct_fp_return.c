@@ -4,7 +4,9 @@
    Limitations:	none.
    PR:		none.  */
 
-/* { dg-do run } */
+/* { dg-do run { xfail mips64*-*-* } } */
+/* XFAIL: mips N64 ABI bug in complex-float/longdouble args and fp-struct
+   returns; see libffi issue #1071.  */
 
 #include "ffitest.h"
 
