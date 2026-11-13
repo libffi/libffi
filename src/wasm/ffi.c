@@ -46,14 +46,14 @@ EM_JS_DEPS(libffi, "$getWasmTableEntry,$setWasmTableEntry,$getEmptyTableSlot,$wa
 
 #define DEREF_U8(addr, offset) HEAPU8[addr + offset]
 #define DEREF_S8(addr, offset) HEAP8[addr + offset]
-#define DEREF_U16(addr, offset) HEAPU16[(addr >> 1) + offset]
-#define DEREF_S16(addr, offset) HEAP16[(addr >> 1) + offset]
-#define DEREF_U32(addr, offset) HEAPU32[(addr >> 2) + offset]
-#define DEREF_S32(addr, offset) HEAP32[(addr >> 2) + offset]
+#define DEREF_U16(addr, offset) HEAPU16[HEAP_INDEX_16(addr) + offset]
+#define DEREF_S16(addr, offset) HEAP16[HEAP_INDEX_16(addr) + offset]
+#define DEREF_U32(addr, offset) HEAPU32[HEAP_INDEX_32(addr) + offset]
+#define DEREF_S32(addr, offset) HEAP32[HEAP_INDEX_32(addr) + offset]
 
-#define DEREF_F32(addr, offset) HEAPF32[(addr >> 2) + offset]
-#define DEREF_F64(addr, offset) HEAPF64[(addr >> 3) + offset]
-#define DEREF_U64(addr, offset) HEAPU64[(addr >> 3) + offset]
+#define DEREF_F32(addr, offset) HEAPF32[HEAP_INDEX_32(addr) + offset]
+#define DEREF_F64(addr, offset) HEAPF64[HEAP_INDEX_64(addr) + offset]
+#define DEREF_U64(addr, offset) HEAPU64[HEAP_INDEX_64(addr) + offset]
 
 #define CHECK_FIELD_OFFSET(struct, field, offset)                                  \
   _Static_assert(                                                                  \
@@ -68,6 +68,12 @@ EM_JS_DEPS(libffi, "$getWasmTableEntry,$setWasmTableEntry,$getEmptyTableSlot,$wa
 
 #define DEC_PTR(p) p
 #define ENC_PTR(p) p
+
+// Pointers reach JS as signed 32-bit Numbers, so an address at or above 2 GiB
+// is negative and needs an unsigned shift to become a heap view index.
+#define HEAP_INDEX_16(addr) ((addr) >>> 1)
+#define HEAP_INDEX_32(addr) ((addr) >>> 2)
+#define HEAP_INDEX_64(addr) ((addr) >>> 3)
 
 #define DEREF_PTR(addr, offset) DEREF_U32(addr, offset)
 #define DEREF_PTR_NUMBER(addr, offset) DEREF_PTR(addr, offset)
@@ -115,6 +121,12 @@ CHECK_FIELD_OFFSET(ffi_type, elements, 8);
 #define DEC_PTR(p) bigintToI53Checked(p)
 // ENC_PTR casts a pointer value represented as Number to BigInt (i64)
 #define ENC_PTR(p) BigInt(p)
+
+// JS shifts truncate their operand to 32 bits, so divide to keep addresses
+// at or above 4 GiB intact.
+#define HEAP_INDEX_16(addr) ((addr) / 2)
+#define HEAP_INDEX_32(addr) ((addr) / 4)
+#define HEAP_INDEX_64(addr) ((addr) / 8)
 
 #define DEREF_PTR(addr, offset) DEREF_U64(addr, offset)
 #define DEREF_PTR_NUMBER(addr, offset) DEC_PTR(DEREF_PTR(addr, offset))
