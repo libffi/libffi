@@ -220,6 +220,13 @@ See the git log for details at http://github.com/libffi/libffi.
           the stack helper dependencies in EM_JS_DEPS (#1019).
         Emit subsections_via_symbols on Apple platforms, enabling
           linker dead-stripping of unused code (#1017).
+        Reject x86-64 System V vector types whose calling convention is
+          undefined -- sub-8-byte vectors and the single-element
+          <1 x double>, where GCC and Clang disagree -- with
+          FFI_BAD_TYPEDEF instead of misclassifying them.  This closes a
+          type confusion where <1 x double> f(long) stored the return
+          value through the caller's integer argument (CWE-843/CWE-787,
+          GHSA-5pc3-hr6f-q3mm).
 
     3.8.0 August-8-2026
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
