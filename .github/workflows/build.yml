@@ -76,6 +76,10 @@ jobs:
         if: matrix.CONFIGURE_OPTIONS == '--enable-shared'
         run: ./.ci/check-configure-docs.sh
 
+      - name: Check assembler configure flags
+        if: matrix.CONFIGURE_OPTIONS == '--enable-shared'
+        run: ./.ci/check-configure-ccasflags.sh
+
       - name: Upload rlgl report
         if: always()
         uses: actions/upload-artifact@v4
