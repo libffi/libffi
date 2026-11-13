@@ -251,6 +251,12 @@ See the git log for details at http://github.com/libffi/libffi.
           registers, and a nested aggregate mixing a vector with scalars
           is no longer misclassified as an HVA (CWE-843/CWE-787,
           GHSA-h52h-3759-xqm4).
+        Fix s390x closures receiving a 128-bit integer argument: the
+          closure helper had no SINT128/UINT128 case, so it left that
+          argument's value pointer uninitialized and read every later
+          argument from a shifted slot.  Pass them by reference like
+          complex types, matching the call side (CWE-824/CWE-908,
+          GHSA-wf8m-qr3x-cch4).
 
     3.8.0 August-8-2026
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
