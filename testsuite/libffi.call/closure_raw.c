@@ -18,7 +18,7 @@ static void
 raw_handler (ffi_cif *cif, void *ret, ffi_raw *args, void *ud)
 {
   (void) cif;
-  *(ffi_arg *) ret = (ffi_arg) (args[0].sint + args[1].sint + (long) ud);
+  *(ffi_arg *) ret = (ffi_arg) (args[0].sint + args[1].sint + (intptr_t) ud);
 }
 
 int
