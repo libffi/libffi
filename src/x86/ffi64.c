@@ -580,7 +580,9 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	{
 	  _Bool sse0 = SSE_CLASS_P (classes[0]);
 
-	  if (rtype_size == 4 && sse0)
+	  if (classes[0] == X86_64_X87_CLASS)
+	    flags = UNIX64_RET_X87;
+	  else if (rtype_size == 4 && sse0)
 	    flags = UNIX64_RET_XMM32;
 	  else if (rtype_size == 8)
 	    flags = sse0 ? UNIX64_RET_XMM64 : UNIX64_RET_INT64;
