@@ -10,6 +10,8 @@
 # else
 #  define STATIC_CHAIN_REG "g2"
 # endif
+#elif defined(__e2k__)
+# define STATIC_CHAIN_REG  "g16"
 #elif defined(__x86_64__)
 # define STATIC_CHAIN_REG  "r10"
 #elif defined(__i386__)
