@@ -220,6 +220,11 @@ See the git log for details at http://github.com/libffi/libffi.
           the stack helper dependencies in EM_JS_DEPS (#1019).
         Emit subsections_via_symbols on Apple platforms, enabling
           linker dead-stripping of unused code (#1017).
+        Fix a heap use-after-free in the Darwin trampoline-table closure
+          allocator: ffi_closure_free bumped a non-head table to the
+          front of the list without unlinking it first, corrupting the
+          list once a process used more than one table (over 1024 live
+          closures) on Apple Silicon (CWE-416, GHSA-23hx-9rxv-9qfp).
         Reject x86-64 System V vector types whose calling convention is
           undefined -- sub-8-byte vectors and the single-element
           <1 x double>, where GCC and Clang disagree -- with
