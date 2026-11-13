@@ -101,7 +101,6 @@ m4_warn([obsolete],
   Except in unusual embedded environments, you can safely include all
   ISO C90 headers unconditionally.])dnl
 
-AC_CHECK_FUNCS(memcpy)
 AC_CHECK_HEADERS(alloca.h)
 
 AC_CHECK_SIZEOF(double)
