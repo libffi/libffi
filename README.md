@@ -214,57 +214,64 @@ See the git log for details at http://github.com/libffi/libffi.
           (#1012, closes #1011 and #675).
         Fix powerpc64 _Complex long double when the ABI's long double
           is 64 bits (e.g. -mlong-double-64 or musl).
-        Fix closure allocation to fail gracefully when the runtime
-          page size lookup fails (#1015).
-        Fix building the wasm port with newer Emscripten by declaring
-          the stack helper dependencies in EM_JS_DEPS (#1019).
-        Emit subsections_via_symbols on Apple platforms, enabling
-          linker dead-stripping of unused code (#1017).
-        Fix a heap use-after-free in the Darwin trampoline-table closure
-          allocator: ffi_closure_free bumped a non-head table to the
-          front of the list without unlinking it first, corrupting the
-          list once a process used more than one table (over 1024 live
-          closures) on Apple Silicon (CWE-416, GHSA-23hx-9rxv-9qfp).
-        Reject x86-64 System V vector types whose calling convention is
-          undefined -- sub-8-byte vectors and the single-element
-          <1 x double>, where GCC and Clang disagree -- with
-          FFI_BAD_TYPEDEF instead of misclassifying them.  This closes a
-          type confusion where <1 x double> f(long) stored the return
-          value through the caller's integer argument (CWE-843/CWE-787,
-          GHSA-5pc3-hr6f-q3mm).
-        Harden the static-trampoline code-table lookup on Linux: read the
-          full /proc/self/maps path instead of truncating it at the first
-          space, and verify the reopened file's inode against the mapping
-          before mapping it executable, so a file at a truncated or
-          replaced path can no longer be mapped as trampoline code
-          (CWE-59/CWE-367, GHSA-fq46-69xf-x5gf).
-        Fix aarch64 ffi_call placing the pointer to a by-value composite
-          larger than 16 bytes at the wrong stack offset: it used the
-          composite's alignment (up to 16) instead of 8 for the pointer
-          slot, so the callee (and libffi's own closure path) read the
-          pointer from a different offset (CWE-787, GHSA-h52h-3759-xqm4).
-        Fix aarch64 homogeneous-aggregate (HFA/HVA) detection to match
-          AAPCS64: flatten nested aggregates fully, and treat short
-          vectors as the same fundamental type by size rather than lane
-          type.  Vectors of the same size but different lane types (e.g.
-          { float32x4, int32x4 }) are now correctly passed in SIMD
-          registers, and a nested aggregate mixing a vector with scalars
-          is no longer misclassified as an HVA (CWE-843/CWE-787,
-          GHSA-h52h-3759-xqm4).
-        Fix s390x closures receiving a 128-bit integer argument: the
-          closure helper had no SINT128/UINT128 case, so it left that
-          argument's value pointer uninitialized and read every later
-          argument from a shifted slot.  Pass them by reference like
-          complex types, matching the call side (CWE-824/CWE-908,
-          GHSA-wf8m-qr3x-cch4).
-        Fix raw-API closures under static trampolines.  The generic
-          ffi_prep_raw_closure_loc passed codeloc (which points into the
-          read-only trampoline table) as the handler user_data, so it read
-          the handler from the wrong memory and made a wild indirect call;
-          the i386 native path wrote a dynamic trampoline over the ftramp
-          pointer and left the static trampoline without parameters.  Pass
-          the closure as user_data, and give the i386 raw closures static-
-          trampoline entry points (CWE-822/CWE-763, GHSA-w6j9-w53f-2857).
+        Return a single-long-double struct (struct { long double; }) in
+          %st0 on x86-64, like a bare long double, instead of in memory
+          (#1058).
+        Fix x86-64 reusable call plans to copy the upper half of 16-byte
+          vector arguments.
+        Ignore the caller's return buffer for void calls on RISC-V.
+        Fix the wasm port: correct heap accesses for addresses at or above
+          2 GiB (#1062), make closures work with wasm stack switching, and
+          declare the stack helper dependencies in EM_JS_DEPS so it builds
+          with newer Emscripten (#1019).
+        Use CFI directives in the mips N32/N64 assembly so stack unwinding
+          works through libffi frames (#1063).
+        Fail closure allocation gracefully when the runtime page-size
+          lookup fails, including on NetBSD sysconf failure (#1015).
+        Bound the executable-mmap retry loop so closure allocation cannot
+          spin indefinitely (#1055).
+        Keep the bundled dlmalloc symbols static so they cannot clash with
+          an application's own allocator.
+        Emit subsections_via_symbols on Apple platforms, enabling linker
+          dead-stripping of unused code (#1017).
+        Build and packaging: honor an explicit --enable-docs, respect
+          every explicit --libdir spelling, and keep the assembler's
+          CCASFLAGS in sync with the final CFLAGS (#1060).
+
+        Security fixes (see the referenced advisories for details):
+          Heap use-after-free in the Darwin trampoline-table closure
+            allocator: ffi_closure_free moved a non-head table to the
+            front of the list without unlinking it, corrupting the list
+            once a process used more than one trampoline table (over 1024
+            live closures) on Apple Silicon (CWE-416, GHSA-23hx-9rxv-9qfp).
+          x86-64 System V type confusion for vector types whose calling
+            convention is undefined (sub-8-byte vectors and the single-
+            element <1 x double>, where GCC and Clang disagree).  These are
+            now rejected with FFI_BAD_TYPEDEF instead of being marshalled
+            the wrong way, which for <1 x double> stored the result through
+            a caller's integer argument (CWE-843/CWE-787,
+            GHSA-5pc3-hr6f-q3mm).
+          Static-trampoline code-table lookup on Linux mapped the wrong
+            file as executable: it truncated the /proc/self/maps path at
+            the first space and never verified the reopened file.  It now
+            reads the full path and checks the inode, so a file at a
+            truncated or replaced path can no longer be mapped as
+            trampoline code (CWE-59/CWE-367, GHSA-fq46-69xf-x5gf).
+          aarch64 ffi_call placed the pointer to a by-value composite
+            larger than 16 bytes at the wrong stack offset, and
+            homogeneous-aggregate (HFA/HVA) detection did not match
+            AAPCS64.  Both are fixed so callees and closures agree on
+            argument placement (CWE-787/CWE-843, GHSA-h52h-3759-xqm4,
+            GHSA-vg77-j273-647r).
+          s390x closures mishandled 128-bit integer arguments, leaving the
+            argument's value pointer uninitialized and shifting every later
+            argument.  They are now passed by reference like complex types
+            (CWE-824/CWE-908, GHSA-wf8m-qr3x-cch4).
+          Raw-API closures under static trampolines passed the wrong
+            pointer as the handler's data (and the i386 native path
+            corrupted the closure), causing a wild indirect call; fixed on
+            both the generic and i386 paths (CWE-822/CWE-763,
+            GHSA-w6j9-w53f-2857).
 
     3.8.0 August-8-2026
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
