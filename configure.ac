@@ -2,7 +2,7 @@ dnl Process this with autoconf to create configure
 
 AC_PREREQ([2.68])
 
-AC_INIT([libffi],[3.8.0],[http://github.com/libffi/libffi/issues])
+AC_INIT([libffi],[3.8.1],[http://github.com/libffi/libffi/issues])
 AC_CONFIG_HEADERS([fficonfig.h])
 
 dnl Derive the version macros from AC_INIT so they cannot drift when the
@@ -290,9 +290,10 @@ EOF
 	# we ensure that we can compile _and_ link an assembly file containing an @unwind section
 	# since the compiler can support it and not the linker (ie old binutils)
 	if $CC -Wa,--fatal-warnings $CFLAGS -c conftest1.s > /dev/null 2>&1 && \
-           $CC conftest2.c conftest1.o > /dev/null 2>&1 ; then
+           $CC conftest2.c conftest1.o -o conftest$ac_exeext > /dev/null 2>&1 ; then
 	    libffi_cv_as_x86_64_unwind_section_type=yes
 	fi
+	rm -f conftest1.s conftest1.o conftest2.c conftest$ac_exeext a.out
 	])
     if test "x$libffi_cv_as_x86_64_unwind_section_type" = xyes; then
 	AC_DEFINE(HAVE_AS_X86_64_UNWIND_SECTION_TYPE, 1,
