@@ -5,6 +5,12 @@
 #define _GNU_SOURCE 1
 #include "ffitest.h"
 
+/* The Emscripten browser harness compiles every testcase and ignores the
+   dg-do target above.  This test interposes mmap through RTLD_NEXT and needs
+   dlsym on a glibc/ELF system; on wasm, dlsym from an unopened handle aborts.
+   Guard the body so it is a harmless no-op anywhere it cannot run.  */
+#if defined(__GLIBC__)
+
 #include <dlfcn.h>
 #include <errno.h>
 #include <sys/mman.h>
@@ -50,3 +56,7 @@ main (void)
 
   exit (0);
 }
+
+#else
+int main (void) { return 0; }
+#endif
