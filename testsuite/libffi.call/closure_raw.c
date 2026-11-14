@@ -9,7 +9,9 @@
    Limitations:	none.
    PR:		GHSA-w6j9-w53f-2857.  */
 
-/* { dg-do run } */
+/* { dg-do run { xfail i686-pc-cygwin } } */
+/* XFAIL: the i686 MSVC native raw-closure path fails at execution; see
+   libffi issue #1074.  */
 #include "ffitest.h"
 
 #if FFI_CLOSURES
