@@ -14,7 +14,10 @@
    libffi issue #1074.  */
 #include "ffitest.h"
 
-#if FFI_CLOSURES
+/* The raw API can be configured out (e.g. Emscripten builds with
+   --disable-raw-api), which drops ffi_prep_raw_closure_loc from the
+   library.  Match raw_api.c's own guard so the test links there too.  */
+#if FFI_CLOSURES && !FFI_NO_RAW_API
 
 static void
 raw_handler (ffi_cif *cif, void *ret, ffi_raw *args, void *ud)
