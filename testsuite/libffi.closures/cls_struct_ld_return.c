@@ -3,7 +3,9 @@
    Limitations:	none.
    PR:		none.  */
 
-/* { dg-do run } */
+/* { dg-do run { xfail mips64*-*-* } } */
+/* XFAIL: mips N64 mishandles long-double struct returns.  See libffi
+   issue #1071.  */
 /* { dg-options -mlong-double-128 { target ppc64_longdouble128 } } */
 
 #include "ffitest.h"
