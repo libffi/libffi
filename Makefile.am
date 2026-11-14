@@ -160,10 +160,10 @@ AM_CCASFLAGS = '$(AM_CPPFLAGS)'
 dist-hook:
 if BUILD_DOCS
 	d=`(cd $(distdir); pwd)`; \
-	if command -v texi2pdf >/dev/null 2>&1; then \
-	  (cd doc; make pdf; cp *.pdf $$d/doc); \
+	if (cd doc && make pdf && cp *.pdf $$d/doc); then \
+	  :; \
 	else \
-	  echo "dist-hook: texi2pdf not found, omitting the PDF manual from the dist"; \
+	  echo "dist-hook: PDF manual not built (no TeX engine?), omitting it from the dist"; \
 	fi
 endif
 	if [ -d $(top_srcdir)/.git ] ; then (cd $(top_srcdir); git log --no-decorate) ; else echo 'See git log for history.' ; fi > $(distdir)/ChangeLog
