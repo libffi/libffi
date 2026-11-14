@@ -13,6 +13,7 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.bhaible/alignof.h libffi.bhaible/bhaible.exp libffi.bhaible/test-call.c \
 	libffi.bhaible/test-callback.c libffi.bhaible/testcases.c libffi.call/align_mixed.c \
 	libffi.call/align_stdcall.c libffi.call/bpo_38748.c libffi.call/call.exp \
+	libffi.call/closure_raw.c \
 	libffi.call/closure_thiscall_fastcall_pop.c \
 	libffi.call/err_bad_typedef.c libffi.call/ffitest.h libffi.call/float.c \
 	libffi.call/float1.c libffi.call/float2.c libffi.call/float3.c \
@@ -42,7 +43,9 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.call/va_2.c libffi.call/va_3.c libffi.call/va_struct1.c \
 	libffi.call/va_struct2.c libffi.call/va_struct3.c libffi.call/callback.c \
 	libffi.call/callback2.c libffi.call/callback3.c libffi.call/callback4.c libffi.call/x32.c \
-	libffi.closures/closure.exp libffi.closures/closure_fn0.c libffi.closures/closure_fn1.c \
+	libffi.closures/closure.exp libffi.closures/closure_int128.c \
+	libffi.closures/closure_mmap_failure.c libffi.closures/closure_trampoline_table.c \
+	libffi.closures/closure_fn0.c libffi.closures/closure_fn1.c \
 	libffi.closures/closure_fn2.c libffi.closures/closure_fn3.c libffi.closures/closure_fn4.c \
 	libffi.closures/closure_fn5.c libffi.closures/closure_fn6.c libffi.closures/closure_loc_fn0.c \
 	libffi.closures/closure_simple.c libffi.closures/cls_12byte.c libffi.closures/cls_16byte.c \
@@ -101,4 +104,6 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.vector/vector_double2.c libffi.vector/vector_int32x4.c \
 	libffi.vector/vector_args_spill.c libffi.vector/vector_vec3.c \
 	libffi.vector/vector_double4.c libffi.vector/vector_hva.c \
-	libffi.vector/cls_vector.c libffi.vector/vector_validate.c
+	libffi.vector/cls_vector.c libffi.vector/vector_validate.c \
+	libffi.vector/vector_unsupported_abi.c \
+	libffi.configure/libdir.sh
