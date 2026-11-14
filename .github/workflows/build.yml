@@ -99,7 +99,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-14, macos-15]
+        platform: [macos-15]
         compilers: [CC=gcc-15 CXX=g++-15, CC=clang CXX=g++-15]
 
     steps:
@@ -114,7 +114,7 @@ jobs:
   # Rosetta 2.  Exercises libffi's x86_64 calling-convention paths.
   build-macos-x86:
     name: MacOS x86_64 (Rosetta)
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v4
