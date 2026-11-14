@@ -205,73 +205,42 @@ See the git log for details at http://github.com/libffi/libffi.
 
     TBD
         Improve ABI conformance and test coverage for complex-number
-          calls, closures, and small aggregate values across ARM, x86,
-          PowerPC, MIPS, RISC-V, LoongArch, and SPARC.
-        Fix aarch64 and arm big-endian closures receiving garbage
-          sub-word integer and scalar-float arguments, and aarch64
-          big-endian sub-word/float return values, by offsetting to the
-          least-significant bytes of the register or stack slot
-          (#1012, closes #1011 and #675).
-        Fix powerpc64 _Complex long double when the ABI's long double
-          is 64 bits (e.g. -mlong-double-64 or musl).
-        Return a single-long-double struct (struct { long double; }) in
-          %st0 on x86-64, like a bare long double, instead of in memory
-          (#1058).
-        Fix x86-64 reusable call plans to copy the upper half of 16-byte
-          vector arguments.
-        Ignore the caller's return buffer for void calls on RISC-V.
-        Fix the wasm port: correct heap accesses for addresses at or above
-          2 GiB (#1062), make closures work with wasm stack switching, and
-          declare the stack helper dependencies in EM_JS_DEPS so it builds
-          with newer Emscripten (#1019).
-        Use CFI directives in the mips N32/N64 assembly so stack unwinding
-          works through libffi frames (#1063).
-        Fail closure allocation gracefully when the runtime page-size
-          lookup fails, including on NetBSD sysconf failure (#1015).
-        Bound the executable-mmap retry loop so closure allocation cannot
-          spin indefinitely (#1055).
+          calls, closures, and small aggregates across ARM, x86, PowerPC,
+          MIPS, RISC-V, LoongArch, and SPARC.
+        aarch64/arm: fix big-endian closures receiving garbage sub-word
+          integer and float arguments, and big-endian sub-word and float
+          return values (#1012, closes #1011, #675).  Correct the stack
+          offset of a by-value composite larger than 16 bytes and the
+          AAPCS64 HFA/HVA detection (GHSA-h52h-3759-xqm4,
+          GHSA-vg77-j273-647r).
+        x86-64: return a single-long-double struct in %st0 like a bare
+          long double (#1058); copy the upper half of 16-byte vector
+          arguments in reusable call plans; and reject vector types whose
+          ABI is undefined, where GCC and Clang disagree, instead of
+          marshalling them the wrong way (GHSA-5pc3-hr6f-q3mm).
+        powerpc64: fix _Complex long double when the ABI's long double is
+          64 bits (e.g. -mlong-double-64 or musl).
+        s390x: pass 128-bit integer closure arguments by reference, like
+          complex types, instead of leaving the value pointer
+          uninitialized (GHSA-wf8m-qr3x-cch4).
+        RISC-V: ignore the caller's return buffer for void calls.
+        MIPS: emit CFI in the N32/N64 assembly so unwinding works through
+          libffi frames (#1063).
+        wasm: correct heap accesses at or above 2 GiB (#1062), make
+          closures work with stack switching, and declare the stack-helper
+          dependencies in EM_JS_DEPS for newer Emscripten (#1019).
+        Closures and trampolines: fail allocation gracefully when the
+          page-size lookup fails (#1015) and bound the executable-mmap
+          retry loop (#1055).  Fix a Darwin trampoline-table use-after-free
+          (GHSA-23hx-9rxv-9qfp), a Linux static-trampoline path mix-up that
+          could map the wrong file as code (GHSA-fq46-69xf-x5gf), and a
+          raw-API closure that passed the wrong handler data under static
+          trampolines (GHSA-w6j9-w53f-2857).
         Keep the bundled dlmalloc symbols static so they cannot clash with
-          an application's own allocator.
-        Emit subsections_via_symbols on Apple platforms, enabling linker
-          dead-stripping of unused code (#1017).
-        Build and packaging: honor an explicit --enable-docs, respect
-          every explicit --libdir spelling, and keep the assembler's
-          CCASFLAGS in sync with the final CFLAGS (#1060).
-
-        Security fixes (see the referenced advisories for details):
-          Heap use-after-free in the Darwin trampoline-table closure
-            allocator: ffi_closure_free moved a non-head table to the
-            front of the list without unlinking it, corrupting the list
-            once a process used more than one trampoline table (over 1024
-            live closures) on Apple Silicon (CWE-416, GHSA-23hx-9rxv-9qfp).
-          x86-64 System V type confusion for vector types whose calling
-            convention is undefined (sub-8-byte vectors and the single-
-            element <1 x double>, where GCC and Clang disagree).  These are
-            now rejected with FFI_BAD_TYPEDEF instead of being marshalled
-            the wrong way, which for <1 x double> stored the result through
-            a caller's integer argument (CWE-843/CWE-787,
-            GHSA-5pc3-hr6f-q3mm).
-          Static-trampoline code-table lookup on Linux mapped the wrong
-            file as executable: it truncated the /proc/self/maps path at
-            the first space and never verified the reopened file.  It now
-            reads the full path and checks the inode, so a file at a
-            truncated or replaced path can no longer be mapped as
-            trampoline code (CWE-59/CWE-367, GHSA-fq46-69xf-x5gf).
-          aarch64 ffi_call placed the pointer to a by-value composite
-            larger than 16 bytes at the wrong stack offset, and
-            homogeneous-aggregate (HFA/HVA) detection did not match
-            AAPCS64.  Both are fixed so callees and closures agree on
-            argument placement (CWE-787/CWE-843, GHSA-h52h-3759-xqm4,
-            GHSA-vg77-j273-647r).
-          s390x closures mishandled 128-bit integer arguments, leaving the
-            argument's value pointer uninitialized and shifting every later
-            argument.  They are now passed by reference like complex types
-            (CWE-824/CWE-908, GHSA-wf8m-qr3x-cch4).
-          Raw-API closures under static trampolines passed the wrong
-            pointer as the handler's data (and the i386 native path
-            corrupted the closure), causing a wild indirect call; fixed on
-            both the generic and i386 paths (CWE-822/CWE-763,
-            GHSA-w6j9-w53f-2857).
+          an application's allocator, and emit subsections_via_symbols on
+          Apple platforms for linker dead-stripping (#1017).
+        Build and packaging: honor an explicit --enable-docs, respect every
+          --libdir spelling, and keep CCASFLAGS in sync with CFLAGS (#1060).
 
     3.8.0 August-8-2026
         Add FFI_TYPE_VECTOR (SIMD) type support with libffi-computed
