@@ -21,6 +21,13 @@ global srcdir subdir
 
 set tlist [lsort [glob -nocomplain -- $srcdir/$subdir/*.{c,cc}]]
 
+# On e2k _Complex can only be used on floating-point types and __int128
+if { [libffi_feature_test "#ifdef __e2k__"] } {
+  unsupported "$srcdir/$subdir/complex_int.c"
+  set idx [lsearch -exact $tlist "$srcdir/$subdir/complex_int.c"]
+  set tlist [lreplace $tlist $idx $idx]
+}
+
 if { [libffi_feature_test "#ifdef FFI_TARGET_HAS_COMPLEX_TYPE"] } {
     run-many-tests $tlist ""
 } else {
