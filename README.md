@@ -204,6 +204,10 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
+    TBD
+        Add z/OS 64-bit XPLINK ABI support (IBM Open XL C/C++), including
+          closures, variadic calls, and _Complex types.
+
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number
           calls, closures, and small aggregates across ARM, x86, PowerPC,
