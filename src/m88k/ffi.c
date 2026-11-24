@@ -131,10 +131,14 @@ ffi_prep_args (void *stack, extended_cif *ecif)
 	    argp = stackp;
 	}
 
-      /* Enforce proper stack alignment of 64-bit types */
+      /* Enforce proper stack alignment of 64-bit types.  Arguments never
+	 get more than doubleword alignment, whatever the alignment of their
+	 type: the stack pointer is only aligned to 16 bytes, and cif->bytes
+	 only accounts for padding relative to the start of the argument
+	 area.  */
       if (argp == stackp && a > sizeof (int))
 	{
-	  stackp = (char *) FFI_ALIGN(stackp, a);
+	  stackp = (char *) FFI_ALIGN(stackp, 2 * sizeof (int));
 	  argp = stackp;
 	}
 
@@ -317,10 +321,11 @@ ffi_prep_closure_args_OBSD (ffi_cif *cif, void **avalue, unsigned int *regp,
 	    argp = stackp;
 	}
 
-      /* Enforce proper stack alignment of 64-bit types */
+      /* Enforce proper stack alignment of 64-bit types.  This must match
+	 ffi_prep_args.  */
       if (argp == stackp && a > sizeof (int))
 	{
-	  stackp = (char *) FFI_ALIGN(stackp, a);
+	  stackp = (char *) FFI_ALIGN(stackp, 2 * sizeof (int));
 	  argp = stackp;
 	}
 

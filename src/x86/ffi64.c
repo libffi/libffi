@@ -700,6 +700,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   ffi_type **arg_types;
   int gprcount, ssecount, ngpr, nsse, i, avn, flags;
   struct register_args *reg_args;
+  size_t stack_align;
 
   /* Can't call 32-bit mode from 64-bit mode.  */
   FFI_ASSERT (cif->abi == FFI_UNIX64);
@@ -718,8 +719,22 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   arg_types = cif->arg_types;
   avn = cif->nargs;
 
-  /* Allocate the space for the arguments, plus 4 words of temp space.  */
-  stack = alloca (sizeof (struct register_args) + cif->bytes + 4*8);
+  /* ffi_prep_cif_machdep sized the stack argument area by aligning
+     offsets into it, but the arguments are placed (and found by the
+     callee) by aligning addresses.  The two only agree if the area
+     starts on a multiple of the largest argument alignment, as it does
+     in a compiled caller; alloca promises no more than 16 bytes.  */
+  stack_align = 16;
+  for (i = 0; i < avn; ++i)
+    if (arg_types[i]->alignment > stack_align)
+      stack_align = arg_types[i]->alignment;
+
+  /* Allocate the space for the arguments, plus 4 words of temp space,
+     plus the slack needed to align the stack argument area.  */
+  stack = alloca (sizeof (struct register_args) + cif->bytes + 4*8
+		  + (stack_align - 16));
+  stack += -(uintptr_t) (stack + sizeof (struct register_args))
+	   & (stack_align - 1);
   reg_args = (struct register_args *) stack;
   argp = stack + sizeof (struct register_args);
 
@@ -1324,6 +1339,7 @@ ffi_closure_unix64_inner(ffi_cif *cif,
   long i, avn;
   int gprcount, ssecount, ngpr, nsse;
   int flags;
+  size_t argoff = 0;
 
   avn = cif->nargs;
   flags = cif->flags;
@@ -1358,10 +1374,12 @@ ffi_closure_unix64_inner(ffi_cif *cif,
 	  if (align < 8)
 	    align = 8;
 
-	  /* Pass this argument in memory.  */
-	  argp = (void *) FFI_ALIGN (argp, align);
-	  avalue[i] = argp;
-	  argp += arg_types[i]->size;
+	  /* Pass this argument in memory.  Its position is an aligned
+	     offset from the start of the argument area; not every
+	     caller aligns the area itself to more than 16 bytes.  */
+	  argoff = FFI_ALIGN (argoff, align);
+	  avalue[i] = argp + argoff;
+	  argoff += arg_types[i]->size;
 	}
       /* If the argument is in a single register, or two consecutive
 	 integer registers, then we can use that address directly.  */

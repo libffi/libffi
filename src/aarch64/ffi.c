@@ -324,13 +324,16 @@ static void *
 allocate_and_copy_struct_to_stack (struct arg_state *state, void *stack,
 				   size_t alignment, size_t size, void *value)
 {
-  size_t dest = state->next_struct_area - size;
+  char *dest = (char *) stack + state->next_struct_area - size;
 
-  /* Round down to the natural alignment of the value.  */
-  dest = FFI_ALIGN_DOWN (dest, alignment);
-  state->next_struct_area = dest;
+  /* Round down to the natural alignment of the value.  Round the address,
+     not the offset: the slab is only 16-byte aligned, and the callee may
+     rely on the full alignment of the copy.  ffi_prep_cif_machdep reserves
+     what this can skip for alignments above 16.  */
+  dest = (char *) FFI_ALIGN_DOWN (dest, alignment);
+  state->next_struct_area = (size_t) (dest - (char *) stack);
 
-  return memcpy ((char *) stack + dest, value, size);
+  return memcpy (dest, value, size);
 }
 
 static ffi_arg
@@ -673,7 +676,13 @@ ffi_prep_cif_machdep (ffi_cif *cif)
     {
       ffi_type *ty = cif->arg_types[i];
       if (ty->size > 16 && !is_vfp_type (ty))
-	bytes += 16;
+	{
+	  bytes += 16;
+	  /* Rounding the copy's address down to an alignment above the
+	     slab's 16 can skip up to alignment - 1 more bytes.  */
+	  if (ty->alignment > 16)
+	    bytes += ty->alignment;
+	}
     }
 
   /* Round the stack up to a multiple of the stack alignment requirement. */

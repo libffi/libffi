@@ -67,6 +67,20 @@ if (argp == &stack[bytes]) \
 #define FIX_ARGP 
 #endif
 
+/* The offset of ARGP in the argument list.  On N32/N64, when there are
+   more than eight slots, ffi_prep_args puts the eight register slots at
+   the end of STACK and the stack slots at its start.  */
+#ifdef FFI_MIPS_N32
+#define ARG_OFFSET(p) \
+  (bytes > 8 * (int) sizeof(ffi_arg) \
+   ? ((p) >= &stack[bytes - 8 * sizeof(ffi_arg)] \
+      ? (size_t) ((p) - &stack[bytes - 8 * sizeof(ffi_arg)]) \
+      : (size_t) ((p) - stack) + 8 * sizeof(ffi_arg)) \
+   : (size_t) ((p) - stack))
+#else
+#define ARG_OFFSET(p) ((size_t) ((p) - stack))
+#endif
+
 
 /* ffi_prep_args is called by the assembly routine once stack space
    has been allocated for the function's arguments */
@@ -134,12 +148,23 @@ static void ffi_prep_args(char *stack,
       a = (*p_arg)->alignment;
       if (a < sizeof(ffi_arg))
         a = sizeof(ffi_arg);
-      
-      if ((a - 1) & (unsigned long) argp)
-	{
-	  argp = (char *) FFI_ALIGN(argp, a);
-	  FIX_ARGP;
-	}
+      /* No argument is passed at more than two-slot alignment, and the
+	 argument area is only that aligned.  */
+      if (a > 2 * sizeof(ffi_arg))
+        a = 2 * sizeof(ffi_arg);
+
+      /* Align the argument's offset in the argument list, as the
+	 compiler does, not its address: on N32/N64 the register part is
+	 moved to the end of the area, so the two need not agree.  */
+      {
+	size_t off = ARG_OFFSET (argp);
+
+	if ((a - 1) & off)
+	  {
+	    argp += FFI_ALIGN(off, a) - off;
+	    FIX_ARGP;
+	  }
+      }
 
       z = (*p_arg)->size;
       if (z <= sizeof(ffi_arg))
@@ -1028,7 +1053,7 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
 
   while (i < avn)
     {
-      if (arg_types[i]->alignment == 8 && (argn & 0x1))
+      if (arg_types[i]->alignment > sizeof(ffi_arg) && (argn & 0x1))
         argn++;
       if (i < 2 && !seen_int &&
 	  (arg_types[i]->type == FFI_TYPE_FLOAT ||
@@ -1253,7 +1278,7 @@ ffi_closure_mips_inner_N32 (ffi_cif *cif,
           unsigned type = arg_types[i]->type;
 
           if (arg_types[i]->alignment > sizeof(ffi_arg))
-            argn = FFI_ALIGN(argn, arg_types[i]->alignment / sizeof(ffi_arg));
+            argn = FFI_ALIGN(argn, 2);
 
           argp = ar + argn;
 
