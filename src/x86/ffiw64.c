@@ -65,6 +65,16 @@ EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
       return FFI_BAD_ABI;
     }
 
+#ifdef FFI_TARGET_HAS_VECTOR_TYPE
+  /* This backend does not marshal vectors.  When it is built alongside
+     ffi64.c, ffi_prep_cif_core lets them through, so reject them here.  */
+  if (ffi_type_contains_vector (cif->rtype))
+    return FFI_BAD_TYPEDEF;
+  for (n = 0; n < (int) cif->nargs; n++)
+    if (ffi_type_contains_vector (cif->arg_types[n]))
+      return FFI_BAD_TYPEDEF;
+#endif
+
   flags = cif->rtype->type;
   switch (flags)
     {

@@ -161,12 +161,13 @@ static ffi_status initialize_aggregate(ffi_type *arg, size_t *offsets)
     return FFI_OK;
 }
 
-#ifndef FFI_TARGET_HAS_VECTOR_TYPE
 /* Recursively test whether TY is, or contains, a vector (SIMD) type.  Ports
    that do not define FFI_TARGET_HAS_VECTOR_TYPE cannot marshal vectors, so
    ffi_prep_cif_core rejects any signature that mentions one (directly or
-   nested inside a struct) with FFI_BAD_TYPEDEF rather than aborting.  */
-static int
+   nested inside a struct) with FFI_BAD_TYPEDEF rather than aborting.  Ports
+   that define it but also build a backend without vector support (x86-64's
+   ffiw64.c) call this from that backend's ffi_prep_cif_machdep.  */
+int FFI_HIDDEN
 ffi_type_contains_vector (ffi_type *ty)
 {
   ffi_type **p;
@@ -181,7 +182,6 @@ ffi_type_contains_vector (ffi_type *ty)
 	return 1;
   return 0;
 }
-#endif /* !FFI_TARGET_HAS_VECTOR_TYPE */
 
 #ifndef __CRIS__
 /* The CRIS ABI specifies structure elements to have byte

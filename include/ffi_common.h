@@ -139,6 +139,9 @@ ffi_status ffi_prep_cif_core(ffi_cif *cif,
 			     ffi_type *rtype,
 			     ffi_type **atypes);
 
+/* Nonzero if TY is, or contains, a vector (SIMD) type.  */
+int ffi_type_contains_vector (ffi_type *ty) FFI_HIDDEN;
+
 /* Translate a data pointer to a code pointer.  Needed for closures on
    some targets.  */
 void *ffi_data_to_code_pointer (void *data) FFI_HIDDEN;

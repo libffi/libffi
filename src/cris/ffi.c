@@ -29,6 +29,8 @@
 #include <ffi.h>
 #include <ffi_common.h>
 
+#include <stdlib.h>
+
 #define STACK_ARG_SIZE(x) FFI_ALIGN(x, FFI_SIZEOF_ARG)
 
 static ffi_status
@@ -173,12 +175,25 @@ ffi_prep_cif_core (ffi_cif * cif,
   cif->nargs = ntotalargs;
   cif->rtype = rtype;
 
+#ifndef FFI_TARGET_HAS_VECTOR_TYPE
+  /* Vector (SIMD) types are only marshalled on ports that opt in.  */
+  if (ffi_type_contains_vector (rtype))
+    return FFI_BAD_TYPEDEF;
+  for (i = 0; i < ntotalargs; i++)
+    if (ffi_type_contains_vector (atypes[i]))
+      return FFI_BAD_TYPEDEF;
+#endif
+
   cif->flags = 0;
 
   if ((cif->rtype->size == 0)
       && (initialize_aggregate_packed_struct (cif->rtype) != FFI_OK))
     return FFI_BAD_TYPEDEF;
 
+#ifndef FFI_TARGET_HAS_COMPLEX_TYPE
+  if (rtype->type == FFI_TYPE_COMPLEX)
+    abort ();
+#endif
   FFI_ASSERT_VALID_TYPE (cif->rtype);
 
   for (ptr = cif->arg_types, i = cif->nargs; i > 0; i--, ptr++)
@@ -187,6 +202,10 @@ ffi_prep_cif_core (ffi_cif * cif,
 	  && (initialize_aggregate_packed_struct ((*ptr)) != FFI_OK))
 	return FFI_BAD_TYPEDEF;
 
+#ifndef FFI_TARGET_HAS_COMPLEX_TYPE
+      if ((*ptr)->type == FFI_TYPE_COMPLEX)
+	abort ();
+#endif
       FFI_ASSERT_VALID_TYPE (*ptr);
 
       if (((*ptr)->alignment - 1) & bytes)

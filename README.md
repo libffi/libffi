@@ -203,6 +203,16 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
+    TBD
+        x86-64: reject vector types under the Win64 ABIs (FFI_WIN64,
+          FFI_GNUW64, FFI_EFI64) on non-Windows builds with
+          FFI_BAD_TYPEDEF, as documented.  Since 3.8.0 they were accepted;
+          a closure returning a vector of 64 bytes or more overwrote its
+          own return address, and ffi_call aborted.
+        CRIS: reject vector types, and abort on complex types, in the
+          port's own ffi_prep_cif_core, as the generic one does.  A
+          closure returning a vector overflowed its 8-byte result slot.
+
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number
           calls, closures, and small aggregates across ARM, x86, PowerPC,

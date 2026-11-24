@@ -15,7 +15,8 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.call/align_stdcall.c libffi.call/bpo_38748.c libffi.call/call.exp \
 	libffi.call/closure_raw.c \
 	libffi.call/closure_thiscall_fastcall_pop.c \
-	libffi.call/err_bad_typedef.c libffi.call/ffitest.h libffi.call/float.c \
+	libffi.call/err_bad_typedef.c libffi.call/err_vector_unsupported.c \
+	libffi.call/ffitest.h libffi.call/float.c \
 	libffi.call/float1.c libffi.call/float2.c libffi.call/float3.c \
 	libffi.call/float4.c libffi.call/float_va.c libffi.call/i128-1.c \
 	libffi.call/large_struct_by_value.c libffi.call/many.c \
