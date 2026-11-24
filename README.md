@@ -212,6 +212,11 @@ See the git log for details at http://github.com/libffi/libffi.
         CRIS: reject vector types, and abort on complex types, in the
           port's own ffi_prep_cif_core, as the generic one does.  A
           closure returning a vector overflowed its 8-byte result slot.
+        aarch64: reserve enough argument space for by-value structs
+          larger than 16 bytes mixed with 16-byte-aligned stack
+          arguments such as __int128.  The copy of one struct could
+          overwrite the spilled pointer to another, so the callee read
+          it from an address taken from the argument data.
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number

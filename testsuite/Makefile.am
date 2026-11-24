@@ -21,7 +21,8 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.call/float4.c libffi.call/float_va.c libffi.call/i128-1.c \
 	libffi.call/large_struct_by_value.c libffi.call/many.c \
 	libffi.call/many2.c libffi.call/many_double.c \
-	libffi.call/many_large_structs.c libffi.call/many_mixed.c \
+	libffi.call/many_large_structs.c libffi.call/many_large_structs_i128.c \
+	libffi.call/many_mixed.c \
 	libffi.call/many_small_structs.c \
 	libffi.call/negint.c libffi.call/offsets.c libffi.call/overread.c \
 	libffi.call/plan.c libffi.call/plan_mixed.c libffi.call/plan_spill.c \
