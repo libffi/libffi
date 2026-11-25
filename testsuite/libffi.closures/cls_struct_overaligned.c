@@ -11,10 +11,10 @@
 /* { dg-do run } */
 #include "ffitest.h"
 
-/* MSVC has neither <alloca.h> nor the aligned attribute used here, and
-   refuses over-aligned by-value parameters (C2719).  */
+/* MSVC lacks the aligned attribute used here and refuses over-aligned
+   by-value parameters (C2719).  Not every target has <alloca.h> (MinGW
+   does not), so use the builtin.  */
 #ifndef _MSC_VER
-#include <alloca.h>
 
 #define BLOCK_ALIGN 128
 #define BLOCK_WORDS 16
@@ -77,7 +77,7 @@ static unsigned long words[10];
 static unsigned long __attribute__ ((noinline))
 call_at_depth (weigh_fn fn, int depth)
 {
-  volatile char *pad = alloca (8 * (depth + 1));
+  volatile char *pad = __builtin_alloca (8 * (depth + 1));
 
   pad[0] = 0;
   return fn (words[0], words[1], words[2], words[3], words[4], words[5],
