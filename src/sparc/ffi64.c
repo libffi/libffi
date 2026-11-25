@@ -599,7 +599,11 @@ ffi_closure_sparc_inner_v9(ffi_cif *cif,
 	      if (named && argn < 16)
 		{
 		  int size_mask = ffi_struct_float_mask (ty, 0);
-		  int argn_mask = (0xffff00 >> argn) & 0xff00;
+		  /* The mask has one bit per 4-byte word of the struct, and
+		     word I is in argument slot ARGN + I / 2; only slots below
+		     16 have FP registers.  */
+		  int nwords = 2 * (16 - argn);
+		  int argn_mask = (nwords >= 8 ? 0xff : (1 << nwords) - 1) << 8;
 
 		  /* Eliminate fp registers off the end.  */
 		  size_mask = (size_mask & 0xff) | (size_mask & argn_mask);
