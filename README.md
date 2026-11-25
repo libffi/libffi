@@ -273,6 +273,10 @@ See the git log for details at http://github.com/libffi/libffi.
           discarded struct result of 49 bytes or more overwrote
           ffi_call's saved frame pointer and return address
           (GHSA-v569-599f-q4hr).
+        AIX: compute a struct's alignment from its members each time it
+          is laid out, so that its size no longer depends on which other
+          signatures were prepared first.  A grown struct made ffi_call
+          copy past its argument area (GHSA-f45x-cg8q-3q9w).
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number
