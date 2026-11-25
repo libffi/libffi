@@ -3,7 +3,7 @@
    Limitations:	none.
    PR:		none.  */
 
-/* { dg-do run { xfail mips64*-*-* } } */
+/* { dg-do run } */
 /* XFAIL: mips N64 complex-argument ABI bug; the little-endian variant
    fails the complex-double case too.  See libffi issue #1071.  */
 

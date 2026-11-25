@@ -256,6 +256,12 @@ See the git log for details at http://github.com/libffi/libffi.
         MIPS O32: give closures a 16-byte result slot.  A closure
           returning _Complex long long overwrote the saved $s0 that the
           native caller gets back (GHSA-xh8m-x7vg-ww5m).
+        MIPS N32/N64: pass a float _Complex that starts in the last
+          argument register like a struct of two floats.  It ran past the
+          argument area, and later arguments were stored over
+          ffi_call_N32's own frame (GHSA-p8w7-v539-c775).  Closures also
+          read a double or long double _Complex that only partly fits in
+          the FP argument registers from where the caller put it.
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number

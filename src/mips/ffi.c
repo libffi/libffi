@@ -231,9 +231,12 @@ static void ffi_prep_args(char *stack,
 		/* expand from 4+4 to 8+8 if pass with fpr reg */
 		/* argp will wind back to stack when we process all of reg args */
 		/* all var_args passed with gpr, should be expand */
+		/* if only one reg slot is left, gcc passes it in that gpr
+		   like a struct of two floats, so don't expand it */
 	        if(!soft_float
 		    && (*p_arg)->elements[0]->type == FFI_TYPE_FLOAT
 		    && argp>=argp_f
+		    && argp + 2 * z <= &stack[bytes]
 		    && i < ecif->cif->mips_nfixedargs)
 		  {
 		    *(float *) argp = *(float *)(* p_argv);
@@ -1238,19 +1241,35 @@ ffi_closure_mips_inner_N32 (ffi_cif *cif,
         }
       else if (arg_types[i]->type == FFI_TYPE_COMPLEX && arg_types[i]->elements[0]->type == FFI_TYPE_DOUBLE)
         {
-          argp = (argn >= 8 || i >= cif->mips_nfixedargs || soft_float) ? ar + argn : fpr + argn;
+          /* with only one reg slot left it was passed in that gpr and on
+             the stack, which follows the saved gprs */
+          argp = (argn >= 7 || i >= cif->mips_nfixedargs || soft_float) ? ar + argn : fpr + argn;
           avaluep[i] = (char *) argp;
         }
       else if (arg_types[i]->type == FFI_TYPE_COMPLEX && arg_types[i]->elements[0]->type == FFI_TYPE_LONGDOUBLE)
         {
 	  /* align long double */
 	  argn += ((argn & 0x1)? 1 : 0);
-          argp = (argn >= 8 || i >= cif->mips_nfixedargs || soft_float) ? ar + argn : fpr + argn;
-          avaluep[i] = (char *) argp;
+          if (argn == 6 && i < cif->mips_nfixedargs && !soft_float)
+            {
+              /* Only the real part fits in the last FP register pair; the
+                 imaginary part is on the stack, which follows the saved
+                 gprs.  Put the two halves back together.  */
+              char *z = alloca (arg_types[i]->size);
+              memcpy (z, fpr + 6, 2 * sizeof (ffi_arg));
+              memcpy (z + 2 * sizeof (ffi_arg), ar + 8, 2 * sizeof (ffi_arg));
+              avaluep[i] = z;
+            }
+          else
+            {
+              argp = (argn >= 8 || i >= cif->mips_nfixedargs || soft_float) ? ar + argn : fpr + argn;
+              avaluep[i] = (char *) argp;
+            }
         }
       else if (arg_types[i]->type == FFI_TYPE_COMPLEX && arg_types[i]->elements[0]->type == FFI_TYPE_FLOAT)
         {
-          if (argn >= 8 || i >= cif->mips_nfixedargs || soft_float)
+          /* with only one reg slot left it was passed in that gpr */
+          if (argn >= 7 || i >= cif->mips_nfixedargs || soft_float)
 	     argp = ar + argn;
 	  else
 	    {
