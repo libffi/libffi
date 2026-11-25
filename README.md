@@ -1,7 +1,7 @@
 Status
 ======
 
-libffi-3.8.1 was released on November 14, 2026.
+libffi-3.8.2 was released on November 25, 2026.
 
 
 What is libffi?
@@ -203,7 +203,7 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
-    TBD
+    3.8.2 November-25-2026
         x86-64: reject vector types under the Win64 ABIs on non-Windows
           builds, as documented (GHSA-v9rw-6cxm-q6rf).
         CRIS: reject vector types (GHSA-j9pv-w354-7fg2).
@@ -234,6 +234,8 @@ See the git log for details at http://github.com/libffi/libffi.
           (GHSA-v569-599f-q4hr).
         AIX: make struct layout independent of prior ffi_prep_cif calls
           (GHSA-f45x-cg8q-3q9w).
+        LoongArch: do not write to the result buffer of a void call
+          (#1083).
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number
