@@ -239,6 +239,14 @@ See the git log for details at http://github.com/libffi/libffi.
           only a read-only descriptor.  The read-write descriptor was
           inherited across fork, so a child that had dropped to another
           uid could rewrite the code behind every closure of its parent.
+        i386: align ffi_raw_call's argument block up to 16 bytes instead
+          of clearing one address bit; at half of all stack positions the
+          block lay below the stack pointer and an argument word was
+          overwritten.  Step through raw arguments by bytes, not ffi_raw
+          elements, so thiscall and fastcall raw calls no longer skip
+          three words after each register argument.  Refuse raw closures
+          whose result is returned in memory, which overran the entry
+          point's 16-byte result slot.
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number

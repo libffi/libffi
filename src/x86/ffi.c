@@ -709,6 +709,17 @@ ffi_prep_raw_closure_loc (ffi_raw_closure *closure,
 	return FFI_BAD_TYPEDEF;
       }
 
+  /* Likewise for results returned in memory.  The raw closure entry
+     points only provide a 16-byte temporary for the result and do not
+     handle the hidden return pointer, so a handler storing a larger
+     struct there would overrun the frame.  */
+  switch (cif->flags)
+    {
+    case X86_RET_STRUCTPOP:
+    case X86_RET_STRUCTARG:
+      return FFI_BAD_TYPEDEF;
+    }
+
   switch (cif->abi)
     {
     case FFI_THISCALL:
@@ -794,7 +805,7 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *avalue)
 
   bytes = STACK_ALIGN (cif->bytes);
   argp = stack =
-      (void *)((uintptr_t)alloca(bytes + sizeof(*frame) + rsize + 15) & ~16);
+      (void *) FFI_ALIGN (alloca (bytes + sizeof(*frame) + rsize + 15), 16);
   frame = (struct call_frame *)(stack + bytes);
   if (rsize)
     rvalue = frame + 1;
@@ -841,7 +852,8 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *avalue)
 	  z = FFI_ALIGN (z, FFI_SIZEOF_ARG);
 	  argp += z;
 	}
-      avalue += z;
+      /* Z is in bytes; AVALUE points to ffi_raw.  */
+      avalue = (ffi_raw *) ((char *) avalue + z);
       bytes -= z;
     }
   if (i < n)

@@ -13,7 +13,7 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.bhaible/alignof.h libffi.bhaible/bhaible.exp libffi.bhaible/test-call.c \
 	libffi.bhaible/test-callback.c libffi.bhaible/testcases.c libffi.call/align_mixed.c \
 	libffi.call/align_stdcall.c libffi.call/bpo_38748.c libffi.call/call.exp \
-	libffi.call/closure_raw.c \
+	libffi.call/closure_raw.c libffi.call/closure_raw_struct.c \
 	libffi.call/closure_thiscall_fastcall_pop.c \
 	libffi.call/err_bad_typedef.c libffi.call/err_vector_unsupported.c \
 	libffi.call/ffitest.h libffi.call/float.c \
@@ -40,7 +40,7 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.call/struct9.c libffi.call/struct_by_value_2.c libffi.call/struct_by_value_3.c \
 	libffi.call/struct_by_value_3f.c libffi.call/struct_by_value_4.c libffi.call/struct_by_value_4f.c \
 	libffi.call/struct_by_value_big.c libffi.call/struct_by_value_small.c libffi.call/struct_return_2H.c \
-	libffi.call/struct_double_spill.c libffi.call/struct_int_float.c libffi.call/struct_stack_small.c libffi.call/longjmp.c \
+	libffi.call/raw_call.c libffi.call/struct_double_spill.c libffi.call/struct_int_float.c libffi.call/struct_stack_small.c libffi.call/longjmp.c \
 	libffi.call/struct_overaligned.c \
 	libffi.call/struct_return_8H.c libffi.call/uninitialized.c libffi.call/va_1.c \
 	libffi.call/va_2.c libffi.call/va_3.c libffi.call/va_struct1.c \
