@@ -217,17 +217,10 @@ See the git log for details at http://github.com/libffi/libffi.
           arguments such as __int128.  The copy of one struct could
           overwrite the spilled pointer to another, so the callee read
           it from an address taken from the argument data.
-        Pass by-value aggregates aligned beyond the stack alignment
-          correctly.  ffi_call placed them by aligning addresses in an
-          area sized by aligning offsets, so on x86-64, ARM, MIPS and
-          m88k the copy could run past the area over ffi_call's own
-          frame, and on AArch64 a later struct copy could land below it;
-          the callee also read the argument from the wrong place.  x86-64
-          now aligns the area like a compiled caller, ARM uses the AAPCS
-          member alignment, MIPS and m88k cap the alignment at what the
-          ABI uses, and x86-64, MIPS and m88k closures read arguments
-          where callers put them.  MIPS N32/N64 aligns argument offsets,
-          not addresses, as the compiler does.
+        x86-64, ARM, MIPS, m88k, AArch64: pass by-value aggregates
+          aligned beyond the stack alignment where the callee expects
+          them.  The copy could run past the argument area over
+          ffi_call's own frame.
         powerpc64 ELFv2: closures no longer assume the caller allocated
           a parameter save area when floating-point arguments run out of
           FPRs but still fit in registers (structs of floats, _Complex).
