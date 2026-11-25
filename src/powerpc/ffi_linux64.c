@@ -339,7 +339,12 @@ homogeneous:
 	case FFI_TYPE_FLOAT:
 	  fparg_count++;
 	  intarg_count++;
-	  if (fparg_count > NUM_FPR_ARG_REGISTERS64)
+	  /* A floating point value that finds no FPR is passed in the GPR
+	     for its doubleword if there is one, and only goes to memory
+	     (so the caller must allocate a parameter save area) once
+	     the doubleword is beyond the eight that map to GPRs.  */
+	  if (fparg_count > NUM_FPR_ARG_REGISTERS64
+	      && intarg_count > NUM_GPR_ARG_REGISTERS64)
 	    flags |= FLAG_ARG_NEEDS_PSAVE;
 	  break;
 
@@ -368,8 +373,12 @@ homogeneous:
 #endif
 	  if (elt)
 	    {
+	      /* Elements that find no FPR are passed in GPRs while the
+		 aggregate's doublewords fit in the eight GPRs (two floats
+		 per doubleword), and only beyond that in memory.  */
 	      fparg_count += elnum;
-	      if (fparg_count > NUM_FPR_ARG_REGISTERS64)
+	      if (fparg_count > NUM_FPR_ARG_REGISTERS64
+		  && intarg_count > NUM_GPR_ARG_REGISTERS64)
 		flags |= FLAG_ARG_NEEDS_PSAVE;
 	    }
 	  else
@@ -416,7 +425,8 @@ homogeneous:
 	    case FFI_TYPE_DOUBLE:
 	      fparg_count += 2;
 	      intarg_count += 2;
-	      if (fparg_count > NUM_FPR_ARG_REGISTERS64)
+	      if (fparg_count > NUM_FPR_ARG_REGISTERS64
+		  && intarg_count > NUM_GPR_ARG_REGISTERS64)
 		flags |= FLAG_ARG_NEEDS_PSAVE;
 	      break;
 #if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
@@ -436,7 +446,8 @@ homogeneous:
 		 consumes a GPR shadow doubleword -- four of each in total.  */
 	      fparg_count += 4;
 	      intarg_count += 4;
-	      if (fparg_count > NUM_FPR_ARG_REGISTERS64)
+	      if (fparg_count > NUM_FPR_ARG_REGISTERS64
+		  && intarg_count > NUM_GPR_ARG_REGISTERS64)
 		flags |= FLAG_ARG_NEEDS_PSAVE;
 	      break;
 #endif
@@ -447,12 +458,12 @@ homogeneous:
 	    case FFI_TYPE_SINT64: case FFI_TYPE_UINT64:
 	    case FFI_TYPE_POINTER:
 	      intarg_count += 2;
+	      if (intarg_count > NUM_GPR_ARG_REGISTERS64)
+		flags |= FLAG_ARG_NEEDS_PSAVE;
 	      break;
 	    default:
 	      return FFI_BAD_TYPEDEF;
 	    }
-	  if (intarg_count > NUM_GPR_ARG_REGISTERS64)
-	    flags |= FLAG_ARG_NEEDS_PSAVE;
 	  break;
 #endif
 

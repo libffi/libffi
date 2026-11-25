@@ -228,6 +228,11 @@ See the git log for details at http://github.com/libffi/libffi.
           ABI uses, and x86-64, MIPS and m88k closures read arguments
           where callers put them.  MIPS N32/N64 aligns argument offsets,
           not addresses, as the compiler does.
+        powerpc64 ELFv2: closures no longer assume the caller allocated
+          a parameter save area when floating-point arguments run out of
+          FPRs but still fit in registers (structs of floats, _Complex).
+          The closure entry stored r3-r10 over the caller's frame,
+          including its saved return address.
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number
