@@ -190,6 +190,10 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       else
 #endif
         bytes = FFI_ALIGN (bytes, t->alignment);
+      /* cif->bytes is an unsigned int: refuse a total it cannot hold
+	 rather than let ffi_call allocate the truncated size.  */
+      if (bytes > INT_MAX || t->size > INT_MAX - bytes)
+	return FFI_BAD_TYPEDEF;
       bytes += FFI_ALIGN (t->size, FFI_SIZEOF_ARG);
     }
   cif->bytes = bytes;

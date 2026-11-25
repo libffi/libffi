@@ -685,6 +685,10 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	}
     }
 
+  /* cif->bytes is an unsigned int: refuse a total it cannot hold.  */
+  if (bytes > INT_MAX)
+    return FFI_BAD_TYPEDEF;
+
   /* Round the stack up to a multiple of the stack alignment requirement. */
   cif->bytes = (unsigned) FFI_ALIGN(bytes, 16);
   cif->flags = flags;

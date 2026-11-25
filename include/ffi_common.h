@@ -119,6 +119,22 @@ void ffi_type_test(ffi_type *a, const char *file, int line);
 /* v cast to size_t and aligned down to a multiple of a */
 #define FFI_ALIGN_DOWN(v, a) (((size_t) (v)) & -a)
 
+/* Upper bound on the size of an aggregate laid out by ffi_prep_cif.
+   Summing member sizes must not wrap, and the call code adds the size of
+   the return type to its frame and argument block (an alloca), so the
+   bound leaves headroom for those additions even where size_t is 32
+   bits.  No real object comes anywhere near it.  */
+#define FFI_MAX_TYPE_SIZE (((size_t) -1) / 4)
+
+/* Upper bounds on a signature, checked by ffi_prep_cif_core before any
+   port sees it.  Several ports keep argument counts in an int and the
+   size of the argument area in the 32-bit cif->bytes, and compute that
+   size in ways that can wrap; no call can use an argument area larger
+   than a thread's stack anyway, so refuse signatures far beyond that
+   rather than let any port truncate them.  */
+#define FFI_MAX_ARG_BYTES ((size_t) 256 << 20)
+#define FFI_MAX_NARGS (FFI_MAX_ARG_BYTES / 8)
+
 /* Perform machine dependent cif processing */
 ffi_status ffi_prep_cif_machdep(ffi_cif *cif);
 ffi_status ffi_prep_cif_machdep_var(ffi_cif *cif,

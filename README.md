@@ -262,6 +262,12 @@ See the git log for details at http://github.com/libffi/libffi.
           ffi_call_N32's own frame (GHSA-p8w7-v539-c775).  Closures also
           read a double or long double _Complex that only partly fits in
           the FP argument registers from where the caller put it.
+        Refuse signatures too large for libffi's fields instead of
+          truncating them: aggregates whose member sizes wrap, argument
+          lists of 256 MiB or more, and more than 32 Mi arguments.  Each
+          was accepted and then overran the stack in ffi_call
+          (GHSA-qpm4-52vm-3xff, GHSA-j4q2-5r23-67rj,
+          GHSA-76jh-g582-v8x4).
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number
