@@ -259,12 +259,13 @@ See the git log for details at http://github.com/libffi/libffi.
         MIPS N32/N64: pass a float _Complex that starts in the last
           argument register like a struct of two floats.  It ran past the
           argument area, and later arguments were stored over
-          ffi_call_N32's own frame (GHSA-p8w7-v539-c775).  Closures also
-          read a double or long double _Complex that only partly fits in
-          the FP argument registers from where the caller put it.
+          ffi_call_N32's own frame (GHSA-p8w7-v539-c775).  Closures took
+          the imaginary part of a double or long double _Complex that only
+          partly fits in the FP argument registers from beyond the saved
+          registers instead of from the stack.
         Refuse signatures too large for libffi's fields instead of
           truncating them: aggregates whose member sizes wrap, argument
-          lists of 256 MiB or more, and more than 32 Mi arguments.  Each
+          lists of more than 256 MiB, and more than 32 Mi arguments.  Each
           was accepted and then overran the stack in ffi_call
           (GHSA-qpm4-52vm-3xff, GHSA-j4q2-5r23-67rj,
           GHSA-76jh-g582-v8x4).
