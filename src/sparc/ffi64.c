@@ -343,8 +343,10 @@ ffi_prep_args_v9(ffi_cif *cif, unsigned long *argp, void *rvalue, void **avalue)
   if (rvalue == NULL)
     {
       /* ffi_call supplied scratch space if the callee needs a pointer
-	 to the return value; otherwise we can ignore it.  */
-      flags = SPARC_RET_VOID;
+	 to the return value; otherwise we can ignore it.  Keep the other
+	 flags: SPARC_FLAG_FP_ARGS says whether to load the FP argument
+	 registers.  */
+      flags = (flags & ~SPARC_FLAG_RET_MASK) | SPARC_RET_VOID;
     }
 
 #ifdef USING_PURIFY
