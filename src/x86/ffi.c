@@ -273,6 +273,25 @@ extern void FFI_DECLARE_FASTCALL ffi_call_i386(struct call_frame *, char *) FFI_
 /* n.b. ffi_call_unix64 will steal the alloca'd `stack` variable here for use
    _as its own stack_ - so we need to compile this function without ASAN */
 FFI_ASAN_NO_SANITIZE
+/* Whether a structure argument is passed at 16-byte alignment: GCC does
+   that only when some member, at any depth, is of a type that needs 16
+   (an SSE vector, or long double on Darwin).  Alignment on the structure
+   type itself, from an attribute or set by the caller, is ignored.  */
+static int
+struct_has_aligned_member (ffi_type *ty)
+{
+  ffi_type **p;
+
+  if (ty->elements == NULL)
+    return 0;
+  for (p = ty->elements; *p != NULL; p++)
+    if ((*p)->type == FFI_TYPE_STRUCT
+	? struct_has_aligned_member (*p)
+	: (*p)->alignment >= 16)
+      return 1;
+  return 0;
+}
+
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	      void **avalue, void *closure)
@@ -380,13 +399,15 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	    narg_reg = 2;
 
 	  /* Alignment rules for arguments are quite complex.  Vectors and
-	     structures with 16 byte alignment get it.  Note that long double
-	     on Darwin does have 16 byte alignment, and does not get this
-	     alignment if passed directly; a structure with a long double
-	     inside, however, would get 16 byte alignment.  Since libffi does
-	     not support vectors, we need non concern ourselves with other
-	     cases.  */
-	  if (t == FFI_TYPE_STRUCT && ty->alignment >= 16)
+	     structures containing a 16-byte-aligned member get it.  Note that
+	     long double on Darwin does have 16 byte alignment, and does not
+	     get this alignment if passed directly; a structure with a long
+	     double inside, however, would get 16 byte alignment.  Alignment
+	     given to the structure type itself, rather than coming from a
+	     member, does not count (see struct_has_aligned_member).  Since
+	     libffi does not support vectors, we need non concern ourselves
+	     with other cases.  */
+	  if (t == FFI_TYPE_STRUCT && struct_has_aligned_member (ty))
 	    align = 16;
 
 	  if (dir < 0)
@@ -516,7 +537,7 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
 	  size_t align = FFI_SIZEOF_ARG;
 
 	  /* See the comment in ffi_call_int.  */
-	  if (t == FFI_TYPE_STRUCT && ty->alignment >= 16)
+	  if (t == FFI_TYPE_STRUCT && struct_has_aligned_member (ty))
 	    align = 16;
 
 	  /* Issue 434: For thiscall and fastcall, if the parameter passed

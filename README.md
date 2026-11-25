@@ -217,7 +217,7 @@ See the git log for details at http://github.com/libffi/libffi.
           arguments such as __int128.  The copy of one struct could
           overwrite the spilled pointer to another, so the callee read
           it from an address taken from the argument data.
-        x86-64, ARM, MIPS, m88k, AArch64: pass by-value aggregates
+        x86-64, i386, ARM, MIPS, m88k, AArch64: pass by-value aggregates
           aligned beyond the stack alignment where the callee expects
           them.  The copy could run past the argument area over
           ffi_call's own frame.
