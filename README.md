@@ -208,37 +208,42 @@ See the git log for details at http://github.com/libffi/libffi.
           FFI_GNUW64, FFI_EFI64) on non-Windows builds with
           FFI_BAD_TYPEDEF, as documented.  Since 3.8.0 they were accepted;
           a closure returning a vector of 64 bytes or more overwrote its
-          own return address, and ffi_call aborted.
+          own return address, and ffi_call aborted (GHSA-v9rw-6cxm-q6rf).
         CRIS: reject vector types, and abort on complex types, in the
           port's own ffi_prep_cif_core, as the generic one does.  A
-          closure returning a vector overflowed its 8-byte result slot.
+          closure returning a vector overflowed its 8-byte result slot
+          (GHSA-j9pv-w354-7fg2).
         aarch64: reserve enough argument space for by-value structs
           larger than 16 bytes mixed with 16-byte-aligned stack
           arguments such as __int128.  The copy of one struct could
           overwrite the spilled pointer to another, so the callee read
-          it from an address taken from the argument data.
+          it from an address taken from the argument data
+          (GHSA-wc36-xxj4-cxh5).
         x86-64, i386, ARM, MIPS, m88k, AArch64: pass by-value aggregates
           aligned beyond the stack alignment where the callee expects
           them.  The copy could run past the argument area over
-          ffi_call's own frame.
+          ffi_call's own frame (GHSA-rwpw-56v4-44r3).
         powerpc64 ELFv2: closures no longer assume the caller allocated
           a parameter save area when floating-point arguments run out of
           FPRs but still fit in registers (structs of floats, _Complex).
           The closure entry stored r3-r10 over the caller's frame,
-          including its saved return address.
+          including its saved return address (GHSA-p8c7-j6j7-h7vg).
         powerpc64 ELFv2: do not pad a struct of only float, double or IBM
           long double members to an even doubleword, matching GCC and
           clang.  Every later argument was one doubleword off, and such a
-          closure could also overwrite its caller's frame.
+          closure could also overwrite its caller's frame
+          (GHSA-34hv-975q-7p7w).
         RISC-V, LoongArch: pass a struct holding a single float or double
           by the integer convention once the FP argument registers are
           used up, as the psABI requires.  It was stored past the end of
-          the saved FP registers, over integer arguments and beyond.
+          the saved FP registers, over integer arguments and beyond
+          (GHSA-2xrh-7r9c-rwmf).
         Static trampolines: when the code table has to come from a
           temporary file, seal it (memfd) or make it read-only and keep
           only a read-only descriptor.  The read-write descriptor was
           inherited across fork, so a child that had dropped to another
-          uid could rewrite the code behind every closure of its parent.
+          uid could rewrite the code behind every closure of its parent
+          (GHSA-7qx4-vhpx-x6qm).
         i386: align ffi_raw_call's argument block up to 16 bytes instead
           of clearing one address bit; at half of all stack positions the
           block lay below the stack pointer and an argument word was
@@ -246,7 +251,8 @@ See the git log for details at http://github.com/libffi/libffi.
           elements, so thiscall and fastcall raw calls no longer skip
           three words after each register argument.  Refuse raw closures
           whose result is returned in memory, which overran the entry
-          point's 16-byte result slot.
+          point's 16-byte result slot (GHSA-qgq7-fxgw-wrp4,
+          GHSA-64xf-g9qc-vf93).
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number
