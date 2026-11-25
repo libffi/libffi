@@ -56,6 +56,7 @@
 #ifdef __linux__
 #include <linux/limits.h>
 #include <linux/types.h>
+#include <link.h>
 #endif
 #ifdef __CYGWIN__
 #include <limits.h>
@@ -207,6 +208,100 @@ static int tramp_table_alloc (void);
 #define FFI_TRAMP_STR_(x) #x
 #define FFI_TRAMP_STR(x)  FFI_TRAMP_STR_(x)
 
+/*
+ * Open PATH and check that it is the file backing the trampoline code table
+ * mapping: its inode must match the one from /proc/<pid>/maps.  This stops a
+ * substituted file from being mapped as executable code
+ * (GHSA-fq46-69xf-x5gf).  The device is not compared because it differs from
+ * stat(2)'s st_dev on btrfs, overlayfs and other filesystems.
+ */
+static int
+ffi_tramp_open_checked (const char *path, unsigned long inode, int open_flags)
+{
+  struct stat st;
+  int fd;
+
+  if (path == NULL || *path == '\0')
+    return -1;
+
+  fd = open (path, open_flags);
+  if (fd == -1)
+    return -1;
+
+  if (fstat (fd, &st) != 0 || (unsigned long) st.st_ino != inode)
+    {
+      close (fd);
+      return -1;
+    }
+
+  return fd;
+}
+
+#ifdef __linux__
+/*
+ * The name of the loaded object containing ADDR, as recorded by the loader.
+ * It can differ from the kernel's name in /proc/<pid>/maps.  The main program
+ * has no name in the link map, so /proc/self/exe is used.
+ */
+struct ffi_tramp_object
+{
+  uintptr_t addr;
+  char *name;
+  size_t name_size;
+  int found;
+};
+
+static int
+ffi_tramp_find_object (struct dl_phdr_info *info, size_t size, void *data)
+{
+  struct ffi_tramp_object *obj = data;
+  size_t i;
+
+  (void) size;
+
+  for (i = 0; i < (size_t) info->dlpi_phnum; i++)
+    {
+      const ElfW(Phdr) *phdr = &info->dlpi_phdr[i];
+      uintptr_t start;
+
+      if (phdr->p_type != PT_LOAD)
+        continue;
+
+      start = (uintptr_t) info->dlpi_addr + phdr->p_vaddr;
+      if (obj->addr >= start && obj->addr < start + phdr->p_memsz)
+        {
+          const char *name = info->dlpi_name;
+
+          if (name == NULL || *name == '\0')
+            name = "/proc/self/exe";
+
+          if (snprintf (obj->name, obj->name_size, "%s", name)
+              >= (int) obj->name_size)
+            return 0;
+
+          obj->found = 1;
+          return 1;
+        }
+    }
+
+  return 0;
+}
+
+static int
+ffi_tramp_loader_path (uintptr_t addr, char *buf, size_t size)
+{
+  struct ffi_tramp_object obj;
+
+  obj.addr = addr;
+  obj.name = buf;
+  obj.name_size = size;
+  obj.found = 0;
+
+  dl_iterate_phdr (ffi_tramp_find_object, &obj);
+  return obj.found;
+}
+#endif /* __linux__ */
+
 static int
 ffi_tramp_get_libffi (void)
 {
@@ -218,7 +313,6 @@ ffi_tramp_get_libffi (void)
   uintptr_t addr = (uintptr_t) tramp_globals.text;
   int nfields, found, path_off;
   char *path = NULL, *nl;
-  struct stat st;
   int open_flags = O_RDONLY;
 
 #ifdef O_CLOEXEC
@@ -258,36 +352,44 @@ ffi_tramp_get_libffi (void)
   }
   fclose (fp);
 
-  if (!found || path == NULL || *path == '\0' || *path == '\n')
+  /*
+   * If no mapping contains the code table there is nothing to map.  An
+   * empty or unopenable path is not fatal: the loader-name fallback below
+   * may still find the file, and the temp-file trampoline is the last
+   * resort.
+   */
+  if (!found)
     return 0;
 
   /* Drop the trailing newline so the path can be opened.  */
-  nl = strchr (path, '\n');
-  if (nl != NULL)
-    *nl = '\0';
+  if (path != NULL)
+    {
+      nl = strchr (path, '\n');
+      if (nl != NULL)
+        *nl = '\0';
+    }
 
-  tramp_globals.fd = open (path, open_flags);
+  /* The maps name is the kernel's name for the file and may not be openable
+     from this process's mount namespace. */
+  tramp_globals.fd = ffi_tramp_open_checked (path, inode, open_flags);
+
+#ifdef __linux__
+  if (tramp_globals.fd == -1)
+    {
+      char loader_path[PATH_MAX];
+
+      /*
+       * The maps name may not be openable.  Try the name the loader used;
+       * its inode cannot be compared with the maps entry, so
+       * tramp_table_map() verifies the mapped code table instead.
+       */
+      if (ffi_tramp_loader_path (addr, loader_path, sizeof (loader_path)))
+        tramp_globals.fd = open (loader_path, open_flags);
+    }
+#endif
+
   if (tramp_globals.fd == -1)
     return 0;
-
-  /*
-   * Verify that the file just opened is the file that backs the mapping we
-   * selected, by comparing its inode with the one from the maps line.
-   * Without this the path could have been replaced, or be a symlink to
-   * another file, between reading the maps line and the open, letting an
-   * attacker substitute the bytes libffi maps as executable trampoline code
-   * (GHSA-fq46-69xf-x5gf).  Only the inode is compared: the device number in
-   * /proc/<pid>/maps does not match stat(2)'s st_dev on btrfs, overlayfs and
-   * some other filesystems, so comparing st_dev would reject the real file
-   * there.  On any mismatch, fall back to the temp-file trampoline.
-   */
-  if (fstat (tramp_globals.fd, &st) != 0
-      || (unsigned long) st.st_ino != inode)
-    {
-      close (tramp_globals.fd);
-      tramp_globals.fd = -1;
-      return 0;
-    }
 
   /*
    * Allocate a trampoline table just to make sure that the trampoline code
@@ -406,6 +508,20 @@ tramp_table_map (struct tramp_table *table)
       (void) munmap (addr, tramp_globals.map_size * 2);
       return 0;
     }
+
+  /*
+   * This is the fallback's equivalent of the inode check.  A sandbox can
+   * expose the same file through a second mount with a synthesized inode, so
+   * compare the bytes that will be executed instead.  A mapping that does not
+   * match is never used (GHSA-fq46-69xf-x5gf).
+   */
+  if (memcmp (table->code_table, tramp_globals.text,
+              tramp_globals.map_size) != 0)
+    {
+      (void) munmap (addr, tramp_globals.map_size * 2);
+      return 0;
+    }
+
   table->parm_table = table->code_table + tramp_globals.map_size;
   return 1;
 }
