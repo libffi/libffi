@@ -237,6 +237,11 @@ See the git log for details at http://github.com/libffi/libffi.
           by the integer convention once the FP argument registers are
           used up, as the psABI requires.  It was stored past the end of
           the saved FP registers, over integer arguments and beyond.
+        Static trampolines: when the code table has to come from a
+          temporary file, seal it (memfd) or make it read-only and keep
+          only a read-only descriptor.  The read-write descriptor was
+          inherited across fork, so a child that had dropped to another
+          uid could rewrite the code behind every closure of its parent.
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number

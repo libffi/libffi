@@ -306,6 +306,47 @@ ffi_tramp_get_libffi (void)
 
 #if defined (__linux__) || defined (__CYGWIN__)
 
+/*
+ * Every trampoline code table is a private mapping of tramp_globals.fd, so a
+ * write to the file shows up in all of them. The temporary file is opened
+ * read-write and the descriptor survives fork (), so once the code table has
+ * been written, make the file immutable: seal it (memfd) or else make it
+ * read-only for everyone but its owner and replace the descriptor with a
+ * read-only one.
+ */
+static int
+ffi_tramp_seal_temp_file (void)
+{
+  char path[64];
+  int fd;
+  int open_flags = O_RDONLY;
+
+#ifdef F_ADD_SEALS
+  if (fcntl (tramp_globals.fd, F_ADD_SEALS,
+	     F_SEAL_WRITE | F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_SEAL) == 0)
+    return 1;
+#endif
+
+#ifdef O_CLOEXEC
+  open_flags |= O_CLOEXEC;
+#endif
+
+  /* A read-only descriptor alone is not enough: a child under another uid
+     could reopen /proc/self/fd/N for writing, and a memfd is mode 0777.
+     Take away write permission first.  */
+  if (fchmod (tramp_globals.fd, S_IRUSR) != 0)
+    return 0;
+
+  snprintf (path, sizeof (path), "/proc/self/fd/%d", tramp_globals.fd);
+  fd = open (path, open_flags);
+  if (fd == -1)
+    return 0;
+
+  close (tramp_globals.fd);
+  tramp_globals.fd = fd;
+  return 1;
+}
+
 static int
 ffi_tramp_get_temp_file (void)
 {
@@ -315,11 +356,13 @@ ffi_tramp_get_temp_file (void)
   tramp_globals.fd = open_temp_exec_file ();
 
   /*
-   * Write the trampoline code table into the temporary file and allocate a
-   * trampoline table to make sure that the temporary file can be mapped.
+   * Write the trampoline code table into the temporary file, make the file
+   * read-only and allocate a trampoline table to make sure that the temporary
+   * file can be mapped.
    */
   count = write(tramp_globals.fd, tramp_globals.text, tramp_globals.map_size);
-  if (count >=0 && (size_t)count == tramp_globals.map_size && tramp_table_alloc ())
+  if (count >=0 && (size_t)count == tramp_globals.map_size
+      && ffi_tramp_seal_temp_file () && tramp_table_alloc ())
     return 1;
 
   close (tramp_globals.fd);
