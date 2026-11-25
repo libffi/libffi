@@ -1000,7 +1000,9 @@ ffi_prep_closure_loc (ffi_closure *closure,
  * registers have been saved, if any.
  *
  * RVALUE is the location where the function return value will be
- * stored. CLOSURE is the prepared closure to invoke.
+ * stored; it has room for 16 bytes, so that a complex value returned
+ * in up to four GPRs or in $f0/$f2 fits.  CLOSURE is the prepared
+ * closure to invoke.
  *
  * This function should only be called from assembly, which is in
  * turn called from a trampoline.
@@ -1033,20 +1035,6 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
       argn = 1;
       seen_int = 1;
     }
-  if (cif->rtype->type == FFI_TYPE_COMPLEX
-      && (cif->rtype->elements[0]->type == FFI_TYPE_FLOAT
-          || cif->rtype->elements[0]->type == FFI_TYPE_DOUBLE
-          || cif->rtype->elements[0]->type == FFI_TYPE_LONGDOUBLE))
-    {
-      rvalue = fpr;
-    }
-  /* With soft float, complex values are returned in up to four GPRs,
-     which does not fit into the space for v0 and v1.  ffi_closure_O32
-     does not use the space for the FP argument registers in that case,
-     so return the value there.  */
-  if (cif->abi == FFI_O32_SOFT_FLOAT && cif->rtype->type == FFI_TYPE_COMPLEX)
-    rvalue = fpr;
-
   i = 0;
   avn = cif->nargs;
   arg_types = cif->arg_types;

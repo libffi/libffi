@@ -275,21 +275,27 @@ $LFE0:
 	-2 - fp save
 	-3 - $16 (s0) save
 	-4 - cprestore
-	-5 - return value high (v1)
-	-6 - return value low (v0)
-	-7 - f14 (le high, be low)
-	-8 - f14 (le low, be high)
-	-9 - f12 (le high, be low)
-       -10 - f12 (le low, be high)
-       -11 - Called function a5 save
-       -12 - Called function a4 save
-       -13 - Called function a3 save
-       -14 - Called function a2 save
-       -15 - Called function a1 save
-       -16 - Called function a0 save, our sp and fp point here
+	-5 - return value, fourth word (a1 / $f2 high)
+	-6 - return value, third word (a0 / $f2 low)
+	-7 - return value high (v1)
+	-8 - return value low (v0)
+	-9 - f14 (le high, be low)
+       -10 - f14 (le low, be high)
+       -11 - f12 (le high, be low)
+       -12 - f12 (le low, be high)
+       -13 - Called function a5 save
+       -14 - Called function a4 save
+       -15 - Called function a3 save
+       -16 - Called function a2 save
+       -17 - Called function a1 save
+       -18 - Called function a0 save, our sp and fp point here
+
+	The return value area is 16 bytes: a complex value is returned
+	in up to four GPRs, or in $f0/$f2, and ffi_closure_mips_inner_O32
+	stores it there in memory order.
 	 */
 	
-#define SIZEOF_FRAME2	(16 * FFI_SIZEOF_ARG)
+#define SIZEOF_FRAME2	(18 * FFI_SIZEOF_ARG)
 #define A3_OFF2		(SIZEOF_FRAME2 + 3 * FFI_SIZEOF_ARG)
 #define A2_OFF2		(SIZEOF_FRAME2 + 2 * FFI_SIZEOF_ARG)
 #define A1_OFF2		(SIZEOF_FRAME2 + 1 * FFI_SIZEOF_ARG)
@@ -298,14 +304,14 @@ $LFE0:
 #define FP_OFF2		(SIZEOF_FRAME2 - 2 * FFI_SIZEOF_ARG)
 #define S0_OFF2		(SIZEOF_FRAME2 - 3 * FFI_SIZEOF_ARG)
 #define GP_OFF2		(SIZEOF_FRAME2 - 4 * FFI_SIZEOF_ARG)
-#define V1_OFF2		(SIZEOF_FRAME2 - 5 * FFI_SIZEOF_ARG)
-#define V0_OFF2		(SIZEOF_FRAME2 - 6 * FFI_SIZEOF_ARG)
-#define FA_1_1_OFF2	(SIZEOF_FRAME2 - 7 * FFI_SIZEOF_ARG)
-#define FA_1_0_OFF2	(SIZEOF_FRAME2 - 8 * FFI_SIZEOF_ARG)
-#define FA_0_1_OFF2	(SIZEOF_FRAME2 - 9 * FFI_SIZEOF_ARG)
-#define FA_0_0_OFF2	(SIZEOF_FRAME2 - 10 * FFI_SIZEOF_ARG)
-#define CALLED_A5_OFF2  (SIZEOF_FRAME2 - 11 * FFI_SIZEOF_ARG)
-#define CALLED_A4_OFF2  (SIZEOF_FRAME2 - 12 * FFI_SIZEOF_ARG)
+#define V1_OFF2		(SIZEOF_FRAME2 - 7 * FFI_SIZEOF_ARG)
+#define V0_OFF2		(SIZEOF_FRAME2 - 8 * FFI_SIZEOF_ARG)
+#define FA_1_1_OFF2	(SIZEOF_FRAME2 - 9 * FFI_SIZEOF_ARG)
+#define FA_1_0_OFF2	(SIZEOF_FRAME2 - 10 * FFI_SIZEOF_ARG)
+#define FA_0_1_OFF2	(SIZEOF_FRAME2 - 11 * FFI_SIZEOF_ARG)
+#define FA_0_0_OFF2	(SIZEOF_FRAME2 - 12 * FFI_SIZEOF_ARG)
+#define CALLED_A5_OFF2  (SIZEOF_FRAME2 - 13 * FFI_SIZEOF_ARG)
+#define CALLED_A4_OFF2  (SIZEOF_FRAME2 - 14 * FFI_SIZEOF_ARG)
 
 	.text
 
@@ -445,30 +451,29 @@ $do_closure:
 	li      $9, FFI_TYPE_COMPLEX
 	bne     $8, $9, 1f
 
+	# Load $f0/$f2 for floating-point complex values, then fall
+	# through to 2 to load the GPRs for integer complex values.
+	# Whichever register set the type does not use is call-clobbered.
 	li      $9, 8
-	REG_L	$2, FA_0_0_OFF2($fp)
+	REG_L	$2, V0_OFF2($fp)
 	mtc1	$2, $f0
-	REG_L	$2, FA_0_1_OFF2($fp)
+	REG_L	$2, V1_OFF2($fp)
 	mtc1	$2, $f2
-	beq     $3, $9, closure_done
+	beq     $3, $9, 2f
 
-	li      $9, 16
-	l.d	$f0, FA_0_0_OFF2($fp)
-	l.d	$f2, FA_1_0_OFF2($fp)
-	beq     $3, $9, closure_done
+	l.d	$f0, V0_OFF2($fp)
+	l.d	$f2, (V0_OFF2 + 8)($fp)
 #endif
-	b	1f
 
 2:
-	# FFI_O32_SOFT_FLOAT returns complex values in up to four GPRs.
-	# ffi_closure_mips_inner_O32 stored them in the space for the
-	# FP argument registers.
+	# Integer complex values, and with FFI_O32_SOFT_FLOAT all complex
+	# values, are returned in up to four GPRs.
 	li	$9, FFI_TYPE_COMPLEX
 	bne	$8, $9, 1f
-	REG_L	$2, FA_0_0_OFF2($fp)
-	REG_L	$3, FA_0_1_OFF2($fp)
-	REG_L	$4, FA_1_0_OFF2($fp)
-	REG_L	$5, FA_1_1_OFF2($fp)
+	REG_L	$2, V0_OFF2($fp)
+	REG_L	$3, V1_OFF2($fp)
+	REG_L	$4, (V0_OFF2 + 8)($fp)
+	REG_L	$5, (V0_OFF2 + 12)($fp)
 	b	closure_done
 
 1:	

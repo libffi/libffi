@@ -253,6 +253,9 @@ See the git log for details at http://github.com/libffi/libffi.
           whose result is returned in memory, which overran the entry
           point's 16-byte result slot (GHSA-qgq7-fxgw-wrp4,
           GHSA-64xf-g9qc-vf93).
+        MIPS O32: give closures a 16-byte result slot.  A closure
+          returning _Complex long long overwrote the saved $s0 that the
+          native caller gets back (GHSA-xh8m-x7vg-ww5m).
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number

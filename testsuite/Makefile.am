@@ -83,7 +83,7 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.closures/stret_medium.c libffi.closures/stret_medium2.c libffi.closures/testclosure.c \
 	libffi.closures/unwindtest.cc libffi.closures/unwindtest_ffi_call.cc libffi.complex/cls_align_complex.inc \
 	libffi.complex/cls_align_complex_double.c libffi.complex/cls_align_complex_float.c libffi.complex/cls_align_complex_longdouble.c \
-	libffi.complex/cls_complex.inc libffi.complex/cls_complex_double.c libffi.complex/cls_complex_float.c \
+	libffi.complex/cls_complex.inc libffi.complex/cls_complex_double.c libffi.complex/cls_complex_float.c libffi.complex/cls_complex_int.c \
 	libffi.complex/cls_complex_longdouble.c libffi.complex/cls_complex_psave.c libffi.complex/cls_complex_struct.inc libffi.complex/cls_complex_struct_double.c \
 	libffi.complex/cls_complex_struct_float.c libffi.complex/cls_complex_struct_longdouble.c libffi.complex/cls_complex_va.inc \
 	libffi.complex/cls_complex_va_double.c libffi.complex/cls_complex_va_float.c libffi.complex/cls_complex_va_longdouble.c \
