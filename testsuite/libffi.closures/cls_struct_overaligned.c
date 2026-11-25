@@ -10,6 +10,10 @@
 
 /* { dg-do run } */
 #include "ffitest.h"
+
+/* MSVC has neither <alloca.h> nor the aligned attribute used here, and
+   refuses over-aligned by-value parameters (C2719).  */
+#ifndef _MSC_VER
 #include <alloca.h>
 
 #define BLOCK_ALIGN 128
@@ -136,3 +140,7 @@ int main (void)
   ffi_closure_free (pcl);
   exit(0);
 }
+
+#else
+int main (void) { return 0; }
+#endif
