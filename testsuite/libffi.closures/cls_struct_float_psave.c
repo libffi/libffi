@@ -15,9 +15,11 @@
 /* { dg-do run } */
 #include "ffitest.h"
 
-typedef struct { float f[2]; } float2;
-typedef struct { float f[4]; } float4;
-typedef struct { float f[8]; } float8;
+/* Named fields, not arrays: libffi describes both the same way, but
+   SPARC64 passes float arrays inside structs in integer registers.  */
+typedef struct { float a, b; } float2;
+typedef struct { float a, b, c, d; } float4;
+typedef struct { float a, b, c, d, e, f, g, h; } float8;
 
 typedef unsigned long (*callback) (float4, unsigned long, float8, float2);
 
@@ -25,25 +27,25 @@ static void
 callback_gn (ffi_cif *cif __UNUSED__, void *resp, void **args,
 	     void *userdata __UNUSED__)
 {
-  float4 *p = (float4 *) args[0];
+  float *p = (float *) args[0];
   unsigned long id = *(unsigned long *) args[1];
-  float8 *w = (float8 *) args[2];
-  float2 *uv = (float2 *) args[3];
+  float *w = (float *) args[2];
+  float *uv = (float *) args[3];
   float sum = 0;
   int i;
 
   for (i = 0; i < 4; i++)
-    sum += p->f[i] * (i + 1);
+    sum += p[i] * (i + 1);
   for (i = 0; i < 8; i++)
-    sum += w->f[i] * (i + 5);
-  sum += uv->f[0] * 13 + uv->f[1] * 14;
+    sum += w[i] * (i + 5);
+  sum += uv[0] * 13 + uv[1] * 14;
 
   *(ffi_arg *) resp = id * 10000 + (unsigned long) sum;
 }
 
-static float4 pos = { { 1, 2, 3, 4 } };
-static float8 weights = { { 5, 6, 7, 8, 9, 10, 11, 12 } };
-static float2 uv = { { 13, 14 } };
+static float4 pos = { 1, 2, 3, 4 };
+static float8 weights = { 5, 6, 7, 8, 9, 10, 11, 12 };
+static float2 uv = { 13, 14 };
 
 /* Makes no other call, so it has no parameter save area of its own; the
    addition keeps the call from becoming a tail call.  */
