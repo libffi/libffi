@@ -164,6 +164,32 @@ discover_homogeneous_aggregate (ffi_abi abi,
 }
 
 
+/* Whether a struct argument is subject to the FFI_LINUX_STRUCT_ALIGN
+   quadword alignment in the parameter save area.  ELT is what
+   discover_homogeneous_aggregate returned for it.  Under ELFv2 a
+   homogeneous aggregate of float, double or IBM long double occupies
+   the doublewords its members would as separate arguments, so it is
+   only doubleword aligned even though the struct's alignment is 16
+   (IBM long double).  IEEE128 aggregates are passed in vector
+   registers and keep the quadword alignment.  */
+static int
+struct_align_applies (ffi_abi abi, unsigned int elt)
+{
+  if ((abi & FFI_LINUX_STRUCT_ALIGN) == 0)
+    return 0;
+#if _CALL_ELF == 2
+  if (elt == FFI_TYPE_FLOAT || elt == FFI_TYPE_DOUBLE)
+    return 0;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+  if (elt == FFI_TYPE_LONGDOUBLE
+      && (abi & FFI_LINUX_LONG_DOUBLE_IEEE128) == 0)
+    return 0;
+#endif
+#endif
+  return 1;
+}
+
+
 /* Perform machine dependent cif processing */
 static ffi_status
 ffi_prep_cif_linux64_core (ffi_cif *cif)
@@ -349,7 +375,8 @@ homogeneous:
 	  break;
 
 	case FFI_TYPE_STRUCT:
-	  if ((cif->abi & FFI_LINUX_STRUCT_ALIGN) != 0)
+	  elt = discover_homogeneous_aggregate (cif->abi, *ptr, &elnum);
+	  if (struct_align_applies (cif->abi, elt))
 	    {
 	      align = (*ptr)->alignment;
 	      if (align > 16)
@@ -359,7 +386,6 @@ homogeneous:
 		intarg_count = FFI_ALIGN (intarg_count, align);
 	    }
 	  intarg_count += ((*ptr)->size + 7) / 8;
-	  elt = discover_homogeneous_aggregate (cif->abi, *ptr, &elnum);
 #if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
           if (elt == FFI_TYPE_LONGDOUBLE &&
               (cif->abi & FFI_LINUX_LONG_DOUBLE_IEEE128) != 0)
@@ -938,7 +964,8 @@ ffi_prep_args64 (extended_cif *ecif, unsigned long *const stack)
 #endif
 
 	case FFI_TYPE_STRUCT:
-	  if ((ecif->cif->abi & FFI_LINUX_STRUCT_ALIGN) != 0)
+	  elt = discover_homogeneous_aggregate (ecif->cif->abi, *ptr, &elnum);
+	  if (struct_align_applies (ecif->cif->abi, elt))
 	    {
 	      align = (*ptr)->alignment;
 	      if (align > 16)
@@ -950,7 +977,6 @@ ffi_prep_args64 (extended_cif *ecif, unsigned long *const stack)
                     next_arg.ul = rest.ul;
                 }
 	    }
-	  elt = discover_homogeneous_aggregate (ecif->cif->abi, *ptr, &elnum);
 	  if (elt)
 	    {
 #if _CALL_ELF == 2
@@ -1232,7 +1258,8 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
 	  break;
 
 	case FFI_TYPE_STRUCT:
-	  if ((cif->abi & FFI_LINUX_STRUCT_ALIGN) != 0)
+	  elt = discover_homogeneous_aggregate (cif->abi, arg_types[i], &elnum);
+	  if (struct_align_applies (cif->abi, elt))
 	    {
 	      align = arg_types[i]->alignment;
 	      if (align > 16)
@@ -1240,7 +1267,6 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
 	      if (align > 1)
 		pst = (unsigned long *) FFI_ALIGN ((size_t) pst, align);
 	    }
-	  elt = discover_homogeneous_aggregate (cif->abi, arg_types[i], &elnum);
 	  if (elt)
 	    {
 #if _CALL_ELF == 2
@@ -1272,6 +1298,15 @@ ffi_closure_helper_LINUX64 (ffi_cif *cif,
 		to.v = pfr;
 	      else
 		to.v = pst;
+
+	      /* Those arrays are only doubleword aligned, but an aggregate
+		 of IBM long double needs 16: rebuild it in aligned memory
+		 instead, or the handler reads it from the wrong place.  */
+	      if (((size_t) to.v & (arg_types[i]->alignment - 1)) != 0)
+		to.v = (void *) FFI_ALIGN (alloca (arg_types[i]->size
+						   + arg_types[i]->alignment
+						   - 1),
+					   arg_types[i]->alignment);
 
 	      avalue[i] = to.v;
 	      from.ul = pst;

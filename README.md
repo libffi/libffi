@@ -226,6 +226,10 @@ See the git log for details at http://github.com/libffi/libffi.
           FPRs but still fit in registers (structs of floats, _Complex).
           The closure entry stored r3-r10 over the caller's frame,
           including its saved return address.
+        powerpc64 ELFv2: do not pad a struct of only float, double or IBM
+          long double members to an even doubleword, matching GCC and
+          clang.  Every later argument was one doubleword off, and such a
+          closure could also overwrite its caller's frame.
         RISC-V, LoongArch: pass a struct holding a single float or double
           by the integer convention once the FP argument registers are
           used up, as the psABI requires.  It was stored past the end of
