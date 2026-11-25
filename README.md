@@ -233,6 +233,10 @@ See the git log for details at http://github.com/libffi/libffi.
           FPRs but still fit in registers (structs of floats, _Complex).
           The closure entry stored r3-r10 over the caller's frame,
           including its saved return address.
+        RISC-V, LoongArch: pass a struct holding a single float or double
+          by the integer convention once the FP argument registers are
+          used up, as the psABI requires.  It was stored past the end of
+          the saved FP registers, over integer arguments and beyond.
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number
