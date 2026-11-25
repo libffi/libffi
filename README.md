@@ -268,6 +268,11 @@ See the git log for details at http://github.com/libffi/libffi.
           was accepted and then overran the stack in ffi_call
           (GHSA-qpm4-52vm-3xff, GHSA-j4q2-5r23-67rj,
           GHSA-76jh-g582-v8x4).
+        SPARC: allocate the scratch result for a NULL rvalue in ffi_call
+          instead of deriving it from the frame layout.  On SPARC64 a
+          discarded struct result of 49 bytes or more overwrote
+          ffi_call's saved frame pointer and return address
+          (GHSA-v569-599f-q4hr).
 
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number
