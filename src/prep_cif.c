@@ -86,12 +86,15 @@ initialize_vector (ffi_type *arg)
       count++;
     }
 
-  if (UNLIKELY (count < 1 || elem->size == 0))
+  if (UNLIKELY (count < 1 || elem->size == 0
+		|| elem->size > FFI_MAX_TYPE_SIZE / count))
     return FFI_BAD_TYPEDEF;
 
   total = elem->size * count;
   for (p2 = 1; p2 < total; p2 <<= 1)
     ;
+  if (UNLIKELY (p2 > FFI_MAX_TYPE_SIZE))
+    return FFI_BAD_TYPEDEF;
 
   arg->size = p2;
   arg->alignment = p2 < 16 ? p2 : 16;
@@ -129,6 +132,13 @@ static ffi_status initialize_aggregate(ffi_type *arg, size_t *offsets)
       FFI_ASSERT_VALID_TYPE(*ptr);
 
       arg->size = FFI_ALIGN(arg->size, (*ptr)->alignment);
+
+      /* Reject a type too large to exist rather than letting the sum
+	 wrap or handing the call code a size it cannot allocate.  */
+      if (UNLIKELY((*ptr)->size > FFI_MAX_TYPE_SIZE
+		   || arg->size > FFI_MAX_TYPE_SIZE - (*ptr)->size))
+	return FFI_BAD_TYPEDEF;
+
       if (offsets)
 	*offsets++ = arg->size;
       arg->size += (*ptr)->size;
@@ -155,18 +165,19 @@ static ffi_status initialize_aggregate(ffi_type *arg, size_t *offsets)
     arg->alignment = FFI_AGGREGATE_ALIGNMENT;
 #endif
 
-  if (arg->size == 0)
+  if (arg->size == 0 || arg->size > FFI_MAX_TYPE_SIZE)
     return FFI_BAD_TYPEDEF;
   else
     return FFI_OK;
 }
 
-#ifndef FFI_TARGET_HAS_VECTOR_TYPE
 /* Recursively test whether TY is, or contains, a vector (SIMD) type.  Ports
    that do not define FFI_TARGET_HAS_VECTOR_TYPE cannot marshal vectors, so
    ffi_prep_cif_core rejects any signature that mentions one (directly or
-   nested inside a struct) with FFI_BAD_TYPEDEF rather than aborting.  */
-static int
+   nested inside a struct) with FFI_BAD_TYPEDEF rather than aborting.  Ports
+   that define it but also build a backend without vector support (x86-64's
+   ffiw64.c) call this from that backend's ffi_prep_cif_machdep.  */
+int FFI_HIDDEN
 ffi_type_contains_vector (ffi_type *ty)
 {
   ffi_type **p;
@@ -181,7 +192,6 @@ ffi_type_contains_vector (ffi_type *ty)
 	return 1;
   return 0;
 }
-#endif /* !FFI_TARGET_HAS_VECTOR_TYPE */
 
 #ifndef __CRIS__
 /* The CRIS ABI specifies structure elements to have byte
@@ -205,6 +215,7 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
 			     ffi_type *rtype, ffi_type **atypes)
 {
   unsigned bytes = 0;
+  size_t arg_bytes = 0;
   unsigned int i;
   ffi_type **ptr;
 
@@ -219,6 +230,9 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
   cif->arg_types = atypes;
   cif->nargs = ntotalargs;
   cif->rtype = rtype;
+
+  if (ntotalargs > FFI_MAX_NARGS)
+    return FFI_BAD_TYPEDEF;
 
 #ifndef FFI_TARGET_HAS_VECTOR_TYPE
   /* Vector (SIMD) types are only marshalled on ports that opt in.  */
@@ -248,6 +262,8 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
 #endif
   /* Perform a sanity check on the return type */
   FFI_ASSERT_VALID_TYPE(cif->rtype);
+  if (cif->rtype->size > FFI_MAX_ARG_BYTES)
+    return FFI_BAD_TYPEDEF;
 
   /* x86, x86-64 and s390 stack space allocation is handled in prep_machdep. */
 #if !defined FFI_TARGET_SPECIFIC_STACK_SPACE_ALLOCATION
@@ -280,6 +296,12 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
 	 check after the initialization.  */
       FFI_ASSERT_VALID_TYPE(*ptr);
 
+      /* Bound the whole argument list, whatever the port does with it.  */
+      if ((*ptr)->size > FFI_MAX_ARG_BYTES
+	  || FFI_ALIGN ((*ptr)->size, 16) > FFI_MAX_ARG_BYTES - arg_bytes)
+	return FFI_BAD_TYPEDEF;
+      arg_bytes += FFI_ALIGN ((*ptr)->size, 16);
+
 #if !defined FFI_TARGET_SPECIFIC_STACK_SPACE_ALLOCATION
 	{
 	  /* Add any padding if necessary */
@@ -300,6 +322,10 @@ ffi_status FFI_HIDDEN ffi_prep_cif_core(ffi_cif *cif, ffi_abi abi,
 	    bytes = 6*4;
 #endif
 
+	  /* cif->bytes is an unsigned int: refuse a total it cannot hold
+	     rather than let ffi_call allocate the truncated size.  */
+	  if (bytes > INT_MAX || (*ptr)->size > INT_MAX - bytes)
+	    return FFI_BAD_TYPEDEF;
 	  bytes += (unsigned int)STACK_ARG_SIZE((*ptr)->size);
 	}
 #endif

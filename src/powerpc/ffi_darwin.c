@@ -667,6 +667,7 @@ static int
 aix_adjust_aggregate_sizes (ffi_type *s, int outer_most_type_or_first_member)
 {
   int i, nested_first_member=0, final_align, rc=0;
+  int first_member_align=0, member_align=1;
 
   if (s->type != FFI_TYPE_STRUCT)
     return 0;
@@ -684,16 +685,26 @@ aix_adjust_aggregate_sizes (ffi_type *s, int outer_most_type_or_first_member)
       else
         aix_adjust_aggregate_sizes(&p, 0);
       align = p.alignment;
+      if (i == 0)
+        first_member_align = align;
       if (i != 0 && p.type == FFI_TYPE_DOUBLE)
         align = 4;
+      if (align > member_align)
+        member_align = align;
       s->size = FFI_ALIGN(s->size, align) + p.size;
     }
 
+  /* Recompute the alignment from the members, as done for the size: S may be
+     a shared type whose stored alignment was raised to 8 below when it was
+     last laid out as an outer-most type or first member, which must not leak
+     into its layout as a later member (or into that of its enclosing type).
+     For the same reason the first member is tested via its adjusted copy.  */
+  s->alignment = member_align;
   final_align=s->alignment;
   if ((s->elements[0]->type == FFI_TYPE_UINT64
           || s->elements[0]->type == FFI_TYPE_SINT64
           || s->elements[0]->type == FFI_TYPE_DOUBLE
-          || s->elements[0]->alignment == 8 || nested_first_member)) {
+          || first_member_align == 8 || nested_first_member)) {
       final_align = s->alignment > 8 ? s->alignment : 8;
       rc=1;
       /* still use the adjusted alignment to calculate tail padding, but don't adjust the types alignment if

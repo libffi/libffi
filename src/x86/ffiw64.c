@@ -54,7 +54,8 @@ extern void ffi_call_win64 (void *stack, struct win64_call_frame *,
 ffi_status FFI_HIDDEN
 EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
 {
-  int flags, n;
+  int flags;
+  size_t n;
 
   switch (cif->abi)
     {
@@ -64,6 +65,16 @@ EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
     default:
       return FFI_BAD_ABI;
     }
+
+#ifdef FFI_TARGET_HAS_VECTOR_TYPE
+  /* This backend does not marshal vectors.  When it is built alongside
+     ffi64.c, ffi_prep_cif_core lets them through, so reject them here.  */
+  if (ffi_type_contains_vector (cif->rtype))
+    return FFI_BAD_TYPEDEF;
+  for (n = 0; n < cif->nargs; n++)
+    if (ffi_type_contains_vector (cif->arg_types[n]))
+      return FFI_BAD_TYPEDEF;
+#endif
 
   flags = cif->rtype->type;
   switch (flags)
@@ -100,11 +111,17 @@ EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
 
   /* Each argument either fits in a register, an 8 byte slot, or is
      passed by reference with the pointer in the 8 byte slot.  */
+  if (cif->nargs > INT_MAX / 8 - 1)
+    return FFI_BAD_TYPEDEF;
   n = cif->nargs;
   n += (flags == FFI_TYPE_STRUCT);
   if (n < 4)
     n = 4;
-  cif->bytes = n * 8;
+  /* cif->bytes is unsigned: refuse an argument area it cannot describe
+     rather than truncating it and making the call with a short stack.  */
+  if (n > UINT_MAX / 8)
+    return FFI_BAD_TYPEDEF;
+  cif->bytes = (unsigned) (n * 8);
 
   return FFI_OK;
 }
@@ -121,13 +138,14 @@ static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	      void **avalue, void *closure)
 {
-  int i, j, n, flags;
+  unsigned i, j, n;
+  int flags;
   UINT64 *stack;
   size_t rsize;
   struct win64_call_frame *frame;
   ffi_type **arg_types = cif->arg_types;
   void **avalue_copy = NULL;
-  int nargs = cif->nargs;
+  unsigned nargs = cif->nargs;
 
   FFI_ASSERT(cif->abi == FFI_GNUW64 || cif->abi == FFI_WIN64);
 
@@ -138,7 +156,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   for (i = 0; i < nargs; i++)
     {
       ffi_type *at = arg_types[i];
-      int size = at->size;
+      size_t size = at->size;
       bool needcopy = false;
 
       switch (at->type)

@@ -137,7 +137,7 @@ struct_passed_as_elements (call_builder *cb, ffi_type *top)
 
   if (num_fields == 1)
     {
-      if (IS_FLOAT (fields[0]->type))
+      if (IS_FLOAT (fields[0]->type) && cb->used_float < NARGREG)
 	{
 	  ret.as_elements = 1;
 	  ret.type1 = fields[0]->type;

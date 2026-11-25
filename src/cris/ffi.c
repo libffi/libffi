@@ -29,6 +29,8 @@
 #include <ffi.h>
 #include <ffi_common.h>
 
+#include <stdlib.h>
+
 #define STACK_ARG_SIZE(x) FFI_ALIGN(x, FFI_SIZEOF_ARG)
 
 static ffi_status
@@ -52,6 +54,8 @@ initialize_aggregate_packed_struct (ffi_type * arg)
 
       FFI_ASSERT (ffi_type_test ((*ptr)));
 
+      if ((*ptr)->size > FFI_MAX_TYPE_SIZE - arg->size)
+	return FFI_BAD_TYPEDEF;
       arg->size += (*ptr)->size;
 
       arg->alignment = (arg->alignment > (*ptr)->alignment) ?
@@ -160,6 +164,7 @@ ffi_prep_cif_core (ffi_cif * cif,
 	           ffi_type * rtype, ffi_type ** atypes)
 {
   unsigned bytes = 0;
+  size_t arg_bytes = 0;
   unsigned int i;
   ffi_type **ptr;
 
@@ -173,13 +178,31 @@ ffi_prep_cif_core (ffi_cif * cif,
   cif->nargs = ntotalargs;
   cif->rtype = rtype;
 
+  if (ntotalargs > FFI_MAX_NARGS)
+    return FFI_BAD_TYPEDEF;
+
+#ifndef FFI_TARGET_HAS_VECTOR_TYPE
+  /* Vector (SIMD) types are only marshalled on ports that opt in.  */
+  if (ffi_type_contains_vector (rtype))
+    return FFI_BAD_TYPEDEF;
+  for (i = 0; i < ntotalargs; i++)
+    if (ffi_type_contains_vector (atypes[i]))
+      return FFI_BAD_TYPEDEF;
+#endif
+
   cif->flags = 0;
 
   if ((cif->rtype->size == 0)
       && (initialize_aggregate_packed_struct (cif->rtype) != FFI_OK))
     return FFI_BAD_TYPEDEF;
 
+#ifndef FFI_TARGET_HAS_COMPLEX_TYPE
+  if (rtype->type == FFI_TYPE_COMPLEX)
+    abort ();
+#endif
   FFI_ASSERT_VALID_TYPE (cif->rtype);
+  if (cif->rtype->size > FFI_MAX_ARG_BYTES)
+    return FFI_BAD_TYPEDEF;
 
   for (ptr = cif->arg_types, i = cif->nargs; i > 0; i--, ptr++)
     {
@@ -187,7 +210,17 @@ ffi_prep_cif_core (ffi_cif * cif,
 	  && (initialize_aggregate_packed_struct ((*ptr)) != FFI_OK))
 	return FFI_BAD_TYPEDEF;
 
+#ifndef FFI_TARGET_HAS_COMPLEX_TYPE
+      if ((*ptr)->type == FFI_TYPE_COMPLEX)
+	abort ();
+#endif
       FFI_ASSERT_VALID_TYPE (*ptr);
+
+      /* Bound the whole argument list, as ffi_prep_cif_core does.  */
+      if ((*ptr)->size > FFI_MAX_ARG_BYTES
+	  || FFI_ALIGN ((*ptr)->size, 16) > FFI_MAX_ARG_BYTES - arg_bytes)
+	return FFI_BAD_TYPEDEF;
+      arg_bytes += FFI_ALIGN ((*ptr)->size, 16);
 
       if (((*ptr)->alignment - 1) & bytes)
 	bytes = FFI_ALIGN (bytes, (*ptr)->alignment);

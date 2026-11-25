@@ -81,6 +81,23 @@ ffi_align (ffi_type *ty, void *p)
   alignment = 4;
 #else
   alignment = ty->alignment;
+  /* An aggregate aligned beyond a doubleword can only have got that from
+     the alignment of the type itself (an attribute on the type, or a
+     caller-set alignment), which the AAPCS ignores when passing it: it
+     uses the largest member alignment, and never more than a doubleword.
+     The argument area is only doubleword aligned anyway.  */
+  if (alignment > 8)
+    {
+      ffi_type **p;
+
+      alignment = 4;
+      if (ty->elements != NULL)
+	for (p = ty->elements; *p != NULL; p++)
+	  if ((*p)->alignment > alignment)
+	    alignment = (*p)->alignment;
+      if (alignment > 8)
+	alignment = 8;
+    }
   if (alignment < 4)
     alignment = 4;
 #endif

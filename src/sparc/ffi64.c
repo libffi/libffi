@@ -342,18 +342,11 @@ ffi_prep_args_v9(ffi_cif *cif, unsigned long *argp, void *rvalue, void **avalue)
 
   if (rvalue == NULL)
     {
-      if (flags & SPARC_FLAG_RET_IN_MEM)
-	{
-	  /* Since we pass the pointer to the callee, we need a value.
-	     We allowed for this space in ffi_call, before ffi_call_v8
-	     alloca'd the space.  */
-	  rvalue = (char *)argp + cif->bytes;
-	}
-      else
-	{
-	  /* Otherwise, we can ignore the return value.  */
-	  flags = SPARC_RET_VOID;
-	}
+      /* ffi_call supplied scratch space if the callee needs a pointer
+	 to the return value; otherwise we can ignore it.  Keep the other
+	 flags: SPARC_FLAG_FP_ARGS says whether to load the FP argument
+	 registers.  */
+      flags = (flags & ~SPARC_FLAG_RET_MASK) | SPARC_RET_VOID;
     }
 
 #ifdef USING_PURIFY
@@ -451,8 +444,10 @@ ffi_call_int(ffi_cif *cif, void (*fn)(void), void *rvalue,
 
   FFI_ASSERT (cif->abi == FFI_V9);
 
+  /* If we've not got a return value, we need to create one if we've
+     got to pass the return value to the callee.  Otherwise ignore it.  */
   if (rvalue == NULL && (cif->flags & SPARC_FLAG_RET_IN_MEM))
-    bytes += FFI_ALIGN (cif->rtype->size, 16);
+    rvalue = alloca (cif->rtype->size);
 
   /* If we have any large structure arguments, make a copy so we are passing
      by value.  The pointer array is cloned first: the caller owns avalue[]
@@ -604,7 +599,11 @@ ffi_closure_sparc_inner_v9(ffi_cif *cif,
 	      if (named && argn < 16)
 		{
 		  int size_mask = ffi_struct_float_mask (ty, 0);
-		  int argn_mask = (0xffff00 >> argn) & 0xff00;
+		  /* The mask has one bit per 4-byte word of the struct, and
+		     word I is in argument slot ARGN + I / 2; only slots below
+		     16 have FP registers.  */
+		  int nwords = 2 * (16 - argn);
+		  int argn_mask = (nwords >= 8 ? 0xff : (1 << nwords) - 1) << 8;
 
 		  /* Eliminate fp registers off the end.  */
 		  size_mask = (size_mask & 0xff) | (size_mask & argn_mask);

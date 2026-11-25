@@ -324,13 +324,16 @@ static void *
 allocate_and_copy_struct_to_stack (struct arg_state *state, void *stack,
 				   size_t alignment, size_t size, void *value)
 {
-  size_t dest = state->next_struct_area - size;
+  char *dest = (char *) stack + state->next_struct_area - size;
 
-  /* Round down to the natural alignment of the value.  */
-  dest = FFI_ALIGN_DOWN (dest, alignment);
-  state->next_struct_area = dest;
+  /* Round down to the natural alignment of the value.  Round the address,
+     not the offset: the slab is only 16-byte aligned, and the callee may
+     rely on the full alignment of the copy.  ffi_prep_cif_machdep reserves
+     what this can skip for alignments above 16.  */
+  dest = (char *) FFI_ALIGN_DOWN (dest, alignment);
+  state->next_struct_area = (size_t) (dest - (char *) stack);
 
-  return memcpy ((char *) stack + dest, value, size);
+  return memcpy (dest, value, size);
 }
 
 static ffi_arg
@@ -660,15 +663,31 @@ ffi_prep_cif_machdep (ffi_cif *cif)
      NSAA, growing up).  The generic prep_cif accounting in cif->bytes
      only charges the payload copy, not that 8-byte pointer slot, so the
      two regions can collide and a later struct copy can overwrite an
-     already-spilled pointer with the copied payload bytes.  Reserve an
-     extra 8 bytes per such argument so the slab is always large enough
-     for both.  */
+     already-spilled pointer with the copied payload bytes.  Nor does it
+     charge the alignment padding that only arises because the payload and
+     the pointer live in different regions: the 8-byte pointer slot can
+     leave the NSAA at an odd doubleword where the generic layout (which
+     placed the payload there instead) did not, so a following 16-byte
+     aligned stack argument (__int128, long double, ...) needs 8 bytes of
+     padding, and a 16-byte aligned payload copied below an odd-doubleword
+     next_struct_area needs another 8.  Reserve an extra 16 bytes per such
+     argument so the slab is always large enough for all of it.  */
   for (i = 0, n = cif->nargs; i < n; i++)
     {
       ffi_type *ty = cif->arg_types[i];
       if (ty->size > 16 && !is_vfp_type (ty))
-	bytes += 8;
+	{
+	  bytes += 16;
+	  /* Rounding the copy's address down to an alignment above the
+	     slab's 16 can skip up to alignment - 1 more bytes.  */
+	  if (ty->alignment > 16)
+	    bytes += ty->alignment;
+	}
     }
+
+  /* cif->bytes is an unsigned int: refuse a total it cannot hold.  */
+  if (bytes > INT_MAX)
+    return FFI_BAD_TYPEDEF;
 
   /* Round the stack up to a multiple of the stack alignment requirement. */
   cif->bytes = (unsigned) FFI_ALIGN(bytes, 16);

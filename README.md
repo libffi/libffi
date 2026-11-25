@@ -203,6 +203,38 @@ History
 
 See the git log for details at http://github.com/libffi/libffi.
 
+    TBD
+        x86-64: reject vector types under the Win64 ABIs on non-Windows
+          builds, as documented (GHSA-v9rw-6cxm-q6rf).
+        CRIS: reject vector types (GHSA-j9pv-w354-7fg2).
+        aarch64: reserve enough stack for large by-value structs mixed
+          with 16-byte-aligned arguments (GHSA-wc36-xxj4-cxh5).
+        Pass by-value aggregates aligned beyond the stack alignment
+          correctly on x86-64, i386, ARM, MIPS, m88k and AArch64
+          (GHSA-rwpw-56v4-44r3).
+        powerpc64 ELFv2: fix closures overwriting the caller's frame
+          with float structs and _Complex arguments
+          (GHSA-p8c7-j6j7-h7vg), and stop padding IBM long double
+          aggregates (GHSA-34hv-975q-7p7w).
+        RISC-V, LoongArch: fix one-float structs passed after the FP
+          argument registers run out (GHSA-2xrh-7r9c-rwmf).
+        Static trampolines: make the temporary code-table file
+          immutable, so a forked child cannot rewrite its parent's
+          closures (GHSA-7qx4-vhpx-x6qm).
+        i386: fix ffi_raw_call argument placement and refuse raw
+          closures with in-memory results (GHSA-qgq7-fxgw-wrp4,
+          GHSA-64xf-g9qc-vf93).
+        MIPS: fix O32 closures returning _Complex long long
+          (GHSA-xh8m-x7vg-ww5m) and N32/N64 complex arguments at the
+          end of the argument registers (GHSA-p8w7-v539-c775).
+        Refuse oversized signatures instead of truncating them
+          (GHSA-qpm4-52vm-3xff, GHSA-j4q2-5r23-67rj,
+          GHSA-76jh-g582-v8x4).
+        SPARC: fix ffi_call with a NULL rvalue for large struct results
+          (GHSA-v569-599f-q4hr).
+        AIX: make struct layout independent of prior ffi_prep_cif calls
+          (GHSA-f45x-cg8q-3q9w).
+
     3.8.1 November-14-2026
         Improve ABI conformance and test coverage for complex-number
           calls, closures, and small aggregates across ARM, x86, PowerPC,

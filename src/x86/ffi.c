@@ -190,6 +190,10 @@ ffi_prep_cif_machdep(ffi_cif *cif)
       else
 #endif
         bytes = FFI_ALIGN (bytes, t->alignment);
+      /* cif->bytes is an unsigned int: refuse a total it cannot hold
+	 rather than let ffi_call allocate the truncated size.  */
+      if (bytes > INT_MAX || t->size > INT_MAX - bytes)
+	return FFI_BAD_TYPEDEF;
       bytes += FFI_ALIGN (t->size, FFI_SIZEOF_ARG);
     }
   cif->bytes = bytes;
@@ -273,6 +277,25 @@ extern void FFI_DECLARE_FASTCALL ffi_call_i386(struct call_frame *, char *) FFI_
 /* n.b. ffi_call_unix64 will steal the alloca'd `stack` variable here for use
    _as its own stack_ - so we need to compile this function without ASAN */
 FFI_ASAN_NO_SANITIZE
+/* Whether a structure argument is passed at 16-byte alignment: GCC does
+   that only when some member, at any depth, is of a type that needs 16
+   (an SSE vector, or long double on Darwin).  Alignment on the structure
+   type itself, from an attribute or set by the caller, is ignored.  */
+static int
+struct_has_aligned_member (ffi_type *ty)
+{
+  ffi_type **p;
+
+  if (ty->elements == NULL)
+    return 0;
+  for (p = ty->elements; *p != NULL; p++)
+    if ((*p)->type == FFI_TYPE_STRUCT
+	? struct_has_aligned_member (*p)
+	: (*p)->alignment >= 16)
+      return 1;
+  return 0;
+}
+
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	      void **avalue, void *closure)
@@ -380,13 +403,15 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	    narg_reg = 2;
 
 	  /* Alignment rules for arguments are quite complex.  Vectors and
-	     structures with 16 byte alignment get it.  Note that long double
-	     on Darwin does have 16 byte alignment, and does not get this
-	     alignment if passed directly; a structure with a long double
-	     inside, however, would get 16 byte alignment.  Since libffi does
-	     not support vectors, we need non concern ourselves with other
-	     cases.  */
-	  if (t == FFI_TYPE_STRUCT && ty->alignment >= 16)
+	     structures containing a 16-byte-aligned member get it.  Note that
+	     long double on Darwin does have 16 byte alignment, and does not
+	     get this alignment if passed directly; a structure with a long
+	     double inside, however, would get 16 byte alignment.  Alignment
+	     given to the structure type itself, rather than coming from a
+	     member, does not count (see struct_has_aligned_member).  Since
+	     libffi does not support vectors, we need non concern ourselves
+	     with other cases.  */
+	  if (t == FFI_TYPE_STRUCT && struct_has_aligned_member (ty))
 	    align = 16;
 
 	  if (dir < 0)
@@ -516,7 +541,7 @@ ffi_closure_inner (struct closure_frame *frame, char *stack)
 	  size_t align = FFI_SIZEOF_ARG;
 
 	  /* See the comment in ffi_call_int.  */
-	  if (t == FFI_TYPE_STRUCT && ty->alignment >= 16)
+	  if (t == FFI_TYPE_STRUCT && struct_has_aligned_member (ty))
 	    align = 16;
 
 	  /* Issue 434: For thiscall and fastcall, if the parameter passed
@@ -709,6 +734,17 @@ ffi_prep_raw_closure_loc (ffi_raw_closure *closure,
 	return FFI_BAD_TYPEDEF;
       }
 
+  /* Likewise for results returned in memory.  The raw closure entry
+     points only provide a 16-byte temporary for the result and do not
+     handle the hidden return pointer, so a handler storing a larger
+     struct there would overrun the frame.  */
+  switch (cif->flags)
+    {
+    case X86_RET_STRUCTPOP:
+    case X86_RET_STRUCTARG:
+      return FFI_BAD_TYPEDEF;
+    }
+
   switch (cif->abi)
     {
     case FFI_THISCALL:
@@ -794,7 +830,7 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *avalue)
 
   bytes = STACK_ALIGN (cif->bytes);
   argp = stack =
-      (void *)((uintptr_t)alloca(bytes + sizeof(*frame) + rsize + 15) & ~16);
+      (void *) FFI_ALIGN (alloca (bytes + sizeof(*frame) + rsize + 15), 16);
   frame = (struct call_frame *)(stack + bytes);
   if (rsize)
     rvalue = frame + 1;
@@ -841,7 +877,8 @@ ffi_raw_call(ffi_cif *cif, void (*fn)(void), void *rvalue, ffi_raw *avalue)
 	  z = FFI_ALIGN (z, FFI_SIZEOF_ARG);
 	  argp += z;
 	}
-      avalue += z;
+      /* Z is in bytes; AVALUE points to ffi_raw.  */
+      avalue = (ffi_raw *) ((char *) avalue + z);
       bytes -= z;
     }
   if (i < n)

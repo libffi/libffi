@@ -487,8 +487,8 @@ ffi_prep_cif_machdep_efi64(ffi_cif *cif);
 ffi_status FFI_HIDDEN
 ffi_prep_cif_machdep (ffi_cif *cif)
 {
-  int gprcount, ssecount, i, avn, ngpr, nsse;
-  unsigned flags;
+  int gprcount, ssecount, ngpr, nsse;
+  unsigned i, avn, flags;
   enum x86_64_reg_class classes[MAX_CLASSES];
   size_t bytes, n, rtype_size;
   ffi_type *rtype;
@@ -671,6 +671,10 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	    align = 8;
 
 	  bytes = FFI_ALIGN (bytes, align);
+	  /* cif->bytes is an unsigned int: refuse a total it cannot hold
+	     rather than let ffi_call allocate the truncated size.  */
+	  if (bytes > INT_MAX || cif->arg_types[i]->size > INT_MAX - bytes)
+	    return FFI_BAD_TYPEDEF;
 	  bytes += cif->arg_types[i]->size;
 	}
       else
@@ -682,8 +686,14 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   if (ssecount)
     flags |= UNIX64_FLAG_XMM_ARGS;
 
+  /* cif->bytes is unsigned: refuse an argument area it cannot describe
+     rather than truncating it and making the call with a short stack.  */
+  bytes = FFI_ALIGN (bytes, 8);
+  if (bytes > UINT_MAX)
+    return FFI_BAD_TYPEDEF;
+
   cif->flags = flags;
-  cif->bytes = (unsigned) FFI_ALIGN (bytes, 8);
+  cif->bytes = (unsigned) bytes;
 
   return FFI_OK;
 }
@@ -698,8 +708,10 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   enum x86_64_reg_class classes[MAX_CLASSES];
   char *stack, *argp;
   ffi_type **arg_types;
-  int gprcount, ssecount, ngpr, nsse, i, avn, flags;
+  int gprcount, ssecount, ngpr, nsse, flags;
+  unsigned i, avn;
   struct register_args *reg_args;
+  size_t stack_align;
 
   /* Can't call 32-bit mode from 64-bit mode.  */
   FFI_ASSERT (cif->abi == FFI_UNIX64);
@@ -718,8 +730,22 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   arg_types = cif->arg_types;
   avn = cif->nargs;
 
-  /* Allocate the space for the arguments, plus 4 words of temp space.  */
-  stack = alloca (sizeof (struct register_args) + cif->bytes + 4*8);
+  /* ffi_prep_cif_machdep sized the stack argument area by aligning
+     offsets into it, but the arguments are placed (and found by the
+     callee) by aligning addresses.  The two only agree if the area
+     starts on a multiple of the largest argument alignment, as it does
+     in a compiled caller; alloca promises no more than 16 bytes.  */
+  stack_align = 16;
+  for (i = 0; i < avn; ++i)
+    if (arg_types[i]->alignment > stack_align)
+      stack_align = arg_types[i]->alignment;
+
+  /* Allocate the space for the arguments, plus 4 words of temp space,
+     plus the slack needed to align the stack argument area.  */
+  stack = alloca (sizeof (struct register_args) + cif->bytes + 4*8
+		  + (stack_align - 16));
+  stack += -(uintptr_t) (stack + sizeof (struct register_args))
+	   & (stack_align - 1);
   reg_args = (struct register_args *) stack;
   argp = stack + sizeof (struct register_args);
 
@@ -927,8 +953,15 @@ build_plan (ffi_cif *cif)
 #endif
     }
 
+  /* The move list is described by 32-bit fields (nmoves, dst_off,
+     alloc_bytes), and 2 * avn + 1 must not wrap below: a signature with
+     more arguments than that fits gets no plan and the caller falls back
+     to ffi_call.  */
+  if (avn > ((UINT_MAX - sizeof (ffi_plan)) / sizeof (ffi_move) - 1) / 2)
+    return NULL;
+
   /* One self-contained allocation: header + moves, released with plain free(). */
-  nbytes = sizeof (ffi_plan) + sizeof (ffi_move) * (2 * avn + 1);
+  nbytes = sizeof (ffi_plan) + sizeof (ffi_move) * (2 * (size_t) avn + 1);
   plan = malloc (nbytes);
   if (plan == NULL)
     return NULL;
@@ -1178,8 +1211,8 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 {
   ffi_type **arg_types = cif->arg_types;
   void **avalue_copy = NULL;
-  int i, nargs = cif->nargs;
-  const int max_reg_struct_size = cif->abi == FFI_GNUW64 ? 8 : 16;
+  unsigned i, nargs = cif->nargs;
+  const size_t max_reg_struct_size = cif->abi == FFI_GNUW64 ? 8 : 16;
 
   /* If we have any large structure arguments, make a copy so we are passing
      by value.  The pointer array is cloned first: the caller owns avalue[]
@@ -1187,7 +1220,7 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
   for (i = 0; i < nargs; i++)
     {
       ffi_type *at = arg_types[i];
-      int size = at->size;
+      size_t size = at->size;
       if (at->type == FFI_TYPE_STRUCT && size > max_reg_struct_size)
         {
           char *argcopy = alloca (size);
@@ -1324,6 +1357,7 @@ ffi_closure_unix64_inner(ffi_cif *cif,
   long i, avn;
   int gprcount, ssecount, ngpr, nsse;
   int flags;
+  size_t argoff = 0;
 
   avn = cif->nargs;
   flags = cif->flags;
@@ -1358,10 +1392,12 @@ ffi_closure_unix64_inner(ffi_cif *cif,
 	  if (align < 8)
 	    align = 8;
 
-	  /* Pass this argument in memory.  */
-	  argp = (void *) FFI_ALIGN (argp, align);
-	  avalue[i] = argp;
-	  argp += arg_types[i]->size;
+	  /* Pass this argument in memory.  Its position is an aligned
+	     offset from the start of the argument area; not every
+	     caller aligns the area itself to more than 16 bytes.  */
+	  argoff = FFI_ALIGN (argoff, align);
+	  avalue[i] = argp + argoff;
+	  argoff += arg_types[i]->size;
 	}
       /* If the argument is in a single register, or two consecutive
 	 integer registers, then we can use that address directly.  */

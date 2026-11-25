@@ -188,18 +188,9 @@ ffi_prep_args_v8(ffi_cif *cif, unsigned long *argp, void *rvalue, void **avalue)
 
   if (rvalue == NULL)
     {
-      if ((flags & SPARC_FLAG_RET_MASK) == SPARC_RET_STRUCT)
-	{
-	  /* Since we pass the pointer to the callee, we need a value.
-	     We allowed for this space in ffi_call, before ffi_call_v8
-	     alloca'd the space.  */
-	  rvalue = (char *)argp + cif->bytes;
-	}
-      else
-	{
-	  /* Otherwise, we can ignore the return value.  */
-	  flags = SPARC_RET_VOID;
-	}
+      /* ffi_call supplied scratch space if the callee needs a pointer
+	 to the return value; otherwise we can ignore it.  */
+      flags = SPARC_RET_VOID;
     }
 
   /* This could only really be done when we are returning a structure.
@@ -296,7 +287,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
      got to pass the return value to the callee.  Otherwise ignore it.  */
   if (rvalue == NULL
       && (cif->flags & SPARC_FLAG_RET_MASK) == SPARC_RET_STRUCT)
-    bytes += FFI_ALIGN (cif->rtype->size, 8);
+    rvalue = alloca (cif->rtype->size);
 
   /* If we have any structure arguments, make a copy so we are passing
      by value.  The pointer array is cloned first: the caller owns avalue[]

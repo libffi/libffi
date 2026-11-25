@@ -67,6 +67,20 @@ if (argp == &stack[bytes]) \
 #define FIX_ARGP 
 #endif
 
+/* The offset of ARGP in the argument list.  On N32/N64, when there are
+   more than eight slots, ffi_prep_args puts the eight register slots at
+   the end of STACK and the stack slots at its start.  */
+#ifdef FFI_MIPS_N32
+#define ARG_OFFSET(p) \
+  (bytes > 8 * (int) sizeof(ffi_arg) \
+   ? ((p) >= &stack[bytes - 8 * sizeof(ffi_arg)] \
+      ? (size_t) ((p) - &stack[bytes - 8 * sizeof(ffi_arg)]) \
+      : (size_t) ((p) - stack) + 8 * sizeof(ffi_arg)) \
+   : (size_t) ((p) - stack))
+#else
+#define ARG_OFFSET(p) ((size_t) ((p) - stack))
+#endif
+
 
 /* ffi_prep_args is called by the assembly routine once stack space
    has been allocated for the function's arguments */
@@ -134,12 +148,23 @@ static void ffi_prep_args(char *stack,
       a = (*p_arg)->alignment;
       if (a < sizeof(ffi_arg))
         a = sizeof(ffi_arg);
-      
-      if ((a - 1) & (unsigned long) argp)
-	{
-	  argp = (char *) FFI_ALIGN(argp, a);
-	  FIX_ARGP;
-	}
+      /* No argument is passed at more than two-slot alignment, and the
+	 argument area is only that aligned.  */
+      if (a > 2 * sizeof(ffi_arg))
+        a = 2 * sizeof(ffi_arg);
+
+      /* Align the argument's offset in the argument list, as the
+	 compiler does, not its address: on N32/N64 the register part is
+	 moved to the end of the area, so the two need not agree.  */
+      {
+	size_t off = ARG_OFFSET (argp);
+
+	if ((a - 1) & off)
+	  {
+	    argp += FFI_ALIGN(off, a) - off;
+	    FIX_ARGP;
+	  }
+      }
 
       z = (*p_arg)->size;
       if (z <= sizeof(ffi_arg))
@@ -206,9 +231,12 @@ static void ffi_prep_args(char *stack,
 		/* expand from 4+4 to 8+8 if pass with fpr reg */
 		/* argp will wind back to stack when we process all of reg args */
 		/* all var_args passed with gpr, should be expand */
+		/* if only one reg slot is left, gcc passes it in that gpr
+		   like a struct of two floats, so don't expand it */
 	        if(!soft_float
 		    && (*p_arg)->elements[0]->type == FFI_TYPE_FLOAT
 		    && argp>=argp_f
+		    && argp + 2 * z <= &stack[bytes]
 		    && i < ecif->cif->mips_nfixedargs)
 		  {
 		    *(float *) argp = *(float *)(* p_argv);
@@ -975,7 +1003,9 @@ ffi_prep_closure_loc (ffi_closure *closure,
  * registers have been saved, if any.
  *
  * RVALUE is the location where the function return value will be
- * stored. CLOSURE is the prepared closure to invoke.
+ * stored; it has room for 16 bytes, so that a complex value returned
+ * in up to four GPRs or in $f0/$f2 fits.  CLOSURE is the prepared
+ * closure to invoke.
  *
  * This function should only be called from assembly, which is in
  * turn called from a trampoline.
@@ -1008,27 +1038,13 @@ ffi_closure_mips_inner_O32 (ffi_cif *cif,
       argn = 1;
       seen_int = 1;
     }
-  if (cif->rtype->type == FFI_TYPE_COMPLEX
-      && (cif->rtype->elements[0]->type == FFI_TYPE_FLOAT
-          || cif->rtype->elements[0]->type == FFI_TYPE_DOUBLE
-          || cif->rtype->elements[0]->type == FFI_TYPE_LONGDOUBLE))
-    {
-      rvalue = fpr;
-    }
-  /* With soft float, complex values are returned in up to four GPRs,
-     which does not fit into the space for v0 and v1.  ffi_closure_O32
-     does not use the space for the FP argument registers in that case,
-     so return the value there.  */
-  if (cif->abi == FFI_O32_SOFT_FLOAT && cif->rtype->type == FFI_TYPE_COMPLEX)
-    rvalue = fpr;
-
   i = 0;
   avn = cif->nargs;
   arg_types = cif->arg_types;
 
   while (i < avn)
     {
-      if (arg_types[i]->alignment == 8 && (argn & 0x1))
+      if (arg_types[i]->alignment > sizeof(ffi_arg) && (argn & 0x1))
         argn++;
       if (i < 2 && !seen_int &&
 	  (arg_types[i]->type == FFI_TYPE_FLOAT ||
@@ -1225,19 +1241,35 @@ ffi_closure_mips_inner_N32 (ffi_cif *cif,
         }
       else if (arg_types[i]->type == FFI_TYPE_COMPLEX && arg_types[i]->elements[0]->type == FFI_TYPE_DOUBLE)
         {
-          argp = (argn >= 8 || i >= cif->mips_nfixedargs || soft_float) ? ar + argn : fpr + argn;
+          /* with only one reg slot left it was passed in that gpr and on
+             the stack, which follows the saved gprs */
+          argp = (argn >= 7 || i >= cif->mips_nfixedargs || soft_float) ? ar + argn : fpr + argn;
           avaluep[i] = (char *) argp;
         }
       else if (arg_types[i]->type == FFI_TYPE_COMPLEX && arg_types[i]->elements[0]->type == FFI_TYPE_LONGDOUBLE)
         {
 	  /* align long double */
 	  argn += ((argn & 0x1)? 1 : 0);
-          argp = (argn >= 8 || i >= cif->mips_nfixedargs || soft_float) ? ar + argn : fpr + argn;
-          avaluep[i] = (char *) argp;
+          if (argn == 6 && i < cif->mips_nfixedargs && !soft_float)
+            {
+              /* Only the real part fits in the last FP register pair; the
+                 imaginary part is on the stack, which follows the saved
+                 gprs.  Put the two halves back together.  */
+              char *z = alloca (arg_types[i]->size);
+              memcpy (z, fpr + 6, 2 * sizeof (ffi_arg));
+              memcpy (z + 2 * sizeof (ffi_arg), ar + 8, 2 * sizeof (ffi_arg));
+              avaluep[i] = z;
+            }
+          else
+            {
+              argp = (argn >= 8 || i >= cif->mips_nfixedargs || soft_float) ? ar + argn : fpr + argn;
+              avaluep[i] = (char *) argp;
+            }
         }
       else if (arg_types[i]->type == FFI_TYPE_COMPLEX && arg_types[i]->elements[0]->type == FFI_TYPE_FLOAT)
         {
-          if (argn >= 8 || i >= cif->mips_nfixedargs || soft_float)
+          /* with only one reg slot left it was passed in that gpr */
+          if (argn >= 7 || i >= cif->mips_nfixedargs || soft_float)
 	     argp = ar + argn;
 	  else
 	    {
@@ -1253,7 +1285,7 @@ ffi_closure_mips_inner_N32 (ffi_cif *cif,
           unsigned type = arg_types[i]->type;
 
           if (arg_types[i]->alignment > sizeof(ffi_arg))
-            argn = FFI_ALIGN(argn, arg_types[i]->alignment / sizeof(ffi_arg));
+            argn = FFI_ALIGN(argn, 2);
 
           argp = ar + argn;
 

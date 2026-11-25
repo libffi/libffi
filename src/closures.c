@@ -618,7 +618,12 @@ static int
 open_temp_exec_file_memfd (const char *name)
 {
   int fd;
+#ifdef MFD_ALLOW_SEALING
+  /* Let ffi_tramp_get_temp_file () seal the file once it has been filled.  */
+  fd = memfd_create (name, MFD_CLOEXEC | MFD_ALLOW_SEALING);
+#else
   fd = memfd_create (name, MFD_CLOEXEC);
+#endif
   return fd;
 }
 #endif

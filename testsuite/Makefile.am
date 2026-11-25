@@ -13,14 +13,17 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.bhaible/alignof.h libffi.bhaible/bhaible.exp libffi.bhaible/test-call.c \
 	libffi.bhaible/test-callback.c libffi.bhaible/testcases.c libffi.call/align_mixed.c \
 	libffi.call/align_stdcall.c libffi.call/bpo_38748.c libffi.call/call.exp \
-	libffi.call/closure_raw.c \
+	libffi.call/closure_raw.c libffi.call/closure_raw_struct.c \
 	libffi.call/closure_thiscall_fastcall_pop.c \
-	libffi.call/err_bad_typedef.c libffi.call/ffitest.h libffi.call/float.c \
+	libffi.call/err_bad_size.c libffi.call/err_bad_typedef.c \
+	libffi.call/err_vector_unsupported.c \
+	libffi.call/ffitest.h libffi.call/float.c \
 	libffi.call/float1.c libffi.call/float2.c libffi.call/float3.c \
 	libffi.call/float4.c libffi.call/float_va.c libffi.call/i128-1.c \
 	libffi.call/large_struct_by_value.c libffi.call/many.c \
 	libffi.call/many2.c libffi.call/many_double.c \
-	libffi.call/many_large_structs.c libffi.call/many_mixed.c \
+	libffi.call/many_large_structs.c libffi.call/many_large_structs_i128.c \
+	libffi.call/many_mixed.c \
 	libffi.call/many_small_structs.c \
 	libffi.call/negint.c libffi.call/offsets.c libffi.call/overread.c \
 	libffi.call/plan.c libffi.call/plan_mixed.c libffi.call/plan_spill.c \
@@ -38,7 +41,8 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.call/struct9.c libffi.call/struct_by_value_2.c libffi.call/struct_by_value_3.c \
 	libffi.call/struct_by_value_3f.c libffi.call/struct_by_value_4.c libffi.call/struct_by_value_4f.c \
 	libffi.call/struct_by_value_big.c libffi.call/struct_by_value_small.c libffi.call/struct_return_2H.c \
-	libffi.call/struct_int_float.c libffi.call/struct_stack_small.c libffi.call/longjmp.c \
+	libffi.call/raw_call.c libffi.call/struct_double_spill.c libffi.call/struct_ret_discard.c libffi.call/struct_int_float.c libffi.call/struct_layout_order.c libffi.call/struct_stack_small.c libffi.call/longjmp.c \
+	libffi.call/struct_overaligned.c \
 	libffi.call/struct_return_8H.c libffi.call/uninitialized.c libffi.call/va_1.c \
 	libffi.call/va_2.c libffi.call/va_3.c libffi.call/va_struct1.c \
 	libffi.call/va_struct2.c libffi.call/va_struct3.c libffi.call/callback.c \
@@ -67,7 +71,7 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.closures/cls_multi_sshortchar.c libffi.closures/cls_multi_uchar.c libffi.closures/cls_multi_ushort.c \
 	libffi.closures/cls_multi_ushortchar.c libffi.closures/cls_pointer.c libffi.closures/cls_pointer_stack.c \
 	libffi.closures/cls_schar.c libffi.closures/cls_sint.c libffi.closures/cls_sshort.c \
-	libffi.closures/cls_struct_fp_return.c libffi.closures/cls_struct_ld_return.c libffi.closures/cls_struct_va1.c libffi.closures/cls_uchar.c libffi.closures/cls_uint.c \
+	libffi.closures/cls_struct_fp_return.c libffi.closures/cls_struct_ld_return.c libffi.closures/cls_struct_double_spill.c libffi.closures/cls_struct_float_psave.c libffi.closures/cls_struct_longdouble_hfa.c libffi.closures/cls_struct_overaligned.c libffi.closures/cls_struct_va1.c libffi.closures/cls_uchar.c libffi.closures/cls_uint.c \
 	libffi.closures/cls_uint_va.c libffi.closures/cls_ulong_va.c libffi.closures/cls_ulonglong.c \
 	libffi.closures/cls_ushort.c libffi.closures/err_bad_abi.c libffi.closures/ffitest.h \
 	libffi.closures/huge_struct.c libffi.closures/nested_struct.c libffi.closures/nested_struct1.c \
@@ -80,13 +84,13 @@ EXTRA_DIST = config/default.exp emscripten/build.sh emscripten/conftest.py \
 	libffi.closures/stret_medium.c libffi.closures/stret_medium2.c libffi.closures/testclosure.c \
 	libffi.closures/unwindtest.cc libffi.closures/unwindtest_ffi_call.cc libffi.complex/cls_align_complex.inc \
 	libffi.complex/cls_align_complex_double.c libffi.complex/cls_align_complex_float.c libffi.complex/cls_align_complex_longdouble.c \
-	libffi.complex/cls_complex.inc libffi.complex/cls_complex_double.c libffi.complex/cls_complex_float.c \
-	libffi.complex/cls_complex_longdouble.c libffi.complex/cls_complex_struct.inc libffi.complex/cls_complex_struct_double.c \
+	libffi.complex/cls_complex.inc libffi.complex/cls_complex_double.c libffi.complex/cls_complex_float.c libffi.complex/cls_complex_int.c \
+	libffi.complex/cls_complex_longdouble.c libffi.complex/cls_complex_psave.c libffi.complex/cls_complex_struct.inc libffi.complex/cls_complex_struct_double.c \
 	libffi.complex/cls_complex_struct_float.c libffi.complex/cls_complex_struct_longdouble.c libffi.complex/cls_complex_va.inc \
 	libffi.complex/cls_complex_va_double.c libffi.complex/cls_complex_va_float.c libffi.complex/cls_complex_va_longdouble.c \
 	libffi.complex/complex.exp libffi.complex/complex.inc libffi.complex/complex_defs_double.inc \
 	libffi.complex/complex_defs_float.inc libffi.complex/complex_defs_longdouble.inc libffi.complex/complex_double.c \
-	libffi.complex/complex_float.c libffi.complex/complex_i128.c libffi.complex/complex_int.c libffi.complex/complex_int_small.c libffi.complex/complex_longdouble.c \
+	libffi.complex/complex_float.c libffi.complex/complex_last_reg.c libffi.complex/complex_i128.c libffi.complex/complex_int.c libffi.complex/complex_int_small.c libffi.complex/complex_longdouble.c \
 	libffi.complex/complex_longdouble_abi.c libffi.complex/complex_regs.inc libffi.complex/complex_regs_double.c \
 	libffi.complex/complex_regs_float.c libffi.complex/complex_regs_longdouble.c \
 	libffi.complex/ffitest.h libffi.complex/many_complex.inc libffi.complex/many_complex_double.c \
